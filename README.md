@@ -11,17 +11,17 @@ If you wish to use the Review Build feature you will need Swarm.  Swarm 2014.2 o
 
 The Perforce plugin requires p4-java; however at the time of writing this is not in Maven Central.  The jar is shipped in the root directory, so to add it into your local maven repo run the following command:
 
-	mvn install:install-file \
-		-Dfile=p4java-2013.2.788582.jar \ 
-		-DgroupId=com.perforce \ 
-		-DartifactId=p4java \ 
-		-Dversion=2013.2.788582 \ 
-		-Dpackaging=jar
-		
+  mvn install:install-file \
+    -Dfile=p4java-2013.2.788582.jar \ 
+    -DgroupId=com.perforce \ 
+    -DartifactId=p4java \ 
+    -Dversion=2013.2.788582 \ 
+    -Dpackaging=jar
+    
 To build the plugin and run the tests use the following:
 
-	`mvn package`
-	
+  mvn package
+  
 Note: for the tests to run you must have p4d in your PATH, to skip tests use the -DskipTests flag.
 
 ## Installing
@@ -36,7 +36,7 @@ Note: for the tests to run you must have p4d in your PATH, to skip tests use the
 
 The plugin makes use of the Jenkins Credential store making it easier to manage the Perforce Server connection for multiple Jenkins jobs.  Perforce Server credentials must be added to the Global or a user defined domain, using one of the two supported Perforce Credentials: 'Perforce Password Credential' or 'Perforce Ticket Credential'.
 
-![alt text][todo]
+![Global credentials][docs/images/1.png]
 
 To add a Perforce Credential:
 
@@ -63,45 +63,52 @@ All Perforce Credential types support SSL for use on Secured Perforce Servers; t
 Perforce workspaces are configured on the Jenkin Job configuration page and support the following behaviours:
 
 * Static
+
 ... The workspace specified must have been previously defined.  The Perforce Jenkins user must either own the workspace or the spec should be unlocked allowing it to make edits.  The workspace View remains static, but Jenkins will update other fields such as the workspace root and clobber option. 
 
-![alt text][todo]
+... ![alt text][todo]
 
 * Spec File
+
 ... The workspace configuration is loaded from a depot file containing a Client workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format).  The name of the workspace must match the name of the Client workspace Spec.
 
-![alt text][todo]
+... ![alt text][todo]
 
 * Manual
+
 ... This allows the specified workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the workspace root and may override the clobber option.
 
-![alt text][todo]
+... ![alt text][todo]
 
 * Template & Stream
+
 ... In this mode the workspace View is generated using the specified template workspace or stream.  The name of the workspace is generated using the Workspace Name Format field and makes it an ideal choice for matrix builds.
 
-![alt text][todo]
+... ![alt text][todo]
 
 ## Populating
 
 Perforce will populate the workspace with the file revisions needed for the build, the way the workspace is populated is configured on the Jenkin Job configuration page and support the following behaviours:
 
 * Automatic cleanup and sync
+
 ... Perforce will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change.  Depending on the two check options boxes Perforce will then clean up any extra files or restore any modified or missing files.  Finally, Perforce will sync the required file revisions to the workspace populating the 'have' table.
 
-![alt text][todo]
+... ![alt text][todo]
 
 * Forced clean and sync
+
 ... Perfore will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.  
 
-![alt text][todo]
+... ![alt text][todo]
 
 ... This method is not recommended as the cost of IO resources on server and client are high.  Apart from exceptional circumstances the Automatic cleanup and sync option will produce the same result.
 
 * Sync only
+
 ... Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
-![alt text][todo]
+... ![alt text][todo]
 
 ## Building
 
@@ -109,11 +116,11 @@ Building a Jenkins Job can be triggered using the SCM polling option, Build Now 
 
 To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using the Cron format.  For example every 10 minutes Monday to Friday, the 'H' is a time offset (calculated using a Hash of the Job name).
 
-![alt text][todo]
+... ![alt text][todo]
 
 To build immediately select the Build now button...
 
-![alt text][todo]
+... ![alt text][todo]
 
 Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobID/build
 
@@ -124,29 +131,31 @@ Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobI
 When polling is used, changes can be filtered to not trigger a build; the filters are configured on the Jenkin Job configuration page and support the following types:
 
 * Exclude changes from user
+
 ... Changes owned by the Perforce user specified in the filter will be excluded.
 
-![alt text][todo]
+... ![alt text][todo]
 
 * Exclude changes from Depot path
+
 ... Changes where all the file revision's path starting with the String specified in the filter will be excluded.
 
-![alt text][todo]
+... ![alt text][todo]
 
 ... For example, with a Filter of "//depot/main/tests":
 
 ... Case A (change will be filtered):
-	Files:
-		//depot/main/tests/index.xml
-		//depot/main/tests/001/test.xml
-		//depot/main/tests/002/test.xml
-		
+  Files:
+    //depot/main/tests/index.xml
+    //depot/main/tests/001/test.xml
+    //depot/main/tests/002/test.xml
+    
 ... Case B (change will not be filtered, as build.xml is outside of the filter):
-	Files:
-		//depot/main/src/build.xml
-		//depot/main/tests/004/test.xml
-		//depot/main/tests/005/test.xml
-		
+  Files:
+    //depot/main/src/build.xml
+    //depot/main/tests/004/test.xml
+    //depot/main/tests/005/test.xml
+    
 ## Review
 
 The plugin supports a Build Review Action with a review/build/ URL endpoint.  Parameters can be passed informing Jenkins of Perforce shelf to unshelve and changelist to sync to.  There are also Pass/Fail callback URLs for use with Swarm.
@@ -212,68 +221,6 @@ To enable the feature select the Repository browser from the Job Configuration p
 Link to change in Swarm
 
 ![alt text][todo]
-
-## Comparison (missing features only)
-
-The following table identifies features that are missing or divergent from the current plugin.
-Feature
-Current 'Perforce' plugin
-New 'this' plugin
-Repo Browsers	
-FishEye
-P4Web
-Perfbrowse
-(no-plan)
-[DONE]
-(no-plan)
-Swarm
-Exclude changes from build when
-using Poll SCM
-[ ADV] Users
-[ ADV] Files
-[DONE]
-[DONE]
-Upstream Project	[ ADV] Sync to another project	(no-plan)
-Sync to other changes	
-[ ADV] Sync to label
-[ ADV] Sync to fixed number
-[Build parameter]
-Build parameter
-Shelved change
-Display Changes	
-Changes in build XML
-[ADV] Integrated changes
-[ADV] Disable change log
-[ADV] Limit change log
-uses Perforce
-(no-plan)
-uses Perforce
-uses Perforce
-Clean workspace	
-[ADV] before build
-[ADV] force sync
-Smart
-[DONE]
-[Sync only]
-Workspace Views	
-Manual (full)
-Manual (LHS only)
-Stream
-From File
-Manual (full)
-(no-plan)
-Stream
-[DONE] 
-Template
-Static
-Static
-Tagging builds	
-Automatic 'Post Build Action'
-Tags Builds
-[DONE]
-[DONE]
-[ ADV] = Advanced (hidden) option
- 
  
 ## Release notes
 
