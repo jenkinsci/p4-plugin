@@ -11,16 +11,16 @@ If you wish to use the Review Build feature you will need Swarm.  Swarm 2014.2 o
 
 The Perforce plugin requires p4-java; however at the time of writing this is not in Maven Central.  The jar is shipped in the root directory, so to add it into your local maven repo run the following command:
 
-  mvn install:install-file \
-    -Dfile=p4java-2013.2.788582.jar \ 
-    -DgroupId=com.perforce \ 
-    -DartifactId=p4java \ 
-    -Dversion=2013.2.788582 \ 
-    -Dpackaging=jar
-    
+	mvn install:install-file \
+		-Dfile=p4java-2013.2.788582.jar \ 
+		-DgroupId=com.perforce \ 
+		-DartifactId=p4java \ 
+		-Dversion=2013.2.788582 \ 
+		-Dpackaging=jar
+
 To build the plugin and run the tests use the following:
 
-  mvn package
+	mvn package
   
 Note: for the tests to run you must have p4d in your PATH, to skip tests use the -DskipTests flag.
 
@@ -145,17 +145,19 @@ Changes where all the file revision's path starting with the String specified in
 For example, with a Filter of "//depot/main/tests":
 
 Case A (change will be filtered):
+
     Files:
         //depot/main/tests/index.xml
         //depot/main/tests/001/test.xml
         //depot/main/tests/002/test.xml
-    
+
 Case B (change will not be filtered, as build.xml is outside of the filter):
+
     Files:
         //depot/main/src/build.xml
         //depot/main/tests/004/test.xml
         //depot/main/tests/005/test.xml
-    
+ 
 ## Review
 
 The plugin supports a Build Review Action with a review/build/ URL endpoint.  Parameters can be passed informing Jenkins of Perforce shelf to unshelve and changelist to sync to.  There are also Pass/Fail callback URLs for use with Swarm.
