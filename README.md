@@ -50,13 +50,13 @@ To add a Perforce Credential:
 8. Press the 'Test Connection' button (you should see Success)
 9. Click 'Save' to save.
  
-![alt text][todo]
+![Perforce Credential](docs/images/2.png)
 
 The Perforce Ticket Credential supports using a ticket file (such as the default P4TICKETS file) or a ticket value (returned by the command p4 login -p).  If Ticket authentication is used for remote builds the Ticket must be valid for the remote host (either login on the remote host or use p4 login -a). 
 
 All Perforce Credential types support SSL for use on Secured Perforce Servers; to use just check the SSL box and provide the Trust fingerprint.
 
-![alt text][todo] 
+![P4Trust Credential](docs/images/3.png)
 
 ## Workspaces
 
@@ -66,25 +66,25 @@ Perforce workspaces are configured on the Jenkin Job configuration page and supp
 
 ... The workspace specified must have been previously defined.  The Perforce Jenkins user must either own the workspace or the spec should be unlocked allowing it to make edits.  The workspace View remains static, but Jenkins will update other fields such as the workspace root and clobber option. 
 
-... ![alt text][todo]
+... ![Static config](docs/images/4.png)
 
 * Spec File
 
 ... The workspace configuration is loaded from a depot file containing a Client workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format).  The name of the workspace must match the name of the Client workspace Spec.
 
-... ![alt text][todo]
+... ![Spec config](docs/images/spec.png)
 
 * Manual
 
 ... This allows the specified workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the workspace root and may override the clobber option.
 
-... ![alt text][todo]
+... ![Manual config](docs/images/5.png)
 
 * Template & Stream
 
 ... In this mode the workspace View is generated using the specified template workspace or stream.  The name of the workspace is generated using the Workspace Name Format field and makes it an ideal choice for matrix builds.
 
-... ![alt text][todo]
+... ![Stream config](docs/images/6.png)
 
 ## Populating
 
@@ -94,13 +94,13 @@ Perforce will populate the workspace with the file revisions needed for the buil
 
 ... Perforce will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change.  Depending on the two check options boxes Perforce will then clean up any extra files or restore any modified or missing files.  Finally, Perforce will sync the required file revisions to the workspace populating the 'have' table.
 
-... ![alt text][todo]
+... ![Automatic populate](docs/images/auto_pop.png)
 
 * Forced clean and sync
 
 ... Perfore will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.  
 
-... ![alt text][todo]
+... ![Force populate](docs/images/force_pop.png)
 
 ... This method is not recommended as the cost of IO resources on server and client are high.  Apart from exceptional circumstances the Automatic cleanup and sync option will produce the same result.
 
@@ -108,7 +108,7 @@ Perforce will populate the workspace with the file revisions needed for the buil
 
 ... Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
-... ![alt text][todo]
+... ![Sync populate](docs/images/sync_pop.png)
 
 ## Building
 
@@ -116,11 +116,11 @@ Building a Jenkins Job can be triggered using the SCM polling option, Build Now 
 
 To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using the Cron format.  For example every 10 minutes Monday to Friday, the 'H' is a time offset (calculated using a Hash of the Job name).
 
-... ![alt text][todo]
+... ![Build trigger](docs/images/trigger.png)
 
 To build immediately select the Build now button...
 
-... ![alt text][todo]
+... ![Build now](docs/images/now.png)
 
 Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobID/build
 
@@ -134,13 +134,13 @@ When polling is used, changes can be filtered to not trigger a build; the filter
 
 ... Changes owned by the Perforce user specified in the filter will be excluded.
 
-... ![alt text][todo]
+... ![User Filter](docs/images/userF.png)
 
 * Exclude changes from Depot path
 
 ... Changes where all the file revision's path starting with the String specified in the filter will be excluded.
 
-... ![alt text][todo]
+... ![Path Filter](docs/images/pathF.png)
 
 ... For example, with a Filter of "//depot/main/tests":
 
@@ -174,19 +174,19 @@ The Build Review Action support the following parameters:
 
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 
-![alt text][todo]
+![Build review](docs/images/review.png)
 
-![alt text][todo]
+![Build manual](docs/images/manual.png)
 
 ## Changes Summary
 
 After a build Jenkins provides the ability to see the details of a build.  Select the build of interest from the Build History on the left hand side.  You then get a Perforce change summary for the build and clicking on the View Detail link for specific files.
 
-![alt text][todo]
+![Change summary](docs/images/summaryC.png)
 
 Detailed view...
 
-![alt text][todo]
+![Change detail](docs/images/detailC.png)
 
 ## Tagging Builds
 
@@ -194,19 +194,21 @@ Jenkins can tag builds automatically as a Post Build Action or allow manual tagg
 
 Tagging with Post Build Action
 
+![Post Action tag](docs/images/tag.png)
+
 Manual Tagging
 
 * Select the build that you wish to tag from the project page.
 
-![alt text][todo]
+![Manual tag](docs/images/manualT.png)
 
 * Click on the 'Label This Build' link on the left hand panel, if the build has already been tagged the link will read 'Perforce Label'.
 
-![alt text][todo]
+![Label tag](docs/images/labelT.png)
 
 * Update the label name and description as required and click 'Label Build' to add the label to Perforce.
 
-![alt text][todo]
+![Update tag](docs/images/updateT.png)
 
 * Once the build is labeled you will see the label details appear in a table above.  New labels can be added to the same build or labels can be updated by providing the same label name.
 
@@ -216,11 +218,11 @@ Repository browsing allows Jenkins to use an external browser, like Swarm, P4Web
 
 To enable the feature select the Repository browser from the Job Configuration page and provide the full URL to the browser.
 
-![alt text][todo]
+![Repo list](docs/images/repos.png)
 
 Link to change in Swarm
 
-![alt text][todo]
+![Repo list](docs/images/swarm.png)
  
 ## Release notes
 
