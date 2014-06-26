@@ -36,7 +36,7 @@ Note: for the tests to run you must have p4d in your PATH, to skip tests use the
 
 The plugin makes use of the Jenkins Credential store making it easier to manage the Perforce Server connection for multiple Jenkins jobs.  Perforce Server credentials must be added to the Global or a user defined domain, using one of the two supported Perforce Credentials: 'Perforce Password Credential' or 'Perforce Ticket Credential'.
 
-![Global credentials][docs/images/1.png]
+![Global credentials](docs/images/1.png)
 
 To add a Perforce Credential:
 
