@@ -1,0 +1,35 @@
+<div>
+	<b>Depot path filter</b>
+	<p>Changes can be filtered to not trigger a build; if all the files
+		within a change match the specified path, the build is filtered.</p>
+	<p style="margin-left: 30.0px;">
+		For example, with a Filter of "
+		<code>//depot/main/tests</code>
+		":
+	</p>
+	<p style="margin-left: 60.0px;">
+		<strong>Case A</strong> (change will be filtered):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/index.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/test.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/002/test.xml</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case B</strong> (change will not be filtered, as build.xml is
+		outside of the filter):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/build.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/004/test.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/005/test.xml</code>
+		</li>
+	</ul>
+</div>

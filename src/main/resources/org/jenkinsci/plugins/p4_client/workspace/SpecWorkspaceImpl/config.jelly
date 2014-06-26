@@ -1,0 +1,15 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+ 
+ 	<f:entry title="${%Character Set}" field="charset">
+		<f:select default="none"/>
+	</f:entry>
+	
+	<f:entry title="${%Workspace name}" field="name">
+		<f:textbox/>
+	</f:entry>
+	
+	<f:entry title="${%Depot path for workspace spec}" field="specPath">
+		<f:textbox/>
+	</f:entry>
+	  
+</j:jelly>

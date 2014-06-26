@@ -1,0 +1,14 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+ 
+ 	<f:entry title="${%Character Set}" field="charset">
+		<f:select default="none"/>
+	</f:entry>
+	
+	<f:entry title="Template workspace" field="templateName">
+		<f:textbox />
+	</f:entry>
+   				
+	<f:entry title="Workspace Name Format" field="format">
+		<f:textbox default="${descriptor.defaultFormat}"/>
+	</f:entry>
+</j:jelly>

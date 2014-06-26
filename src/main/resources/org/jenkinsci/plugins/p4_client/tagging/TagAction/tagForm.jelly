@@ -1,0 +1,69 @@
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
+			
+	<d:taglib uri="local">
+		<d:tag name="listTags">
+			<ul>
+				<j:forEach var="t" items="${tags}">
+					<li>${t}</li>
+				</j:forEach>
+			</ul>
+		</d:tag>
+	</d:taglib>
+
+	<l:layout norefresh="true" xmlns:local="local">
+		<st:include it="${it.build}" page="sidepanel.jelly" />
+		<l:main-panel>
+			<h1>Build #${it.build.number}</h1>
+
+			<j:if test="${it.isTagged()}">
+				<p>This build is labeled:</p>
+				<table border="0" width="640">
+					<tr>
+						<td><b>Label</b></td>
+						<td><b>Description</b></td>
+						<td><b>Owner</b></td>
+						<td><b>Revision</b></td>
+					</tr>
+					<j:forEach var="entry" items="${it.tags}">
+						<tr>
+							<td>${entry}</td>
+							<td>${it.getLabel(entry).description}</td>
+							<td>${it.getLabel(entry).ownerName}</td>
+							<td>${it.getLabel(entry).revisionSpec}</td>
+						</tr>
+					</j:forEach>
+				</table>
+				<st:nbsp/> 
+			</j:if>
+
+			<p><b>Create a Perforce Automatic label:</b></p>
+			<p>The Label's view is based on the workspace used during the build and Revision is set to change number: ${it.change}.</p>
+			<form action="submit" method="get" name="label">
+				<table border="0" width="640">
+					<tr>
+						<td nowrap="nowrap"><b>Label Name:</b> </td>
+						<td><input type="text" name="name"
+						value="jenkins-${it.build.project.name}-Build-${it.build.number}" 
+						style="width:70%" id="name" 
+						checkUrl="'checkTag?value='+escape(this.value)"/>
+						</td>
+					</tr>
+					<tr>
+						<td><b>Description:</b> </td>
+						<td><textarea name="desc" rows="5" cols="60" style="width:70%">
+						JenkinsBuild: #${it.build.number}
+						</textarea></td>
+					</tr>
+					<tr>
+						<td colspan="2"> </td>
+					</tr>
+					<tr>
+						<td colspan="2" align="right"><input type="submit" value="Label Build"/></td>
+					</tr>
+				</table>
+			</form>
+
+		</l:main-panel>
+	</l:layout>
+</j:jelly>

@@ -1,0 +1,24 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:choose>
+	<j:when test="${it.emptySet}">
+		No changes from last build.
+	</j:when>
+	<j:otherwise>
+		<b>Summary Of Changes</b> - <b><a href="changes">View Detail</a></b>
+		<br/>
+		<j:forEach var="c" items="${it.history}" varStatus="loop">
+		
+			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
+				<img src="${rootURL}/plugin/p4-client/icons/changelist.gif" border="0" style="vertical-align: middle"/>
+				<a href="changes#detail${loop.index}">${c.id}</a>
+				by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
+				on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
+				<hr/>
+				${c.msgAnnotated}
+				<br/>
+			</div>
+	
+		</j:forEach>
+	</j:otherwise>
+</j:choose>
+</j:jelly>

@@ -1,0 +1,79 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:set var="browser" value="${it.build.parent.scm.effectiveBrowser}"/>
+<j:choose>
+	<j:when test="${it.emptySet}">
+		No changes from last build.
+	</j:when>
+	<j:otherwise>
+
+		<j:forEach var="entry" items="${it.history}" varStatus="loop">
+
+			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
+				<a name="detail${loop.index}"></a>
+				<img src="${rootURL}/plugin/p4-client/icons/changelist.gif" border="0" style="vertical-align: middle"/>
+
+				<j:choose>
+					<j:when test="${entry.label}">
+						<b><a href="${browser.getLabelSetLink(entry)}">${entry.id}</a></b>
+					</j:when>
+					<j:otherwise>
+						<b><a href="${browser.getChangeSetLink(entry)}">${entry.id}</a></b>
+					</j:otherwise>
+				</j:choose>
+				
+				by <a href="${rootURL}/${entry.author.url}/">${entry.author}@${entry.clientId}</a>
+				on <i:formatDate value="${entry.date}" type="both" dateStyle="medium" timeStyle="medium"/>
+				<hr/>
+				${entry.msgAnnotated}
+				<br/>
+			</div>
+			
+			<j:if test="${entry.files.size() > 0}">
+				<j:choose>
+					<j:when test="${entry.shelved}">
+						Shelved Files:
+					</j:when>	
+					<j:otherwise>
+						Submitted Files:
+					</j:otherwise>
+				</j:choose>
+				
+				<ul style="list-style-type: none;">
+					<j:forEach var="file" items="${entry.files}" varStatus="fileloop">
+						<li><img src="${rootURL}/plugin/p4-client/icons/action-${entry.getAction(file)}.gif" border="0" style="vertical-align"/>
+						<st:nbsp/> 
+						<a href="${browser.getFileLink(file)}">${file.depotPathString}</a>
+            			<j:set var="diff" value="${browser.getDiffLink(file)}"/>
+            			<j:choose>
+            				<j:when test="${diff!=null}">
+              					<st:nbsp/>
+              					<a href="${diff}">#${file.endRevision}</a>
+              				</j:when>
+              				<j:otherwise>
+              				#${file.endRevision}
+              				</j:otherwise>
+              			</j:choose>
+						</li>
+					</j:forEach>
+				</ul>
+			</j:if>
+
+			<j:if test="${entry.jobs.size() > 0}">
+				Affected Jobs:
+				<ul style="list-style-type: none;">
+					<j:forEach var="job" items="${entry.jobs}" varStatus="jobloop">
+						<p><img src="${rootURL}/plugin/p4-client/icons/job.gif" border="0" style="vertical-align"/>
+						<st:nbsp/>
+						<a href="${browser.getJobLink(job)}">${job.id}</a>
+						- ${entry.getJobStatus(job)}
+						<br/>
+						${entry.getJobSummary(job)}
+						</p>
+					</j:forEach>
+				</ul>
+			</j:if>
+
+		</j:forEach>
+	</j:otherwise>
+</j:choose>
+</j:jelly>

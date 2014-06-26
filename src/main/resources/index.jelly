@@ -1,0 +1,12 @@
+<!--
+  This view is used to render the installed plugins page.
+-->
+<div>
+	Perforce Client plugin for the Jenkins SCM provider.  The plugin includes extension points for:
+	
+	<ul>
+		<li>Perforce Password and Ticket Credentials store</li>
+		<li>Workspace management for static, manual, template and stream</li>
+		<li>Action point for Review Builds</li>
+	</ul>
+</div>

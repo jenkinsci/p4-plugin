@@ -1,0 +1,25 @@
+<div>
+	<b>Populate Options</b>
+	<p>Perforce will populate the workspace with the file revisions
+		needed for the build. The different options effect the way the
+		workspace is cleaned and the file revisions are updated.</p>
+	<p>There are three options:</p>
+	<ul>
+		<dt>Automatic Cleanup and Sync</dt>
+		<dd>
+			Efficient cleaning and syncing of file revisions. Extra (non
+			versioned files) are removed, missing and modified files re-added. </br>Best
+			for clean builds.
+		</dd>
+
+		<dt>Force Clean and Sync</dt>
+		<dd>Will remove all files from under the workspace root, then
+			force sync the required files. Inefficient and NOT RECOMENDED.</dd>
+
+		<dt>Sync Only</dt>
+		<dd>
+			No cleanup attempted; the sync will update all files (as CLOBBER is
+			set) to the required set of revisions. </br>Best for incremental builds.
+		</dd>
+	</ul>
+</div>

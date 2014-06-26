@@ -1,0 +1,26 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <l:layout title="${%Build With Parameters}" norefresh="true" permission="${it.requiredPermission}">
+        <l:side-panel>
+            <l:tasks>
+                <l:task icon="images/24x24/up.gif" href="../" title="${%Back to Project}"/>
+            </l:tasks>
+        </l:side-panel>
+        <l:main-panel>
+            <h2>Manual Configuration for Build</h2>
+            <f:form method="post" action="buildSubmit" name="config">
+                <j:forEach var="parameter" items="${it.availableParameters}">
+                    <f:entry title="${parameter.name}" description="${parameter.description}">
+                        <div>
+                              <f:textbox name="${parameter.name}" value="${parameter.value}"/>
+                        </div>
+                    </f:entry>
+                </j:forEach>
+                <f:block>
+                    <f:submit value="${%Build}"/>
+                </f:block>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
+
+</j:jelly>

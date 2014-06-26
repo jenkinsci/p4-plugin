@@ -1,0 +1,26 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+ 
+	<f:entry title="${%Options}">
+	<table width="100%"> 
+	<td><f:checkbox title="${%ALLWRITE}" 	field="allwrite" 	id="id.allwrite"	/></td>
+	<td><f:checkbox title="${%CLOBBER}" 	field="clobber" 	id="id.clobber" 	/></td>
+	<td><f:checkbox title="${%COMPRESS}" 	field="compress" 	id="id.compress" 	/></td>
+	<td><f:checkbox title="${%LOCKED}" 		field="locked" 		id="id.locked" 		/></td>
+	<td><f:checkbox title="${%MODTIME}" 	field="modtime" 	id="id.modtime" 	/></td>
+	<td><f:checkbox title="${%RMDIR}" 		field="rmdir" 		id="id.rmdir" 		/></td>
+	</table>
+	</f:entry>
+	
+	<f:entry title="${%Stream }" field="streamName">
+		<f:textbox id="id.stream" />
+	</f:entry>
+	
+	<f:entry title="${%Line Endings }" field="line">
+		<f:select id="id.line" />
+	</f:entry>
+	
+	<f:entry title="${%View Mappings }" field="view">
+		<f:textarea id="id.view" />
+	</f:entry>
+	  
+</j:jelly>

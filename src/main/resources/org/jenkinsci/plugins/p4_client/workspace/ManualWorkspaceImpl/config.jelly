@@ -1,0 +1,37 @@
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
+ 
+ 	<f:entry title="${%Character Set}" field="charset">
+		<f:select default="none"/>
+	</f:entry>
+	
+	<f:entry title="${%Workspace name }" field="name">
+		<f:textbox id="id.name" onfocus="updateWorkspaceSpec()" onkeyup="updateWorkspaceSpec()" />
+	</f:entry>
+	
+	<f:entry>
+		<f:property field="spec" />
+	</f:entry>
+	
+	<script>
+		function updateWorkspaceSpec() {
+			var inst = <st:bind value="${instance}"/>;
+			var name = document.getElementById("id.name").value;
+					
+			inst.getSpecJSON(name, function(t) {
+				var json = t.responseObject();
+				
+				document.getElementById("id.allwrite").checked = json.options.allwrite;
+				document.getElementById("id.clobber").checked = json.options.clobber;
+				document.getElementById("id.compress").checked = json.options.compress;
+				document.getElementById("id.locked").checked = json.options.locked;
+				document.getElementById("id.modtime").checked = json.options.modtime;
+				document.getElementById("id.rmdir").checked = json.options.rmdir;
+				document.getElementById("id.stream").value = json.stream;
+				document.getElementById("id.line").value = json.line;
+				document.getElementById("id.view").value = json.view;
+			});
+		}
+	</script>
+	
+</j:jelly>
