@@ -64,27 +64,27 @@ Perforce workspaces are configured on the Jenkin Job configuration page and supp
 
 * Static
 
-... The workspace specified must have been previously defined.  The Perforce Jenkins user must either own the workspace or the spec should be unlocked allowing it to make edits.  The workspace View remains static, but Jenkins will update other fields such as the workspace root and clobber option. 
+The workspace specified must have been previously defined.  The Perforce Jenkins user must either own the workspace or the spec should be unlocked allowing it to make edits.  The workspace View remains static, but Jenkins will update other fields such as the workspace root and clobber option. 
 
-... ![Static config](docs/images/4.png)
+![Static config](docs/images/4.png)
 
 * Spec File
 
-... The workspace configuration is loaded from a depot file containing a Client workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format).  The name of the workspace must match the name of the Client workspace Spec.
+The workspace configuration is loaded from a depot file containing a Client workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format).  The name of the workspace must match the name of the Client workspace Spec.
 
-... ![Spec config](docs/images/spec.png)
+![Spec config](docs/images/spec.png)
 
 * Manual
 
-... This allows the specified workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the workspace root and may override the clobber option.
+This allows the specified workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the workspace root and may override the clobber option.
 
-... ![Manual config](docs/images/5.png)
+![Manual config](docs/images/5.png)
 
 * Template & Stream
 
-... In this mode the workspace View is generated using the specified template workspace or stream.  The name of the workspace is generated using the Workspace Name Format field and makes it an ideal choice for matrix builds.
+In this mode the workspace View is generated using the specified template workspace or stream.  The name of the workspace is generated using the Workspace Name Format field and makes it an ideal choice for matrix builds.
 
-... ![Stream config](docs/images/6.png)
+![Stream config](docs/images/6.png)
 
 ## Populating
 
@@ -92,23 +92,23 @@ Perforce will populate the workspace with the file revisions needed for the buil
 
 * Automatic cleanup and sync
 
-... Perforce will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change.  Depending on the two check options boxes Perforce will then clean up any extra files or restore any modified or missing files.  Finally, Perforce will sync the required file revisions to the workspace populating the 'have' table.
+Perforce will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change.  Depending on the two check options boxes Perforce will then clean up any extra files or restore any modified or missing files.  Finally, Perforce will sync the required file revisions to the workspace populating the 'have' table.
 
-... ![Automatic populate](docs/images/auto_pop.png)
+![Automatic populate](docs/images/auto_pop.png)
 
 * Forced clean and sync
 
-... Perfore will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.  
+Perfore will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.  
 
-... ![Force populate](docs/images/force_pop.png)
+![Force populate](docs/images/force_pop.png)
 
-... This method is not recommended as the cost of IO resources on server and client are high.  Apart from exceptional circumstances the Automatic cleanup and sync option will produce the same result.
+This method is not recommended as the cost of IO resources on server and client are high.  Apart from exceptional circumstances the Automatic cleanup and sync option will produce the same result.
 
 * Sync only
 
-... Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
+Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
-... ![Sync populate](docs/images/sync_pop.png)
+![Sync populate](docs/images/sync_pop.png)
 
 ## Building
 
@@ -116,11 +116,11 @@ Building a Jenkins Job can be triggered using the SCM polling option, Build Now 
 
 To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using the Cron format.  For example every 10 minutes Monday to Friday, the 'H' is a time offset (calculated using a Hash of the Job name).
 
-... ![Build trigger](docs/images/trigger.png)
+![Build trigger](docs/images/trigger.png)
 
 To build immediately select the Build now button...
 
-... ![Build now](docs/images/now.png)
+![Build now](docs/images/now.png)
 
 Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobID/build
 
@@ -132,29 +132,29 @@ When polling is used, changes can be filtered to not trigger a build; the filter
 
 * Exclude changes from user
 
-... Changes owned by the Perforce user specified in the filter will be excluded.
+Changes owned by the Perforce user specified in the filter will be excluded.
 
-... ![User Filter](docs/images/userF.png)
+![User Filter](docs/images/userF.png)
 
 * Exclude changes from Depot path
 
-... Changes where all the file revision's path starting with the String specified in the filter will be excluded.
+Changes where all the file revision's path starting with the String specified in the filter will be excluded.
 
-... ![Path Filter](docs/images/pathF.png)
+![Path Filter](docs/images/pathF.png)
 
-... For example, with a Filter of "//depot/main/tests":
+For example, with a Filter of "//depot/main/tests":
 
-... Case A (change will be filtered):
-  Files:
-    //depot/main/tests/index.xml
-    //depot/main/tests/001/test.xml
-    //depot/main/tests/002/test.xml
+Case A (change will be filtered):
+    Files:
+        //depot/main/tests/index.xml
+        //depot/main/tests/001/test.xml
+        //depot/main/tests/002/test.xml
     
-... Case B (change will not be filtered, as build.xml is outside of the filter):
-  Files:
-    //depot/main/src/build.xml
-    //depot/main/tests/004/test.xml
-    //depot/main/tests/005/test.xml
+Case B (change will not be filtered, as build.xml is outside of the filter):
+    Files:
+        //depot/main/src/build.xml
+        //depot/main/tests/004/test.xml
+        //depot/main/tests/005/test.xml
     
 ## Review
 
