@@ -7,7 +7,6 @@
 		<groupId>org.jenkins-ci.plugins</groupId>
 		<artifactId>plugin</artifactId>
 		<version>1.532.3</version>
-		<!-- was 1.509.3 orig: 1.509.4 new: 1.532.2 -->
 	</parent>
 
 	<artifactId>p4-client</artifactId>
