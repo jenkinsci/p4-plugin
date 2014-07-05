@@ -138,11 +138,12 @@ public class P4Server {
 
 	public int getVersion() throws Exception {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		CommandLine commandline = CommandLine.parse("p4d -V");
+		CommandLine cmdLine = new CommandLine(p4d);
+		cmdLine.addArgument("-V");
 		DefaultExecutor executor = new DefaultExecutor();
 		PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream);
 		executor.setStreamHandler(streamHandler);
-		executor.execute(commandline);
+		executor.execute(cmdLine);
 
 		int version = 0;
 		for (String line : outputStream.toString().split("\\n")) {
