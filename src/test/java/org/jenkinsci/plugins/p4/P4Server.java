@@ -33,7 +33,18 @@ public class P4Server {
 	private final String p4port;
 	private final File p4root;
 
-	public P4Server(String p4d, String root, String p4port) {
+	public P4Server(String p4bin, String root, String p4port) {
+		String p4d = p4bin;
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win")) {
+			p4d += "bin.ntx64/p4d.exe";
+		}
+		if (os.contains("mac")) {
+			p4d += "bin.darwin90x86_64/p4d";
+		}
+		if (os.contains("nix") || os.contains("nux")) {
+			p4d += "bin.linux26x86_64/p4d";
+		}
 		this.p4d = p4d;
 		this.p4root = new File(root);
 		this.p4port = p4port;
@@ -41,7 +52,7 @@ public class P4Server {
 
 	public void start() throws Exception {
 		CommandLine cmdLine = new CommandLine(p4d);
-	//	cmdLine.addArgument("-vserver=5");
+		// cmdLine.addArgument("-vserver=5");
 		cmdLine.addArgument("-C1");
 		cmdLine.addArgument("-r");
 		cmdLine.addArgument(formatPath(p4root.getAbsolutePath()));

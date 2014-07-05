@@ -33,7 +33,6 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -61,13 +60,15 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class ConnectionTest {
 
 	private final String credential = "id";
+	private static String PWD = System.getProperty("user.dir") + "/";
+	private static String P4BIN = "src/test/resources/r14.1/";
 	private final static String P4ROOT = "tmp-p4root";
 	private final static String P4PORT = "localhost:1999";
 	private final static int HTTP_PORT = 1888;
 	private final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
 	private final int LOG_LIMIT = 1000;
 
-	private final static P4Server p4d = new P4Server("p4d", P4ROOT, P4PORT);
+	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT, P4PORT);
 
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
