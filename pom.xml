@@ -62,7 +62,9 @@
 		<dependency>
 			<groupId>com.perforce</groupId>
 			<artifactId>p4java</artifactId>
-			<version>2013.2.788582</version>
+			<version>2013.2</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/lib/p4java-2013.2.788582.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
