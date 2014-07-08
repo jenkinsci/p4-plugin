@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -10,10 +9,10 @@
 	</parent>
 
 	<artifactId>p4</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0.2-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
-	<name>Perforce plugin</name>
+	<name>P4 Plugin</name>
 	<description>Perforce Client plugin for the Jenkins SCM provider.</description>
 	<url>http://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin</url>
 
