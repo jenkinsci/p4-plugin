@@ -38,7 +38,7 @@ public class ReviewAction implements Action {
 	}
 
 	public String getIconFileName() {
-		return "/plugin/p4-client/icons/p4.png";
+		return "/plugin/p4/icons/p4.png";
 	}
 
 	public String getDisplayName() {
