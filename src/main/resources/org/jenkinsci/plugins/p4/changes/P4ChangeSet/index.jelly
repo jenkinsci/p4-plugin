@@ -10,7 +10,7 @@
 
 			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
 				<a name="detail${loop.index}"></a>
-				<img src="${rootURL}/plugin/p4-client/icons/changelist.gif" border="0" style="vertical-align: middle"/>
+				<img src="${rootURL}/plugin/p4/icons/changelist.gif" border="0" style="vertical-align: middle"/>
 
 				<j:choose>
 					<j:when test="${entry.label}">
@@ -40,7 +40,7 @@
 				
 				<ul style="list-style-type: none;">
 					<j:forEach var="file" items="${entry.files}" varStatus="fileloop">
-						<li><img src="${rootURL}/plugin/p4-client/icons/action-${entry.getAction(file)}.gif" border="0" style="vertical-align"/>
+						<li><img src="${rootURL}/plugin/p4/icons/action-${entry.getAction(file)}.gif" border="0" style="vertical-align"/>
 						<st:nbsp/> 
 						<a href="${browser.getFileLink(file)}">${file.depotPathString}</a>
             			<j:set var="diff" value="${browser.getDiffLink(file)}"/>
@@ -62,7 +62,7 @@
 				Affected Jobs:
 				<ul style="list-style-type: none;">
 					<j:forEach var="job" items="${entry.jobs}" varStatus="jobloop">
-						<p><img src="${rootURL}/plugin/p4-client/icons/job.gif" border="0" style="vertical-align"/>
+						<p><img src="${rootURL}/plugin/p4/icons/job.gif" border="0" style="vertical-align"/>
 						<st:nbsp/>
 						<a href="${browser.getJobLink(job)}">${job.id}</a>
 						- ${entry.getJobStatus(job)}
