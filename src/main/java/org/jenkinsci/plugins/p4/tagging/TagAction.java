@@ -34,7 +34,7 @@ public class TagAction extends AbstractScmTagAction {
 	public String getIconFileName() {
 		if (!getACL().hasPermission(PerforceScm.TAG))
 			return null;
-		return "/plugin/p4-client/icons/label.gif";
+		return "/plugin/p4/icons/label.gif";
 	}
 
 	public String getDisplayName() {

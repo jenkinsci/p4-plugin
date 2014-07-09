@@ -9,7 +9,7 @@
 		<j:forEach var="c" items="${it.history}" varStatus="loop">
 		
 			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
-				<img src="${rootURL}/plugin/p4-client/icons/changelist.gif" border="0" style="vertical-align: middle"/>
+				<img src="${rootURL}/plugin/p4/icons/changelist.gif" border="0" style="vertical-align: middle"/>
 				<a href="changes#detail${loop.index}">${c.id}</a>
 				by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
 				on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>

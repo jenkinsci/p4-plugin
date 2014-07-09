@@ -7,16 +7,19 @@
 * Minimum Perforce Protection of 'open' for the Jenkins user. 
 If you wish to use the Review Build feature you will need Swarm.  Swarm 2014.2 or greater is required to support Jenkins authentication.
 
+## Install
+
+1. Open Jenkins in a browser; e.g. http://jenkins_host:8080
+2. Browse to 'Manage Jenkins' --> 'Manage Plugins' and Select the 'Available' tab.
+3. Find the 'P4 Plugin' or use the Filter if needed
+4. Check the box and press the 'Install without restart' button
+
+If you are unable to find the plugin, you may need to refresh the Update site.
+1. Select the 'Advanced' tab (under 'Manage Plugins')
+2. Press the 'Check now' button at the bottom of the page.
+3. When 'Done' go back to the update centre and try again.
+
 ## Building
-
-The Perforce plugin requires p4-java; however at the time of writing this is not in Maven Central.  The jar is shipped in the root directory, so to add it into your local maven repo run the following command:
-
-	mvn install:install-file \
-		-Dfile=p4java-2013.2.788582.jar \ 
-		-DgroupId=com.perforce \ 
-		-DartifactId=p4java \ 
-		-Dversion=2013.2.788582 \ 
-		-Dpackaging=jar
 
 To build the plugin and run the tests use the following:
 
@@ -24,12 +27,12 @@ To build the plugin and run the tests use the following:
   
 Note: for the tests to run you must have p4d in your PATH, to skip tests use the -DskipTests flag.
 
-## Installing
+## Manual install
 
 1. Open Jenkins in a browser; e.g. http://jenkins_host:8080
 2. Browse to 'Manage Jenkins' --> 'Manage Plugins’ and Select the 'Advanced' tab.
 3. Press the 'Choose File' button under the 'Upload Plugin' section
-4. Find the location of the 'p4-client.hpi' file and Select Upload
+4. Find the location of the 'p4.hpi' file and Select Upload
 5. Choose the 'Download now and install after restart' button (this might be different on the newer version)
 
 ## Credentials
