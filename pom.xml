@@ -43,6 +43,10 @@
 			<id>repo.jenkins-ci.org</id>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</repository>
+		<repository>
+			<id>snap.repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/snapshots/</url>
+		</repository>
 	</repositories>
 
 	<pluginRepositories>
@@ -61,9 +65,7 @@
 		<dependency>
 			<groupId>com.perforce</groupId>
 			<artifactId>p4java</artifactId>
-			<version>2013.2</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/p4java-2013.2.788582.jar</systemPath>
+			<version>[2013.2,)</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
