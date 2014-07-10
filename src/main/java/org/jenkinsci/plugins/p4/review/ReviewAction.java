@@ -13,6 +13,7 @@ import hudson.model.StringParameterValue;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -82,11 +83,17 @@ public class ReviewAction implements Action {
 		project.checkPermission(AbstractProject.BUILD);
 
 		List<ParameterValue> values = new ArrayList<ParameterValue>();
-		List<ParameterDefinition> defs = getParameterDefinitions();
+		List<ParameterDefinition> defs = new ArrayList<ParameterDefinition>();
 
+		Enumeration<?> names = req.getParameterNames();
+		while(names.hasMoreElements()) {
+			String name = (String) names.nextElement();
+			defs.add(new StringParameterDefinition(name, null));
+		}
+		
 		for (ParameterDefinition d : defs) {
-			ParameterValue value = d.createValue(req);
-			if (value != null) {
+			StringParameterValue value = (StringParameterValue) d.createValue(req);
+			if (value.value != null && !value.value.isEmpty()) {
 				values.add(value);
 			}
 		}
