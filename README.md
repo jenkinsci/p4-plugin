@@ -3,7 +3,7 @@
 ## Requirements
 
 * Jenkins 1.509 or greater.
-* P4D 12.1 or greater. (download)
+* P4D 12.1 or greater.
 * Minimum Perforce Protection of 'open' for the Jenkins user. 
 If you wish to use the Review Build feature you will need Swarm.  Swarm 2014.2 or greater is required to support Jenkins authentication.
 
@@ -15,6 +15,7 @@ If you wish to use the Review Build feature you will need Swarm.  Swarm 2014.2 o
 4. Check the box and press the 'Install without restart' button
 
 If you are unable to find the plugin, you may need to refresh the Update site.
+
 1. Select the 'Advanced' tab (under 'Manage Plugins')
 2. Press the 'Check now' button at the bottom of the page.
 3. When 'Done' go back to the update centre and try again.
