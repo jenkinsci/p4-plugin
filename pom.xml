@@ -43,10 +43,6 @@
 			<id>repo.jenkins-ci.org</id>
 			<url>http://repo.jenkins-ci.org/public/</url>
 		</repository>
-		<repository>
-			<id>snap.repo.jenkins-ci.org</id>
-			<url>http://repo.jenkins-ci.org/snapshots/</url>
-		</repository>
 	</repositories>
 
 	<pluginRepositories>
