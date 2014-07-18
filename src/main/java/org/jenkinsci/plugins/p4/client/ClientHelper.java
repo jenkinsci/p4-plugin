@@ -89,7 +89,8 @@ public class ClientHelper extends ConnectionHelper {
 	public boolean updateFiles() throws Exception {
 		// build file revision spec
 		List<IFileSpec> syncFiles;
-		syncFiles = FileSpecBuilder.makeFileSpecList("//...");
+		String path = iclient.getRoot() + "/...";
+		syncFiles = FileSpecBuilder.makeFileSpecList(path);
 
 		// Sync revision to re-edit
 		SyncOptions syncOpts = new SyncOptions();
@@ -118,7 +119,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// build file revision spec
 		List<IFileSpec> files;
-		String revisions = "//...@" + change;
+		String path = iclient.getRoot() + "/...";
+		String revisions = path + "@" + change;
 		log("... sync " + revisions);
 
 		// Sync files
@@ -137,7 +139,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// build file revision spec
 		List<IFileSpec> files;
-		String revisions = "//...@" + label;
+		String path = iclient.getRoot() + "/...";
+		String revisions = path + "@" + label;
 		log("... sync " + revisions);
 
 		// Sync files
@@ -175,7 +178,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// relies on workspace view for scope.
 		List<IFileSpec> files;
-		files = FileSpecBuilder.makeFileSpecList("//...");
+		String path = iclient.getRoot() + "/...";
+		files = FileSpecBuilder.makeFileSpecList(path);
 
 		if (populate instanceof AutoCleanImpl) {
 			// remove all pending files within workspace
@@ -209,7 +213,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// revert all pending and shelved revisions
 		RevertFilesOptions rOpts = new RevertFilesOptions();
-		log("... [list] = revert //...");
+		log("... [list] = revert");
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
 		success &= validateFileSpecs(list, "not opened on this client");
 
@@ -237,7 +241,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts = new ReconcileFilesOptions();
 		statusOpts.setNoUpdate(true);
 		statusOpts.setUseWildcards(true);
-		log("... [list] = reconcile -n //...");
+		log("... [list] = reconcile -n");
 		List<IFileSpec> update = iclient.reconcileFiles(files, statusOpts);
 		success &= validateFileSpecs(update, "also opened by",
 				"no file(s) to reconcile", "must sync/resolve",
@@ -286,7 +290,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setNoUpdate(true);
 		statusOpts.setUseWildcards(true);
-		log("... [list] = reconcile -n -a //...");
+		log("... [list] = reconcile -n -a");
 		List<IFileSpec> extra = iclient.reconcileFiles(files, statusOpts);
 		success &= validateFileSpecs(extra, "- no file(s) to reconcile",
 				"instead of", "empty, assuming text");
@@ -365,17 +369,18 @@ public class ClientHelper extends ConnectionHelper {
 
 		// build file revision spec
 		List<IFileSpec> files;
-		files = FileSpecBuilder.makeFileSpecList("//...");
+		String path = iclient.getRoot() + "/...";
+		files = FileSpecBuilder.makeFileSpecList(path);
 
 		// Sync workspace to head
 		SyncOptions syncOpts = new SyncOptions();
-		log("... sync //...");
+		log("... sync " + path);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		success &= validateFileSpecs(syncMsg, "file(s) up-to-date.");
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
-		log("... unshelve -f -s " + review + " //...");
+		log("... unshelve -f -s " + review + " " + path);
 		shelveMsg = iclient.unshelveChangelist(review, files, 0, true, false);
 		success &= validateFileSpecs(shelveMsg, "also opened by",
 				"no such file(s)", "exclusive file already opened");
@@ -395,7 +400,7 @@ public class ClientHelper extends ConnectionHelper {
 		// Remove opened files from have list.
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		rOpts.setNoUpdate(true);
-		log("... revert -k //...");
+		log("... revert -k " + path);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
 		success &= validateFileSpecs(rvtMsg,
 				"file(s) not opened on this client");
@@ -445,8 +450,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Object> listChanges() throws Exception {
-		String fileSpec = "//...";
-		return listChanges(fileSpec);
+		String path = iclient.getRoot() + "/...";
+		return listChanges(path);
 	}
 
 	/**
@@ -458,7 +463,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Object> listChanges(int changeLimit) throws Exception {
-		String fileSpec = "//...@" + changeLimit;
+		String path = iclient.getRoot() + "/...";
+		String fileSpec = path + "@" + changeLimit;
 		return listChanges(fileSpec);
 	}
 
