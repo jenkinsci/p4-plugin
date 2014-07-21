@@ -54,14 +54,16 @@ public class ManualWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
+		// expands Workspace name if formatters are used.
+		String clientName = getFullName();
 
-		IClient iclient = connection.getClient(getName());
+		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("... Creating manual client: " + getName());
+			logger.info("... Creating manual client: " + clientName);
 			Client implClient = new Client();
-			implClient.setName(getName());
+			implClient.setName(clientName);
 			connection.createClient(implClient);
-			iclient = connection.getClient(getName());
+			iclient = connection.getClient(clientName);
 		}
 
 		iclient.setOwnerName(user);
@@ -81,6 +83,7 @@ public class ManualWorkspaceImpl extends Workspace {
 		ClientView clientView = new ClientView();
 		int order = 0;
 		for (String line : getSpec().getView().split("\\n")) {
+			line = expand(line);
 			ClientViewMapping entry = new ClientViewMapping(order, line);
 			order++;
 			clientView.addEntry(entry);

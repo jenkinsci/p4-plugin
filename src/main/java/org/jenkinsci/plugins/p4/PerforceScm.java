@@ -157,7 +157,7 @@ public class PerforceScm extends SCM {
 			scmWorkspace.setHostName(null); // TODO get real hostname!
 			scmWorkspace.setRootPath(buildWorkspace.getRemote());
 
-			String client = scmWorkspace.getName();
+			String client = scmWorkspace.getFullName();
 			ClientHelper p4 = new ClientHelper(scmCredential, listener, client);
 
 			// setup the client workspace to use for the build.
@@ -278,6 +278,7 @@ public class PerforceScm extends SCM {
 
 		// Create task
 		Map<String, String> map = build.getBuildVariables();
+		scmWorkspace.load(map);
 
 		// Set label in map, if pinning is used.
 		String pin = scpPopulate.getPin();
@@ -291,7 +292,7 @@ public class PerforceScm extends SCM {
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(build);
-		tag.setClient(scmWorkspace.getName());
+		tag.setClient(scmWorkspace.getFullName());
 		tag.setCredential(scmCredential);
 		tag.setChange(task.getChange());
 		build.addAction(tag);

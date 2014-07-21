@@ -53,14 +53,16 @@ public class SpecWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
+		// expands Workspace name if formatters are used.
+		String clientName = getFullName();
 
-		IClient iclient = connection.getClient(getName());
+		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("Creating stream client: " + getName());
+			logger.info("Creating stream client: " + clientName);
 			Client implClient = new Client();
-			implClient.setName(getName());
+			implClient.setName(clientName);
 			connection.createClient(implClient);
-			iclient = connection.getClient(getName());
+			iclient = connection.getClient(clientName);
 		}
 
 		// Set owner (not set during create)
@@ -73,7 +75,7 @@ public class SpecWorkspaceImpl extends Workspace {
 		String spec = IOUtils.toString(ins, "UTF-8");
 		connection.execInputStringMapCmd("client", new String[] { "-i" }, spec);
 		iclient.refresh();
-		
+
 		return iclient;
 	}
 

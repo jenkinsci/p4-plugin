@@ -36,6 +36,11 @@ public class StreamWorkspaceImpl extends Workspace {
 	}
 
 	@Override
+	public String getName() {
+		return format;
+	}
+
+	@Override
 	public WorkspaceType getType() {
 		return WorkspaceType.STREAM;
 	}
@@ -50,13 +55,16 @@ public class StreamWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
-		IClient iclient = connection.getClient(getName());
+		// expands Workspace name if formatters are used.
+		String clientName = getFullName();
+				
+		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("Creating stream client: " + getName());
+			logger.info("Creating stream client: " + clientName);
 			Client implClient = new Client();
-			implClient.setName(getName());
+			implClient.setName(clientName);
 			connection.createClient(implClient);
-			iclient = connection.getClient(getName());
+			iclient = connection.getClient(clientName);
 		}
 		// Set owner (not set during create)
 		iclient.setOwnerName(user);
@@ -127,16 +135,5 @@ public class StreamWorkspaceImpl extends Workspace {
 			}
 			return FormValidation.error("Workspace Name format error.");
 		}
-
-	}
-
-	/**
-	 * Builds Workspace name from prefix, node and project.
-	 * 
-	 * @return
-	 */
-	@Override
-	public String getName() {
-		return getFormattedName(format);
 	}
 }

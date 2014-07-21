@@ -143,7 +143,7 @@ public class ConnectionHelper {
 			connection.setCharsetName(charset);
 		}
 
-		String name = workspace.getName();
+		String name = workspace.getFullName();
 		connection.deleteClient(name, true);
 	}
 

@@ -106,7 +106,7 @@ public class P4ChangeParser extends ChangeLogParser {
 					AbstractProject<?, ?> project = build.getProject();
 					PerforceScm scm = (PerforceScm) project.getScm();
 					String credential = scm.getCredential();
-					String client = scm.getWorkspace().getName();
+					String client = scm.getWorkspace().getFullName();
 
 					// Log in to Perforce and find change-list
 					ClientHelper p4 = new ClientHelper(credential, null, client);

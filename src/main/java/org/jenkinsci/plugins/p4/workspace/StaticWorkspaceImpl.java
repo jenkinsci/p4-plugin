@@ -33,9 +33,12 @@ public class StaticWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
-		IClient iclient = connection.getClient(getName());
+		// expands Workspace name if formatters are used.
+		String clientName = getFullName();
+
+		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			throw new Exception("Undefined workspace: " + getName());
+			throw new Exception("Undefined workspace: " + clientName);
 		}
 		return iclient;
 	}
