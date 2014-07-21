@@ -50,7 +50,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 		this.credential = ConnectionHelper.findCredential(credentialID);
 		this.listener = listener;
-		this.client = config.getName();
+		this.client = config.getFullName();
 		this.status = getStatus(map);
 
 		try {

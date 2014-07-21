@@ -240,8 +240,10 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
 		statusOpts = new ReconcileFilesOptions();
 		statusOpts.setNoUpdate(true);
+		statusOpts.setOutsideEdit(true);
+		statusOpts.setRemoved(true);
 		statusOpts.setUseWildcards(true);
-		log("... [list] = reconcile -n");
+		log("... [list] = reconcile -n -ed");
 		List<IFileSpec> update = iclient.reconcileFiles(files, statusOpts);
 		success &= validateFileSpecs(update, "also opened by",
 				"no file(s) to reconcile", "must sync/resolve",
