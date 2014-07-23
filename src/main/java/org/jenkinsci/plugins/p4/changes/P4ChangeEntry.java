@@ -20,6 +20,8 @@ import com.perforce.p4java.impl.generic.core.Label;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
+	private int FILE_COUNT_LIMIT = 50;
+
 	private String id;
 	private User author;
 	private Date date;
@@ -28,6 +30,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	private Collection<String> affectedPaths;
 	private boolean shelved;
 	private boolean label;
+	private int fileCount;
 	private List<IFileSpec> files;
 	private List<IJob> jobs;
 
@@ -36,39 +39,43 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		setParent(parent);
 	}
 
-	public void setChange(ClientHelper p4, int id) {
+	public void setChange(ClientHelper p4, int changeId) {
 		try {
-			Changelist changelist = (Changelist) p4.getChange(id);
+			Changelist changelist = (Changelist) p4.getChange(changeId);
 
 			// set id
-			this.id = "" + changelist.getId();
+			id = "" + changelist.getId();
 
 			// set author
 			String user = changelist.getUsername();
-			this.author = User.get(user);
+			author = User.get(user);
 
 			// set date of change
-			this.date = changelist.getDate();
+			date = changelist.getDate();
 
 			// set client id
-			this.clientId = changelist.getClientId();
+			clientId = changelist.getClientId();
 
 			// set display message
-			this.msg = changelist.getDescription();
-
-			// set list of affected paths
-			List<String> affectedPaths = new ArrayList<String>();
-			for (IFileSpec item : changelist.getFiles(false)) {
-				affectedPaths.add(item.getDepotPathString());
-			}
+			msg = changelist.getDescription();
 
 			// set list of file revisions in change
 			if (changelist.getStatus() == ChangelistStatus.PENDING) {
-				this.files = p4.loadShelvedFiles(id);
-				this.shelved = true;
+				files = p4.loadShelvedFiles(changeId);
+				shelved = true;
 			} else {
-				this.files = changelist.getFiles(false);
-				this.shelved = false;
+				files = changelist.getFiles(false);
+				shelved = false;
+			}
+			fileCount = files.size();
+			if (files.size() > FILE_COUNT_LIMIT) {
+				files = files.subList(0, FILE_COUNT_LIMIT - 1);
+			}
+
+			// set list of affected paths
+			List<String> affectedPaths = new ArrayList<String>();
+			for (IFileSpec item : files) {
+				affectedPaths.add(item.getDepotPathString());
 			}
 
 			// set list of jobs in change
@@ -78,29 +85,33 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 	}
 
-	public void setLabel(ClientHelper p4, String id) {
+	public void setLabel(ClientHelper p4, String labelId) {
 		try {
 			label = true;
-			Label label = (Label) p4.getLabel(id);
+			Label label = (Label) p4.getLabel(labelId);
 
 			// set id
-			this.id = id;
+			id = labelId;
 
 			// set author
 			String user = label.getOwnerName();
-			this.author = User.get(user);
+			author = User.get(user);
 
 			// set date of change
-			this.date = label.getLastAccess();
+			date = label.getLastAccess();
 
 			// set client id
-			this.clientId = id;
+			clientId = labelId;
 
 			// set display message
-			this.msg = label.getDescription();
+			msg = label.getDescription();
 
 			// set list of file revisions in change
-			this.files = p4.getTaggedFiles(id);
+			files = p4.getTaggedFiles(labelId);
+			fileCount = files.size();
+			if (files.size() > FILE_COUNT_LIMIT) {
+				files = files.subList(0, FILE_COUNT_LIMIT - 1);
+			}
 
 			// set list of affected paths
 			List<String> affectedPaths = new ArrayList<String>();
@@ -137,6 +148,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	@Override
 	public Collection<String> getAffectedPaths() {
 		return affectedPaths;
+	}
+
+	public int getFileCount() {
+		return fileCount;
 	}
 
 	public List<IFileSpec> getFiles() {
