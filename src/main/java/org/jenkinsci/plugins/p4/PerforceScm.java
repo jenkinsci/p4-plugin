@@ -303,7 +303,9 @@ public class PerforceScm extends SCM {
 		// Only write change log if build succeed.
 		if (success) {
 			List<Object> changes = task.getChanges();
-			P4ChangeSet.store(changelogFile, changes);
+			if (changes != null) {
+				P4ChangeSet.store(changelogFile, changes);
+			}
 		}
 		return success;
 	}
