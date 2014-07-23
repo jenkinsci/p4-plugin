@@ -112,6 +112,13 @@ public abstract class Workspace implements ExtensionPoint,
 		}
 		formatTags.put(tag, value);
 	}
+	
+	public String get(String tag) {
+		if (formatTags == null) {
+			return null;
+		}
+		return formatTags.get(tag);
+	}
 
 	public void load(Map<String, String> map) {
 		for (String key : map.keySet()) {

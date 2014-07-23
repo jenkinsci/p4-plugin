@@ -60,7 +60,7 @@ public class StreamWorkspaceImpl extends Workspace {
 				
 		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("Creating stream client: " + clientName);
+			logger.info("P4: Creating stream client: " + clientName);
 			Client implClient = new Client();
 			implClient.setName(clientName);
 			connection.createClient(implClient);
@@ -75,7 +75,7 @@ public class StreamWorkspaceImpl extends Workspace {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static final String defaultFormat = "jenkins-${node}-${project}";
+		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
 
 		@Override
 		public String getDisplayName() {
