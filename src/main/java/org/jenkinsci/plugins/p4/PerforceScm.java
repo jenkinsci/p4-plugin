@@ -300,6 +300,7 @@ public class PerforceScm extends SCM {
 		nodename = (nodename != "") ? nodename : "master";
 		String hostname = build.getBuiltOn().toComputer().getHostName();
 
+		scmWorkspace.clear();
 		scmWorkspace.set("node", nodename);
 		scmWorkspace.set("hostname", hostname);
 		scmWorkspace.set("hash", String.valueOf(nodename.hashCode()));

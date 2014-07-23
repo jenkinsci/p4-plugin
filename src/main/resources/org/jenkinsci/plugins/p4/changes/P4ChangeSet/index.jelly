@@ -57,7 +57,7 @@
 					</j:forEach>
 					
 					<j:if test="${entry.fileCount > entry.files.size()}">
-						...list truncated (total count ${entry.fileCount}
+						...list truncated (total count ${entry.fileCount})
 					</j:if>
 				</ul>
 			</j:if>
