@@ -58,7 +58,7 @@ public class SpecWorkspaceImpl extends Workspace {
 
 		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("Creating stream client: " + clientName);
+			logger.info("P4: Creating client from spec: " + clientName);
 			Client implClient = new Client();
 			implClient.setName(clientName);
 			connection.createClient(implClient);

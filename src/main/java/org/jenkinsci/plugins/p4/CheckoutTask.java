@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -28,8 +27,8 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	private final P4StandardCredentials credential;
 	private final TaskListener listener;
 	private final String client;
-	private final CheckoutStatus status;
 
+	private CheckoutStatus status;
 	private int head;
 	private int change;
 	private int review;
@@ -46,24 +45,30 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 *            - Server login details
 	 */
 	public CheckoutTask(String credentialID, Workspace config,
-			TaskListener listener, Map<String, String> map) {
-
+			TaskListener listener) {
 		this.credential = ConnectionHelper.findCredential(credentialID);
 		this.listener = listener;
 		this.client = config.getFullName();
-		this.status = getStatus(map);
+	}
+
+	public boolean setBuildOpts(Workspace workspace) {
+
+		boolean success = true;
+		ClientHelper p4 = new ClientHelper(credential, listener, client);
 
 		try {
-			ClientHelper p4 = new ClientHelper(credential, listener, client);
-
 			// setup the client workspace to use for the build.
-			p4.setClient(config);
+			success &= p4.setClient(workspace);
+			if (!success) {
+				return false;
+			}
 
 			// fetch and calculate change to sync to or review to unshelve.
+			this.status = getStatus(workspace);
 			this.head = p4.getClientHead();
-			this.change = getChange(map);
-			this.review = getReview(map);
-			this.label = getLabel(map);
+			this.change = getChange(workspace);
+			this.review = getReview(workspace);
+			this.label = getLabel(workspace);
 
 			// add changes to list for this build.
 			if (label != null && !label.isEmpty()) {
@@ -75,18 +80,18 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			if (status == CheckoutStatus.SHELVED) {
 				changes.add(review);
 			}
-
-			p4.disconnect();
 		} catch (Exception e) {
 			String err = "Unable to setup workspace: " + e;
 			logger.severe(err);
 			listener.getLogger().println(err);
 			e.printStackTrace();
+		} finally {
+			p4.disconnect();
 		}
-
+		return success;
 	}
 
-	public void setPopulate(Populate populate) {
+	public void setPopulateOpts(Populate populate) {
 		this.populate = populate;
 	}
 
@@ -98,12 +103,10 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	public Boolean invoke(File workspace, VirtualChannel channel)
 			throws IOException {
 
-		logger.info("P4:CheckoutTask sync...");
 		boolean success = true;
+		ClientHelper p4 = new ClientHelper(credential, listener, client);
 
 		try {
-			ClientHelper p4 = new ClientHelper(credential, listener, client);
-
 			// Tidy the workspace before sync/build
 			success &= p4.tidyWorkspace(populate);
 
@@ -118,13 +121,14 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			if (status == CheckoutStatus.SHELVED) {
 				success &= p4.unshelveFiles(review);
 			}
-			p4.disconnect();
 		} catch (Exception e) {
-			String err = "Unable to run sync workspace: " + e;
+			String err = "Unable to update workspace: " + e;
 			logger.severe(err);
 			listener.getLogger().println(err);
 			e.printStackTrace();
-			return false;
+			success = false;
+		} finally {
+			p4.disconnect();
 		}
 		return success;
 	}
@@ -135,10 +139,10 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 * @param map
 	 * @return
 	 */
-	private CheckoutStatus getStatus(Map<String, String> map) {
+	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
-		if (map != null && map.containsKey("status")) {
-			String value = map.get("status");
+		String value = workspace.get("status");
+		if (value != null && !value.isEmpty()) {
 			status = CheckoutStatus.parse(value);
 		}
 		return status;
@@ -151,10 +155,10 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 * @param map
 	 * @return
 	 */
-	private int getChange(Map<String, String> map) {
+	private int getChange(Workspace workspace) {
 		int change = this.head;
-		if (map != null && map.containsKey("change")) {
-			String value = map.get("change");
+		String value = workspace.get("change");
+		if (value != null && !value.isEmpty()) {
 			try {
 				change = Integer.parseInt(value);
 			} catch (NumberFormatException e) {
@@ -170,10 +174,11 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 * @param map
 	 * @return
 	 */
-	private String getLabel(Map<String, String> map) {
+	private String getLabel(Workspace workspace) {
 		String label = null;
-		if (map != null && map.containsKey("label")) {
-			label = map.get("label");
+		String value = workspace.get("label");
+		if (value != null && !value.isEmpty()) {
+			label = value;
 		}
 		return label;
 	}
@@ -184,10 +189,10 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 * @param map
 	 * @return
 	 */
-	private int getReview(Map<String, String> map) {
+	private int getReview(Workspace workspace) {
 		int review = 0;
-		if (map != null && map.containsKey("review")) {
-			String value = map.get("review");
+		String value = workspace.get("review");
+		if (value != null && !value.isEmpty()) {
 			try {
 				review = Integer.parseInt(value);
 			} catch (NumberFormatException e) {

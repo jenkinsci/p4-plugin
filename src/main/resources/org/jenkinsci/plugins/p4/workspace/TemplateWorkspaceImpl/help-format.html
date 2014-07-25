@@ -2,20 +2,6 @@
 	<b>Workspace name formatter</b>
 	<p>Jenklin slave nodes must each use a unique Perforce workspace.
 		The format string configures the workspace name by substituting the
-		following tokens: (at least one token must be used)</p>
-	<ul>
-		<dt>${node}</dt>
-		<dd>The name given to the slave Jenkins node. (Caution this might
-			not be unique).</dd>
-
-		<dt>${hostname}</dt>
-		<dd>The hostname for the slave Jenkins node.</dd>
-
-		<dt>${project}</dt>
-		<dd>The name of the Jenkins build Job. (Caution this is not
-			unique for slaves).</dd>
-
-		<dt>${hash}</dt>
-		<dd>Unique hash code of the Jenkins node.</dd>
-	</ul>
+		specified variables: (at least one variable must be used)</p>
+	<p>Variables can be taken from the Jenkins <a href="${rootURL}/env-vars.html">Environment</a> or Parameterized builds</p>
 </div>

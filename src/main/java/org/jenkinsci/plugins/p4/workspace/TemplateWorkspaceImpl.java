@@ -55,13 +55,19 @@ public class TemplateWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
+		// Check template exists or exit early
+		String template = getTemplateName();
+		IClient itemplate = connection.getClient(template);
+		if (itemplate == null) {
+			return null;
+		}
+
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
-				
-		String template = getTemplateName();
+
 		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("Creating template client: " + clientName);
+			logger.info("P4: Creating template client: " + clientName);
 			Client implClient = new Client();
 			implClient.setName(clientName);
 			connection.createClient(implClient);
@@ -82,7 +88,7 @@ public class TemplateWorkspaceImpl extends Workspace {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static final String defaultFormat = "jenkins-${node}-${project}";
+		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
 
 		@Override
 		public String getDisplayName() {

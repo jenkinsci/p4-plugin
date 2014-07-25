@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -22,14 +23,14 @@
 		<url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
 		<tag>HEAD</tag>
 	</scm>
-	
+
 	<distributionManagement>
 		<repository>
 			<id>maven.jenkins-ci.org</id>
 			<url>http://maven.jenkins-ci.org/content/repositories/releases/</url>
 		</repository>
 	</distributionManagement>
- 
+
 	<developers>
 		<developer>
 			<id>p4paul</id>
@@ -42,6 +43,10 @@
 		<repository>
 			<id>repo.jenkins-ci.org</id>
 			<url>http://repo.jenkins-ci.org/public/</url>
+		</repository>
+		<repository>
+			<id>snap.repo.jenkins-ci.org</id>
+			<url>http://repo.jenkins-ci.org/snapshots/</url>
 		</repository>
 	</repositories>
 

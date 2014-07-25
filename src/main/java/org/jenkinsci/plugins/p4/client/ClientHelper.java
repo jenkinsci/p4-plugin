@@ -9,11 +9,13 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.client.IClient;
@@ -36,25 +38,46 @@ import com.perforce.p4java.server.CmdSpec;
 
 public class ClientHelper extends ConnectionHelper {
 
+	private static Logger logger = Logger.getLogger(ClientHelper.class
+			.getName());
+
 	private IClient iclient;
 
-	public ClientHelper(String credential, TaskListener listener, String client)
-			throws Exception {
+	public ClientHelper(String credential, TaskListener listener, String client) {
 		super(credential, listener);
-		login();
-		iclient = connection.getClient(client);
-		connection.setCurrentClient(iclient);
+		clientLogin(listener, client);
 	}
 
 	public ClientHelper(P4StandardCredentials credential,
-			TaskListener listener, String client) throws Exception {
+			TaskListener listener, String client) {
 		super(credential, listener);
-		login();
-		iclient = connection.getClient(client);
-		connection.setCurrentClient(iclient);
+		clientLogin(listener, client);
 	}
 
-	public void setClient(Workspace workspace) throws Exception {
+	private void clientLogin(TaskListener listener, String client) {
+		// Login to Perforce
+		try {
+			login();
+		} catch (Exception e) {
+			String err = "P4: Unable to login: " + e;
+			logger.severe(err);
+			listener.getLogger().println(err);
+			e.printStackTrace();
+		}
+
+		// Find workspace and set as current
+		try {
+			iclient = connection.getClient(client);
+			connection.setCurrentClient(iclient);
+		} catch (Exception e) {
+			String err = "P4: Unable to use Workspace: " + e;
+			logger.severe(err);
+			listener.getLogger().println(err);
+			e.printStackTrace();
+		}
+	}
+
+	public boolean setClient(Workspace workspace) throws Exception {
 
 		if (connectionConfig.isUnicode()) {
 			String charset = "utf8";
@@ -64,6 +87,12 @@ public class ClientHelper extends ConnectionHelper {
 		// Setup/Create workspace based on type
 		iclient = workspace.setClient(connection,
 				authorisationConfig.getUsername());
+
+		// Exit early if client is not defined
+		if (!isClientValid(workspace)) {
+
+			return false;
+		}
 
 		// Ensure root and host fields are set
 		iclient.setRoot(workspace.getRootPath());
@@ -79,6 +108,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Set active client for this connection
 		connection.setCurrentClient(iclient);
+		return true;
 	}
 
 	/**
@@ -155,8 +185,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setForceUpdate(populate.isForce());
-		syncOpts.setClientBypass(!populate.isHave());
+		syncOpts.setServerBypass(!populate.isHave());	
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());		
 		log("... force update " + populate.isForce());
 		log("... bypass have " + !populate.isHave());
 
@@ -535,4 +565,23 @@ public class ClientHelper extends ConnectionHelper {
 		return iclient.getClientView();
 	}
 
+	public boolean isClientValid(Workspace workspace) {
+		if (iclient == null) {
+			String msg;
+			if (workspace instanceof TemplateWorkspaceImpl) {
+				TemplateWorkspaceImpl template = ((TemplateWorkspaceImpl) workspace);
+				String name = template.getTemplateName();
+				msg = "P4: Template worksapce not found: " + name;
+			} else {
+				String name = workspace.getFullName();
+				msg = "P4: Unable to use workspace: " + name;
+			}
+			logger.severe(msg);
+			if (listener != null) {
+				listener.getLogger().println(msg);
+			}
+			return false;
+		}
+		return true;
+	}
 }

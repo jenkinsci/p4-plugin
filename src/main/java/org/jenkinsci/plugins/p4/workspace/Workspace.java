@@ -99,18 +99,14 @@ public abstract class Workspace implements ExtensionPoint,
 	}
 
 	public void set(String tag, String value) {
-		if (formatTags == null) {
-			formatTags = new HashMap<String, String>();
-			Jenkins jenkins = Jenkins.getInstance();
-
-			for (NodeProperty<?> node : jenkins.getGlobalNodeProperties()) {
-				if (node instanceof EnvironmentVariablesNodeProperty) {
-					EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty) node;
-					formatTags.putAll((env).getEnvVars());
-				}
-			}
-		}
 		formatTags.put(tag, value);
+	}
+
+	public String get(String tag) {
+		if (formatTags == null) {
+			return null;
+		}
+		return formatTags.get(tag);
 	}
 
 	public void load(Map<String, String> map) {
@@ -129,5 +125,17 @@ public abstract class Workspace implements ExtensionPoint,
 		String clientName = expand(getName());
 		clientName = clientName.replaceAll(" ", "_");
 		return clientName;
+	}
+
+	public void clear() {
+		formatTags = new HashMap<String, String>();
+		Jenkins jenkins = Jenkins.getInstance();
+
+		for (NodeProperty<?> node : jenkins.getGlobalNodeProperties()) {
+			if (node instanceof EnvironmentVariablesNodeProperty) {
+				EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty) node;
+				formatTags.putAll((env).getEnvVars());
+			}
+		}
 	}
 }

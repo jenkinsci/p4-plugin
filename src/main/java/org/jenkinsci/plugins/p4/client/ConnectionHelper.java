@@ -27,31 +27,48 @@ public class ConnectionHelper {
 
 	protected final ConnectionConfig connectionConfig;
 	protected final AuthorisationConfig authorisationConfig;
-	protected final IOptionsServer connection;
-	private final TaskListener listener;
+	protected IOptionsServer connection;
+	protected final TaskListener listener;
 
-	public ConnectionHelper(String credentialID, TaskListener listener)
-			throws Exception {
+	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
 		P4StandardCredentials credential = findCredential(credentialID);
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		this.connection = ConnectionFactory.getConnection(connectionConfig);
+		connect();
 	}
 
 	public ConnectionHelper(P4StandardCredentials credential,
-			TaskListener listener) throws Exception {
+			TaskListener listener) {
 		this.listener = listener;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		this.connection = ConnectionFactory.getConnection(connectionConfig);
+		connect();
 	}
 
-	public ConnectionHelper(P4StandardCredentials credential) throws Exception {
+	public ConnectionHelper(P4StandardCredentials credential) {
 		this.listener = null;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		this.connection = ConnectionFactory.getConnection(connectionConfig);
+		connect();
+	}
+
+	/**
+	 * Convenience wrapper to connect and report errors
+	 */
+	private void connect() {
+		try {
+			// Connect to the Perforce server
+			this.connection = ConnectionFactory.getConnection(connectionConfig);
+			logger.fine("P4: opened connection OK");
+		} catch (Exception e) {
+			String err = "P4: Unable to connect: " + e;
+			logger.severe(err);
+			if (listener != null) {
+				listener.getLogger().println(err);
+			}
+			e.printStackTrace();
+		}
 	}
 
 	public boolean isConnected() {
@@ -133,7 +150,7 @@ public class ConnectionHelper {
 			return true;
 		}
 
-		logger.info("P4:login failed '" + status + "'");
+		logger.info("P4: login failed '" + status + "'");
 		return false;
 	}
 
@@ -152,8 +169,18 @@ public class ConnectionHelper {
 	 * 
 	 * @throws Exception
 	 */
-	public void disconnect() throws Exception {
-		connection.disconnect();
+	public void disconnect() {
+		try {
+			connection.disconnect();
+			logger.fine("P4: closed connection OK");
+		} catch (Exception e) {
+			String err = "P4: Unable to close Perforce connection: " + e;
+			logger.severe(err);
+			if (listener != null) {
+				listener.getLogger().println(err);
+			}
+			e.printStackTrace();
+		}
 	}
 
 	/**

@@ -59,7 +59,7 @@ public class ManualWorkspaceImpl extends Workspace {
 
 		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
-			logger.info("... Creating manual client: " + clientName);
+			logger.info("P4: Creating manual client: " + clientName);
 			Client implClient = new Client();
 			implClient.setName(clientName);
 			connection.createClient(implClient);

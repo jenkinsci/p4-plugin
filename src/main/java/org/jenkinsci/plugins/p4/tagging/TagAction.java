@@ -22,6 +22,7 @@ import com.perforce.p4java.impl.generic.core.Label.LabelMapping;
 
 public class TagAction extends AbstractScmTagAction {
 
+	private String tag;
 	private List<String> tags = new ArrayList<String>();
 	private String credential;
 	private String client;
@@ -63,6 +64,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	public void labelBuild(String name, String description) throws Exception {
 
+		tag = name;
 		ClientHelper p4 = new ClientHelper(credential, null, client);
 		Label label = new Label();
 
@@ -106,6 +108,10 @@ public class TagAction extends AbstractScmTagAction {
 
 	public void setClient(String client) {
 		this.client = client;
+	}
+
+	public String getTag() {
+		return tag;
 	}
 
 	public List<String> getTags() {
