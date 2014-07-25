@@ -185,8 +185,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setForceUpdate(populate.isForce());
-		syncOpts.setClientBypass(!populate.isHave());
+		syncOpts.setServerBypass(!populate.isHave());	
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());		
 		log("... force update " + populate.isForce());
 		log("... bypass have " + !populate.isHave());
 
