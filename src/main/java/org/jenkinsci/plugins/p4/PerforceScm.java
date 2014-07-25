@@ -323,6 +323,20 @@ public class PerforceScm extends SCM {
 		return scmWorkspace;
 	}
 
+	@Override
+	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+		super.buildEnvVars(build, env);
+
+		// Set P4_CHANGELIST value
+		TagAction tagAction = build.getAction(TagAction.class);
+		if (tagAction != null) {
+			if (tagAction.getChange() > 0) {
+				String change = String.valueOf(tagAction.getChange());
+				env.put("P4_CHANGELIST", change);
+			} 
+		}
+	}
+
 	/**
 	 * The checkout method should, besides checking out the modified files,
 	 * write a changelog.xml file that contains the changes for a certain build.
