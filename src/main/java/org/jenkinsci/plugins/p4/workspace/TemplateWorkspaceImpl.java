@@ -78,6 +78,9 @@ public class TemplateWorkspaceImpl extends Workspace {
 
 		// Root required to switch view; must reload values in iclient.
 		iclient.setRoot(getRootPath());
+		iclient.update();
+		
+		// Use template with client
 		SwitchClientViewOptions opts = new SwitchClientViewOptions();
 		opts.setForce(true);
 		connection.switchClientView(template, clientName, opts);
