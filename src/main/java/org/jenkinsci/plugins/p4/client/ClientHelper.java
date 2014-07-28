@@ -190,7 +190,8 @@ public class ClientHelper extends ConnectionHelper {
 		log("... bypass have " + !populate.isHave());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		success &= validateFileSpecs(syncMsg, "file(s) up-to-date.");
+		success &= validateFileSpecs(syncMsg, "file(s) up-to-date.",
+				"file does not exist", "no file(s) as of that date");
 		return success;
 	}
 
