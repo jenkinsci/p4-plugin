@@ -71,11 +71,21 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			this.label = getLabel(workspace);
 
 			// add changes to list for this build.
+			changes = new ArrayList<Object>();
 			if (label != null && !label.isEmpty()) {
-				changes = new ArrayList<Object>();
 				changes.add(label);
 			} else {
-				changes = p4.listChanges(change);
+				if (p4.haveChanges(change).isEmpty()) {
+					// if client has no changes, only report last change needed
+					List<Object> needed = p4.listChanges(change);
+					if(!needed.isEmpty()) {
+						Object last = needed.get(needed.size() - 1);
+						changes.add(last);
+					}
+				} else {
+					// else add all needed changes
+					changes = p4.listChanges(change);
+				}
 			}
 			if (status == CheckoutStatus.SHELVED) {
 				changes.add(review);
