@@ -480,9 +480,34 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
+	public List<Object> haveChanges() throws Exception {
+		String path = iclient.getRoot() + "/...";
+		return listChanges(path, true);
+	}
+
+	/**
+	 * Fetches a list of changes needed to update the workspace to the specified
+	 * limit. The limit could be a Perforce change number or label.
+	 * 
+	 * @param limit
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Object> haveChanges(int changeLimit) throws Exception {
+		String path = iclient.getRoot() + "/...";
+		String fileSpec = path + "@" + changeLimit;
+		return listChanges(fileSpec, true);
+	}
+
+	/**
+	 * Fetches a list of changes needed to update the workspace to head.
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
 	public List<Object> listChanges() throws Exception {
 		String path = iclient.getRoot() + "/...";
-		return listChanges(path);
+		return listChanges(path, false);
 	}
 
 	/**
@@ -496,11 +521,13 @@ public class ClientHelper extends ConnectionHelper {
 	public List<Object> listChanges(int changeLimit) throws Exception {
 		String path = iclient.getRoot() + "/...";
 		String fileSpec = path + "@" + changeLimit;
-		return listChanges(fileSpec);
+		return listChanges(fileSpec, false);
 	}
 
-	private List<Object> listChanges(String fileSpec) throws Exception {
-		List<Object> changes = new ArrayList<Object>();
+	private List<Object> listChanges(String fileSpec, boolean have)
+			throws Exception {
+		List<Object> needChanges = new ArrayList<Object>();
+		List<Object> haveChanges = new ArrayList<Object>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
 
@@ -509,14 +536,22 @@ public class ClientHelper extends ConnectionHelper {
 			if (status.startsWith("need")) {
 				String value = (String) entry.get("change");
 				int change = Integer.parseInt(value);
-				changes.add(change);
+				needChanges.add(change);
 			} else if (status.startsWith("partial")) {
 				String value = (String) entry.get("change");
 				int change = Integer.parseInt(value);
-				changes.add(change);
+				needChanges.add(change);
+			} else if (status.startsWith("have")) {
+				String value = (String) entry.get("change");
+				int change = Integer.parseInt(value);
+				haveChanges.add(change);
 			}
 		}
-		return changes;
+		if (have) {
+			return haveChanges;
+		} else {
+			return needChanges;
+		}
 	}
 
 	public Label getLabel(String id) throws Exception {
