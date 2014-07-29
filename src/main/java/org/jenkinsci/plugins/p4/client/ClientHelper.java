@@ -480,14 +480,40 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
+	 * Show all changes within the scope of the client, between the 'from' and
+	 * 'to' change limits.
+	 * 
+	 * @param from
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Object> listChanges(int from, int to) throws Exception {
+		List<Object> list = new ArrayList<Object>();
+
+		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(50);
+		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
+		if (cngs != null) {
+			for (IChangelistSummary c : cngs) {
+				list.add(c.getId());
+			}
+		}
+
+		return list;
+	}
+
+	/**
 	 * Fetches a list of changes needed to update the workspace to head.
 	 * 
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> haveChanges() throws Exception {
+	public List<Object> listClientChanges() throws Exception {
 		String path = iclient.getRoot() + "/...";
-		return listChanges(path, true);
+		return listClientChanges(path);
 	}
 
 	/**
@@ -498,41 +524,14 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> haveChanges(int changeLimit) throws Exception {
+	public List<Object> listClientChanges(int changeLimit) throws Exception {
 		String path = iclient.getRoot() + "/...";
 		String fileSpec = path + "@" + changeLimit;
-		return listChanges(fileSpec, true);
+		return listClientChanges(fileSpec);
 	}
 
-	/**
-	 * Fetches a list of changes needed to update the workspace to head.
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public List<Object> listChanges() throws Exception {
-		String path = iclient.getRoot() + "/...";
-		return listChanges(path, false);
-	}
-
-	/**
-	 * Fetches a list of changes needed to update the workspace to the specified
-	 * limit. The limit could be a Perforce change number or label.
-	 * 
-	 * @param limit
-	 * @return
-	 * @throws Exception
-	 */
-	public List<Object> listChanges(int changeLimit) throws Exception {
-		String path = iclient.getRoot() + "/...";
-		String fileSpec = path + "@" + changeLimit;
-		return listChanges(fileSpec, false);
-	}
-
-	private List<Object> listChanges(String fileSpec, boolean have)
-			throws Exception {
+	private List<Object> listClientChanges(String fileSpec) throws Exception {
 		List<Object> needChanges = new ArrayList<Object>();
-		List<Object> haveChanges = new ArrayList<Object>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
 
@@ -546,17 +545,9 @@ public class ClientHelper extends ConnectionHelper {
 				String value = (String) entry.get("change");
 				int change = Integer.parseInt(value);
 				needChanges.add(change);
-			} else if (status.startsWith("have")) {
-				String value = (String) entry.get("change");
-				int change = Integer.parseInt(value);
-				haveChanges.add(change);
 			}
 		}
-		if (have) {
-			return haveChanges;
-		} else {
-			return needChanges;
-		}
+		return needChanges;
 	}
 
 	public Label getLabel(String id) throws Exception {

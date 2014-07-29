@@ -13,6 +13,7 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
@@ -31,6 +32,7 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -157,7 +159,7 @@ public class PerforceScm extends SCM {
 				log.println("P4: Polling with client: " + client);
 			}
 
-			List<Object> changes = p4.listChanges();
+			List<Object> changes = p4.listClientChanges();
 			List<Object> remainder = new ArrayList<Object>();
 
 			for (Object c : changes) {
@@ -269,6 +271,17 @@ public class PerforceScm extends SCM {
 		tag.setChange(task.getChange());
 		build.addAction(tag);
 
+		// Calculate changes prior to build (based on last build)
+		List<Object> changes = new ArrayList<Object>();
+		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		if (lastBuild != null) {
+			TagAction lastTag = lastBuild.getAction(TagAction.class);
+			int lastChange = lastTag.getChange();
+			changes = task.getChanges(lastChange);
+		} else {
+			changes.add(task.getChange());
+		}
+
 		// Only Invoke build if setup succeed.
 		if (success) {
 			success &= buildWorkspace.act(task);
@@ -276,10 +289,7 @@ public class PerforceScm extends SCM {
 
 		// Only write change log if build succeed.
 		if (success) {
-			List<Object> changes = task.getChanges();
-			if (changes != null) {
-				P4ChangeSet.store(changelogFile, changes);
-			}
+			P4ChangeSet.store(changelogFile, changes);
 		}
 		return success;
 	}
@@ -333,7 +343,7 @@ public class PerforceScm extends SCM {
 			if (tagAction.getChange() > 0) {
 				String change = String.valueOf(tagAction.getChange());
 				env.put("P4_CHANGELIST", change);
-			} 
+			}
 		}
 	}
 

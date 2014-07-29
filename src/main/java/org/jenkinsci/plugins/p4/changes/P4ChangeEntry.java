@@ -22,7 +22,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private int FILE_COUNT_LIMIT = 50;
 
-	private String id;
+	private Object id;
 	private User author;
 	private Date date;
 	private String clientId;
@@ -44,7 +44,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			Changelist changelist = (Changelist) p4.getChange(changeId);
 
 			// set id
-			id = "" + changelist.getId();
+			id = changelist.getId();
 
 			// set author
 			String user = changelist.getUsername();
@@ -123,7 +123,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 	}
 
-	public String getId() {
+	public Object getId() {
 		return id;
 	}
 
