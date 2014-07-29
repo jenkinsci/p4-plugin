@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -227,10 +228,13 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		if (populate instanceof ForceCleanImpl) {
+			// remove all versioned files (clean have list)
+			success &= syncFiles(0, populate);
+
 			// remove all files from workspace
 			String root = iclient.getRoot();
-			File unlink = new File(root);
-			unlink.delete();
+			log("... rm -rf " + root);
+			FileUtils.forceDelete(new File(root));
 		}
 
 		return success;
