@@ -298,7 +298,7 @@ public class PerforceScm extends SCM {
 		EnvVars envVars = build.getEnvironment(listener);
 
 		PerforceScm scm = (PerforceScm) build.getProject().getScm();
-		Workspace scmWorkspace = scm.getWorkspace();
+		Workspace scmWorkspace = (Workspace) scm.getWorkspace().clone();
 		Populate scmPopulate = scm.getPopulate();
 
 		// IMPORTANT: Set workspace format map to build workspace name.

@@ -518,7 +518,8 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		String filename = "add_@%#$%^&().txt";
-		String path = workspace.getRootPath() + "/" + filename;
+		
+		String path = build.getWorkspace() + "/" + filename;
 		File add = new File(path);
 		add.createNewFile();
 

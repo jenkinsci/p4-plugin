@@ -16,7 +16,7 @@ import jenkins.model.Jenkins;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
 
-public abstract class Workspace implements ExtensionPoint,
+public abstract class Workspace implements Cloneable, ExtensionPoint,
 		Describable<Workspace> {
 
 	private static Logger logger = Logger.getLogger(Workspace.class.getName());
@@ -141,6 +141,14 @@ public abstract class Workspace implements ExtensionPoint,
 				EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty) node;
 				formatTags.putAll((env).getEnvVars());
 			}
+		}
+	}
+
+	public Object clone() {
+		try {
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+			return null;
 		}
 	}
 }
