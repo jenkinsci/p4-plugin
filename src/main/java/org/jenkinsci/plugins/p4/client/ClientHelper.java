@@ -29,13 +29,11 @@ import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
-import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
-import com.perforce.p4java.server.CmdSpec;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -56,16 +54,6 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private void clientLogin(TaskListener listener, String client) {
-		// Login to Perforce
-		try {
-			login();
-		} catch (Exception e) {
-			String err = "P4: Unable to login: " + e;
-			logger.severe(err);
-			listener.getLogger().println(err);
-			e.printStackTrace();
-		}
-
 		// Find workspace and set as current
 		try {
 			iclient = connection.getClient(client);
@@ -467,17 +455,7 @@ public class ClientHelper extends ConnectionHelper {
 		return change;
 	}
 
-	/**
-	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
-	 * p4-java throws an exception if one is not set.
-	 * 
-	 * @param id
-	 * @return
-	 * @throws Exception
-	 */
-	public Changelist getChange(int id) throws Exception {
-		return (Changelist) connection.getChangelist(id);
-	}
+
 
 	/**
 	 * Show all changes within the scope of the client, between the 'from' and
@@ -550,46 +528,7 @@ public class ClientHelper extends ConnectionHelper {
 		return needChanges;
 	}
 
-	public Label getLabel(String id) throws Exception {
-		return (Label) connection.getLabel(id);
-	}
 
-	public void setLabel(Label label) throws Exception {
-		// connection.createLabel(label);
-		String user = connection.getUserName();
-		label.setOwnerName(user);
-		connection.updateLabel(label);
-	}
-
-	public List<IFileSpec> getTaggedFiles(String label) throws Exception {
-		String ws = "//" + iclient.getName() + "/...@" + label;
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
-		List<IFileSpec> tagged = connection.getDepotFiles(spec, false);
-		return tagged;
-	}
-
-	public List<IFileSpec> loadShelvedFiles(int id) throws Exception {
-		String cmd = CmdSpec.DESCRIBE.name();
-		String[] args = new String[] { "-s", "-S", "" + id };
-		List<Map<String, Object>> resultMaps;
-		resultMaps = connection.execMapCmdList(cmd, args, null);
-
-		List<IFileSpec> list = new ArrayList<IFileSpec>();
-
-		if (resultMaps != null) {
-			if ((resultMaps.size() > 0) && (resultMaps.get(0) != null)) {
-				Map<String, Object> map = resultMaps.get(0);
-				if (map.containsKey("shelved")) {
-					for (int i = 0; map.get("rev" + i) != null; i++) {
-						FileSpec fSpec = new FileSpec(map, connection, i);
-						fSpec.setChangelistId(id);
-						list.add(fSpec);
-					}
-				}
-			}
-		}
-		return list;
-	}
 
 	public ClientView getClientView() {
 		return iclient.getClientView();

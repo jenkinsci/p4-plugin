@@ -16,7 +16,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -106,10 +106,9 @@ public class P4ChangeParser extends ChangeLogParser {
 					AbstractProject<?, ?> project = build.getProject();
 					PerforceScm scm = (PerforceScm) project.getScm();
 					String credential = scm.getCredential();
-					String client = scm.getWorkspace().getFullName();
 
 					// Log in to Perforce and find change-list
-					ClientHelper p4 = new ClientHelper(credential, null, client);
+					ConnectionHelper p4 = new ConnectionHelper(credential, null);
 
 					// Add changelist to entry
 					if (qName.equalsIgnoreCase("changenumber")) {
