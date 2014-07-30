@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -28,13 +29,11 @@ import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
-import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
-import com.perforce.p4java.server.CmdSpec;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -55,16 +54,6 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private void clientLogin(TaskListener listener, String client) {
-		// Login to Perforce
-		try {
-			login();
-		} catch (Exception e) {
-			String err = "P4: Unable to login: " + e;
-			logger.severe(err);
-			listener.getLogger().println(err);
-			e.printStackTrace();
-		}
-
 		// Find workspace and set as current
 		try {
 			iclient = connection.getClient(client);
@@ -227,10 +216,13 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		if (populate instanceof ForceCleanImpl) {
+			// remove all versioned files (clean have list)
+			success &= syncFiles(0, populate);
+
 			// remove all files from workspace
 			String root = iclient.getRoot();
-			File unlink = new File(root);
-			unlink.delete();
+			log("... rm -rf " + root);
+			FileUtils.forceDelete(new File(root));
 		}
 
 		return success;
@@ -463,16 +455,32 @@ public class ClientHelper extends ConnectionHelper {
 		return change;
 	}
 
+
+
 	/**
-	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
-	 * p4-java throws an exception if one is not set.
+	 * Show all changes within the scope of the client, between the 'from' and
+	 * 'to' change limits.
 	 * 
-	 * @param id
+	 * @param from
 	 * @return
 	 * @throws Exception
 	 */
-	public Changelist getChange(int id) throws Exception {
-		return (Changelist) connection.getChangelist(id);
+	public List<Object> listChanges(int from, int to) throws Exception {
+		List<Object> list = new ArrayList<Object>();
+
+		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(50);
+		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
+		if (cngs != null) {
+			for (IChangelistSummary c : cngs) {
+				list.add(c.getId());
+			}
+		}
+
+		return list;
 	}
 
 	/**
@@ -481,9 +489,9 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> haveChanges() throws Exception {
+	public List<Object> listClientChanges() throws Exception {
 		String path = iclient.getRoot() + "/...";
-		return listChanges(path, true);
+		return listClientChanges(path);
 	}
 
 	/**
@@ -494,41 +502,14 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> haveChanges(int changeLimit) throws Exception {
+	public List<Object> listClientChanges(int changeLimit) throws Exception {
 		String path = iclient.getRoot() + "/...";
 		String fileSpec = path + "@" + changeLimit;
-		return listChanges(fileSpec, true);
+		return listClientChanges(fileSpec);
 	}
 
-	/**
-	 * Fetches a list of changes needed to update the workspace to head.
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public List<Object> listChanges() throws Exception {
-		String path = iclient.getRoot() + "/...";
-		return listChanges(path, false);
-	}
-
-	/**
-	 * Fetches a list of changes needed to update the workspace to the specified
-	 * limit. The limit could be a Perforce change number or label.
-	 * 
-	 * @param limit
-	 * @return
-	 * @throws Exception
-	 */
-	public List<Object> listChanges(int changeLimit) throws Exception {
-		String path = iclient.getRoot() + "/...";
-		String fileSpec = path + "@" + changeLimit;
-		return listChanges(fileSpec, false);
-	}
-
-	private List<Object> listChanges(String fileSpec, boolean have)
-			throws Exception {
+	private List<Object> listClientChanges(String fileSpec) throws Exception {
 		List<Object> needChanges = new ArrayList<Object>();
-		List<Object> haveChanges = new ArrayList<Object>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
 
@@ -542,59 +523,12 @@ public class ClientHelper extends ConnectionHelper {
 				String value = (String) entry.get("change");
 				int change = Integer.parseInt(value);
 				needChanges.add(change);
-			} else if (status.startsWith("have")) {
-				String value = (String) entry.get("change");
-				int change = Integer.parseInt(value);
-				haveChanges.add(change);
 			}
 		}
-		if (have) {
-			return haveChanges;
-		} else {
-			return needChanges;
-		}
+		return needChanges;
 	}
 
-	public Label getLabel(String id) throws Exception {
-		return (Label) connection.getLabel(id);
-	}
 
-	public void setLabel(Label label) throws Exception {
-		// connection.createLabel(label);
-		String user = connection.getUserName();
-		label.setOwnerName(user);
-		connection.updateLabel(label);
-	}
-
-	public List<IFileSpec> getTaggedFiles(String label) throws Exception {
-		String ws = "//" + iclient.getName() + "/...@" + label;
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
-		List<IFileSpec> tagged = connection.getDepotFiles(spec, false);
-		return tagged;
-	}
-
-	public List<IFileSpec> loadShelvedFiles(int id) throws Exception {
-		String cmd = CmdSpec.DESCRIBE.name();
-		String[] args = new String[] { "-s", "-S", "" + id };
-		List<Map<String, Object>> resultMaps;
-		resultMaps = connection.execMapCmdList(cmd, args, null);
-
-		List<IFileSpec> list = new ArrayList<IFileSpec>();
-
-		if (resultMaps != null) {
-			if ((resultMaps.size() > 0) && (resultMaps.get(0) != null)) {
-				Map<String, Object> map = resultMaps.get(0);
-				if (map.containsKey("shelved")) {
-					for (int i = 0; map.get("rev" + i) != null; i++) {
-						FileSpec fSpec = new FileSpec(map, connection, i);
-						fSpec.setChangelistId(id);
-						list.add(fSpec);
-					}
-				}
-			}
-		}
-		return list;
-	}
 
 	public ClientView getClientView() {
 		return iclient.getClientView();

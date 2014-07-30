@@ -6,6 +6,7 @@ import hudson.security.ACL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
@@ -16,8 +17,14 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.core.Changelist;
+import com.perforce.p4java.impl.generic.core.Label;
+import com.perforce.p4java.impl.generic.core.file.FileSpec;
+import com.perforce.p4java.option.server.GetDepotFilesOptions;
+import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 
 public class ConnectionHelper {
@@ -57,8 +64,8 @@ public class ConnectionHelper {
 	 * Convenience wrapper to connect and report errors
 	 */
 	private void connect() {
+		// Connect to the Perforce server
 		try {
-			// Connect to the Perforce server
 			this.connection = ConnectionFactory.getConnection(connectionConfig);
 			logger.fine("P4: opened connection OK");
 		} catch (Exception e) {
@@ -67,6 +74,16 @@ public class ConnectionHelper {
 			if (listener != null) {
 				listener.getLogger().println(err);
 			}
+			e.printStackTrace();
+		}
+		
+		// Login to Perforce
+		try {
+			login();
+		} catch (Exception e) {
+			String err = "P4: Unable to login: " + e;
+			logger.severe(err);
+			listener.getLogger().println(err);
 			e.printStackTrace();
 		}
 	}
@@ -162,6 +179,90 @@ public class ConnectionHelper {
 
 		String name = workspace.getFullName();
 		connection.deleteClient(name, true);
+	}
+
+	/**
+	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
+	 * p4-java throws an exception if one is not set.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public Changelist getChange(int id) throws Exception {
+		return (Changelist) connection.getChangelist(id);
+	}
+
+	/**
+	 * Get Perforce Label
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public Label getLabel(String id) throws Exception {
+		return (Label) connection.getLabel(id);
+	}
+
+	/**
+	 * Create/Update a Perforce Label
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public void setLabel(Label label) throws Exception {
+		// connection.createLabel(label);
+		String user = connection.getUserName();
+		label.setOwnerName(user);
+		connection.updateLabel(label);
+	}
+
+	/**
+	 * Find all files within a label or change. (Max results limited by limit)
+	 * 
+	 * @param label
+	 * @param limit
+	 * @return
+	 * @throws Exception
+	 */
+	public List<IFileSpec> getFiles(String id, int limit) throws Exception {
+		String path = "//...@" + id;
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+		GetDepotFilesOptions opts = new GetDepotFilesOptions();
+		opts.setMaxResults(limit);
+		List<IFileSpec> tagged = connection.getDepotFiles(spec, opts);
+		return tagged;
+	}
+
+	/**
+	 * Find all files within a shelf.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public List<IFileSpec> loadShelvedFiles(int id) throws Exception {
+		String cmd = CmdSpec.DESCRIBE.name();
+		String[] args = new String[] { "-s", "-S", "" + id };
+		List<Map<String, Object>> resultMaps;
+		resultMaps = connection.execMapCmdList(cmd, args, null);
+
+		List<IFileSpec> list = new ArrayList<IFileSpec>();
+
+		if (resultMaps != null) {
+			if ((resultMaps.size() > 0) && (resultMaps.get(0) != null)) {
+				Map<String, Object> map = resultMaps.get(0);
+				if (map.containsKey("shelved")) {
+					for (int i = 0; map.get("rev" + i) != null; i++) {
+						FileSpec fSpec = new FileSpec(map, connection, i);
+						fSpec.setChangelistId(id);
+						list.add(fSpec);
+					}
+				}
+			}
+		}
+		return list;
 	}
 
 	/**

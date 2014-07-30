@@ -157,7 +157,7 @@ public class PerforceScm extends SCM {
 				log.println("P4: Polling with client: " + client);
 			}
 
-			List<Object> changes = p4.listChanges();
+			List<Object> changes = p4.listClientChanges();
 			List<Object> remainder = new ArrayList<Object>();
 
 			for (Object c : changes) {
@@ -269,6 +269,16 @@ public class PerforceScm extends SCM {
 		tag.setChange(task.getChange());
 		build.addAction(tag);
 
+		// Calculate changes prior to build (based on last build)
+		List<Object> changes = new ArrayList<Object>();
+		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		int lastChange = task.getChange() - 1;
+		if (lastBuild != null) {
+			TagAction lastTag = lastBuild.getAction(TagAction.class);
+			lastChange = lastTag.getChange();
+		}
+		changes = task.getChanges(lastChange);
+
 		// Only Invoke build if setup succeed.
 		if (success) {
 			success &= buildWorkspace.act(task);
@@ -276,10 +286,7 @@ public class PerforceScm extends SCM {
 
 		// Only write change log if build succeed.
 		if (success) {
-			List<Object> changes = task.getChanges();
-			if (changes != null) {
-				P4ChangeSet.store(changelogFile, changes);
-			}
+			P4ChangeSet.store(changelogFile, changes);
 		}
 		return success;
 	}
@@ -291,7 +298,7 @@ public class PerforceScm extends SCM {
 		EnvVars envVars = build.getEnvironment(listener);
 
 		PerforceScm scm = (PerforceScm) build.getProject().getScm();
-		Workspace scmWorkspace = scm.getWorkspace();
+		Workspace scmWorkspace = (Workspace) scm.getWorkspace().clone();
 		Populate scmPopulate = scm.getPopulate();
 
 		// IMPORTANT: Set workspace format map to build workspace name.
@@ -333,7 +340,7 @@ public class PerforceScm extends SCM {
 			if (tagAction.getChange() > 0) {
 				String change = String.valueOf(tagAction.getChange());
 				env.put("P4_CHANGELIST", change);
-			} 
+			}
 		}
 	}
 

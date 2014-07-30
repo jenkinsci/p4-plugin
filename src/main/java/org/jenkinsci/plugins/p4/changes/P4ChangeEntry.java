@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IJob;
@@ -22,7 +22,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private int FILE_COUNT_LIMIT = 50;
 
-	private String id;
+	private Object id;
 	private User author;
 	private Date date;
 	private String clientId;
@@ -30,7 +30,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	private Collection<String> affectedPaths;
 	private boolean shelved;
 	private boolean label;
-	private int fileCount;
+	private boolean fileLimit = false;
 	private List<IFileSpec> files;
 	private List<IJob> jobs;
 
@@ -39,12 +39,12 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		setParent(parent);
 	}
 
-	public void setChange(ClientHelper p4, int changeId) {
+	public void setChange(ConnectionHelper p4, int changeId) {
 		try {
 			Changelist changelist = (Changelist) p4.getChange(changeId);
 
 			// set id
-			id = "" + changelist.getId();
+			id = changelist.getId();
 
 			// set author
 			String user = changelist.getUsername();
@@ -64,12 +64,12 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 				files = p4.loadShelvedFiles(changeId);
 				shelved = true;
 			} else {
-				files = changelist.getFiles(false);
+				files = p4.getFiles("=" + changeId, FILE_COUNT_LIMIT + 1);
 				shelved = false;
 			}
-			fileCount = files.size();
 			if (files.size() > FILE_COUNT_LIMIT) {
-				files = files.subList(0, FILE_COUNT_LIMIT - 1);
+				fileLimit = true;
+				files = files.subList(0, FILE_COUNT_LIMIT);
 			}
 
 			// set list of affected paths
@@ -85,7 +85,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 	}
 
-	public void setLabel(ClientHelper p4, String labelId) {
+	public void setLabel(ConnectionHelper p4, String labelId) {
 		try {
 			label = true;
 			Label label = (Label) p4.getLabel(labelId);
@@ -107,10 +107,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			msg = label.getDescription();
 
 			// set list of file revisions in change
-			files = p4.getTaggedFiles(labelId);
-			fileCount = files.size();
+			files = p4.getFiles(labelId, FILE_COUNT_LIMIT + 1);
 			if (files.size() > FILE_COUNT_LIMIT) {
-				files = files.subList(0, FILE_COUNT_LIMIT - 1);
+				fileLimit = true;
+				files = files.subList(0, FILE_COUNT_LIMIT);
 			}
 
 			// set list of affected paths
@@ -123,7 +123,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 	}
 
-	public String getId() {
+	public Object getId() {
 		return id;
 	}
 
@@ -150,8 +150,8 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return affectedPaths;
 	}
 
-	public int getFileCount() {
-		return fileCount;
+	public boolean isFileLimit() {
+		return fileLimit;
 	}
 
 	public List<IFileSpec> getFiles() {
@@ -188,5 +188,9 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			summary = summary.substring(0, 80) + "...";
 		}
 		return summary;
+	}
+
+	public int getMaxLimit() {
+		return FILE_COUNT_LIMIT;
 	}
 }

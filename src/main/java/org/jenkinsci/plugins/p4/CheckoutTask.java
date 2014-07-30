@@ -33,7 +33,6 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	private int change;
 	private int review;
 	private String label;
-	private List<Object> changes;
 	private Populate populate;
 
 	/**
@@ -70,26 +69,6 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			this.review = getReview(workspace);
 			this.label = getLabel(workspace);
 
-			// add changes to list for this build.
-			changes = new ArrayList<Object>();
-			if (label != null && !label.isEmpty()) {
-				changes.add(label);
-			} else {
-				if (p4.haveChanges(change).isEmpty()) {
-					// if client has no changes, only report last change needed
-					List<Object> needed = p4.listChanges(change);
-					if(!needed.isEmpty()) {
-						Object last = needed.get(needed.size() - 1);
-						changes.add(last);
-					}
-				} else {
-					// else add all needed changes
-					changes = p4.listChanges(change);
-				}
-			}
-			if (status == CheckoutStatus.SHELVED) {
-				changes.add(review);
-			}
 		} catch (Exception e) {
 			String err = "Unable to setup workspace: " + e;
 			logger.severe(err);
@@ -211,7 +190,32 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		return review;
 	}
 
-	public List<Object> getChanges() {
+	public List<Object> getChanges(int last) {
+
+		List<Object> changes = new ArrayList<Object>();
+
+		// Add changes or label to this build.
+		if (label != null && !label.isEmpty()) {
+			changes.add(label);
+		} else {
+			ClientHelper p4 = new ClientHelper(credential, listener, client);
+			try {
+				changes = p4.listChanges(last + 1, change);
+			} catch (Exception e) {
+				String err = "Unable to get changes: " + e;
+				logger.severe(err);
+				listener.getLogger().println(err);
+				e.printStackTrace();
+			} finally {
+				p4.disconnect();
+			}
+		}
+
+		// Include shelf if a review
+		if (status == CheckoutStatus.SHELVED) {
+			changes.add(review);
+		}
+
 		return changes;
 	}
 
