@@ -13,7 +13,6 @@ import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
@@ -32,7 +31,6 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -274,13 +272,12 @@ public class PerforceScm extends SCM {
 		// Calculate changes prior to build (based on last build)
 		List<Object> changes = new ArrayList<Object>();
 		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		int lastChange = task.getChange() - 1;
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
-			int lastChange = lastTag.getChange();
-			changes = task.getChanges(lastChange);
-		} else {
-			changes.add(task.getChange());
+			lastChange = lastTag.getChange();
 		}
+		changes = task.getChanges(lastChange);
 
 		// Only Invoke build if setup succeed.
 		if (success) {
