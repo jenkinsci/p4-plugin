@@ -123,7 +123,12 @@ public abstract class Workspace implements ExtensionPoint,
 	public String getFullName() {
 		// expands Workspace name if formatters are used.
 		String clientName = expand(getName());
+
+		// replace restricted characters with "-" as per the old plugin
 		clientName = clientName.replaceAll(" ", "_");
+		clientName = clientName.replaceAll(",", "-");
+		clientName = clientName.replaceAll("=", "-");
+		clientName = clientName.replaceAll("/", "-");
 		return clientName;
 	}
 
