@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
+import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -275,7 +276,9 @@ public class PerforceScm extends SCM {
 		int lastChange = task.getChange() - 1;
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
-			lastChange = lastTag.getChange();
+			if (lastTag != null) {
+				lastChange = lastTag.getChange();
+			}
 		}
 		changes = task.getChanges(lastChange);
 
@@ -334,12 +337,18 @@ public class PerforceScm extends SCM {
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
-		// Set P4_CHANGELIST value
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
+			// Set P4_CHANGELIST value
 			if (tagAction.getChange() > 0) {
 				String change = String.valueOf(tagAction.getChange());
 				env.put("P4_CHANGELIST", change);
+			}
+
+			// Set P4_CLIENT workspace value
+			if (tagAction.getClient() != null) {
+				String client = tagAction.getClient();
+				env.put("P4_CLIENT", client);
 			}
 		}
 	}
@@ -364,19 +373,29 @@ public class PerforceScm extends SCM {
 	public boolean processWorkspaceBeforeDeletion(
 			AbstractProject<?, ?> project, FilePath buildWorkspace, Node node) {
 
-		try {
-			PerforceScm scm = (PerforceScm) project.getScm();
-			Workspace scmWorkspace = scm.getWorkspace();
-			String scmCredential = scm.getCredential();
+		PerforceScm scm = (PerforceScm) project.getScm();
+		String scmCredential = scm.getCredential();
+		AbstractBuild<?, ?> build = project.getLastBuild();
 
-			ConnectionHelper p4 = new ConnectionHelper(scmCredential, null);
-			p4.login();
-			p4.deleteClient(scmWorkspace);
-			p4.disconnect();
+		String client = "unset";
+		try {
+			EnvVars envVars = build.getEnvironment(null);
+			client = envVars.get("P4_CLIENT");
 		} catch (Exception e) {
-			logger.severe("Connection issue!");
-			e.printStackTrace();
-			return false;
+			logger.warning("P4: Unable to read P4_CLIENT");
+			return true;
+		}
+
+		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
+		try {
+			ForceCleanImpl forceClean = new ForceCleanImpl(false, null);
+			logger.info("P4: unsyncing client: " + client);
+			p4.syncFiles(0, forceClean);
+		} catch (Exception e) {
+			logger.warning("P4: Not able to unsync client: " + client);
+			return true;
+		} finally {
+			p4.disconnect();
 		}
 		return true;
 	}

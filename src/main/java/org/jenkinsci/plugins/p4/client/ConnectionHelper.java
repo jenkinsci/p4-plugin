@@ -13,7 +13,6 @@ import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
@@ -76,7 +75,7 @@ public class ConnectionHelper {
 			}
 			e.printStackTrace();
 		}
-		
+
 		// Login to Perforce
 		try {
 			login();
@@ -169,16 +168,6 @@ public class ConnectionHelper {
 
 		logger.info("P4: login failed '" + status + "'");
 		return false;
-	}
-
-	public void deleteClient(Workspace workspace) throws Exception {
-		if (connectionConfig.isUnicode()) {
-			String charset = "utf8";
-			connection.setCharsetName(charset);
-		}
-
-		String name = workspace.getFullName();
-		connection.deleteClient(name, true);
 	}
 
 	/**
