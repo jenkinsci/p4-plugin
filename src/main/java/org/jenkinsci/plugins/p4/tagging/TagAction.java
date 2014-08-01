@@ -102,6 +102,10 @@ public class TagAction extends AbstractScmTagAction {
 		return change;
 	}
 
+	public String getClient() {
+		return client;
+	}
+
 	public void setCredential(String credential) {
 		this.credential = credential;
 	}
