@@ -26,7 +26,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<String> tags = new ArrayList<String>();
 	private String credential;
 	private String client;
-	private int change;
+	private Object buildChange;
 
 	public TagAction(AbstractBuild<?, ?> build) {
 		super(build);
@@ -70,7 +70,7 @@ public class TagAction extends AbstractScmTagAction {
 
 		label.setDescription(description);
 		label.setName(name);
-		label.setRevisionSpec("@" + change);
+		label.setRevisionSpec("@" + buildChange);
 
 		// set label view to match workspace
 		ViewMap<ILabelMapping> viewMapping = new ViewMap<ILabelMapping>();
@@ -94,12 +94,12 @@ public class TagAction extends AbstractScmTagAction {
 		p4.disconnect();
 	}
 
-	public void setChange(int change) {
-		this.change = change;
+	public void setBuildChange(Object buildChange) {
+		this.buildChange = buildChange;
 	}
 
-	public int getChange() {
-		return change;
+	public Object getBuildChange() {
+		return buildChange;
 	}
 
 	public String getClient() {
