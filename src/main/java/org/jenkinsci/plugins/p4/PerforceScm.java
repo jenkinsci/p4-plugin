@@ -163,11 +163,11 @@ public class PerforceScm extends SCM {
 			// expand the label if required
 			String pin = scmPopulate.getPin();
 			Workspace scmWorkspace = setEnvironment(build, listener);
-			pin = scmWorkspace.expand(pin);
 
 			// find changes...
 			List<Object> changes = new ArrayList<Object>();
 			if (pin != null && !pin.isEmpty()) {
+				pin = scmWorkspace.expand(pin);
 				log.println("P4: Polling with label/change: " + pin);
 				changes = p4.listClientChanges(pin);
 			} else {
@@ -352,8 +352,8 @@ public class PerforceScm extends SCM {
 
 		// Set label in map, if pinning is used.
 		String pin = scmPopulate.getPin();
-		pin = scmWorkspace.expand(pin);
 		if (pin != null && !pin.isEmpty()) {
+			pin = scmWorkspace.expand(pin);
 			map.put("label", pin);
 		}
 
