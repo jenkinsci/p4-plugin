@@ -144,7 +144,9 @@ public class PerforceScm extends SCM {
 		Populate scmPopulate = scm.getPopulate();
 		List<Filter> scmFilter = scm.getFilter();
 
-		// setup the client workspace to use for the build.
+		// CAUTION: scmWorkspace environment will have limited access to the
+		// environment variables (e.g. NODE_NAME is missing). Instead get the
+		// expanded client workspace name from the last build.
 		String client = "unset";
 		try {
 			EnvVars envVars = build.getEnvironment(null);
@@ -158,8 +160,12 @@ public class PerforceScm extends SCM {
 		ClientHelper p4 = new ClientHelper(scmCredential, listener, client);
 
 		try {
-			// find changes...
+			// expand the label if required
 			String pin = scmPopulate.getPin();
+			Workspace scmWorkspace = setEnvironment(build, listener);
+			pin = scmWorkspace.expand(pin);
+
+			// find changes...
 			List<Object> changes = new ArrayList<Object>();
 			if (pin != null && !pin.isEmpty()) {
 				log.println("P4: Polling with label/change: " + pin);
@@ -340,15 +346,16 @@ public class PerforceScm extends SCM {
 		scmWorkspace.setHostName(null); // TODO get real hostname!
 		scmWorkspace.setRootPath(build.getModuleRoot().getRemote());
 
-		// Set label in map, if pinning is used.
-		String pin = scmPopulate.getPin();
-		if (pin != null && !pin.isEmpty()) {
-			map.put("label", pin);
-		}
-
 		// load environments
 		scmWorkspace.load(map);
 		scmWorkspace.load(envVars);
+
+		// Set label in map, if pinning is used.
+		String pin = scmPopulate.getPin();
+		pin = scmWorkspace.expand(pin);
+		if (pin != null && !pin.isEmpty()) {
+			map.put("label", pin);
+		}
 
 		return scmWorkspace;
 	}
