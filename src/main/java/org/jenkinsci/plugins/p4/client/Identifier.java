@@ -1,20 +1,17 @@
 package org.jenkinsci.plugins.p4.client;
 
-import hudson.PluginWrapper;
-import jenkins.model.Jenkins;
+import java.util.ResourceBundle;
 
 public class Identifier {
 	private String product;
 	private String version;
 
 	public Identifier() {
-		Jenkins jenkins = Jenkins.getInstance();
-		PluginWrapper plugin = jenkins.getPluginManager().getPlugin("p4");
-		String string = plugin.getVersion();
-		String[] parts = string.split(" ");
+		ResourceBundle bundle = ResourceBundle
+				.getBundle("org.jenkinsci.plugins.p4.Identifier");
 
-		version = parts[0];
-		product = "Jenkins_p4-plugin";
+		version = bundle.getString("org.jenkinsci.plugins.p4.version");
+		product = bundle.getString("org.jenkinsci.plugins.p4.product");
 	}
 
 	public String getVersion() {
