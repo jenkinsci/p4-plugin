@@ -58,6 +58,9 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			// setup the client workspace to use for the build.
 			success &= p4.setClient(workspace);
 			if (!success) {
+				String err = "Undefined workspace: " + workspace.getFullName();
+				logger.severe(err);
+				listener.getLogger().println(err);
 				return false;
 			}
 

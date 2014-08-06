@@ -269,28 +269,16 @@ public class PerforceScm extends SCM {
 		// Create task
 		CheckoutTask task;
 		task = new CheckoutTask(scmCredential, scmWorkspace, listener);
-		success &= task.setBuildOpts(scmWorkspace);
 		task.setPopulateOpts(scmPopulate);
+		success &= task.setBuildOpts(scmWorkspace);
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(build);
-		tag.setClient(scmWorkspace.getFullName());
-		tag.setCredential(scmCredential);
-		tag.setBuildChange(task.getBuildChange());
-		build.addAction(tag);
-
-		// Calculate changes prior to build (based on last build)
-		List<Object> changes = new ArrayList<Object>();
-		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
-		if (lastBuild != null) {
-			TagAction lastTag = lastBuild.getAction(TagAction.class);
-			if (lastTag != null) {
-				Object lastChange = lastTag.getBuildChange();
-				changes = task.getChanges(lastChange);
-			}
-		} else {
-			// No previous build, so add current
-			changes.add(task.getBuildChange());
+		if (success) {
+			TagAction tag = new TagAction(build);
+			tag.setClient(scmWorkspace.getFullName());
+			tag.setCredential(scmCredential);
+			tag.setBuildChange(task.getBuildChange());
+			build.addAction(tag);
 		}
 
 		// Only Invoke build if setup succeed.
@@ -300,9 +288,30 @@ public class PerforceScm extends SCM {
 
 		// Only write change log if build succeed.
 		if (success) {
+			// Calculate changes prior to build (based on last build)
+			List<Object> changes = calculateChanges(build, task);
 			P4ChangeSet.store(changelogFile, changes);
 		}
 		return success;
+	}
+
+	private List<Object> calculateChanges(AbstractBuild<?, ?> build,
+			CheckoutTask task) {
+		List<Object> changes = new ArrayList<Object>();
+		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		if (lastBuild != null) {
+			TagAction lastTag = lastBuild.getAction(TagAction.class);
+			if (lastTag != null) {
+				Object lastChange = lastTag.getBuildChange();
+				if (lastChange != null) {
+					changes = task.getChanges(lastChange);
+				}
+			}
+		} else {
+			// No previous build, so add current
+			changes.add(task.getBuildChange());
+		}
+		return changes;
 	}
 
 	private Workspace setEnvironment(AbstractBuild<?, ?> build,

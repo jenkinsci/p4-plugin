@@ -66,7 +66,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	public boolean setClient(Workspace workspace) throws Exception {
 
-		if (connectionConfig.isUnicode()) {
+		if (isUnicode()) {
 			String charset = "utf8";
 			connection.setCharsetName(charset);
 		}

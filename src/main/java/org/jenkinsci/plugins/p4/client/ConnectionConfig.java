@@ -15,7 +15,6 @@ public class ConnectionConfig implements Serializable {
 	private final boolean ssl;
 	private final String serverUri;
 	private final String trust;
-	private final boolean unicode;
 
 	public ConnectionConfig(P4StandardCredentials credential) {
 		this.p4port = credential.getP4port();
@@ -27,8 +26,6 @@ public class ConnectionConfig implements Serializable {
 		} else {
 			this.serverUri = "p4java://" + p4port;
 		}
-
-		this.unicode = checkUnicode();
 	}
 
 	public String getPort() {
@@ -67,26 +64,4 @@ public class ConnectionConfig implements Serializable {
 		hash = (int) (1777 * hash + this.toString().hashCode());
 		return hash;
 	}
-
-	/**
-	 * Query if the Perforce Server is set to run in Unicode enabled mode.
-	 * 
-	 * @return true if unicode enabled, false if disabled of server is offline.
-	 * @throws Exception
-	 */
-	private boolean checkUnicode() {
-		IOptionsServer connection;
-		try {
-			connection = ConnectionFactory.getConnection(this);
-			IServerInfo info = connection.getServerInfo();
-			return info.isUnicodeEnabled();
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
-	public boolean isUnicode() {
-		return unicode;
-	}
-
 }

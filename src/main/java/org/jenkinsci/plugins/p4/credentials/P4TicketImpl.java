@@ -83,8 +83,11 @@ public class P4TicketImpl extends P4StandardCredentials {
 						sslTrust, username, ticket);
 
 				ConnectionHelper p4 = new ConnectionHelper(test);
-				p4.login();
-				p4.logout();
+				
+				if (!p4.isConnected()) {
+					return FormValidation.error("Server Connection Error.");
+				}
+				p4.logout(); // invalidate any earlier ticket before test.
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");

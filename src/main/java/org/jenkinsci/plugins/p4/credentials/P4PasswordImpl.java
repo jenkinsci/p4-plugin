@@ -64,8 +64,11 @@ public class P4PasswordImpl extends P4StandardCredentials {
 						p4port, sslTrust, username, password);
 
 				ConnectionHelper p4 = new ConnectionHelper(test);
-				p4.login();
-				p4.logout();
+
+				if (!p4.isConnected()) {
+					return FormValidation.error("Server Connection Error.");
+				}
+				p4.logout(); // invalidate any earlier ticket before test.
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");
@@ -76,7 +79,7 @@ public class P4PasswordImpl extends P4StandardCredentials {
 				}
 				return FormValidation.ok("Success");
 			} catch (Exception e) {
-				return FormValidation.error(e.getMessage());
+				return FormValidation.error("Connection Error.");
 			}
 		}
 	}
