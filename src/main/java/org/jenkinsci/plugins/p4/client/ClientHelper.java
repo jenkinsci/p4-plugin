@@ -27,8 +27,6 @@ import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
-import com.perforce.p4java.impl.generic.core.Changelist;
-import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
@@ -68,7 +66,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	public boolean setClient(Workspace workspace) throws Exception {
 
-		if (connectionConfig.isUnicode()) {
+		if (isUnicode()) {
 			String charset = "utf8";
 			connection.setCharsetName(charset);
 		}
@@ -127,38 +125,19 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
-	 * Sync files to workspace at the specified change.
+	 * Sync files to workspace at the specified change/label.
 	 * 
 	 * @param change
 	 * @throws Exception
 	 */
-	public boolean syncFiles(int change, Populate populate) throws Exception {
-		log("SCM Task: syncing files at change: " + change);
+	public boolean syncFiles(Object buildChange, Populate populate)
+			throws Exception {
+		log("SCM Task: syncing files at change: " + buildChange);
 
 		// build file revision spec
 		List<IFileSpec> files;
 		String path = iclient.getRoot() + "/...";
-		String revisions = path + "@" + change;
-		log("... sync " + revisions);
-
-		// Sync files
-		files = FileSpecBuilder.makeFileSpecList(revisions);
-		return syncFiles(files, populate);
-	}
-
-	/**
-	 * Sync files to workspace at the specified label.
-	 * 
-	 * @param change
-	 * @throws Exception
-	 */
-	public boolean syncFiles(String label, Populate populate) throws Exception {
-		log("SCM Task: syncing files at label: " + label);
-
-		// build file revision spec
-		List<IFileSpec> files;
-		String path = iclient.getRoot() + "/...";
-		String revisions = path + "@" + label;
+		String revisions = path + "@" + buildChange;
 		log("... sync " + revisions);
 
 		// Sync files
@@ -455,8 +434,6 @@ public class ClientHelper extends ConnectionHelper {
 		return change;
 	}
 
-
-
 	/**
 	 * Show all changes within the scope of the client, between the 'from' and
 	 * 'to' change limits.
@@ -465,8 +442,13 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> listChanges(int from, int to) throws Exception {
+	public List<Object> listChanges(Object from, Object to) throws Exception {
 		List<Object> list = new ArrayList<Object>();
+
+		// return if from and to are equal, or Perforce will report a change
+		if (from.equals(to)) {
+			return list;
+		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
@@ -502,7 +484,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> listClientChanges(int changeLimit) throws Exception {
+	public List<Object> listClientChanges(Object changeLimit) throws Exception {
 		String path = iclient.getRoot() + "/...";
 		String fileSpec = path + "@" + changeLimit;
 		return listClientChanges(fileSpec);
@@ -527,8 +509,6 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		return needChanges;
 	}
-
-
 
 	public ClientView getClientView() {
 		return iclient.getClientView();

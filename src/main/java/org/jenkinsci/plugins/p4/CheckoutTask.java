@@ -30,9 +30,8 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 	private CheckoutStatus status;
 	private int head;
-	private int change;
+	private Object buildChange;
 	private int review;
-	private String label;
 	private Populate populate;
 
 	/**
@@ -59,15 +58,17 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			// setup the client workspace to use for the build.
 			success &= p4.setClient(workspace);
 			if (!success) {
+				String err = "Undefined workspace: " + workspace.getFullName();
+				logger.severe(err);
+				listener.getLogger().println(err);
 				return false;
 			}
 
 			// fetch and calculate change to sync to or review to unshelve.
-			this.status = getStatus(workspace);
-			this.head = p4.getClientHead();
-			this.change = getChange(workspace);
-			this.review = getReview(workspace);
-			this.label = getLabel(workspace);
+			status = getStatus(workspace);
+			head = p4.getClientHead();
+			review = getReview(workspace);
+			buildChange = getBuildChange(workspace);
 
 		} catch (Exception e) {
 			String err = "Unable to setup workspace: " + e;
@@ -100,11 +101,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			success &= p4.tidyWorkspace(populate);
 
 			// Sync workspace to label, head or specified change
-			if (label != null && !label.isEmpty()) {
-				success &= p4.syncFiles(label, populate);
-			} else {
-				success &= p4.syncFiles(change, populate);
-			}
+			success &= p4.syncFiles(buildChange, populate);
 
 			// Unshelve review if specified
 			if (status == CheckoutStatus.SHELVED) {
@@ -144,32 +141,26 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 * @param map
 	 * @return
 	 */
-	private int getChange(Workspace workspace) {
-		int change = this.head;
-		String value = workspace.get("change");
-		if (value != null && !value.isEmpty()) {
+	private Object getBuildChange(Workspace workspace) {
+		// Use head as the default
+		Object build = this.head;
+
+		// if change is specified then update
+		String change = workspace.get("change");
+		if (change != null && !change.isEmpty()) {
 			try {
-				change = Integer.parseInt(value);
+				build = Integer.parseInt(change);
 			} catch (NumberFormatException e) {
 			}
 		}
-		return change;
-	}
 
-	/**
-	 * Get the label from the parameter map. Returns null if no label found in
-	 * the map.
-	 * 
-	 * @param map
-	 * @return
-	 */
-	private String getLabel(Workspace workspace) {
-		String label = null;
-		String value = workspace.get("label");
-		if (value != null && !value.isEmpty()) {
-			label = value;
+		// if label is specified then update
+		String label = workspace.get("label");
+		if (label != null && !label.isEmpty()) {
+			build = label;
 		}
-		return label;
+
+		return build;
 	}
 
 	/**
@@ -190,25 +181,21 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		return review;
 	}
 
-	public List<Object> getChanges(int last) {
+	public List<Object> getChanges(Object last) {
 
 		List<Object> changes = new ArrayList<Object>();
 
-		// Add changes or label to this build.
-		if (label != null && !label.isEmpty()) {
-			changes.add(label);
-		} else {
-			ClientHelper p4 = new ClientHelper(credential, listener, client);
-			try {
-				changes = p4.listChanges(last + 1, change);
-			} catch (Exception e) {
-				String err = "Unable to get changes: " + e;
-				logger.severe(err);
-				listener.getLogger().println(err);
-				e.printStackTrace();
-			} finally {
-				p4.disconnect();
-			}
+		// Add changes to this build.
+		ClientHelper p4 = new ClientHelper(credential, listener, client);
+		try {
+			changes = p4.listChanges(last, buildChange);
+		} catch (Exception e) {
+			String err = "Unable to get changes: " + e;
+			logger.severe(err);
+			listener.getLogger().println(err);
+			e.printStackTrace();
+		} finally {
+			p4.disconnect();
 		}
 
 		// Include shelf if a review
@@ -223,7 +210,10 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		return status;
 	}
 
-	public int getChange() {
-		return change;
+	public Object getBuildChange() {
+		if (status == CheckoutStatus.SHELVED) {
+			return review;
+		}
+		return buildChange;
 	}
 }

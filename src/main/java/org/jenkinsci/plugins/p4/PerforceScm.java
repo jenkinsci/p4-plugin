@@ -135,32 +135,47 @@ public class PerforceScm extends SCM {
 			FilePath buildWorkspace, TaskListener listener,
 			SCMRevisionState baseline) throws IOException, InterruptedException {
 
-		PrintStream log = listener.getLogger();
 		PollingResult state = PollingResult.NO_CHANGES;
+		PrintStream log = listener.getLogger();
+
 		AbstractBuild<?, ?> build = project.getLastBuild();
+		PerforceScm scm = (PerforceScm) build.getProject().getScm();
+		String scmCredential = scm.getCredential();
+		Populate scmPopulate = scm.getPopulate();
+		List<Filter> scmFilter = scm.getFilter();
+
+		// CAUTION: scmWorkspace environment will have limited access to the
+		// environment variables (e.g. NODE_NAME is missing). Instead get the
+		// expanded client workspace name from the last build.
+		String client = "unset";
+		try {
+			EnvVars envVars = build.getEnvironment(null);
+			client = envVars.get("P4_CLIENT");
+			log.println("P4: Polling with client: " + client);
+		} catch (Exception e) {
+			logger.warning("P4: Unable to read P4_CLIENT");
+			return PollingResult.NO_CHANGES;
+		}
+
+		ClientHelper p4 = new ClientHelper(scmCredential, listener, client);
 
 		try {
-			PerforceScm scm = (PerforceScm) project.getScm();
+			// expand the label if required
+			String pin = scmPopulate.getPin();
 			Workspace scmWorkspace = setEnvironment(build, listener);
-			String scmCredential = scm.getCredential();
 
-			List<Filter> scmFilter = scm.getFilter();
-
-			String client = scmWorkspace.getFullName();
-			ClientHelper p4 = new ClientHelper(scmCredential, listener, client);
-
-			// setup the client workspace to use for the build.
-			boolean success = p4.setClient(scmWorkspace);
-			if (!success) {
-				log.println("P4: Polling unable to use client: " + client);
-				return PollingResult.NO_CHANGES;
+			// find changes...
+			List<Object> changes = new ArrayList<Object>();
+			if (pin != null && !pin.isEmpty()) {
+				pin = scmWorkspace.expand(pin);
+				log.println("P4: Polling with label/change: " + pin);
+				changes = p4.listClientChanges(pin);
 			} else {
-				log.println("P4: Polling with client: " + client);
+				changes = p4.listClientChanges();
 			}
 
-			List<Object> changes = p4.listClientChanges();
+			// filter changes...
 			List<Object> remainder = new ArrayList<Object>();
-
 			for (Object c : changes) {
 				if (c instanceof Integer) {
 					Changelist changelist = p4.getChange((Integer) c);
@@ -176,13 +191,13 @@ public class PerforceScm extends SCM {
 			if (!remainder.isEmpty() && p4.updateFiles()) {
 				state = PollingResult.BUILD_NOW;
 			}
-
-			// close connection
-			p4.disconnect();
 		} catch (Exception e) {
-			logger.severe("Perforce Polling Error: " + e);
+			logger.severe("P4: Polling Error: " + e);
 			e.printStackTrace();
 			return null;
+		} finally {
+			// close connection
+			p4.disconnect();
 		}
 		return state;
 	}
@@ -260,27 +275,17 @@ public class PerforceScm extends SCM {
 		// Create task
 		CheckoutTask task;
 		task = new CheckoutTask(scmCredential, scmWorkspace, listener);
-		success &= task.setBuildOpts(scmWorkspace);
 		task.setPopulateOpts(scmPopulate);
+		success &= task.setBuildOpts(scmWorkspace);
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(build);
-		tag.setClient(scmWorkspace.getFullName());
-		tag.setCredential(scmCredential);
-		tag.setChange(task.getChange());
-		build.addAction(tag);
-
-		// Calculate changes prior to build (based on last build)
-		List<Object> changes = new ArrayList<Object>();
-		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
-		int lastChange = task.getChange() - 1;
-		if (lastBuild != null) {
-			TagAction lastTag = lastBuild.getAction(TagAction.class);
-			if (lastTag != null) {
-				lastChange = lastTag.getChange();
-			}
+		if (success) {
+			TagAction tag = new TagAction(build);
+			tag.setClient(scmWorkspace.getFullName());
+			tag.setCredential(scmCredential);
+			tag.setBuildChange(task.getBuildChange());
+			build.addAction(tag);
 		}
-		changes = task.getChanges(lastChange);
 
 		// Only Invoke build if setup succeed.
 		if (success) {
@@ -289,9 +294,30 @@ public class PerforceScm extends SCM {
 
 		// Only write change log if build succeed.
 		if (success) {
+			// Calculate changes prior to build (based on last build)
+			List<Object> changes = calculateChanges(build, task);
 			P4ChangeSet.store(changelogFile, changes);
 		}
 		return success;
+	}
+
+	private List<Object> calculateChanges(AbstractBuild<?, ?> build,
+			CheckoutTask task) {
+		List<Object> changes = new ArrayList<Object>();
+		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		if (lastBuild != null) {
+			TagAction lastTag = lastBuild.getAction(TagAction.class);
+			if (lastTag != null) {
+				Object lastChange = lastTag.getBuildChange();
+				if (lastChange != null) {
+					changes = task.getChanges(lastChange);
+				}
+			}
+		} else {
+			// No previous build, so add current
+			changes.add(task.getBuildChange());
+		}
+		return changes;
 	}
 
 	private Workspace setEnvironment(AbstractBuild<?, ?> build,
@@ -320,15 +346,16 @@ public class PerforceScm extends SCM {
 		scmWorkspace.setHostName(null); // TODO get real hostname!
 		scmWorkspace.setRootPath(build.getModuleRoot().getRemote());
 
-		// Set label in map, if pinning is used.
-		String pin = scmPopulate.getPin();
-		if (pin != null && !pin.isEmpty()) {
-			map.put("label", pin);
-		}
-
 		// load environments
 		scmWorkspace.load(map);
 		scmWorkspace.load(envVars);
+
+		// Set label in map, if pinning is used.
+		String pin = scmPopulate.getPin();
+		if (pin != null && !pin.isEmpty()) {
+			pin = scmWorkspace.expand(pin);
+			map.put("label", pin);
+		}
 
 		return scmWorkspace;
 	}
@@ -340,8 +367,8 @@ public class PerforceScm extends SCM {
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
-			if (tagAction.getChange() > 0) {
-				String change = String.valueOf(tagAction.getChange());
+			if (tagAction.getBuildChange() != null) {
+				String change = String.valueOf(tagAction.getBuildChange());
 				env.put("P4_CHANGELIST", change);
 			}
 

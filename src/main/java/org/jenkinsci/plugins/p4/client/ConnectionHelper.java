@@ -2,11 +2,13 @@ package org.jenkinsci.plugins.p4.client;
 
 import hudson.model.TaskListener;
 import hudson.security.ACL;
+import hudson.util.LogTaskListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
@@ -53,7 +55,7 @@ public class ConnectionHelper {
 	}
 
 	public ConnectionHelper(P4StandardCredentials credential) {
-		this.listener = null;
+		this.listener = new LogTaskListener(logger, Level.INFO);
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connect();
@@ -70,10 +72,8 @@ public class ConnectionHelper {
 		} catch (Exception e) {
 			String err = "P4: Unable to connect: " + e;
 			logger.severe(err);
-			if (listener != null) {
-				listener.getLogger().println(err);
-			}
-			e.printStackTrace();
+			log(err);
+			return;
 		}
 
 		// Login to Perforce
@@ -82,8 +82,8 @@ public class ConnectionHelper {
 		} catch (Exception e) {
 			String err = "P4: Unable to login: " + e;
 			logger.severe(err);
-			listener.getLogger().println(err);
-			e.printStackTrace();
+			log(err);
+			return;
 		}
 	}
 
@@ -266,9 +266,7 @@ public class ConnectionHelper {
 		} catch (Exception e) {
 			String err = "P4: Unable to close Perforce connection: " + e;
 			logger.severe(err);
-			if (listener != null) {
-				listener.getLogger().println(err);
-			}
+			log(err);
 			e.printStackTrace();
 		}
 	}
@@ -306,8 +304,9 @@ public class ConnectionHelper {
 				// check and report unknown message
 				if (unknownMsg) {
 					if (!quiet) {
-						log("P4JAVA: " + msg);
-						logger.warning("p4java: " + msg);
+						msg = "P4JAVA: " + msg;
+						log(msg);
+						logger.warning(msg);
 					}
 					return false;
 				}
@@ -348,5 +347,4 @@ public class ConnectionHelper {
 	public void stop() throws Exception {
 		connection.execMapCmd("admin", new String[] { "stop" }, null);
 	}
-
 }
