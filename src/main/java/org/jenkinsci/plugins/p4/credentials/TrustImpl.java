@@ -4,13 +4,18 @@ import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
+import java.io.Serializable;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class TrustImpl extends AbstractDescribableImpl<TrustImpl> {
+public class TrustImpl extends AbstractDescribableImpl<TrustImpl> implements
+		Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	@NonNull
 	private final String trust;
 

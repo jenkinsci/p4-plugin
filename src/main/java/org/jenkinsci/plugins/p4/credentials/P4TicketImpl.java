@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import javax.servlet.ServletException;
 
@@ -16,7 +17,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class P4TicketImpl extends P4StandardCredentials {
+public class P4TicketImpl extends P4StandardCredentials implements Serializable {
 
 	/**
 	 * Ensure consistent serialisation.
@@ -83,7 +84,7 @@ public class P4TicketImpl extends P4StandardCredentials {
 						sslTrust, username, ticket);
 
 				ConnectionHelper p4 = new ConnectionHelper(test);
-				
+
 				if (!p4.isConnected()) {
 					return FormValidation.error("Server Connection Error.");
 				}
