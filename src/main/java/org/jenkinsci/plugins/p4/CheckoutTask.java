@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4;
 
+import hudson.AbortException;
 import hudson.FilePath.FileCallable;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
@@ -49,19 +50,17 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		this.client = config.getFullName();
 	}
 
-	public boolean setBuildOpts(Workspace workspace) {
+	public void setBuildOpts(Workspace workspace) throws AbortException {
 
-		boolean success = true;
 		ClientHelper p4 = new ClientHelper(credential, listener, client);
 
 		try {
 			// setup the client workspace to use for the build.
-			success &= p4.setClient(workspace);
-			if (!success) {
+			if (!p4.setClient(workspace)) {
 				String err = "Undefined workspace: " + workspace.getFullName();
 				logger.severe(err);
-				listener.getLogger().println(err);
-				return false;
+				listener.error(err);
+				throw new AbortException(err);
 			}
 
 			// fetch and calculate change to sync to or review to unshelve.
@@ -73,12 +72,11 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		} catch (Exception e) {
 			String err = "Unable to setup workspace: " + e;
 			logger.severe(err);
-			listener.getLogger().println(err);
-			e.printStackTrace();
+			listener.error(err);
+			throw new AbortException(err);
 		} finally {
 			p4.disconnect();
 		}
-		return success;
 	}
 
 	public void setPopulateOpts(Populate populate) {
@@ -93,30 +91,28 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	public Boolean invoke(File workspace, VirtualChannel channel)
 			throws IOException {
 
-		boolean success = true;
 		ClientHelper p4 = new ClientHelper(credential, listener, client);
 
 		try {
 			// Tidy the workspace before sync/build
-			success &= p4.tidyWorkspace(populate);
+			p4.tidyWorkspace(populate);
 
 			// Sync workspace to label, head or specified change
-			success &= p4.syncFiles(buildChange, populate);
+			p4.syncFiles(buildChange, populate);
 
 			// Unshelve review if specified
 			if (status == CheckoutStatus.SHELVED) {
-				success &= p4.unshelveFiles(review);
+				p4.unshelveFiles(review);
 			}
 		} catch (Exception e) {
-			String err = "Unable to update workspace: " + e;
-			logger.severe(err);
-			listener.getLogger().println(err);
-			e.printStackTrace();
-			success = false;
+			String msg = "Unable to update workspace: " + e;
+			logger.warning(msg);
+			listener.getLogger().println(msg);
+			return false;
 		} finally {
 			p4.disconnect();
 		}
-		return success;
+		return true;
 	}
 
 	/**

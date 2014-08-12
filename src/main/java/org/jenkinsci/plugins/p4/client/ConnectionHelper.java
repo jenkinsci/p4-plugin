@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.AbortException;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
@@ -279,9 +280,9 @@ public class ConnectionHelper {
 	 * @return
 	 * @throws ConverterException
 	 */
-	public boolean validateFileSpecs(List<IFileSpec> fileSpecs,
-			String... ignore) throws Exception {
-		return validateFileSpecs(fileSpecs, false, ignore);
+	public void validateFileSpecs(List<IFileSpec> fileSpecs, String... ignore)
+			throws Exception {
+		validateFileSpecs(fileSpecs, false, ignore);
 	}
 
 	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet,
@@ -307,6 +308,7 @@ public class ConnectionHelper {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
+						throw new AbortException(msg);
 					}
 					return false;
 				}

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -266,37 +267,38 @@ public class PerforceScm extends SCM {
 			throws IOException, InterruptedException {
 
 		boolean success = true;
-
-		PerforceScm scm = (PerforceScm) build.getProject().getScm();
+		
 		Workspace scmWorkspace = setEnvironment(build, listener);
-		String scmCredential = scm.getCredential();
-		Populate scmPopulate = scm.getPopulate();
+		scmWorkspace.setRootPath(buildWorkspace.getRemote());
+		String scmCredential = getCredential();
+		Populate scmPopulate = getPopulate();
 
 		// Create task
 		CheckoutTask task;
 		task = new CheckoutTask(scmCredential, scmWorkspace, listener);
 		task.setPopulateOpts(scmPopulate);
-		success &= task.setBuildOpts(scmWorkspace);
+		task.setBuildOpts(scmWorkspace);
 
 		// Add tagging action to build, enabling label support.
-		if (success) {
-			TagAction tag = new TagAction(build);
-			tag.setClient(scmWorkspace.getFullName());
-			tag.setCredential(scmCredential);
-			tag.setBuildChange(task.getBuildChange());
-			build.addAction(tag);
-		}
+		TagAction tag = new TagAction(build);
+		tag.setClient(scmWorkspace.getFullName());
+		tag.setCredential(scmCredential);
+		tag.setBuildChange(task.getBuildChange());
+		build.addAction(tag);
 
-		// Only Invoke build if setup succeed.
-		if (success) {
-			success &= buildWorkspace.act(task);
-		}
+		// Invoke build.
+		success &= buildWorkspace.act(task);
 
 		// Only write change log if build succeed.
 		if (success) {
 			// Calculate changes prior to build (based on last build)
 			List<Object> changes = calculateChanges(build, task);
 			P4ChangeSet.store(changelogFile, changes);
+		} else {
+			String msg = "P4: Build failed";
+			listener.getLogger().println(msg);
+			logger.warning(msg);
+			throw new AbortException(msg);
 		}
 		return success;
 	}
@@ -323,40 +325,22 @@ public class PerforceScm extends SCM {
 	private Workspace setEnvironment(AbstractBuild<?, ?> build,
 			TaskListener listener) throws IOException, InterruptedException {
 
-		Map<String, String> map = build.getBuildVariables();
-		EnvVars envVars = build.getEnvironment(listener);
+		Workspace scmWorkspace = (Workspace) getWorkspace().clone();
 
-		PerforceScm scm = (PerforceScm) build.getProject().getScm();
-		Workspace scmWorkspace = (Workspace) scm.getWorkspace().clone();
-		Populate scmPopulate = scm.getPopulate();
-
-		// IMPORTANT: Set workspace format map to build workspace name.
-		AbstractProject<?, ?> project = build.getProject();
-		String nodename = build.getBuiltOn().getNodeName();
-		nodename = (nodename != "") ? nodename : "master";
-		String hostname = build.getBuiltOn().toComputer().getHostName();
-
-		scmWorkspace.clear();
-		scmWorkspace.set("node", nodename);
-		scmWorkspace.set("hostname", hostname);
-		scmWorkspace.set("hash", String.valueOf(nodename.hashCode()));
-		scmWorkspace.set("project", project.getName());
-
-		// IMPORTANT: Set workspace root and hostname
-		scmWorkspace.setHostName(null); // TODO get real hostname!
 		scmWorkspace.setRootPath(build.getModuleRoot().getRemote());
 
 		// load environments
-		scmWorkspace.load(map);
+		EnvVars envVars = build.getEnvironment(listener);
+		scmWorkspace.clear();
 		scmWorkspace.load(envVars);
 
 		// Set label in map, if pinning is used.
+		Populate scmPopulate = getPopulate();
 		String pin = scmPopulate.getPin();
 		if (pin != null && !pin.isEmpty()) {
 			pin = scmWorkspace.expand(pin);
-			map.put("label", pin);
+			scmWorkspace.set("label", pin);
 		}
-
 		return scmWorkspace;
 	}
 

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.AbortException;
 import hudson.model.TaskListener;
 
 import java.io.BufferedOutputStream;
@@ -21,6 +22,7 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -59,7 +61,7 @@ public class ClientHelper extends ConnectionHelper {
 		} catch (Exception e) {
 			String err = "P4: Unable to use Workspace: " + e;
 			logger.severe(err);
-			listener.getLogger().println(err);
+			log(err);
 			e.printStackTrace();
 		}
 	}
@@ -130,9 +132,29 @@ public class ClientHelper extends ConnectionHelper {
 	 * @param change
 	 * @throws Exception
 	 */
-	public boolean syncFiles(Object buildChange, Populate populate)
+	public void syncFiles(Object buildChange, Populate populate)
 			throws Exception {
-		log("SCM Task: syncing files at change: " + buildChange);
+
+		// test label is valid
+		if (buildChange instanceof String) {
+			String label = (String) buildChange;
+			try {
+				int change = Integer.parseInt(label);
+				log("SCM Task: label is a number! syncing files at change: "
+						+ change);
+			} catch (NumberFormatException e) {
+				if (!isLabel(label)) {
+					String msg = "P4: Unable to find label: " + label;
+					log(msg);
+					logger.warning(msg);
+					throw new AbortException(msg);
+				} else {
+					log("SCM Task: syncing files at label: " + label);
+				}
+			}
+		} else {
+			log("SCM Task: syncing files at change: " + buildChange);
+		}
 
 		// build file revision spec
 		List<IFileSpec> files;
@@ -142,14 +164,11 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Sync files
 		files = FileSpecBuilder.makeFileSpecList(revisions);
-		return syncFiles(files, populate);
+		syncFiles(files, populate);
 	}
 
-	private boolean syncFiles(List<IFileSpec> files, Populate populate)
+	private void syncFiles(List<IFileSpec> files, Populate populate)
 			throws Exception {
-
-		boolean success = true;
-
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
@@ -158,9 +177,16 @@ public class ClientHelper extends ConnectionHelper {
 		log("... bypass have " + !populate.isHave());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		success &= validateFileSpecs(syncMsg, "file(s) up-to-date.",
+		validateFileSpecs(syncMsg, "file(s) up-to-date.",
 				"file does not exist", "no file(s) as of that date");
-		return success;
+	}
+
+	private boolean isLabel(String name) throws Exception {
+		if (name.equals("now")) {
+			return true;
+		}
+		ILabel label = connection.getLabel(name);
+		return (label != null);
 	}
 
 	/**
@@ -169,8 +195,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * 
 	 * @throws Exception
 	 */
-	public boolean tidyWorkspace(Populate populate) throws Exception {
-		boolean success = true;
+	public void tidyWorkspace(Populate populate) throws Exception {
 
 		log("SCM Task: cleanup workspace: " + iclient.getName());
 
@@ -181,34 +206,31 @@ public class ClientHelper extends ConnectionHelper {
 
 		if (populate instanceof AutoCleanImpl) {
 			// remove all pending files within workspace
-			success &= tidyPending(files);
+			tidyPending(files);
 
 			// remove extra files within workspace
 			if (((AutoCleanImpl) populate).isDelete()) {
-				success &= tidyDelete(files);
+				tidyDelete(files);
 			}
 
 			// replace any missing/modified files within workspace
 			if (((AutoCleanImpl) populate).isReplace()) {
-				success &= tidyReplace(files);
+				tidyReplace(files);
 			}
 		}
 
 		if (populate instanceof ForceCleanImpl) {
 			// remove all versioned files (clean have list)
-			success &= syncFiles(0, populate);
+			syncFiles(0, populate);
 
 			// remove all files from workspace
 			String root = iclient.getRoot();
 			log("... rm -rf " + root);
 			FileUtils.forceDelete(new File(root));
 		}
-
-		return success;
 	}
 
-	private boolean tidyPending(List<IFileSpec> files) throws Exception {
-		boolean success = true;
+	private void tidyPending(List<IFileSpec> files) throws Exception {
 
 		log("SCM Task: reverting all pending and shelved revisions.");
 
@@ -216,7 +238,7 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		log("... [list] = revert");
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		success &= validateFileSpecs(list, "not opened on this client");
+		validateFileSpecs(list, "not opened on this client");
 
 		// check for added files and remove...
 		log("... rm [list] | ABANDONED");
@@ -229,11 +251,9 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		}
-		return success;
 	}
 
-	private boolean tidyReplace(List<IFileSpec> files) throws Exception {
-		boolean success = true;
+	private void tidyReplace(List<IFileSpec> files) throws Exception {
 
 		log("SCM Task: restoring all missing and changed revisions.");
 
@@ -246,19 +266,20 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setUseWildcards(true);
 		log("... [list] = reconcile -n -ed");
 		List<IFileSpec> update = iclient.reconcileFiles(files, statusOpts);
-		success &= validateFileSpecs(update, "also opened by",
-				"no file(s) to reconcile", "must sync/resolve",
-				"exclusive file already opened");
+		validateFileSpecs(update, "also opened by", "no file(s) to reconcile",
+				"must sync/resolve", "exclusive file already opened",
+				"cannot submit from stream");
 
 		// force sync to update files only if "no file(s) to reconcile" is not
 		// present.
 		if (validateFileSpecs(update, true, "also opened by",
-				"must sync/resolve", "exclusive file already opened")) {
+				"must sync/resolve", "exclusive file already opened",
+				"cannot submit from stream")) {
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
 			log("... sync -f [list]");
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
-			success &= validateFileSpecs(syncMsg, "file(s) up-to-date.",
+			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");
 		}
 
@@ -274,17 +295,14 @@ public class ClientHelper extends ConnectionHelper {
 					syncOpts.setForceUpdate(true);
 					log("... sync -f " + rev);
 					List<IFileSpec> syncMsg = iclient.sync(f, syncOpts);
-					success &= validateFileSpecs(syncMsg,
-							"file(s) up-to-date.", "file does not exist");
+					validateFileSpecs(syncMsg, "file(s) up-to-date.",
+							"file does not exist");
 				}
 			}
 		}
-
-		return success;
 	}
 
-	private boolean tidyDelete(List<IFileSpec> files) throws Exception {
-		boolean success = true;
+	private void tidyDelete(List<IFileSpec> files) throws Exception {
 
 		log("SCM Task: removing all non-versioned files.");
 
@@ -295,8 +313,8 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setUseWildcards(true);
 		log("... [list] = reconcile -n -a");
 		List<IFileSpec> extra = iclient.reconcileFiles(files, statusOpts);
-		success &= validateFileSpecs(extra, "- no file(s) to reconcile",
-				"instead of", "empty, assuming text");
+		validateFileSpecs(extra, "- no file(s) to reconcile", "instead of",
+				"empty, assuming text");
 
 		// remove added files
 		log("... rm [list]");
@@ -307,8 +325,6 @@ public class ClientHelper extends ConnectionHelper {
 				unlink.delete();
 			}
 		}
-
-		return success;
 	}
 
 	/**
@@ -365,8 +381,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @param review
 	 * @throws Exception
 	 */
-	public boolean unshelveFiles(int review) throws Exception {
-		boolean success = true;
+	public void unshelveFiles(int review) throws Exception {
 
 		log("SCM Task: unshelve review: " + review);
 
@@ -379,14 +394,14 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		log("... sync " + path);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		success &= validateFileSpecs(syncMsg, "file(s) up-to-date.");
+		validateFileSpecs(syncMsg, "file(s) up-to-date.");
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		log("... unshelve -f -s " + review + " " + path);
 		shelveMsg = iclient.unshelveChangelist(review, files, 0, true, false);
-		success &= validateFileSpecs(shelveMsg, "also opened by",
-				"no such file(s)", "exclusive file already opened");
+		validateFileSpecs(shelveMsg, "also opened by", "no such file(s)",
+				"exclusive file already opened");
 
 		// force sync any files missed due to INFO messages e.g. exclusive files
 		for (IFileSpec spec : shelveMsg) {
@@ -405,10 +420,7 @@ public class ClientHelper extends ConnectionHelper {
 		rOpts.setNoUpdate(true);
 		log("... revert -k " + path);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
-		success &= validateFileSpecs(rvtMsg,
-				"file(s) not opened on this client");
-
-		return success;
+		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
 	}
 
 	/**
@@ -451,8 +463,11 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
+		String msg = "listing changes: " + ws;
+		log(msg);
+		logger.info(msg);
 
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(50);
 		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
@@ -497,14 +512,16 @@ public class ClientHelper extends ConnectionHelper {
 
 		for (Map<String, Object> entry : map) {
 			String status = (String) entry.get("status");
-			if (status.startsWith("need")) {
-				String value = (String) entry.get("change");
-				int change = Integer.parseInt(value);
-				needChanges.add(change);
-			} else if (status.startsWith("partial")) {
-				String value = (String) entry.get("change");
-				int change = Integer.parseInt(value);
-				needChanges.add(change);
+			if (status != null) {
+				if (status.startsWith("need")) {
+					String value = (String) entry.get("change");
+					int change = Integer.parseInt(value);
+					needChanges.add(change);
+				} else if (status.startsWith("partial")) {
+					String value = (String) entry.get("change");
+					int change = Integer.parseInt(value);
+					needChanges.add(change);
+				}
 			}
 		}
 		return needChanges;
@@ -527,7 +544,7 @@ public class ClientHelper extends ConnectionHelper {
 			}
 			logger.severe(msg);
 			if (listener != null) {
-				listener.getLogger().println(msg);
+				log(msg);
 			}
 			return false;
 		}
