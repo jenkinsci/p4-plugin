@@ -19,6 +19,7 @@ import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
@@ -183,6 +184,17 @@ public class ConnectionHelper {
 		return (Changelist) connection.getChangelist(id);
 	}
 
+	/**
+	 * Test if given name is a label
+	 */
+	public boolean isLabel(String name) throws Exception {
+		if (name.equals("now")) {
+			return true;
+		}
+		ILabel label = connection.getLabel(name);
+		return (label != null);
+	}
+	
 	/**
 	 * Get Perforce Label
 	 * 

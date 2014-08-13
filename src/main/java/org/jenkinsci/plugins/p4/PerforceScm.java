@@ -54,6 +54,7 @@ import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
+import com.perforce.p4java.impl.generic.core.Label;
 
 public class PerforceScm extends SCM {
 
@@ -267,7 +268,7 @@ public class PerforceScm extends SCM {
 			throws IOException, InterruptedException {
 
 		boolean success = true;
-		
+
 		Workspace scmWorkspace = setEnvironment(build, listener);
 		scmWorkspace.setRootPath(buildWorkspace.getRemote());
 		String scmCredential = getCredential();
@@ -296,7 +297,6 @@ public class PerforceScm extends SCM {
 			P4ChangeSet.store(changelogFile, changes);
 		} else {
 			String msg = "P4: Build failed";
-			listener.getLogger().println(msg);
 			logger.warning(msg);
 			throw new AbortException(msg);
 		}
@@ -352,7 +352,7 @@ public class PerforceScm extends SCM {
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
 			if (tagAction.getBuildChange() != null) {
-				String change = String.valueOf(tagAction.getBuildChange());
+				String change = getChangeNumber(tagAction);
 				env.put("P4_CHANGELIST", change);
 			}
 
@@ -361,6 +361,44 @@ public class PerforceScm extends SCM {
 				String client = tagAction.getClient();
 				env.put("P4_CLIENT", client);
 			}
+		}
+	}
+
+	private String getChangeNumber(TagAction tagAction) {
+		Object buildChange = tagAction.getBuildChange();
+
+		if (buildChange instanceof Integer) {
+			// it already an Integer, so add change...
+			String change = String.valueOf(buildChange);
+			return change;
+		}
+
+		try {
+			// it is really a change number, so add change...
+			int change = Integer.parseInt((String) buildChange);
+			return String.valueOf(change);
+		} catch (NumberFormatException n) {
+		}
+
+		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
+		String name = (String) buildChange;
+		try {
+			Label label = p4.getLabel(name);
+			String spec = label.getRevisionSpec();
+			if (spec != null && !spec.isEmpty()) {
+				if (spec.startsWith("@")) {
+					spec = spec.substring(1);
+				}
+				return spec;
+			} else {
+				// a label, but no RevisionSpec
+				return name;
+			}
+		} catch (Exception e) {
+			// not a label
+			return name;
+		} finally {
+			p4.disconnect();
 		}
 	}
 

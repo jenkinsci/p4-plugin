@@ -22,7 +22,6 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
-import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -179,14 +178,6 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
 				"file does not exist", "no file(s) as of that date");
-	}
-
-	private boolean isLabel(String name) throws Exception {
-		if (name.equals("now")) {
-			return true;
-		}
-		ILabel label = connection.getLabel(name);
-		return (label != null);
 	}
 
 	/**
