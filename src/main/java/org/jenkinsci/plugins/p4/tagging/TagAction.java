@@ -121,4 +121,17 @@ public class TagAction extends AbstractScmTagAction {
 	public List<String> getTags() {
 		return tags;
 	}
+
+	/**
+	 * Method used by Jelly code to show Label information (do not remove)
+	 * 
+	 * @param tag
+	 * @return
+	 * @throws Exception
+	 */
+	public Label getLabel(String tag) throws Exception {
+		ClientHelper p4 = new ClientHelper(credential, null, client);
+		Label label = p4.getLabel(tag);
+		return label;
+	}
 }

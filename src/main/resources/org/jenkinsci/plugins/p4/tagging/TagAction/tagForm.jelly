@@ -17,7 +17,7 @@
 			<h1>Build #${it.build.number}</h1>
 
 			<j:if test="${it.isTagged()}">
-				<p>This build is labeled:</p>
+				<p>This build is labelled:</p>
 				<table border="0" width="640">
 					<tr>
 						<td><b>Label</b></td>
@@ -38,7 +38,7 @@
 			</j:if>
 
 			<p><b>Create a Perforce Automatic label:</b></p>
-			<p>The Label's view is based on the workspace used during the build and Revision is set to change number: ${it.change}.</p>
+			<p>The Label's view is based on the workspace used during the build and Revision is set to change number: ${it.buildChange}.</p>
 			<form action="submit" method="get" name="label">
 				<table border="0" width="640">
 					<tr>
