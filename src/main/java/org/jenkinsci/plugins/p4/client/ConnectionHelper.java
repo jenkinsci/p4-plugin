@@ -351,7 +351,7 @@ public class ConnectionHelper {
 		return null;
 	}
 
-	protected void log(String msg) {
+	public void log(String msg) {
 		if (listener == null) {
 			return;
 		}

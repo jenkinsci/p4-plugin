@@ -43,16 +43,16 @@ public class ClientHelper extends ConnectionHelper {
 
 	public ClientHelper(String credential, TaskListener listener, String client) {
 		super(credential, listener);
-		clientLogin(listener, client);
+		clientLogin(client);
 	}
 
 	public ClientHelper(P4StandardCredentials credential,
 			TaskListener listener, String client) {
 		super(credential, listener);
-		clientLogin(listener, client);
+		clientLogin(client);
 	}
 
-	private void clientLogin(TaskListener listener, String client) {
+	private void clientLogin(String client) {
 		// Find workspace and set as current
 		try {
 			iclient = connection.getClient(client);
@@ -540,5 +540,9 @@ public class ClientHelper extends ConnectionHelper {
 			return false;
 		}
 		return true;
+	}
+
+	public IClient getClient() {
+		return iclient;
 	}
 }

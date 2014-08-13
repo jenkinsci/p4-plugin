@@ -94,6 +94,20 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		ClientHelper p4 = new ClientHelper(credential, listener, client);
 
 		try {
+			// test server connection
+			if (!p4.isConnected()) {
+				p4.log("P4: Server connection error:" + credential.getP4port());
+				return false;
+			}
+			p4.log("Connected to server: " + credential.getP4port());
+
+			// test client connection
+			if (p4.getClient() == null) {
+				p4.log("P4: Client unknown: " + client);
+				return false;
+			}
+			p4.log("Connected to client: " + client);
+
 			// Tidy the workspace before sync/build
 			p4.tidyWorkspace(populate);
 
@@ -107,8 +121,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		} catch (Exception e) {
 			String msg = "Unable to update workspace: " + e;
 			logger.warning(msg);
-			listener.getLogger().println(msg);
-			return false;
+			throw new AbortException(msg);
 		} finally {
 			p4.disconnect();
 		}
