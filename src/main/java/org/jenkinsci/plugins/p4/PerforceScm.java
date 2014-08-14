@@ -327,8 +327,6 @@ public class PerforceScm extends SCM {
 
 		Workspace scmWorkspace = (Workspace) getWorkspace().clone();
 
-		scmWorkspace.setRootPath(build.getModuleRoot().getRemote());
-
 		// load environments
 		EnvVars envVars = build.getEnvironment(listener);
 		scmWorkspace.clear();
