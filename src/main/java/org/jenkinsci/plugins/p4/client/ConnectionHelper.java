@@ -194,7 +194,7 @@ public class ConnectionHelper {
 		ILabel label = connection.getLabel(name);
 		return (label != null);
 	}
-	
+
 	/**
 	 * Get Perforce Label
 	 * 
@@ -300,7 +300,8 @@ public class ConnectionHelper {
 	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet,
 			String... ignore) throws Exception {
 		for (IFileSpec fileSpec : fileSpecs) {
-			if (fileSpec.getOpStatus() != FileSpecOpStatus.VALID) {
+			FileSpecOpStatus status = fileSpec.getOpStatus();
+			if (status != FileSpecOpStatus.VALID) {
 				String msg = fileSpec.getStatusMessage();
 
 				// superfluous p4java message
@@ -320,7 +321,10 @@ public class ConnectionHelper {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
-						throw new AbortException(msg);
+						if (status == FileSpecOpStatus.ERROR
+								|| status == FileSpecOpStatus.CLIENT_ERROR) {
+							throw new AbortException(msg);
+						}
 					}
 					return false;
 				}
