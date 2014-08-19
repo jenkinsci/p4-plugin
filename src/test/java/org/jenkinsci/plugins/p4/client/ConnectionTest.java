@@ -265,7 +265,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: syncing files at label: auto15"));
+		assertTrue(log.contains("SCM Task: syncing files at client/label: auto15"));
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);

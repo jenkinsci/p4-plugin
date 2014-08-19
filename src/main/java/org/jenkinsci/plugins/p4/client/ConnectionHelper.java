@@ -19,10 +19,12 @@ import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
@@ -186,13 +188,33 @@ public class ConnectionHelper {
 
 	/**
 	 * Test if given name is a label
+	 * 
+	 * @throws Exception
 	 */
 	public boolean isLabel(String name) throws Exception {
 		if (name.equals("now")) {
 			return true;
 		}
-		ILabel label = connection.getLabel(name);
-		return (label != null);
+		try {
+			ILabel label = connection.getLabel(name);
+			return (label != null);
+		} catch (RequestException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Test if given name is a client
+	 * 
+	 * @throws Exception
+	 */
+	public boolean isClient(String name) throws Exception {
+		try {
+			IClient client = connection.getClient(name);
+			return (client != null);
+		} catch (RequestException e) {
+			return false;
+		}
 	}
 
 	/**

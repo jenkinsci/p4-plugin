@@ -142,13 +142,13 @@ public class ClientHelper extends ConnectionHelper {
 				log("SCM Task: label is a number! syncing files at change: "
 						+ change);
 			} catch (NumberFormatException e) {
-				if (!isLabel(label)) {
-					String msg = "P4: Unable to find label: " + label;
+				if (!isLabel(label) && !isClient(label)) {
+					String msg = "P4: Unable to find client/label: " + label;
 					log(msg);
 					logger.warning(msg);
 					throw new AbortException(msg);
 				} else {
-					log("SCM Task: syncing files at label: " + label);
+					log("SCM Task: syncing files at client/label: " + label);
 				}
 			}
 		} else {
