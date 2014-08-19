@@ -88,7 +88,7 @@ public class P4TicketImpl extends P4StandardCredentials implements Serializable 
 				if (!p4.isConnected()) {
 					return FormValidation.error("Server Connection Error.");
 				}
-				p4.logout(); // invalidate any earlier ticket before test.
+				// Do not logout, before test (preserve tickets)
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");
