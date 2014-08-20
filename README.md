@@ -178,6 +178,8 @@ The Build Review Action support the following parameters:
 * pass (URL to call after a build succeeded)
 * fail (URL to call after a build failed)
 
+*Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. ${label}; for this reason please avoid these names for slaves and matrix axis.*
+
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 
 ![Build review](docs/images/review.png)
