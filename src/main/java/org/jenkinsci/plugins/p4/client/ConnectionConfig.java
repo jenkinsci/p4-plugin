@@ -4,13 +4,10 @@ import java.io.Serializable;
 
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 
-import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.IServerInfo;
-
 public class ConnectionConfig implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private final String p4port;
 	private final boolean ssl;
 	private final String serverUri;
@@ -20,11 +17,21 @@ public class ConnectionConfig implements Serializable {
 		this.p4port = credential.getP4port();
 		this.ssl = credential.isSsl();
 		this.trust = credential.getTrust();
+		this.serverUri = toUri();
+	}
 
+	public ConnectionConfig(String p4port, boolean ssl, String trust) {
+		this.p4port = p4port;
+		this.ssl = ssl;
+		this.trust = trust;
+		this.serverUri = toUri();
+	}
+
+	private String toUri() {
 		if (ssl) {
-			this.serverUri = "p4javassl://" + p4port;
+			return "p4javassl://" + p4port;
 		} else {
-			this.serverUri = "p4java://" + p4port;
+			return "p4java://" + p4port;
 		}
 	}
 

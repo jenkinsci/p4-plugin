@@ -8,6 +8,8 @@ import java.io.Serializable;
 
 import javax.servlet.ServletException;
 
+import org.jenkinsci.plugins.p4.client.ConnectionConfig;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -74,6 +76,16 @@ public class P4TicketImpl extends P4StandardCredentials implements Serializable 
 				@QueryParameter("ticketPath") String ticketPath)
 				throws IOException, ServletException {
 			try {
+				// Test connection path to Server
+				ConnectionConfig config = new ConnectionConfig(p4port,
+						"true".equals(ssl), trust);
+				FormValidation validation;
+				validation = ConnectionFactory.testConnection(config);
+				if (!FormValidation.ok().equals(validation)) {
+					return validation;
+				}
+
+				// Test an open connection
 				TrustImpl sslTrust;
 				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
 
@@ -88,11 +100,15 @@ public class P4TicketImpl extends P4StandardCredentials implements Serializable 
 				if (!p4.isConnected()) {
 					return FormValidation.error("Server Connection Error.");
 				}
+
+				// Test authentication
 				// Do not logout, before test (preserve tickets)
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");
 				}
+
+				// Test minimum server version
 				if (!p4.checkVersion(20121)) {
 					return FormValidation
 							.error("Server version is too old (min 2012.1)");

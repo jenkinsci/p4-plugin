@@ -24,6 +24,7 @@ import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
@@ -89,6 +90,10 @@ public class ConnectionHelper {
 			log(err);
 			return;
 		}
+	}
+
+	public String getTrust() throws Exception {
+		return connection.getTrust();
 	}
 
 	public boolean isConnected() {

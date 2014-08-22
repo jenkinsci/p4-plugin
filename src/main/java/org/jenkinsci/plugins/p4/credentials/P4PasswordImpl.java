@@ -8,6 +8,8 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import org.jenkinsci.plugins.p4.client.ConnectionConfig;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -57,22 +59,36 @@ public class P4PasswordImpl extends P4StandardCredentials {
 				@QueryParameter("password") String password)
 				throws IOException, ServletException {
 			try {
+				// Test connection path to Server
+				ConnectionConfig config = new ConnectionConfig(p4port,
+						"true".equals(ssl), trust);
+				FormValidation validation;
+				validation = ConnectionFactory.testConnection(config);
+				if(!FormValidation.ok().equals(validation)) {
+					return validation;
+				}
+
+				// Test an open connection
 				TrustImpl sslTrust;
 				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-
+				
 				P4PasswordImpl test = new P4PasswordImpl(null, null, null,
 						p4port, sslTrust, username, password);
-
+				
 				ConnectionHelper p4 = new ConnectionHelper(test);
-
+				
 				if (!p4.isConnected()) {
 					return FormValidation.error("Server Connection Error.");
 				}
+				
+				// Test authentication
 				p4.logout(); // invalidate any earlier ticket before test.
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");
 				}
+				
+				// Test minimum server version
 				if (!p4.checkVersion(20121)) {
 					return FormValidation
 							.error("Server version is too old (min 2012.1)");

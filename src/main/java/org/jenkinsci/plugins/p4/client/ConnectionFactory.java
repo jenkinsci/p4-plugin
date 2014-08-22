@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.util.FormValidation;
+
 import java.util.Properties;
 import java.util.logging.Logger;
 
@@ -42,6 +44,46 @@ public class ConnectionFactory {
 	public static IOptionsServer getConnection(ConnectionConfig config)
 			throws Exception {
 
+		IOptionsServer iserver = getRawConnection(config);
+
+		// Add trust for SSL connections
+		if (config.isSsl()) {
+			iserver.addTrust(config.getTrust());
+		}
+
+		// Connect and update current P4 connection
+		iserver.connect();
+		currentP4 = iserver;
+		return iserver;
+	}
+
+	public static FormValidation testConnection(ConnectionConfig config) {
+
+		// Test for SSL connections
+		try {
+			IOptionsServer iserver = getRawConnection(config);
+			if (config.isSsl()) {
+				String serverTrust = iserver.getTrust();
+				if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
+					return FormValidation
+							.error("Trust missmatch! Server fingerprint: "
+									+ serverTrust);
+				}
+			}
+		} catch (Exception e) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Unable to connect to: ");
+			sb.append(config.getServerUri());
+			sb.append("\n");
+			sb.append(e.getMessage());
+			return FormValidation.error(sb.toString());
+		}
+
+		return FormValidation.ok();
+	}
+
+	private static IOptionsServer getRawConnection(ConnectionConfig config)
+			throws Exception {
 		Properties props = System.getProperties();
 
 		// Identify ourselves in server log files.
@@ -59,15 +101,6 @@ public class ConnectionFactory {
 		String serverUri = config.getServerUri();
 		IOptionsServer iserver;
 		iserver = ServerFactory.getOptionsServer(serverUri, props);
-
-		// Add trust for SSL connections
-		if (config.isSsl()) {
-			iserver.addTrust(config.getTrust());
-		}
-
-		// Connect and update current P4 connection
-		iserver.connect();
-		currentP4 = iserver;
 		return iserver;
 	}
 }
