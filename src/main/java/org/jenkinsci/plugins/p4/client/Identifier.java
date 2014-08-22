@@ -12,6 +12,9 @@ public class Identifier {
 
 		version = bundle.getString("org.jenkinsci.plugins.p4.version");
 		product = bundle.getString("org.jenkinsci.plugins.p4.product");
+		
+		String platform = System.getProperty("os.name");
+		version += "/" + platform;
 	}
 
 	public String getVersion() {
