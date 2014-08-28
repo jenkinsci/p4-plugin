@@ -190,7 +190,7 @@ public class PerforceScm extends SCM {
 			}
 
 			// if there is a remainder and the workspace is out of date
-			if (!remainder.isEmpty() && p4.updateFiles()) {
+			if (!remainder.isEmpty() || p4.updateFiles()) {
 				state = PollingResult.BUILD_NOW;
 			}
 		} catch (Exception e) {
