@@ -46,10 +46,13 @@ public class ConnectionFactory {
 
 		IOptionsServer iserver = getRawConnection(config);
 
-		// Add trust for SSL connections
-		if (config.isSsl()) {
-			iserver.addTrust(config.getTrust());
-		}
+        // Add trust for SSL connections, if it is not already there
+        if (config.isSsl()) {
+            String serverTrust = iserver.getTrust();
+            if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
+                iserver.addTrust(config.getTrust());
+            }
+        }
 
 		// Connect and update current P4 connection
 		iserver.connect();
