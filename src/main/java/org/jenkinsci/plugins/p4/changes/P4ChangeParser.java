@@ -126,7 +126,7 @@ public class P4ChangeParser extends ChangeLogParser {
 					p4.disconnect();
 					return;
 				} catch (Exception e) {
-					e.printStackTrace();
+					entry = null;
 				}
 			}
 		}

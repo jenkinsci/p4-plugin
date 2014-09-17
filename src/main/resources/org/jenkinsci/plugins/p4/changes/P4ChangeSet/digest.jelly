@@ -7,17 +7,25 @@
 		<b>Summary Of Changes</b> - <b><a href="changes">View Detail</a></b>
 		<br/>
 		<j:forEach var="c" items="${it.history}" varStatus="loop">
-		
+			
 			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
-				<img src="${rootURL}/plugin/p4/icons/changelist.gif" border="0" style="vertical-align: middle"/>
-				<a href="changes#detail${loop.index}">${c.id}</a>
-				by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
-				on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
-				<hr/>
-				${c.msgAnnotated}
-				<br/>
+			<j:choose>
+				<j:when test="${c.id == null}">
+					No connection to Perforce.
+				</j:when>
+			
+				<j:otherwise>
+					<img src="${rootURL}/plugin/p4/icons/changelist.gif" border="0" style="vertical-align: middle"/>
+					<a href="changes#detail${loop.index}">${c.id}</a>
+					by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
+					on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
+					<hr/>
+					${c.msgAnnotated}
+					<br/>
+				</j:otherwise>
+			</j:choose>
 			</div>
-	
+			
 		</j:forEach>
 	</j:otherwise>
 </j:choose>

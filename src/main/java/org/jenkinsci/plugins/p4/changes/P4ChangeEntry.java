@@ -39,87 +39,79 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		setParent(parent);
 	}
 
-	public void setChange(ConnectionHelper p4, int changeId) {
-		try {
-			Changelist changelist = (Changelist) p4.getChange(changeId);
+	public void setChange(ConnectionHelper p4, int changeId) throws Exception {
+		Changelist changelist = (Changelist) p4.getChange(changeId);
 
-			// set id
-			id = changelist.getId();
+		// set id
+		id = changelist.getId();
 
-			// set author
-			String user = changelist.getUsername();
-			author = User.get(user);
+		// set author
+		String user = changelist.getUsername();
+		author = User.get(user);
 
-			// set date of change
-			date = changelist.getDate();
+		// set date of change
+		date = changelist.getDate();
 
-			// set client id
-			clientId = changelist.getClientId();
+		// set client id
+		clientId = changelist.getClientId();
 
-			// set display message
-			msg = changelist.getDescription();
+		// set display message
+		msg = changelist.getDescription();
 
-			// set list of file revisions in change
-			if (changelist.getStatus() == ChangelistStatus.PENDING) {
-				files = p4.loadShelvedFiles(changeId);
-				shelved = true;
-			} else {
-				files = p4.getFiles("=" + changeId, FILE_COUNT_LIMIT + 1);
-				shelved = false;
-			}
-			if (files.size() > FILE_COUNT_LIMIT) {
-				fileLimit = true;
-				files = files.subList(0, FILE_COUNT_LIMIT);
-			}
-
-			// set list of affected paths
-			List<String> affectedPaths = new ArrayList<String>();
-			for (IFileSpec item : files) {
-				affectedPaths.add(item.getDepotPathString());
-			}
-
-			// set list of jobs in change
-			this.jobs = changelist.getJobs();
-		} catch (Exception e) {
-			e.printStackTrace();
+		// set list of file revisions in change
+		if (changelist.getStatus() == ChangelistStatus.PENDING) {
+			files = p4.loadShelvedFiles(changeId);
+			shelved = true;
+		} else {
+			files = p4.getFiles("=" + changeId, FILE_COUNT_LIMIT + 1);
+			shelved = false;
 		}
+		if (files.size() > FILE_COUNT_LIMIT) {
+			fileLimit = true;
+			files = files.subList(0, FILE_COUNT_LIMIT);
+		}
+
+		// set list of affected paths
+		List<String> affectedPaths = new ArrayList<String>();
+		for (IFileSpec item : files) {
+			affectedPaths.add(item.getDepotPathString());
+		}
+
+		// set list of jobs in change
+		this.jobs = changelist.getJobs();
 	}
 
-	public void setLabel(ConnectionHelper p4, String labelId) {
-		try {
-			label = true;
-			Label label = (Label) p4.getLabel(labelId);
+	public void setLabel(ConnectionHelper p4, String labelId) throws Exception {
+		label = true;
+		Label label = (Label) p4.getLabel(labelId);
 
-			// set id
-			id = labelId;
+		// set id
+		id = labelId;
 
-			// set author
-			String user = label.getOwnerName();
-			author = User.get(user);
+		// set author
+		String user = label.getOwnerName();
+		author = User.get(user);
 
-			// set date of change
-			date = label.getLastAccess();
+		// set date of change
+		date = label.getLastAccess();
 
-			// set client id
-			clientId = labelId;
+		// set client id
+		clientId = labelId;
 
-			// set display message
-			msg = label.getDescription();
+		// set display message
+		msg = label.getDescription();
 
-			// set list of file revisions in change
-			files = p4.getFiles(labelId, FILE_COUNT_LIMIT + 1);
-			if (files.size() > FILE_COUNT_LIMIT) {
-				fileLimit = true;
-				files = files.subList(0, FILE_COUNT_LIMIT);
-			}
+		// set list of file revisions in change
+		files = p4.getFiles(labelId, FILE_COUNT_LIMIT + 1);
+		if (files.size() > FILE_COUNT_LIMIT) {
+			fileLimit = true;
+			files = files.subList(0, FILE_COUNT_LIMIT);
+		}
 
-			// set list of affected paths
-			List<String> affectedPaths = new ArrayList<String>();
-			for (IFileSpec item : files) {
-				affectedPaths.add(item.getDepotPathString());
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		// set list of affected paths
+		List<String> affectedPaths = new ArrayList<String>();
+		for (IFileSpec item : files) {
+			affectedPaths.add(item.getDepotPathString());
 		}
 	}
 
