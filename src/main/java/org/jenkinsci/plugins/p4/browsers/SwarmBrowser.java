@@ -36,7 +36,7 @@ public class SwarmBrowser extends P4Browser {
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
 		return new URL(url.toString() + "change/" + changeSet.getId());
 	}
-	
+
 	public URL getLabelSetLink(P4ChangeEntry changeSet) throws IOException {
 		return new URL(url.toString() + "label/" + changeSet.getId());
 	}
@@ -49,7 +49,11 @@ public class SwarmBrowser extends P4Browser {
 
 	@Override
 	public URL getFileLink(IFileSpec file) throws Exception {
-		return new URL(url.toString() + file.getDepotPathString());
+		int r = new Integer(file.getEndRevision());
+		String path = file.getDepotPathString();
+		path = path.replace("//", "files/");
+		String rev = "?v=" + r;
+		return new URL(url.toString() + path + rev);
 	}
 
 	@Override
