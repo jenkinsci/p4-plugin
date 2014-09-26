@@ -166,7 +166,12 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		// if label is specified then update
 		String label = workspace.get("label");
 		if (label != null && !label.isEmpty()) {
-			build = label;
+			try {
+				// if build is a change-number passed as a label
+				build = Integer.parseInt(label);
+			} catch (NumberFormatException e) {
+				build = label;
+			}
 		}
 
 		return build;
