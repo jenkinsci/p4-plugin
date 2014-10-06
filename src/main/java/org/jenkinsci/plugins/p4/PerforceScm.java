@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
+import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -170,29 +171,60 @@ public class PerforceScm extends SCM {
 			List<Object> changes = new ArrayList<Object>();
 			if (pin != null && !pin.isEmpty()) {
 				pin = scmWorkspace.expand(pin);
-				log.println("P4: Polling with label/change: " + pin);
-				changes = p4.listClientChanges(pin);
+				List<Integer> have = p4.listHaveChanges(pin);
+				int last = 0;
+				if (!have.isEmpty()) {
+					last = have.get(have.size() - 1);
+				}
+				log.println("P4: Polling with label/change: " + last + ","
+						+ pin);
+				changes = p4.listChanges(last, pin);
 			} else {
-				changes = p4.listClientChanges();
+				List<Integer> have = p4.listHaveChanges();
+				int last = 0;
+				if (!have.isEmpty()) {
+					last = have.get(have.size() - 1);
+				}
+				log.println("P4: Polling with label/change: " + last + ",now");
+				changes = p4.listChanges(last);
 			}
 
 			// filter changes...
-			List<Object> remainder = new ArrayList<Object>();
+			List<Integer> remainder = new ArrayList<Integer>();
 			for (Object c : changes) {
 				if (c instanceof Integer) {
 					Changelist changelist = p4.getChange((Integer) c);
 					// add unfiltered changes to remainder list
 					if (!filterChange(changelist, scmFilter)) {
-						remainder.add(changelist);
+						remainder.add(changelist.getId());
 						log.println("... found change: " + changelist.getId());
 					}
 				}
 			}
 
-			// if there is a remainder and the workspace is out of date
-			if (!remainder.isEmpty() || p4.updateFiles()) {
+			// if there is a remainder...
+			if (!remainder.isEmpty()) {
+				// if Poll per change, use lowest change to pin build.
+				if (scmFilter != null) {
+					for (Filter f : scmFilter) {
+						if (f instanceof FilterPerChangeImpl) {
+							FilterPerChangeImpl perChange = (FilterPerChangeImpl) f;
+							if (perChange.isPerChange()) {
+								int lowest = remainder
+										.get(remainder.size() - 1);
+								perChange.setNextChange(lowest);
+							}
+						}
+					}
+				}
 				state = PollingResult.BUILD_NOW;
 			}
+
+			// if the workspace is out of date...
+			if (p4.updateFiles()) {
+				state = PollingResult.BUILD_NOW;
+			}
+
 		} catch (Exception e) {
 			logger.severe("P4: Polling Error: " + e);
 			e.printStackTrace();
@@ -339,6 +371,18 @@ public class PerforceScm extends SCM {
 			pin = scmWorkspace.expand(pin);
 			scmWorkspace.set("label", pin);
 		}
+
+		// Set label to next change if perBuild is used
+		if (filter != null) {
+			for (Filter f : filter) {
+				if (f instanceof FilterPerChangeImpl) {
+					FilterPerChangeImpl perChange = (FilterPerChangeImpl) f;
+					int next = perChange.getNextChange();
+					scmWorkspace.set("label", Integer.toString(next));
+				}
+			}
+		}
+
 		return scmWorkspace;
 	}
 
