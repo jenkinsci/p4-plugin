@@ -326,6 +326,9 @@ public class ConnectionHelper {
 
 	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet,
 			String... ignore) throws Exception {
+		boolean success = true;
+		boolean abort = false;
+		
 		for (IFileSpec fileSpec : fileSpecs) {
 			FileSpecOpStatus status = fileSpec.getOpStatus();
 			if (status != FileSpecOpStatus.VALID) {
@@ -350,14 +353,19 @@ public class ConnectionHelper {
 						logger.warning(msg);
 						if (status == FileSpecOpStatus.ERROR
 								|| status == FileSpecOpStatus.CLIENT_ERROR) {
-							throw new AbortException(msg);
+							abort = true;
 						}
 					}
-					return false;
+					success = false;
 				}
 			}
 		}
-		return true;
+		
+		if (!quiet && abort) {
+			String msg = "P4JAVA: Error(s)";
+			throw new AbortException(msg);
+		}
+		return success;
 	}
 
 	/**
