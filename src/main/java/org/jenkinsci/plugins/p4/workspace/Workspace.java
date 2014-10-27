@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
 
@@ -111,7 +113,12 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 
 	public void load(Map<String, String> map) {
 		for (String key : map.keySet()) {
-			set(key, map.get(key));
+			String value = map.get(key);
+			if (ReviewProp.isProp(key)) {
+				// Known Perforce Review property; prefix with namespace
+				key = ReviewProp.NAMESPACE + key;
+			}
+			set(key, value);
 		}
 	}
 

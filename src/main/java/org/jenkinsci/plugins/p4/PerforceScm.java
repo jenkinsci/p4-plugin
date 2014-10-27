@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -369,7 +370,7 @@ public class PerforceScm extends SCM {
 		String pin = scmPopulate.getPin();
 		if (pin != null && !pin.isEmpty()) {
 			pin = scmWorkspace.expand(pin);
-			scmWorkspace.set("label", pin);
+			scmWorkspace.set(ReviewProp.LABEL.toString(), pin);
 		}
 
 		// Set label to next change if perBuild is used
@@ -378,7 +379,7 @@ public class PerforceScm extends SCM {
 				if (f instanceof FilterPerChangeImpl) {
 					FilterPerChangeImpl perChange = (FilterPerChangeImpl) f;
 					int next = perChange.getNextChange();
-					scmWorkspace.set("label", Integer.toString(next));
+					scmWorkspace.set(ReviewProp.LABEL.toString(), Integer.toString(next));
 				}
 			}
 		}

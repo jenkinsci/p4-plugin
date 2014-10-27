@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
@@ -192,8 +193,8 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue("status", "committed"));
-		list.add(new StringParameterValue("change", "9"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -254,9 +255,9 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue("status", "committed"));
-		list.add(new StringParameterValue("label", "auto15"));
-		list.add(new StringParameterValue("pass", HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.LABEL.toString(), "auto15"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -314,9 +315,9 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue("status", "shelved"));
-		list.add(new StringParameterValue("review", "19"));
-		list.add(new StringParameterValue("pass", HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -547,8 +548,8 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue("status", "shelved"));
-		list.add(new StringParameterValue("review", "19"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;

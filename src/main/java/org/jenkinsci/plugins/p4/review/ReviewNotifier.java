@@ -52,11 +52,11 @@ public class ReviewNotifier extends RunListener<Run> {
 		@SuppressWarnings("unchecked")
 		Map<String, String> map = build.getBuildVariables();
 		if (map != null) {
-			if (map.containsKey("fail")) {
-				fail = map.get("fail");
+			if (map.containsKey(ReviewProp.FAIL.toString())) {
+				fail = map.get(ReviewProp.FAIL.toString());
 			}
-			if (map.containsKey("pass")) {
-				pass = map.get("pass");
+			if (map.containsKey(ReviewProp.PASS.toString())) {
+				pass = map.get(ReviewProp.PASS.toString());
 			}
 		}
 

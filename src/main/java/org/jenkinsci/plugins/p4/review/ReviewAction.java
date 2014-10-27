@@ -86,13 +86,14 @@ public class ReviewAction implements Action {
 		List<ParameterDefinition> defs = new ArrayList<ParameterDefinition>();
 
 		Enumeration<?> names = req.getParameterNames();
-		while(names.hasMoreElements()) {
+		while (names.hasMoreElements()) {
 			String name = (String) names.nextElement();
 			defs.add(new StringParameterDefinition(name, null));
 		}
-		
+
 		for (ParameterDefinition d : defs) {
-			StringParameterValue value = (StringParameterValue) d.createValue(req);
+			StringParameterValue value = (StringParameterValue) d
+					.createValue(req);
 			if (value.value != null && !value.value.isEmpty()) {
 				values.add(value);
 			}
@@ -111,12 +112,16 @@ public class ReviewAction implements Action {
 
 	private List<ParameterDefinition> getParameterDefinitions() {
 		List<ParameterDefinition> swarm = new ArrayList<ParameterDefinition>();
-		swarm.add(new StringParameterDefinition("review", null));
-		swarm.add(new StringParameterDefinition("change", null));
-		swarm.add(new StringParameterDefinition("label", null));
-		swarm.add(new StringParameterDefinition("status", null));
-		swarm.add(new StringParameterDefinition("pass", null));
-		swarm.add(new StringParameterDefinition("fail", null));
+		swarm.add(new StringParameterDefinition(ReviewProp.REVIEW.getProp(),
+				null));
+		swarm.add(new StringParameterDefinition(ReviewProp.CHANGE.getProp(),
+				null));
+		swarm.add(new StringParameterDefinition(ReviewProp.LABEL.getProp(),
+				null));
+		swarm.add(new StringParameterDefinition(ReviewProp.STATUS.getProp(),
+				null));
+		swarm.add(new StringParameterDefinition(ReviewProp.PASS.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.FAIL.getProp(), null));
 
 		return swarm;
 	}

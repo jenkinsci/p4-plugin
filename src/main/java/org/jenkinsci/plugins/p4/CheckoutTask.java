@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 public class CheckoutTask implements FileCallable<Boolean>, Serializable {
@@ -136,7 +137,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
-		String value = workspace.get("status");
+		String value = workspace.get(ReviewProp.STATUS.toString());
 		if (value != null && !value.isEmpty()) {
 			status = CheckoutStatus.parse(value);
 		}
@@ -155,7 +156,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		Object build = this.head;
 
 		// if change is specified then update
-		String change = workspace.get("change");
+		String change = workspace.get(ReviewProp.CHANGE.toString());
 		if (change != null && !change.isEmpty()) {
 			try {
 				build = Integer.parseInt(change);
@@ -164,7 +165,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		}
 
 		// if label is specified then update
-		String label = workspace.get("label");
+		String label = workspace.get(ReviewProp.LABEL.toString());
 		if (label != null && !label.isEmpty()) {
 			try {
 				// if build is a change-number passed as a label
@@ -185,7 +186,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	 */
 	private int getReview(Workspace workspace) {
 		int review = 0;
-		String value = workspace.get("review");
+		String value = workspace.get(ReviewProp.REVIEW.toString());
 		if (value != null && !value.isEmpty()) {
 			try {
 				review = Integer.parseInt(value);
