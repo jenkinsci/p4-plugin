@@ -20,6 +20,7 @@ import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -255,13 +256,20 @@ public class ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<IFileSpec> getFiles(String id, int limit) throws Exception {
+	public List<IFileSpec> getLabelFiles(String id, int limit) throws Exception {
 		String path = "//...@" + id;
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
 		GetDepotFilesOptions opts = new GetDepotFilesOptions();
 		opts.setMaxResults(limit);
+		
 		List<IFileSpec> tagged = connection.getDepotFiles(spec, opts);
 		return tagged;
+	}
+	
+	public List<IFileSpec> getChangeFiles(int id) throws Exception {
+		IChangelist change = connection.getChangelist(id);
+		List<IFileSpec> files = change.getFiles(false);
+		return files;
 	}
 
 	/**
@@ -271,7 +279,7 @@ public class ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<IFileSpec> loadShelvedFiles(int id) throws Exception {
+	public List<IFileSpec> getShelvedFiles(int id) throws Exception {
 		String cmd = CmdSpec.DESCRIBE.name();
 		String[] args = new String[] { "-s", "-S", "" + id };
 		List<Map<String, Object>> resultMaps;

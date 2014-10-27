@@ -60,10 +60,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set list of file revisions in change
 		if (changelist.getStatus() == ChangelistStatus.PENDING) {
-			files = p4.loadShelvedFiles(changeId);
+			files = p4.getShelvedFiles(changeId);
 			shelved = true;
 		} else {
-			files = p4.getFiles("=" + changeId, FILE_COUNT_LIMIT + 1);
+			files = p4.getChangeFiles(changeId);
 			shelved = false;
 		}
 		if (files.size() > FILE_COUNT_LIMIT) {
@@ -102,7 +102,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		msg = label.getDescription();
 
 		// set list of file revisions in change
-		files = p4.getFiles(labelId, FILE_COUNT_LIMIT + 1);
+		files = p4.getLabelFiles(labelId, FILE_COUNT_LIMIT + 1);
 		if (files.size() > FILE_COUNT_LIMIT) {
 			fileLimit = true;
 			files = files.subList(0, FILE_COUNT_LIMIT);
