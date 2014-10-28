@@ -266,12 +266,12 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: syncing files at client/label: auto15"));
+		assertTrue(log.contains("SCM Task: syncing files at change: 15"));
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
 		String text = page.asText();
-		assertTrue(text.contains("auto15 by admin@auto15"));
+		assertTrue(text.contains("15 by jenkins@jenkins.data.ws"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
 		text = page.asText();
@@ -283,7 +283,7 @@ public class ConnectionTest {
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
 		text = page.asText();
-		assertTrue(text.contains("Build-1\tJenkinsBuild: #1\tjenkins\t@auto15"));
+		assertTrue(text.contains("Build-1\tJenkinsBuild: #1\tjenkins\t@15"));
 
 		// Check browser
 		Descriptor<RepositoryBrowser<?>> desc = browser.getDescriptor();

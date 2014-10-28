@@ -19,6 +19,8 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
+import com.perforce.p4java.impl.generic.core.Label;
+
 public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -69,6 +71,24 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			head = p4.getClientHead();
 			review = getReview(workspace);
 			buildChange = getBuildChange(workspace);
+
+			// try to get change-number if automatic label
+			if (buildChange instanceof String) {
+				String label = (String) buildChange;
+				if (p4.isLabel(label)) {
+					Label labelSpec = p4.getLabel(label);
+					String revSpec = labelSpec.getRevisionSpec();
+					if (revSpec != null && !revSpec.isEmpty()
+							&& revSpec.startsWith("@")) {
+						try {
+							int change = Integer.parseInt(revSpec.substring(1));
+							buildChange = change;
+						} catch (NumberFormatException e) {
+							// leave buildChange as is
+						}
+					}
+				}
+			}
 
 		} catch (Exception e) {
 			String err = "Unable to setup workspace: " + e;
@@ -177,7 +197,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 		return build;
 	}
-
+	
 	/**
 	 * Get the unshelve point from the parameter map.
 	 * 
