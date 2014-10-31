@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workspace;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
@@ -86,10 +87,16 @@ public class ManualWorkspaceImpl extends Workspace {
 			String origName = getName();
 			line = line.replace(origName, clientName);
 			line = expand(line);
-			
-			ClientViewMapping entry = new ClientViewMapping(order, line);
-			order++;
-			clientView.addEntry(entry);
+
+			try {
+				ClientViewMapping entry = new ClientViewMapping(order, line);
+				order++;
+				clientView.addEntry(entry);
+			} catch (Exception e) {
+				String msg = "P4: invalid client view: " + line;
+				logger.warning(msg);
+				throw new AbortException(msg);
+			}
 		}
 		iclient.setClientView(clientView);
 

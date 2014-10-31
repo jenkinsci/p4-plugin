@@ -216,9 +216,9 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		return review;
 	}
 
-	public List<Object> getChanges(Object last) {
+	public List<Integer> getChanges(Object last) {
 
-		List<Object> changes = new ArrayList<Object>();
+		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
 		ClientHelper p4 = new ClientHelper(credential, listener, client);

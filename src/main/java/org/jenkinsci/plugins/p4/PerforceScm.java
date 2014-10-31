@@ -38,9 +38,6 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
-import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
-import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -52,10 +49,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.RequestException;
-import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 
 public class PerforceScm extends SCM {
@@ -68,6 +61,8 @@ public class PerforceScm extends SCM {
 	private final List<Filter> filter;
 	private final Populate populate;
 	private final P4Browser browser;
+
+	private transient CheckoutChanges newChanges;
 
 	public String getCredential() {
 		return credential;
@@ -142,152 +137,41 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 		PrintStream log = listener.getLogger();
 
-		AbstractBuild<?, ?> build = project.getLastBuild();
-		PerforceScm scm = (PerforceScm) build.getProject().getScm();
-		String scmCredential = scm.getCredential();
-		Populate scmPopulate = scm.getPopulate();
-		List<Filter> scmFilter = scm.getFilter();
-
-		// CAUTION: scmWorkspace environment will have limited access to the
+		// CAUTION: workspace environment will have limited access to the
 		// environment variables (e.g. NODE_NAME is missing). Instead get the
 		// expanded client workspace name from the last build.
-		String client = "unset";
 		try {
-			EnvVars envVars = build.getEnvironment(null);
-			client = envVars.get("P4_CLIENT");
-			log.println("P4: Polling with client: " + client);
+			AbstractBuild<?, ?> build = project.getLastBuild();
+			EnvVars envVars = build.getEnvironment(listener);
+			workspace.clear();
+			workspace.load(envVars);
 		} catch (Exception e) {
-			logger.warning("P4: Unable to read P4_CLIENT");
+			logger.warning("P4: Unable setup workspace environment");
 			return PollingResult.NO_CHANGES;
 		}
 
-		ClientHelper p4 = new ClientHelper(scmCredential, listener, client);
+		// Set EXPANDED client
+		String client = workspace.getFullName();
+		log.println("P4: Polling with client: " + client);
 
-		try {
-			// expand the label if required
-			String pin = scmPopulate.getPin();
-			Workspace scmWorkspace = setEnvironment(build, listener);
-
-			// find changes...
-			List<Object> changes = new ArrayList<Object>();
-			if (pin != null && !pin.isEmpty()) {
-				pin = scmWorkspace.expand(pin);
-				List<Integer> have = p4.listHaveChanges(pin);
-				int last = 0;
-				if (!have.isEmpty()) {
-					last = have.get(have.size() - 1);
-				}
-				log.println("P4: Polling with label/change: " + last + ","
-						+ pin);
-				changes = p4.listChanges(last, pin);
-			} else {
-				List<Integer> have = p4.listHaveChanges();
-				int last = 0;
-				if (!have.isEmpty()) {
-					last = have.get(have.size() - 1);
-				}
-				log.println("P4: Polling with label/change: " + last + ",now");
-				changes = p4.listChanges(last);
-			}
-
-			// filter changes...
-			List<Integer> remainder = new ArrayList<Integer>();
-			for (Object c : changes) {
-				if (c instanceof Integer) {
-					Changelist changelist = p4.getChange((Integer) c);
-					// add unfiltered changes to remainder list
-					if (!filterChange(changelist, scmFilter)) {
-						remainder.add(changelist.getId());
-						log.println("... found change: " + changelist.getId());
-					}
-				}
-			}
-
-			// if there is a remainder...
-			if (!remainder.isEmpty()) {
-				// if Poll per change, use lowest change to pin build.
-				if (scmFilter != null) {
-					for (Filter f : scmFilter) {
-						if (f instanceof FilterPerChangeImpl) {
-							FilterPerChangeImpl perChange = (FilterPerChangeImpl) f;
-							if (perChange.isPerChange()) {
-								int lowest = remainder
-										.get(remainder.size() - 1);
-								perChange.setNextChange(lowest);
-							}
-						}
-					}
-				}
-				state = PollingResult.BUILD_NOW;
-			}
-
-			// if the workspace is out of date...
-			if (p4.updateFiles()) {
-				state = PollingResult.BUILD_NOW;
-			}
-
-		} catch (Exception e) {
-			logger.severe("P4: Polling Error: " + e);
-			e.printStackTrace();
-			return null;
-		} finally {
-			// close connection
-			p4.disconnect();
+		// Set EXPANDED pinned label/change
+		String pin = populate.getPin();
+		if (pin != null && !pin.isEmpty()) {
+			pin = workspace.expand(pin);
+			workspace.set(ReviewProp.LABEL.toString(), pin);
 		}
+
+		newChanges = new CheckoutChanges(credential, listener, client);
+		newChanges.setFilter(filter);
+		newChanges.setLimit(pin);
+		newChanges.process();
+
+		List<Integer> changes = newChanges.getChanges();
+		if (!changes.isEmpty()) {
+			state = PollingResult.BUILD_NOW;
+		}
+
 		return state;
-	}
-
-	/**
-	 * Returns true if change should be filtered
-	 * 
-	 * @param changelist
-	 * @return
-	 * @throws AccessException
-	 * @throws RequestException
-	 * @throws Exception
-	 */
-	private boolean filterChange(Changelist changelist, List<Filter> scmFilter)
-			throws Exception {
-		// exit early if no filters
-		if (scmFilter == null) {
-			return false;
-		}
-
-		String user = changelist.getUsername();
-		List<IFileSpec> files = changelist.getFiles(true);
-
-		for (Filter f : scmFilter) {
-			// Scan through User filters
-			if (f instanceof FilterUserImpl) {
-				// return is user matches filter
-				String u = ((FilterUserImpl) f).getUser();
-				if (u.equalsIgnoreCase(user)) {
-					return true;
-				}
-			}
-
-			// Scan through Path filters
-			if (f instanceof FilterPathImpl) {
-				// add unmatched files to remainder list
-				List<IFileSpec> remainder = new ArrayList<IFileSpec>();
-				String path = ((FilterPathImpl) f).getPath();
-				for (IFileSpec s : files) {
-					String p = s.getDepotPathString();
-					if (!p.startsWith(path)) {
-						remainder.add(s);
-					}
-				}
-
-				// update files with remainder
-				files = remainder;
-
-				// add if all files are removed then remove change
-				if (files.isEmpty()) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -302,21 +186,25 @@ public class PerforceScm extends SCM {
 
 		boolean success = true;
 
-		Workspace scmWorkspace = setEnvironment(build, listener);
-		scmWorkspace.setRootPath(buildWorkspace.getRemote());
-		String scmCredential = getCredential();
-		Populate scmPopulate = getPopulate();
+		// Set environment
+		EnvVars envVars = build.getEnvironment(listener);
+		workspace.clear();
+		workspace.load(envVars);
+		workspace.setRootPath(buildWorkspace.getRemote());
+
+		// Set label for changes to build
+		setBuildLabel();
 
 		// Create task
 		CheckoutTask task;
-		task = new CheckoutTask(scmCredential, scmWorkspace, listener);
-		task.setPopulateOpts(scmPopulate);
-		task.setBuildOpts(scmWorkspace);
+		task = new CheckoutTask(credential, workspace, listener);
+		task.setPopulateOpts(populate);
+		task.setBuildOpts(workspace);
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(build);
-		tag.setClient(scmWorkspace.getFullName());
-		tag.setCredential(scmCredential);
+		tag.setClient(workspace.getFullName());
+		tag.setCredential(credential);
 		tag.setBuildChange(task.getBuildChange());
 		build.addAction(tag);
 
@@ -333,58 +221,41 @@ public class PerforceScm extends SCM {
 			logger.warning(msg);
 			throw new AbortException(msg);
 		}
+
+		// Clean up change list
+		newChanges = null;
 		return success;
+	}
+
+	private void setBuildLabel() {
+		if (newChanges != null) {
+			List<Integer> changes = newChanges.getChanges();
+			String label = Integer.toString(changes.get(0));
+			workspace.set(ReviewProp.LABEL.toString(), label);
+		}
 	}
 
 	private List<Object> calculateChanges(AbstractBuild<?, ?> build,
 			CheckoutTask task) {
-		List<Object> changes = new ArrayList<Object>();
-		AbstractBuild<?, ?> lastBuild = build.getPreviousBuild();
+		List<Object> list = new ArrayList<Object>();
+
+		AbstractBuild<?, ?> lastBuild = build.getPreviousSuccessfulBuild();
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
 			if (lastTag != null) {
 				Object lastChange = lastTag.getBuildChange();
 				if (lastChange != null) {
-					changes = task.getChanges(lastChange);
+					List<Integer> changes = task.getChanges(lastChange);
+					for (int c : changes) {
+						list.add(c);
+					}
 				}
 			}
 		} else {
 			// No previous build, so add current
-			changes.add(task.getBuildChange());
+			list.add(task.getBuildChange());
 		}
-		return changes;
-	}
-
-	private Workspace setEnvironment(AbstractBuild<?, ?> build,
-			TaskListener listener) throws IOException, InterruptedException {
-
-		Workspace scmWorkspace = (Workspace) getWorkspace().clone();
-
-		// load environments
-		EnvVars envVars = build.getEnvironment(listener);
-		scmWorkspace.clear();
-		scmWorkspace.load(envVars);
-
-		// Set label in map, if pinning is used.
-		Populate scmPopulate = getPopulate();
-		String pin = scmPopulate.getPin();
-		if (pin != null && !pin.isEmpty()) {
-			pin = scmWorkspace.expand(pin);
-			scmWorkspace.set(ReviewProp.LABEL.toString(), pin);
-		}
-
-		// Set label to next change if perBuild is used
-		if (filter != null) {
-			for (Filter f : filter) {
-				if (f instanceof FilterPerChangeImpl) {
-					FilterPerChangeImpl perChange = (FilterPerChangeImpl) f;
-					int next = perChange.getNextChange();
-					scmWorkspace.set(ReviewProp.LABEL.toString(), Integer.toString(next));
-				}
-			}
-		}
-
-		return scmWorkspace;
+		return list;
 	}
 
 	@Override

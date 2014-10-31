@@ -445,15 +445,15 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> listChanges(Object from, Object to) throws Exception {
+	public List<Integer> listChanges(Object from, Object to) throws Exception {
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
-			return new ArrayList<Object>();
+			return new ArrayList<Integer>();
 		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
-		List<Object> list = listChanges(ws);
+		List<Integer> list = listChanges(ws);
 		list.remove(from);
 		return list;
 	}
@@ -466,9 +466,9 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> listChanges(Object from) throws Exception {
+	public List<Integer> listChanges(Object from) throws Exception {
 		String ws = "//" + iclient.getName() + "/...@" + from + ",now";
-		List<Object> list = listChanges(ws);
+		List<Integer> list = listChanges(ws);
 		list.remove(from);
 		return list;
 	}
@@ -480,13 +480,13 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Object> listChanges() throws Exception {
+	public List<Integer> listChanges() throws Exception {
 		String ws = "//" + iclient.getName() + "/...";
 		return listChanges(ws);
 	}
 
-	private List<Object> listChanges(String ws) throws Exception {
-		List<Object> list = new ArrayList<Object>();
+	private List<Integer> listChanges(String ws) throws Exception {
+		List<Integer> list = new ArrayList<Integer>();
 
 		String msg = "listing changes: " + ws;
 		log(msg);
