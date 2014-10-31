@@ -85,6 +85,10 @@ public class PerforceScm extends SCM {
 		return browser;
 	}
 
+	public CheckoutChanges getNewChanges() {
+		return newChanges;
+	}
+
 	/**
 	 * Create a constructor that takes non-transient fields, and add the
 	 * annotation @DataBoundConstructor to it. Using the annotation helps the

@@ -18,15 +18,19 @@ import hudson.model.StringParameterValue;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
+import hudson.util.LogTaskListener;
 import hudson.util.ListBoxModel;
 
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.sf.json.JSONObject;
 
+import org.jenkinsci.plugins.p4.CheckoutChanges;
 import org.jenkinsci.plugins.p4.DummyServer;
 import org.jenkinsci.plugins.p4.P4Server;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -34,6 +38,8 @@ import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -60,6 +66,9 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class ConnectionTest {
 
+	private static Logger logger = Logger.getLogger(ConnectionTest.class
+			.getName());
+
 	private final String credential = "id";
 	private static String PWD = System.getProperty("user.dir") + "/";
 	private static String P4BIN = "src/test/resources/r14.1/";
@@ -69,7 +78,8 @@ public class ConnectionTest {
 	private final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
 	private final int LOG_LIMIT = 1000;
 
-	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT, P4PORT);
+	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT,
+			P4PORT);
 
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
@@ -193,7 +203,8 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"committed"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
 		Action actions = new ParametersAction(list);
 
@@ -255,9 +266,11 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"committed"));
 		list.add(new StringParameterValue(ReviewProp.LABEL.toString(), "auto15"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL
+				+ "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -315,9 +328,11 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL
+				+ "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -519,7 +534,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		String filename = "add_@%#$%^&().txt";
-		
+
 		String path = build.getWorkspace() + "/" + filename;
 		File add = new File(path);
 		add.createNewFile();
@@ -548,7 +563,8 @@ public class ConnectionTest {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
 		Action actions = new ParametersAction(list);
 
@@ -563,6 +579,104 @@ public class ConnectionTest {
 		// TPI-95 Second build with template ws
 		build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.SUCCESS, build.getResult());
+	}
+
+	@Test
+	public void testPolling_Pin() throws Exception {
+
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
+				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
+		SystemCredentialsProvider.getInstance().save();
+
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
+				false, false, stream, line, view);
+
+		FreeStyleProject project = jenkins
+				.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
+				spec);
+
+		// Pin at label auto15
+		Populate populate = new AutoCleanImpl(true, true, "auto15");
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new ParametersAction(list);
+
+		FreeStyleBuild build;
+		UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Poll for changes
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		CheckoutChanges changes = scm.getNewChanges();
+		List<Integer> buildList = changes.getChanges();
+		assertEquals(12, buildList.size());
+	}
+
+	@Test
+	public void testPolling_Inc() throws Exception {
+
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
+				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
+		SystemCredentialsProvider.getInstance().save();
+
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
+				false, false, stream, line, view);
+
+		FreeStyleProject project = jenkins
+				.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
+				spec);
+
+		// Pin at label auto15
+		Populate populate = new AutoCleanImpl(true, true, "auto15");
+		List<Filter> filter = new ArrayList<Filter>();
+		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
+		filter.add(inc);
+		PerforceScm scm = new PerforceScm(credential, workspace, filter,
+				populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
+				"submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new ParametersAction(list);
+
+		FreeStyleBuild build;
+		UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		CheckoutChanges changes = scm.getNewChanges();
+		List<Integer> buildList = changes.getChanges();
+		assertEquals(1, buildList.size());
+		int change = buildList.get(0);
+		assertEquals(4, change);
 	}
 
 	private static void startHttpServer(int port) throws Exception {
