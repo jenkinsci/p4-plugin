@@ -234,8 +234,10 @@ public class PerforceScm extends SCM {
 	private void setBuildLabel() {
 		if (newChanges != null) {
 			List<Integer> changes = newChanges.getChanges();
-			String label = Integer.toString(changes.get(0));
-			workspace.set(ReviewProp.LABEL.toString(), label);
+			if (!changes.isEmpty()) {
+				String label = Integer.toString(changes.get(0));
+				workspace.set(ReviewProp.LABEL.toString(), label);
+			}
 		}
 	}
 
@@ -355,7 +357,7 @@ public class PerforceScm extends SCM {
 
 		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
 		try {
-			ForceCleanImpl forceClean = new ForceCleanImpl(false, null);
+			ForceCleanImpl forceClean = new ForceCleanImpl(false, false, null);
 			logger.info("P4: unsyncing client: " + client);
 			p4.syncFiles(0, forceClean);
 		} catch (Exception e) {

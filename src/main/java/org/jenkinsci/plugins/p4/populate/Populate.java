@@ -12,14 +12,16 @@ public abstract class Populate implements ExtensionPoint,
 		Describable<Populate>, Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private final boolean have; // ! sync '-p'
 	private final boolean force; // sync '-f'
+	private final boolean modtime;
 	private final String pin;
 
-	public Populate(boolean have, boolean force, String pin) {
+	public Populate(boolean have, boolean force, boolean modtime, String pin) {
 		this.have = have;
 		this.force = force;
+		this.modtime = modtime;
 		this.pin = pin;
 	}
 
@@ -29,6 +31,10 @@ public abstract class Populate implements ExtensionPoint,
 
 	public boolean isForce() {
 		return force;
+	}
+
+	public boolean isModtime() {
+		return modtime;
 	}
 
 	public String getPin() {

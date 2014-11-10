@@ -12,8 +12,8 @@ public class SyncOnlyImpl extends Populate {
 	 * @param have
 	 */
 	@DataBoundConstructor
-	public SyncOnlyImpl(boolean have, String pin) {
-		super(have, false, pin);
+	public SyncOnlyImpl(boolean have, boolean modtime, String pin) {
+		super(have, false, modtime, pin);
 	}
 
 	@Extension

@@ -25,7 +25,7 @@ public class PerforceScmTest {
 
 		String credential = "123";
 		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
-		Populate populate = new AutoCleanImpl(true, true, null);
+		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 
 		project.setScm(scm);

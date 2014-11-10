@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -21,12 +22,12 @@ import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
@@ -86,7 +87,7 @@ public class ClientHelper extends ConnectionHelper {
 		iclient.setHostName(workspace.getHostName());
 
 		// Set clobber on to ensure workspace is always good
-		ClientOptions options = new ClientOptions();
+		IClientOptions options = iclient.getOptions();
 		options.setClobber(true);
 		iclient.setOptions(options);
 
@@ -168,6 +169,19 @@ public class ClientHelper extends ConnectionHelper {
 
 	private void syncFiles(List<IFileSpec> files, Populate populate)
 			throws Exception {
+
+		// set MODTIME if populate options is used
+		if (populate.isModtime()) {
+			IClientOptions options = iclient.getOptions();
+			if (!options.isModtime()) {
+				options.setModtime(true);
+				iclient.setOptions(options);
+				iclient.update(); // Save client spec
+				// iclient.refresh();
+				// connection.setCurrentClient(iclient);
+			}
+		}
+
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
@@ -206,7 +220,7 @@ public class ClientHelper extends ConnectionHelper {
 
 			// replace any missing/modified files within workspace
 			if (((AutoCleanImpl) populate).isReplace()) {
-				tidyReplace(files);
+				tidyReplace(files, populate);
 			}
 		}
 
@@ -244,18 +258,29 @@ public class ClientHelper extends ConnectionHelper {
 		}
 	}
 
-	private void tidyReplace(List<IFileSpec> files) throws Exception {
+	private void tidyReplace(List<IFileSpec> files, Populate populate)
+			throws Exception {
 
 		log("SCM Task: restoring all missing and changed revisions.");
 
 		// check status - find all missing or changed
-		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
-		statusOpts = new ReconcileFilesOptions();
-		statusOpts.setNoUpdate(true);
-		statusOpts.setOutsideEdit(true);
-		statusOpts.setRemoved(true);
-		statusOpts.setUseWildcards(true);
-		log("... [list] = reconcile -n -ed");
+		String[] base = { "-n", "-e", "-d", "-f" };
+		List<String> list = new ArrayList<String>();
+		list.addAll(Arrays.asList(base));
+
+		// set MODTIME if populate options is used and server supports flag
+		if (populate.isModtime()) {
+			if (checkVersion(20141)) {
+				list.add("-m");
+			} else {
+				log("P4: Resolving files by MODTIME not supported (requires 2014.1)");
+			}
+		}
+
+		String[] args = list.toArray(new String[list.size()]);
+		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
+
+		log("... [list] = reconcile " + list.toString());
 		List<IFileSpec> update = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(update, "also opened by", "no file(s) to reconcile",
 				"must sync/resolve", "exclusive file already opened",
