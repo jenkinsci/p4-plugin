@@ -63,31 +63,43 @@ public class P4Server {
 		DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 		DefaultExecutor executor = new DefaultExecutor();
 		executor.execute(cmdLine, resultHandler);
-
 		logger.info("start signal sent...");
-		Thread.sleep(100);
+
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
+				"desc", p4port, null, "admin", "Password");
+
+		int retry = 0;
+		while (retry < 20) {
+			try {
+				p4 = new ConnectionHelper(auth);
+				break;
+			} catch (Exception e) {
+				Thread.sleep(100);
+			}
+		}
 	}
 
 	public void stop() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
 				"desc", p4port, null, "admin", "Password");
 
-		int retry = 0;
-		while (retry < 5) {
-			try {
-				p4 = new ConnectionHelper(auth);
-				break;
-			} catch (Exception e) {
-				e.printStackTrace();
-				retry++;
-				Thread.sleep(100);
-			}
-		}
+		p4 = new ConnectionHelper(auth);
 		p4.login();
 		p4.stop();
-
 		logger.info("stop signal sent...");
-		Thread.sleep(1000);
+
+		int retry = 0;
+		while (retry < 20) {
+			try {
+				if (!p4.login()) {
+					break;
+				} else {
+					Thread.sleep(100);
+				}
+			} catch (Exception e) {
+				break;
+			}
+		}
 	}
 
 	public void upgrade() throws Exception {
