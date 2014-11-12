@@ -447,6 +447,10 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public int getClientHead() throws Exception {
+		// get last change in server
+		String latestChange = connection.getCounter("change");
+		int change = Integer.parseInt(latestChange);
+
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
@@ -455,9 +459,11 @@ public class ClientHelper extends ConnectionHelper {
 		opts.setMaxMostRecent(1);
 		List<IChangelistSummary> list = connection.getChangelists(files, opts);
 
-		int change = 0;
 		if (!list.isEmpty() && list.get(0) != null) {
 			change = list.get(0).getId();
+		} else {
+			log("P4: no revisions under " + ws + " using latest change: "
+					+ change);
 		}
 		return change;
 	}
