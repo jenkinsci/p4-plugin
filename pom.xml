@@ -9,18 +9,18 @@
 	</parent>
 
 	<artifactId>p4</artifactId>
-	<version>1.0.19</version>
+	<version>1.0.20-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 
 	<name>P4 Plugin</name>
 	<description>Perforce Client plugin for the Jenkins SCM provider.</description>
-	<url>http://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin</url>
+	<url>https://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin</url>
 
 	<scm>
 		<connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
 		<url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-		<tag>p4-1.0.19</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 	<distributionManagement>
