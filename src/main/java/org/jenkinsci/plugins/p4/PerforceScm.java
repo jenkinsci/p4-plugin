@@ -140,6 +140,7 @@ public class PerforceScm extends SCM {
 
 		PollingResult state = PollingResult.NO_CHANGES;
 		PrintStream log = listener.getLogger();
+		Workspace ws = (Workspace) workspace.clone();
 
 		// CAUTION: workspace environment will have limited access to the
 		// environment variables (e.g. NODE_NAME is missing). Instead get the
@@ -147,22 +148,22 @@ public class PerforceScm extends SCM {
 		try {
 			AbstractBuild<?, ?> build = project.getLastBuild();
 			EnvVars envVars = build.getEnvironment(listener);
-			workspace.clear();
-			workspace.load(envVars);
+			ws.clear();
+			ws.load(envVars);
 		} catch (Exception e) {
 			logger.warning("P4: Unable setup workspace environment");
 			return PollingResult.NO_CHANGES;
 		}
 
 		// Set EXPANDED client
-		String client = workspace.getFullName();
+		String client = ws.getFullName();
 		log.println("P4: Polling with client: " + client);
 
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
 		if (pin != null && !pin.isEmpty()) {
-			pin = workspace.expand(pin);
-			workspace.set(ReviewProp.LABEL.toString(), pin);
+			pin = ws.expand(pin);
+			ws.set(ReviewProp.LABEL.toString(), pin);
 		}
 
 		newChanges = new CheckoutChanges(credential, listener, client);
@@ -192,22 +193,23 @@ public class PerforceScm extends SCM {
 
 		// Set environment
 		EnvVars envVars = build.getEnvironment(listener);
-		workspace.clear();
-		workspace.load(envVars);
-		workspace.setRootPath(buildWorkspace.getRemote());
+		Workspace ws = (Workspace) workspace.clone();
+		ws.clear();
+		ws.load(envVars);
+		ws.setRootPath(buildWorkspace.getRemote());
 
 		// Set label for changes to build
 		setBuildLabel();
 
 		// Create task
 		CheckoutTask task;
-		task = new CheckoutTask(credential, workspace, listener);
+		task = new CheckoutTask(credential, ws, listener);
 		task.setPopulateOpts(populate);
-		task.setBuildOpts(workspace);
+		task.setBuildOpts(ws);
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(build);
-		tag.setClient(workspace.getFullName());
+		tag.setClient(ws.getFullName());
 		tag.setCredential(credential);
 		tag.setBuildChange(task.getBuildChange());
 		build.addAction(tag);
