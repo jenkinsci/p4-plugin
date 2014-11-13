@@ -199,7 +199,13 @@ public class PerforceScm extends SCM {
 		ws.setRootPath(buildWorkspace.getRemote());
 
 		// Set label for changes to build
-		setBuildLabel();
+		if (newChanges != null) {
+			List<Integer> changes = newChanges.getChanges();
+			if (!changes.isEmpty()) {
+				String label = Integer.toString(changes.get(0));
+				ws.set(ReviewProp.LABEL.toString(), label);
+			}
+		}
 
 		// Create task
 		CheckoutTask task;
@@ -231,16 +237,6 @@ public class PerforceScm extends SCM {
 		// Clean up change list
 		newChanges = null;
 		return success;
-	}
-
-	private void setBuildLabel() {
-		if (newChanges != null) {
-			List<Integer> changes = newChanges.getChanges();
-			if (!changes.isEmpty()) {
-				String label = Integer.toString(changes.get(0));
-				workspace.set(ReviewProp.LABEL.toString(), label);
-			}
-		}
 	}
 
 	private List<Object> calculateChanges(AbstractBuild<?, ?> build,
