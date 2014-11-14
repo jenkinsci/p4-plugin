@@ -344,6 +344,11 @@ public class PerforceScm extends SCM {
 		String scmCredential = scm.getCredential();
 		AbstractBuild<?, ?> build = project.getLastBuild();
 
+		if (build == null) {
+			logger.warning("P4: No previous builds found");
+			return true;
+		}
+
 		String client = "unset";
 		try {
 			EnvVars envVars = build.getEnvironment(null);
