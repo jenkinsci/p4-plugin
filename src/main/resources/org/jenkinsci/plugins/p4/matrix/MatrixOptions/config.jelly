@@ -1,0 +1,12 @@
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
+					
+	<f:entry field="runSequentially">
+		<f:checkbox title="${%Run each configuration sequentially}" default="false"/>
+	</f:entry>
+	
+	<f:entry field="buildParent">
+		<f:checkbox title="${%Build parent}" default="false"/>
+	</f:entry>
+		
+</j:jelly>

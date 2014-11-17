@@ -5,6 +5,10 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixExecutionStrategy;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
 import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
@@ -23,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -38,6 +43,7 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -139,21 +145,37 @@ public class PerforceScm extends SCM {
 			SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
-		PrintStream log = listener.getLogger();
-		Workspace ws = (Workspace) workspace.clone();
 
-		// CAUTION: workspace environment will have limited access to the
-		// environment variables (e.g. NODE_NAME is missing). Instead get the
-		// expanded client workspace name from the last build.
-		try {
-			AbstractBuild<?, ?> build = project.getLastBuild();
-			EnvVars envVars = build.getEnvironment(listener);
-			ws.clear();
-			ws.load(envVars);
-		} catch (Exception e) {
-			logger.warning("P4: Unable setup workspace environment");
-			return PollingResult.NO_CHANGES;
+		if (project instanceof MatrixProject) {
+			MatrixProject matrixProj = (MatrixProject) project;
+			Collection<MatrixConfiguration> configs = matrixProj
+					.getActiveConfigurations();
+
+			for (MatrixConfiguration config : configs) {
+				EnvVars envVars = config.getEnvironment(null, listener);
+				state = pollWorkspace(envVars, listener);
+			}
+		} else {
+			EnvVars envVars = project.getCharacteristicEnvVars();
+			state = pollWorkspace(envVars, listener);
 		}
+
+		return state;
+	}
+
+	/**
+	 * Construct workspace from environment and then look for changes.
+	 * 
+	 * @param envVars
+	 * @param listener
+	 * @return
+	 */
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener) {
+		PrintStream log = listener.getLogger();
+
+		Workspace ws = (Workspace) workspace.clone();
+		ws.clear();
+		ws.load(envVars);
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
@@ -162,7 +184,7 @@ public class PerforceScm extends SCM {
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
 		if (pin != null && !pin.isEmpty()) {
-			pin = ws.expand(pin);
+			pin = ws.expand(pin, false);
 			ws.set(ReviewProp.LABEL.toString(), pin);
 		}
 
@@ -173,10 +195,9 @@ public class PerforceScm extends SCM {
 
 		List<Integer> changes = newChanges.getChanges();
 		if (!changes.isEmpty()) {
-			state = PollingResult.BUILD_NOW;
+			return PollingResult.BUILD_NOW;
 		}
-
-		return state;
+		return PollingResult.NO_CHANGES;
 	}
 
 	/**
@@ -220,8 +241,30 @@ public class PerforceScm extends SCM {
 		tag.setBuildChange(task.getBuildChange());
 		build.addAction(tag);
 
+		// Get Matrix Execution options
+		MatrixOptions matrix = null;
+		AbstractProject<?, ?> project = build.getProject();
+		if (project instanceof MatrixProject) {
+			MatrixProject matrixProj = (MatrixProject) project;
+			MatrixExecutionStrategy exec = matrixProj.getExecutionStrategy();
+			if (exec instanceof MatrixOptions) {
+				matrix = (MatrixOptions) exec;
+			}
+		}
+
 		// Invoke build.
-		success &= buildWorkspace.act(task);
+		if (matrix != null) {
+			if (build instanceof MatrixBuild) {
+				if (matrix.isBuildParent()) {
+					listener.getLogger().println("Building Parent... ");
+					success &= buildWorkspace.act(task);
+				} else {
+					listener.getLogger().println("Skipping Parent build... ");
+				}
+			}
+		} else {
+			success &= buildWorkspace.act(task);
+		}
 
 		// Only write change log if build succeed.
 		if (success) {

@@ -84,7 +84,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		this.rootPath = rootPath;
 	}
 
-	public String expand(String format) {
+	public String expand(String format, boolean wildcard) {
 		if (formatTags != null) {
 			for (String tag : formatTags.keySet()) {
 				String value = formatTags.get(tag);
@@ -95,6 +95,9 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		}
 
 		// cleanup undefined tags
+		if (wildcard) {
+			format = format.replaceAll("\\$\\{.+?\\}", "*");
+		}
 		format = format.replace("${", "");
 		format = format.replace("}", "");
 		return format;
@@ -129,7 +132,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	 */
 	public String getFullName() {
 		// expands Workspace name if formatters are used.
-		String clientName = expand(getName());
+		String clientName = expand(getName(), false);
 
 		// replace restricted characters with "-" as per the old plugin
 		clientName = clientName.replaceAll(" ", "_");
