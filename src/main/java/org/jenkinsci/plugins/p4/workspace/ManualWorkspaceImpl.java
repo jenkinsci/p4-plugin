@@ -86,7 +86,7 @@ public class ManualWorkspaceImpl extends Workspace {
 		for (String line : getSpec().getView().split("\\n")) {
 			String origName = getName();
 			line = line.replace(origName, clientName);
-			line = expand(line, true);
+			line = expand(line, false);
 
 			try {
 				ClientViewMapping entry = new ClientViewMapping(order, line);

@@ -260,6 +260,7 @@ public class PerforceScm extends SCM {
 					success &= buildWorkspace.act(task);
 				} else {
 					listener.getLogger().println("Skipping Parent build... ");
+					return success;
 				}
 			}
 		} else {
@@ -276,9 +277,6 @@ public class PerforceScm extends SCM {
 			logger.warning(msg);
 			throw new AbortException(msg);
 		}
-
-		// Clean up change list
-		newChanges = null;
 		return success;
 	}
 
