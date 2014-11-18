@@ -543,7 +543,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges() throws Exception {
-		String path = iclient.getRoot() + "/...";
+		String path = "//" + iclient.getName() + "/...";
 		return listHaveChanges(path);
 	}
 
@@ -556,7 +556,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges(Object changeLimit) throws Exception {
-		String path = iclient.getRoot() + "/...";
+		String path = "//" + iclient.getName() + "/...";
 		String fileSpec = path + "@" + changeLimit;
 		return listHaveChanges(fileSpec);
 	}

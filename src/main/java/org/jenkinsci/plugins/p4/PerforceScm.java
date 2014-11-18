@@ -154,6 +154,10 @@ public class PerforceScm extends SCM {
 			for (MatrixConfiguration config : configs) {
 				EnvVars envVars = config.getEnvironment(null, listener);
 				state = pollWorkspace(envVars, listener);
+				// exit early if changes found
+				if (state == PollingResult.BUILD_NOW) {
+					return PollingResult.BUILD_NOW;
+				}
 			}
 		} else {
 			EnvVars envVars = project.getCharacteristicEnvVars();
