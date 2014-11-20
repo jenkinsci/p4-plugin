@@ -3,14 +3,15 @@ package org.jenkinsci.plugins.p4.changes;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.text.SimpleDateFormat;
 
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.kohsuke.stapler.export.Exported;
 
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IJob;
@@ -18,9 +19,6 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
-
-import org.kohsuke.stapler.export.Exported;
-
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
@@ -123,13 +121,13 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	public Object getChangeNumber() {
 		return id;
 	}
-	
+
 	@Exported
 	public String getChangeTime() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"); 
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 		return sdf.format(date);
 	}
-	
+
 	public Object getId() {
 		return id;
 	}

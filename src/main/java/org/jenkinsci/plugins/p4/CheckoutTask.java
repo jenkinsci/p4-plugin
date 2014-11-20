@@ -12,7 +12,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.Date;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -131,36 +130,28 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			}
 			p4.log("Connected to client: " + client);
 
-			long lStartTime = new Date().getTime();
-			
-			
-			
-			
 			// Tidy the workspace before sync/build
 			p4.tidyWorkspace(populate);
-			p4.log("SCM Task: Prepare duration : " + (new Date().getTime() - lStartTime)/1000+" s");
-			
-			lStartTime = new Date().getTime();
-			
-			
-			try {
-				//Write the build change to a properties file so other tools can pick it up
-				String propFile=workspace.getAbsolutePath()+File.separator+"p4-plugin.properties";
-				PrintWriter printWriter = new PrintWriter(propFile);
-				printWriter.println ("buildChange="+buildChange);
-			    printWriter.close ();   
-			    p4.log("Created :"+propFile);
-			
-			} catch (IOException e) {
-			   
-			}
-			
-			
+
 			// Sync workspace to label, head or specified change
 			p4.syncFiles(buildChange, populate);
-
-			p4.log("SCM Task: Sync duration : " + (new Date().getTime() - lStartTime)/1000+" s");
 			
+			// Write the build change to a properties file
+/**			try {
+				String propFile = workspace.getAbsolutePath();
+				propFile += File.separator + "p4-plugin.properties";
+				
+				PrintWriter printWriter = new PrintWriter(propFile);
+				printWriter.println("buildChange=" + buildChange);
+				printWriter.close();
+				
+				p4.log("... created property:" + propFile);
+			} catch (IOException e) {
+				String msg = "Unable to write property: " + e;
+				logger.warning(msg);
+				throw new AbortException(msg);
+			}
+**/
 			// Unshelve review if specified
 			if (status == CheckoutStatus.SHELVED) {
 				p4.unshelveFiles(review);
@@ -223,7 +214,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 		return build;
 	}
-	
+
 	/**
 	 * Get the unshelve point from the parameter map.
 	 * 

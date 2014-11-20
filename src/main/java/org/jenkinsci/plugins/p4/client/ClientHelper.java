@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.p4.TimeTask;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -134,6 +135,7 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public void syncFiles(Object buildChange, Populate populate)
 			throws Exception {
+		TimeTask timer = new TimeTask();
 
 		// test label is valid
 		if (buildChange instanceof String) {
@@ -165,6 +167,7 @@ public class ClientHelper extends ConnectionHelper {
 		// Sync files
 		files = FileSpecBuilder.makeFileSpecList(revisions);
 		syncFiles(files, populate);
+		log("... duration: " + timer.toString());
 	}
 
 	private void syncFiles(List<IFileSpec> files, Populate populate)
@@ -236,12 +239,13 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private void tidyPending(List<IFileSpec> files) throws Exception {
-
+		TimeTask timer = new TimeTask();
 		log("SCM Task: reverting all pending and shelved revisions.");
 
 		// revert all pending and shelved revisions
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		log("... [list] = revert");
+
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(list, "not opened on this client");
 
@@ -256,11 +260,12 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		}
+		log("... duration: " + timer.toString());
 	}
 
 	private void tidyReplace(List<IFileSpec> files, Populate populate)
 			throws Exception {
-
+		TimeTask timer = new TimeTask();
 		log("SCM Task: restoring all missing and changed revisions.");
 
 		// check status - find all missing or changed
@@ -316,10 +321,11 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		}
+		log("... duration: " + timer.toString());
 	}
 
 	private void tidyDelete(List<IFileSpec> files) throws Exception {
-
+		TimeTask timer = new TimeTask();
 		log("SCM Task: removing all non-versioned files.");
 
 		// check status - find all extra files
@@ -341,6 +347,7 @@ public class ClientHelper extends ConnectionHelper {
 				unlink.delete();
 			}
 		}
+		log("... duration: " + timer.toString());
 	}
 
 	/**
@@ -398,7 +405,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public void unshelveFiles(int review) throws Exception {
-
+		TimeTask timer = new TimeTask();
 		log("SCM Task: unshelve review: " + review);
 
 		// build file revision spec
@@ -437,6 +444,7 @@ public class ClientHelper extends ConnectionHelper {
 		log("... revert -k " + path);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
+		log("... duration: " + timer.toString());
 	}
 
 	/**
