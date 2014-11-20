@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.text.SimpleDateFormat;
 
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
@@ -17,6 +18,9 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
+
+import org.kohsuke.stapler.export.Exported;
+
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
@@ -115,6 +119,17 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 	}
 
+	@Exported
+	public Object getChangeNumber() {
+		return id;
+	}
+	
+	@Exported
+	public String getChangeTime() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss"); 
+		return sdf.format(date);
+	}
+	
 	public Object getId() {
 		return id;
 	}
