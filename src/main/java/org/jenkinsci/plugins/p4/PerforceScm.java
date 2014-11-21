@@ -152,7 +152,8 @@ public class PerforceScm extends SCM {
 					.getActiveConfigurations();
 
 			for (MatrixConfiguration config : configs) {
-				EnvVars envVars = config.getEnvironment(null, listener);
+				Node node = config.getLastBuiltOn();
+				EnvVars envVars = config.getEnvironment(node, listener);
 				state = pollWorkspace(envVars, listener);
 				// exit early if changes found
 				if (state == PollingResult.BUILD_NOW) {
@@ -160,7 +161,8 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} else {
-			EnvVars envVars = project.getCharacteristicEnvVars();
+			Node node = project.getLastBuiltOn();
+			EnvVars envVars = project.getEnvironment(node, listener);
 			state = pollWorkspace(envVars, listener);
 		}
 
@@ -177,13 +179,17 @@ public class PerforceScm extends SCM {
 	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener) {
 		PrintStream log = listener.getLogger();
 
+		// set NODE_NAME to default "master" if not set
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+
 		Workspace ws = (Workspace) workspace.clone();
 		ws.clear();
 		ws.load(envVars);
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
-		log.println("P4: Polling with client: " + client);
+		String node = envVars.get("NODE_NAME");
+		log.println("P4: Polling on: " + node + " with:" + client);
 
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
@@ -214,6 +220,7 @@ public class PerforceScm extends SCM {
 			FilePath buildWorkspace, BuildListener listener, File changelogFile)
 			throws IOException, InterruptedException {
 
+		PrintStream log = listener.getLogger();
 		boolean success = true;
 
 		// Set environment
@@ -257,10 +264,11 @@ public class PerforceScm extends SCM {
 		}
 
 		// Invoke build.
+		String node = ws.get("NODE_NAME");
 		if (matrix != null) {
 			if (build instanceof MatrixBuild) {
 				if (matrix.isBuildParent()) {
-					listener.getLogger().println("Building Parent... ");
+					log.println("Building Parent on Node: " + node);
 					success &= buildWorkspace.act(task);
 				} else {
 					listener.getLogger().println("Skipping Parent build... ");
@@ -268,12 +276,14 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} else {
+			log.println("Building on Node: " + node);
 			success &= buildWorkspace.act(task);
 		}
 
 		// Only write change log if build succeed.
 		if (success) {
 			// Calculate changes prior to build (based on last build)
+			listener.getLogger().println("Calculating built changes... ");
 			List<Object> changes = calculateChanges(build, task);
 			P4ChangeSet.store(changelogFile, changes);
 		} else {
