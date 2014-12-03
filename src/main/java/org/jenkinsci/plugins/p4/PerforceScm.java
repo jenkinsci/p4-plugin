@@ -225,6 +225,8 @@ public class PerforceScm extends SCM {
 
 		// Set environment
 		EnvVars envVars = build.getEnvironment(listener);
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		
 		Workspace ws = (Workspace) workspace.clone();
 		ws.clear();
 		ws.load(envVars);
