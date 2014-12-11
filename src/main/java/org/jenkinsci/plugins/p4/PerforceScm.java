@@ -226,7 +226,7 @@ public class PerforceScm extends SCM {
 		// Set environment
 		EnvVars envVars = build.getEnvironment(listener);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
-		
+
 		Workspace ws = (Workspace) workspace.clone();
 		ws.clear();
 		ws.load(envVars);
@@ -251,7 +251,7 @@ public class PerforceScm extends SCM {
 		TagAction tag = new TagAction(build);
 		tag.setClient(ws.getFullName());
 		tag.setCredential(credential);
-		tag.setBuildChange(task.getBuildChange());
+		tag.setBuildChange(task.getSyncChange());
 		build.addAction(tag);
 
 		// Get Matrix Execution options
@@ -288,6 +288,7 @@ public class PerforceScm extends SCM {
 			listener.getLogger().println("Calculating built changes... ");
 			List<Object> changes = calculateChanges(build, task);
 			P4ChangeSet.store(changelogFile, changes);
+			listener.getLogger().println("Saved to file... ");
 		} else {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
@@ -306,8 +307,8 @@ public class PerforceScm extends SCM {
 			if (lastTag != null) {
 				Object lastChange = lastTag.getBuildChange();
 				if (lastChange != null) {
-					List<Integer> changes = task.getChanges(lastChange);
-					for (int c : changes) {
+					List<Object> changes = task.getChangesFull(lastChange);
+					for (Object c : changes) {
 						list.add(c);
 					}
 				}

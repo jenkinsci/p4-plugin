@@ -7,12 +7,12 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
@@ -135,23 +135,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 
 			// Sync workspace to label, head or specified change
 			p4.syncFiles(buildChange, populate);
-			
-			// Write the build change to a properties file
-/**			try {
-				String propFile = workspace.getAbsolutePath();
-				propFile += File.separator + "p4-plugin.properties";
-				
-				PrintWriter printWriter = new PrintWriter(propFile);
-				printWriter.println("buildChange=" + buildChange);
-				printWriter.close();
-				
-				p4.log("... created property:" + propFile);
-			} catch (IOException e) {
-				String msg = "Unable to write property: " + e;
-				logger.warning(msg);
-				throw new AbortException(msg);
-			}
-**/
+
 			// Unshelve review if specified
 			if (status == CheckoutStatus.SHELVED) {
 				p4.unshelveFiles(review);
@@ -258,8 +242,45 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		return changes;
 	}
 
+	public List<Object> getChangesFull(Object last) {
+
+		List<Object> changesFull = new ArrayList<Object>();
+		List<Integer> changes = new ArrayList<Integer>();
+
+		// Add changes to this build.
+		ClientHelper p4 = new ClientHelper(credential, listener, client);
+		try {
+			changes = p4.listChanges(last, buildChange);
+			for (Integer change : changes) {
+				P4ChangeEntry cl = new P4ChangeEntry();
+				cl.setChange(p4, change);
+				changesFull.add(cl);
+			}
+
+			if (status == CheckoutStatus.SHELVED) {
+				P4ChangeEntry cl = new P4ChangeEntry();
+				cl.setChange(p4, review);
+				changesFull.add(cl);
+			}
+		} catch (Exception e) {
+			String err = "Unable to get changes: " + e;
+			logger.severe(err);
+			listener.getLogger().println(err);
+			e.printStackTrace();
+		} finally {
+			p4.disconnect();
+		}
+
+		return changesFull;
+	}
+
 	public CheckoutStatus getStatus() {
 		return status;
+	}
+
+	// Returns the number of the build change not the review change
+	public Object getSyncChange() {
+		return buildChange;
 	}
 
 	public Object getBuildChange() {
@@ -267,5 +288,9 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 			return review;
 		}
 		return buildChange;
+	}
+	
+	public int getReview() {
+		return review;
 	}
 }

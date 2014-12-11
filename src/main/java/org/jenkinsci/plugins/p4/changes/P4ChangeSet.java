@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.ChangelistStatus;
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
 import hudson.model.AbstractBuild;
 import hudson.scm.ChangeLogSet;
 
@@ -10,12 +13,17 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
+
+import com.perforce.p4java.impl.generic.core.Changelist;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.kohsuke.stapler.export.ExportedBean;
 
 public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
@@ -58,6 +66,39 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 				stream.println("\t<entry>");
 				if (change instanceof String) {
 					stream.println("\t\t<label>" + change + "</label>");
+				} else if (change instanceof P4ChangeEntry) {
+					P4ChangeEntry cl = (P4ChangeEntry) change;
+					stream.println("\t\t<changenumber><changeInfo>"
+							+ cl.getId() + "</changeInfo>");
+					stream.println("\t\t<clientId>" + cl.getClientId()
+							+ "</clientId>");
+
+					stream.println("\t\t<msg>"
+							+ StringEscapeUtils.escapeXml(cl.getMsg())
+							+ "</msg>");
+					stream.println("\t\t<changeUser>"
+							+ StringEscapeUtils.escapeXml(cl.getAuthor()
+									.getDisplayName()) + "</changeUser>");
+
+					stream.println("\t\t<changeTime>"
+							+ StringEscapeUtils.escapeXml(cl.getChangeTime())
+							+ "</changeTime>");
+
+					stream.println("\t\t<shelved>" + cl.isShelved()
+							+ "</shelved>");
+
+					stream.println("\t\t<files>");
+					for (IFileSpec filespec : cl.getFiles()) {
+						FileAction action = filespec.getAction();
+						stream.println("\t\t<file endRevision=\""
+								+ filespec.getEndRevision() + "\" action=\""
+								+ action.name() + "\" depot=\""
+								+ filespec.getDepotPathString() + "\" />");
+					}
+					stream.println("\t\t</files>");
+
+					stream.println("\t\t</changenumber>");
+
 				} else {
 					stream.println("\t\t<changenumber>" + change
 							+ "</changenumber>");

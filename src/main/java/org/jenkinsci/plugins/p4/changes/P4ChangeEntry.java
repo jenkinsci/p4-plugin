@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.changes;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +11,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import javax.print.attribute.standard.DateTimeAtCompleted;
+
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IJob;
@@ -26,19 +30,27 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private Object id;
 	private User author;
-	private Date date;
-	private String clientId;
-	private String msg;
+	private Date date = new Date();
+	private String clientId = "";
+	private String msg = "";
 	private Collection<String> affectedPaths;
 	private boolean shelved;
 	private boolean label;
 	private boolean fileLimit = false;
-	private List<IFileSpec> files;
+	public List<IFileSpec> files;
 	private List<IJob> jobs;
 
 	public P4ChangeEntry(P4ChangeSet parent) {
 		super();
 		setParent(parent);
+
+		files = new ArrayList<IFileSpec>();
+		jobs = new ArrayList<IJob>();
+		affectedPaths = new ArrayList<String>();
+	}
+
+	public P4ChangeEntry() {
+
 	}
 
 	public void setChange(ConnectionHelper p4, int changeId) throws Exception {
@@ -74,7 +86,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 
 		// set list of affected paths
-		List<String> affectedPaths = new ArrayList<String>();
+		affectedPaths = new ArrayList<String>();
 		for (IFileSpec item : files) {
 			affectedPaths.add(item.getDepotPathString());
 		}
@@ -111,7 +123,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 
 		// set list of affected paths
-		List<String> affectedPaths = new ArrayList<String>();
+		affectedPaths = new ArrayList<String>();
 		for (IFileSpec item : files) {
 			affectedPaths.add(item.getDepotPathString());
 		}
@@ -132,13 +144,38 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return id;
 	}
 
+	public void setId(Object value) {
+		id = value;
+	}
+
 	@Override
 	public User getAuthor() {
 		return author;
 	}
 
+	public void setAuthor(String value) {
+		author = User.get(value);
+
+	}
+
 	public Date getDate() {
 		return date;
+	}
+
+	public void setDate(String value) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+
+		try {
+			date = sdf.parse(value);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+
+			e.printStackTrace();
+		}
+	}
+
+	public void setClientId(String value) {
+		clientId = value;
 	}
 
 	public String getClientId() {
@@ -148,6 +185,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	@Override
 	public String getMsg() {
 		return msg;
+	}
+
+	public void setMsg(String value) {
+		msg = value;
 	}
 
 	@Override
@@ -167,6 +208,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		FileAction action = file.getAction();
 		String s = action.name();
 		return s.replace("/", "_");
+	}
+
+	public void setShelved(boolean value) {
+		shelved = value;
 	}
 
 	public boolean isShelved() {

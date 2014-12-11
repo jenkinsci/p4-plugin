@@ -1,7 +1,11 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.User;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
@@ -17,6 +21,8 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -27,6 +33,7 @@ public class P4ChangeParser extends ChangeLogParser {
 	 * Uses the "index.jelly" view to render the changelist details and use the
 	 * "digest.jelly" view of to render the summary page.
 	 */
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public ChangeLogSet<? extends Entry> parse(AbstractBuild build, File file)
@@ -75,16 +82,39 @@ public class P4ChangeParser extends ChangeLogParser {
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
 
-			text.setLength(0);
-
 			if (qName.equalsIgnoreCase("changelog")) {
 				// this is the root, so don't do anything
+				text.setLength(0);
 				return;
 			}
 			if (qName.equalsIgnoreCase("entry")) {
 				objects.push(new P4ChangeEntry(changeSet));
+				text.setLength(0);
 				return;
 			}
+			if (objects.peek() instanceof P4ChangeEntry) {
+				P4ChangeEntry entry = (P4ChangeEntry) objects.peek();
+				try {
+					if (qName.equalsIgnoreCase("file")) {
+
+						IFileSpec temp = new FileSpec();
+						temp.setDepotPath(attributes.getValue("depot"));
+						temp.setAction(FileAction.fromString(attributes
+								.getValue("action")));
+						int endRevision = new Integer(
+								attributes.getValue("endRevision"));
+						temp.setEndRevision(endRevision);
+						entry.files.add(temp);
+						text.setLength(0);
+						return;
+					}
+
+				} catch (Exception e) {
+					entry = null;
+				}
+			}
+
+			text.setLength(0);
 		}
 
 		@Override
@@ -94,41 +124,94 @@ public class P4ChangeParser extends ChangeLogParser {
 				// this is the root, so don't do anything
 				return;
 			}
+
 			if (qName.equalsIgnoreCase("entry")) {
 				P4ChangeEntry entry = (P4ChangeEntry) objects.pop();
 				changeEntries.add(entry);
 				return;
 			}
+
+			// if we are in the entry element
 			if (objects.peek() instanceof P4ChangeEntry) {
 				P4ChangeEntry entry = (P4ChangeEntry) objects.peek();
 				try {
-					// Find Credential ID and Workspace for this build
-					AbstractProject<?, ?> project = build.getProject();
-					PerforceScm scm = (PerforceScm) project.getScm();
-					String credential = scm.getCredential();
 
-					// Log in to Perforce and find change-list
-					ConnectionHelper p4 = new ConnectionHelper(credential, null);
+					if (text.toString().trim().length() != 0
+							&& (qName.equalsIgnoreCase("changenumber") || qName
+									.equalsIgnoreCase("label"))) {
+						// Find Credential ID and Workspace for this build
+						AbstractProject<?, ?> project = build.getProject();
+						PerforceScm scm = (PerforceScm) project.getScm();
+						String credential = scm.getCredential();
 
-					// Add changelist to entry
-					if (qName.equalsIgnoreCase("changenumber")) {
-						int id = new Integer(text.toString());
-						entry.setChange(p4, id);
+						// Log in to Perforce and find change-list
+						ConnectionHelper p4 = new ConnectionHelper(credential,
+								null);
+
+						// Add changelist to entry
+						if (qName.equalsIgnoreCase("changenumber")) {
+							int id = new Integer(text.toString());
+							entry.setChange(p4, id);
+
+						}
+
+						// Add label to entry
+						if (qName.equalsIgnoreCase("label")) {
+							String id = text.toString();
+							entry.setLabel(p4, id);
+						}
+
+						// disconnect from Perforce
+						p4.disconnect();
+					} else {
+
+						String elementText = text.toString().trim();
+
+						if (qName.equalsIgnoreCase("changeInfo")) {
+							int id = new Integer(elementText);
+							entry.setId(id);
+
+							text.setLength(0);
+							return;
+						}
+						if (qName.equalsIgnoreCase("shelved")) {
+							entry.setShelved(elementText.equals("true"));
+							text.setLength(0);
+						}
+
+						if (qName.equalsIgnoreCase("msg")) {
+							entry.setMsg(elementText);
+							text.setLength(0);
+						}
+
+						if (qName.equalsIgnoreCase("clientId")) {
+							entry.setClientId(elementText);
+							text.setLength(0);
+							return;
+						}
+
+						if (qName.equalsIgnoreCase("changeUser")) {
+
+							entry.setAuthor(elementText);
+							text.setLength(0);
+							return;
+						}
+						if (qName.equalsIgnoreCase("changeTime")) {
+
+							entry.setDate(elementText);
+							text.setLength(0);
+							return;
+						}
+
 					}
 
-					// Add label to entry
-					if (qName.equalsIgnoreCase("label")) {
-						String id = text.toString();
-						entry.setLabel(p4, id);
-					}
-
-					// disconnect from Perforce
-					p4.disconnect();
+					text.setLength(0);
 					return;
 				} catch (Exception e) {
 					entry = null;
 				}
 			}
+
 		}
 
 		public P4ChangeSet getChangeLogSet() {
