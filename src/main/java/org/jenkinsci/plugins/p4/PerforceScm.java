@@ -274,7 +274,7 @@ public class PerforceScm extends SCM {
 					success &= buildWorkspace.act(task);
 				} else {
 					listener.getLogger().println("Skipping Parent build... ");
-					return success;
+					success = true;
 				}
 			}
 		} else {
