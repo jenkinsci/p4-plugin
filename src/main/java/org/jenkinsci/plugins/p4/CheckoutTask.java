@@ -250,6 +250,12 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		// Add changes to this build.
 		ClientHelper p4 = new ClientHelper(credential, listener, client);
 		try {
+			if (status == CheckoutStatus.SHELVED) {
+				P4ChangeEntry cl = new P4ChangeEntry();
+				cl.setChange(p4, review);
+				changesFull.add(cl);
+			}
+
 			changes = p4.listChanges(last, buildChange);
 			for (Integer change : changes) {
 				P4ChangeEntry cl = new P4ChangeEntry();
@@ -257,11 +263,6 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 				changesFull.add(cl);
 			}
 
-			if (status == CheckoutStatus.SHELVED) {
-				P4ChangeEntry cl = new P4ChangeEntry();
-				cl.setChange(p4, review);
-				changesFull.add(cl);
-			}
 		} catch (Exception e) {
 			String err = "Unable to get changes: " + e;
 			logger.severe(err);
@@ -289,7 +290,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		}
 		return buildChange;
 	}
-	
+
 	public int getReview() {
 		return review;
 	}
