@@ -13,29 +13,25 @@ import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
-import org.jenkinsci.plugins.p4.credentials.P4TicketImpl;
-import org.jenkinsci.plugins.p4.credentials.TicketModeImpl;
-import org.jenkinsci.plugins.p4.credentials.TrustImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 public class PerforceCredentialsTest {
-	
+
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
-	
+
 	@Test
 	public void testAddStandardCredentials() throws IOException {
 		P4StandardCredentials credential = new P4PasswordImpl(
-				CredentialsScope.SYSTEM, "id", "description", "localhost:1666",
+				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhost:1666",
 				null, "user", "pass");
 
 		assertTrue(lookupCredentials().isEmpty());
@@ -47,13 +43,16 @@ public class PerforceCredentialsTest {
 		SystemCredentialsProvider.getInstance().save();
 		assertFalse(new SystemCredentialsProvider().getCredentials().isEmpty());
 
-		assertEquals("description", credential.getDescription());
+		assertEquals("desc:passwd", credential.getDescription());
 		assertEquals("id", credential.getId());
 
 		List<P4StandardCredentials> list = lookupCredentials();
 		assertEquals("localhost:1666", list.get(0).getP4port());
 		assertEquals("user", list.get(0).getUsername());
 		assertFalse(list.get(0).isSsl());
+
+		String name = CredentialsNameProvider.name(credential);
+		assertEquals("id (desc:passwd)", name);
 	}
 
 	@Test
@@ -110,7 +109,7 @@ public class PerforceCredentialsTest {
 				null);
 
 		P4TicketImpl credential = new P4TicketImpl(CredentialsScope.SYSTEM,
-				"id", "description", "localhost:1666", null, "user", ticket);
+				"id", "desc:ticket", "localhost:1666", null, "user", ticket);
 
 		assertTrue(lookupCredentials().isEmpty());
 		SystemCredentialsProvider.getInstance().getCredentials()
@@ -126,6 +125,9 @@ public class PerforceCredentialsTest {
 		AuthorisationConfig auth = new AuthorisationConfig(credential);
 		assertEquals(AuthorisationType.TICKET, auth.getType());
 		assertEquals("12345", auth.getTicketValue());
+
+		String name = CredentialsNameProvider.name(credential);
+		assertEquals("id (desc:ticket)", name);
 	}
 
 	@Test

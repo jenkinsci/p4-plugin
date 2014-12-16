@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.credentials;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 
@@ -14,11 +15,14 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.NameWith;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+@NameWith(P4StandardCredentials.NameProvider.class)
 public class P4PasswordImpl extends P4StandardCredentials {
 
 	/**
@@ -43,6 +47,15 @@ public class P4PasswordImpl extends P4StandardCredentials {
 		return password;
 	}
 
+	class NameProvider extends CredentialsNameProvider<P4StandardCredentials> {
+		@Override
+		public String getName(P4StandardCredentials c) {
+			String name = Util.fixEmptyAndTrim(c.getDescription());
+			name = (name != null) ? name : defaultDescription();
+			return " (" + name + ")";
+		}
+	}
+
 	@Extension
 	public static class DescriptorImpl extends P4CredentialsDescriptor {
 
@@ -64,30 +77,30 @@ public class P4PasswordImpl extends P4StandardCredentials {
 						"true".equals(ssl), trust);
 				FormValidation validation;
 				validation = ConnectionFactory.testConnection(config);
-				if(!FormValidation.ok().equals(validation)) {
+				if (!FormValidation.ok().equals(validation)) {
 					return validation;
 				}
 
 				// Test an open connection
 				TrustImpl sslTrust;
 				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-				
+
 				P4PasswordImpl test = new P4PasswordImpl(null, null, null,
 						p4port, sslTrust, username, password);
-				
+
 				ConnectionHelper p4 = new ConnectionHelper(test);
-				
+
 				if (!p4.isConnected()) {
 					return FormValidation.error("Server Connection Error.");
 				}
-				
+
 				// Test authentication
 				p4.logout(); // invalidate any earlier ticket before test.
 				if (!p4.login()) {
 					return FormValidation
 							.error("Authentication Error: Unable to login.");
 				}
-				
+
 				// Test minimum server version
 				if (!p4.checkVersion(20121)) {
 					return FormValidation

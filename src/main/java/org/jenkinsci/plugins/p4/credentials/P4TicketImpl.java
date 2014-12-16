@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.credentials;
 
 import hudson.Extension;
+import hudson.Util;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
@@ -14,11 +15,14 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.NameWith;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+@NameWith(P4StandardCredentials.NameProvider.class)
 public class P4TicketImpl extends P4StandardCredentials implements Serializable {
 
 	/**
@@ -56,6 +60,15 @@ public class P4TicketImpl extends P4StandardCredentials implements Serializable 
 
 	public boolean isTicketPathSet() {
 		return ticket.isTicketPathSet();
+	}
+
+	class NameProvider extends CredentialsNameProvider<P4StandardCredentials> {
+		@Override
+		public String getName(P4StandardCredentials c) {
+			String name = Util.fixEmptyAndTrim(c.getDescription());
+			name = (name != null) ? name : defaultDescription();
+			return " (" + name + ")";
+		}
 	}
 
 	@Extension
