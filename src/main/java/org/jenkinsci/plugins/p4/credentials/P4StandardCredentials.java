@@ -110,12 +110,4 @@ public abstract class P4StandardCredentials extends P4Credentials implements
 	public final int hashCode() {
 		return IdCredentials.Helpers.hashCode(this);
 	}
-
-	protected String defaultDescription() {
-		StringBuffer sb = new StringBuffer();
-		sb.append(username);
-		sb.append(":");
-		sb.append(p4port);
-		return sb.toString();
-	}
 }
