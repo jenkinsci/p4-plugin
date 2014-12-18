@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.review;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.matrix.MatrixRun;
 import hudson.model.BuildListener;
 import hudson.model.Environment;
 import hudson.model.Result;
@@ -66,6 +67,11 @@ public class ReviewNotifier extends RunListener<Run> {
 
 	@Override
 	public void onFinalized(Run r) {
+
+		if (r instanceof MatrixRun) {
+			return;
+		}
+
 		String url = fail;
 
 		Result result = r.getResult();
