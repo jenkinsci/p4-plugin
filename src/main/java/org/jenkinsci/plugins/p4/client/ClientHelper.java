@@ -421,8 +421,8 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
-		log("... unshelve -f -s " + review + " " + path);
-		shelveMsg = iclient.unshelveChangelist(review, files, 0, true, false);
+		log("... unshelve -f -s " + review);
+		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
 		validateFileSpecs(shelveMsg, "also opened by", "no such file(s)",
 				"exclusive file already opened");
 
