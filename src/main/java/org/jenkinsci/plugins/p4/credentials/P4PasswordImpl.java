@@ -20,7 +20,6 @@ import com.cloudbees.plugins.credentials.NameWith;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-@NameWith(P4StandardCredentials.NameProvider.class)
 public class P4PasswordImpl extends P4StandardCredentials {
 
 	/**
