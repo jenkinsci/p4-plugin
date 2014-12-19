@@ -413,12 +413,6 @@ public class ClientHelper extends ConnectionHelper {
 		String path = iclient.getRoot() + "/...";
 		files = FileSpecBuilder.makeFileSpecList(path);
 
-		// Sync workspace to head
-		SyncOptions syncOpts = new SyncOptions();
-		log("... sync " + path);
-		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		validateFileSpecs(syncMsg, "file(s) up-to-date.");
-
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		log("... unshelve -f -s " + review);
