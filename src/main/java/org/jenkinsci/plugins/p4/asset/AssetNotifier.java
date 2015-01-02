@@ -131,7 +131,7 @@ public class AssetNotifier extends Notifier {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce: publish assets";
+			return "Perforce: Publish assets";
 		}
 
 		/**
