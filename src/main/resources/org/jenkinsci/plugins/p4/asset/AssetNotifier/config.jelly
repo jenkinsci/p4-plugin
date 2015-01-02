@@ -1,0 +1,17 @@
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
+			
+	<f:entry title="Perforce Credentials" field="credential">
+		<f:select/>
+		<i> Click <a href="${rootURL}/credential-store">here</a> to add new Perforce credentials</i>
+	</f:entry>
+	
+	<f:entry title="Workspace behaviour">
+		<f:dropdownDescriptorSelector field="workspace"/>
+	</f:entry>
+	
+	<f:entry title="Publish options">
+		<f:dropdownDescriptorSelector field="publish"/>
+	</f:entry>
+	
+</j:jelly>

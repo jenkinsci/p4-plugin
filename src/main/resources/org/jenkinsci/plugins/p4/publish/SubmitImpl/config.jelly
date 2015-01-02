@@ -1,0 +1,12 @@
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
+			
+	<f:entry title="${%Description}" field="description">
+		<f:textarea default="Submitted by Jenkins. Build: $${BUILD_TAG}"/>
+	</f:entry>
+	
+	<f:entry field="reopen">
+		<f:checkbox title="${%Reopened files}" default="false"/>
+	</f:entry>
+	
+</j:jelly>

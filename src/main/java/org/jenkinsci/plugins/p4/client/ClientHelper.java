@@ -19,22 +19,30 @@ import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.plugins.p4.publish.ShelveImpl;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.IClientOptions;
+import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.client.ClientView;
+import com.perforce.p4java.impl.generic.core.Changelist;
+import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
+import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
+import com.perforce.p4java.option.server.OpenedFilesOptions;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -348,6 +356,81 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 		log("... duration: " + timer.toString());
+	}
+
+	public boolean buildChange() throws Exception {
+		TimeTask timer = new TimeTask();
+		log("SCM Task: reconcile files to changelist.");
+
+		// build file revision spec
+		String ws = "//" + iclient.getName() + "/...";
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+
+		// check status - find all changes to files
+		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
+		statusOpts.setUseWildcards(true);
+		log("... [list] = reconcile");
+		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
+		validateFileSpecs(status, "- no file(s) to reconcile", "instead of",
+				"empty, assuming text");
+
+		// Check if file is open
+		boolean open = isOpened(files);
+
+		log("... duration: " + timer.toString());
+		return open;
+	}
+
+	public void publishChange(Publish publish) throws Exception {
+		TimeTask timer = new TimeTask();
+		log("SCM Task: publish files to Perforce.");
+
+		// build file revision spec
+		String ws = "//" + iclient.getName() + "/...";
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+
+		// create new pending change and add description
+		IChangelist change = new Changelist();
+		change.setDescription(publish.getExpandedDesc());
+		change = iclient.createChangelist(change);
+
+		// move files from default change
+		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
+		reopenOpts.setChangelistId(change.getId());
+		iclient.reopenFiles(files, reopenOpts);
+
+		// if SUBMIT
+		if (publish instanceof SubmitImpl) {
+			SubmitImpl submit = (SubmitImpl) publish;
+			SubmitOptions submitOpts = new SubmitOptions();
+			submitOpts.setReOpen(submit.isReopen());
+			change.submit(submitOpts);
+			log("... submitting files");
+		}
+
+		// if SHELVE
+		if (publish instanceof ShelveImpl) {
+			ShelveImpl shelve = (ShelveImpl) publish;
+			iclient.shelveChangelist(change);
+			log("... shelving files");
+			if (shelve.isRevert()) {
+				RevertFilesOptions revertOpts = new RevertFilesOptions();
+				revertOpts.setChangelistId(change.getId());
+				iclient.revertFiles(files, revertOpts);
+			}
+		}
+		log("... duration: " + timer.toString());
+	}
+
+	private boolean isOpened(List<IFileSpec> files) throws Exception {
+		OpenedFilesOptions openOps = new OpenedFilesOptions();
+		List<IFileSpec> open = iclient.openedFiles(files, openOps);
+		for (IFileSpec file : open) {
+			if (file != null && file.getAction() != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
