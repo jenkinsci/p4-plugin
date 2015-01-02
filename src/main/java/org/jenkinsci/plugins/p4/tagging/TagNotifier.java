@@ -119,7 +119,7 @@ public class TagNotifier extends Notifier {
 
 		@Override
 		public String getDisplayName() {
-			return "Create or Update Label in Perforce";
+			return "Perforce: Label build";
 		}
 
 	}
