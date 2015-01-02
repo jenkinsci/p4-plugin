@@ -220,6 +220,18 @@ Manual Tagging
 
 * Once the build is labeled you will see the label details appear in a table above.  New labels can be added to the same build or labels can be updated by providing the same label name.
 
+## Publishing Build assets
+
+Jenkins can automatically shelve or submit build assets to Perforce.  Select the 'Add post-build action' and select the 'Perforce: Publish assets' from the list.  Select the Credentials and Workspace options, you can connect to a different Perforce server if required.  Update the description if required, ${variables} are expanded.
+
+Shelving with Post Build Action
+
+![Shelve Asset](docs/images/ShelveAsset.png)
+
+Submitting with Post Build Action
+
+![Submit Asset](docs/images/SubmitAsset.png)
+
 ## Repository Browsing
 
 Repository browsing allows Jenkins to use an external browser, like Swarm, P4Web, etc... to navigate files and changes associated with a Jenkins build.
