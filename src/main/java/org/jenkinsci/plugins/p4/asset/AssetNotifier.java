@@ -94,8 +94,8 @@ public class AssetNotifier extends Notifier {
 			p4.log("Connected to server: " + cdt.getP4port());
 
 			// setup the client workspace to publish asset.
-			if (!p4.setClient(workspace)) {
-				p4.log("P4: Undefined workspace: " + workspace.getFullName());
+			if (!p4.setClient(ws)) {
+				p4.log("P4: Undefined workspace: " + ws.getFullName());
 				return false;
 			}
 
