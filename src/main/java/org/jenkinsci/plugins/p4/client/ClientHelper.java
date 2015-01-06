@@ -366,6 +366,12 @@ public class ClientHelper extends ConnectionHelper {
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
+		// flush client to populate have (sync -k)
+		SyncOptions syncOpts = new SyncOptions();
+		syncOpts.setClientBypass(true);
+		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
+		validateFileSpecs(syncStat, "file(s) up-to-date.");
+
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
 		statusOpts.setUseWildcards(true);

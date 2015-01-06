@@ -75,6 +75,7 @@ public class AssetNotifier extends Notifier {
 			EnvVars envVars = build.getEnvironment(listener);
 			ws.clear();
 			ws.load(envVars);
+			ws.setRootPath(build.getWorkspace().getRemote());
 			String desc = publish.getDescription();
 			desc = ws.expand(desc, false);
 			publish.setExpandedDesc(desc);
