@@ -147,17 +147,27 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 
 		if (project instanceof MatrixProject) {
-			MatrixProject matrixProj = (MatrixProject) project;
-			Collection<MatrixConfiguration> configs = matrixProj
-					.getActiveConfigurations();
-
-			for (MatrixConfiguration config : configs) {
-				Node node = config.getLastBuiltOn();
-				EnvVars envVars = config.getEnvironment(node, listener);
+			MatrixOptions matrix = getMatrixOptions(project);
+			if (matrix.isBuildParent()) {
+				// Poll PARENT only
+				Node node = project.getLastBuiltOn();
+				EnvVars envVars = project.getEnvironment(node, listener);
 				state = pollWorkspace(envVars, listener);
-				// exit early if changes found
-				if (state == PollingResult.BUILD_NOW) {
-					return PollingResult.BUILD_NOW;
+			} else {
+				// Poll CHILDREN only
+				MatrixProject matrixProj = (MatrixProject) project;
+
+				Collection<MatrixConfiguration> configs = matrixProj
+						.getActiveConfigurations();
+
+				for (MatrixConfiguration config : configs) {
+					Node node = config.getLastBuiltOn();
+					EnvVars envVars = config.getEnvironment(node, listener);
+					state = pollWorkspace(envVars, listener);
+					// exit early if changes found
+					if (state == PollingResult.BUILD_NOW) {
+						return PollingResult.BUILD_NOW;
+					}
 				}
 			}
 		} else {
@@ -255,15 +265,8 @@ public class PerforceScm extends SCM {
 		build.addAction(tag);
 
 		// Get Matrix Execution options
-		MatrixOptions matrix = null;
 		AbstractProject<?, ?> project = build.getProject();
-		if (project instanceof MatrixProject) {
-			MatrixProject matrixProj = (MatrixProject) project;
-			MatrixExecutionStrategy exec = matrixProj.getExecutionStrategy();
-			if (exec instanceof MatrixOptions) {
-				matrix = (MatrixOptions) exec;
-			}
-		}
+		MatrixOptions matrix = getMatrixOptions(project);
 
 		// Invoke build.
 		String node = ws.get("NODE_NAME");
@@ -295,6 +298,19 @@ public class PerforceScm extends SCM {
 			throw new AbortException(msg);
 		}
 		return success;
+	}
+
+	// Get Matrix Execution options
+	private MatrixOptions getMatrixOptions(AbstractProject<?, ?> project) {
+		MatrixOptions matrix = null;
+		if (project instanceof MatrixProject) {
+			MatrixProject matrixProj = (MatrixProject) project;
+			MatrixExecutionStrategy exec = matrixProj.getExecutionStrategy();
+			if (exec instanceof MatrixOptions) {
+				matrix = (MatrixOptions) exec;
+			}
+		}
+		return matrix;
 	}
 
 	private List<Object> calculateChanges(AbstractBuild<?, ?> build,

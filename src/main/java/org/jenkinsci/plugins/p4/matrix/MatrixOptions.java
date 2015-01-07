@@ -32,7 +32,7 @@ public class MatrixOptions extends DefaultMatrixExecutionStrategyImpl {
 
 		@Override
 		public String getDisplayName() {
-			return "Matrix options for Perforce";
+			return "Perforce: Matrix options";
 		}
 	}
 }
