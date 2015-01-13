@@ -6,7 +6,7 @@
 	</f:entry>
 	
 	<f:entry field="revert">
-		<f:checkbox title="${%Revert opened files}" default="false"/>
+		<f:checkbox title="${%Revert opened file list}" default="false"/>
 	</f:entry>
 	
 </j:jelly>

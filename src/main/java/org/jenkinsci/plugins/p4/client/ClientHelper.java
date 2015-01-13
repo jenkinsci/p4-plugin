@@ -378,7 +378,7 @@ public class ClientHelper extends ConnectionHelper {
 		log("... [list] = reconcile");
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of",
-				"empty, assuming text");
+				"empty, assuming text", "also opened by");
 
 		// Check if file is open
 		boolean open = isOpened(files);
@@ -399,11 +399,21 @@ public class ClientHelper extends ConnectionHelper {
 		IChangelist change = new Changelist();
 		change.setDescription(publish.getExpandedDesc());
 		change = iclient.createChangelist(change);
+		log("... pending change: " + change.getId());
 
 		// move files from default change
 		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
 		reopenOpts.setChangelistId(change.getId());
 		iclient.reopenFiles(files, reopenOpts);
+
+		// logging
+		OpenedFilesOptions openOps = new OpenedFilesOptions();
+		List<IFileSpec> open = iclient.openedFiles(files, openOps);
+		for (IFileSpec f : open) {
+			FileAction action = f.getAction();
+			String path = f.getDepotPathString();
+			log("... ... " + action + " " + path);
+		}
 
 		// if SUBMIT
 		if (publish instanceof SubmitImpl) {
@@ -422,6 +432,7 @@ public class ClientHelper extends ConnectionHelper {
 			if (shelve.isRevert()) {
 				RevertFilesOptions revertOpts = new RevertFilesOptions();
 				revertOpts.setChangelistId(change.getId());
+				revertOpts.setNoClientRefresh(true);
 				iclient.revertFiles(files, revertOpts);
 			}
 		}
