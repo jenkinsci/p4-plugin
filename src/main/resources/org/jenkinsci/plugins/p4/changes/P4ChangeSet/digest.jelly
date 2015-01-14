@@ -1,32 +1,52 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
-<j:choose>
-	<j:when test="${it.emptySet}">
-		No changes from last build.
-	</j:when>
-	<j:otherwise>
-		<b>Summary Of Changes</b> - <b><a href="changes">View Detail</a></b>
-		<br/>
-		<j:forEach var="c" items="${it.history}" varStatus="loop">
+    <j:choose>
+        <j:when test="${it.emptySet}">
+            No changes from last build.
+        </j:when>
+        <j:otherwise>
+            <b>Summary Of Changes</b> - <b>
+                <a href="changes">View Detail</a>
+            </b>
+            <br/>
+            <j:forEach var="c" items="${it.history}" varStatus="loop">
+                <j:choose>
+                    <j:when test="${c.shelved}">                                            
+                        <j:set var="divColor" value="background-color:white"/>
+                    </j:when>	
+                    <j:otherwise>
+                        <j:set var="divColor" value="background-color:#F5F0FA"/>
+                    </j:otherwise>
+                </j:choose>
+            
+                <div class="changeset-message" style="width: 650px; margin-bottom: 4px;${divColor}">  
+                    	
+                    <j:choose>
+                        <j:when test="${c.id == null}">
+                            No connection to Perforce.
+                        </j:when>
 			
-			<div class="changeset-message" style="width: 650px; margin-bottom: 4px;">
-			<j:choose>
-				<j:when test="${c.id == null}">
-					No connection to Perforce.
-				</j:when>
+                        <j:otherwise>
+                            <j:choose>
+                                <j:when test="${c.shelved}">                                            
+                                    <img src="${rootURL}/plugin/p4/icons/shelved.png" border="0" style="vertical-align: middle"/>
+                                </j:when>	
+                                <j:otherwise>
+                                    <img src="${rootURL}/plugin/p4/icons/submitted.png" border="0" style="vertical-align: middle"/>
+                                </j:otherwise>
+                            </j:choose>
+					
+                            <a href="changes#detail${loop.index}">${c.id}</a>
+                            by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
+                            on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
+                            <hr/>
+                            ${c.msgAnnotated}
+                                        
+                            <br/>
+                        </j:otherwise>
+                    </j:choose>
+                </div>
 			
-				<j:otherwise>
-					<img src="${rootURL}/plugin/p4/icons/changelist.gif" border="0" style="vertical-align: middle"/>
-					<a href="changes#detail${loop.index}">${c.id}</a>
-					by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
-					on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
-					<hr/>
-					${c.msgAnnotated}
-					<br/>
-				</j:otherwise>
-			</j:choose>
-			</div>
-			
-		</j:forEach>
-	</j:otherwise>
-</j:choose>
+            </j:forEach>
+        </j:otherwise>
+    </j:choose>
 </j:jelly>
