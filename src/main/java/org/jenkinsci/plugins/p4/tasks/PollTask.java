@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import hudson.model.TaskListener;
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
 
-import java.io.PrintStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,62 +21,51 @@ import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 
-public class CheckoutChanges {
+public class PollTask extends AbstractTask implements FileCallable<Boolean>,
+		Serializable {
 
-	private String credential;
-	private TaskListener listener;
-	private String client;
+	private static final long serialVersionUID = 1L;
+	
+	private final List<Filter> filter;
+	private final boolean perChange;
 
 	private String pin;
-	private List<Filter> filter;
-	private boolean perChange;
+	private List<Integer> changes = new ArrayList<Integer>();
 
-	List<Integer> changes = new ArrayList<Integer>();
+	public PollTask(List<Filter> filter) {
+		this.filter = filter;
 
-	public CheckoutChanges(String credential, TaskListener listener,
-			String client) {
-		this.credential = credential;
-		this.listener = listener;
-		this.client = client;
-	}
-
-	public void setLimit(String expandedPin) {
-		pin = expandedPin;
-	}
-
-	public void setFilter(List<Filter> pollFilters) {
-		filter = pollFilters;
-		perChange = false;
-
+		// look for incremental filter option
+		boolean incremental = false;
 		if (filter != null) {
 			for (Filter f : filter) {
 				if (f instanceof FilterPerChangeImpl) {
 					if (((FilterPerChangeImpl) f).isPerChange()) {
-						perChange = true;
+						incremental = true;
 					}
 				}
 			}
 		}
+		this.perChange = incremental;
 	}
 
-	public List<Integer> getChanges() {
-		return changes;
-	}
-
-	public void process() {
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
-		PrintStream log = listener.getLogger();
-
-		// find changes...
+	public Boolean invoke(File f, VirtualChannel channel) throws IOException,
+			InterruptedException {
+		ClientHelper p4 = getConnection();
 		try {
+			// Check connection (might be on remote slave)
+			if (!checkConnection(p4)) {
+				return false;
+			}
+
+			// find changes...
 			if (pin != null && !pin.isEmpty()) {
 				List<Integer> have = p4.listHaveChanges(pin);
 				int last = 0;
 				if (!have.isEmpty()) {
 					last = have.get(have.size() - 1);
 				}
-				log.println("P4: Polling with label/change: " + last + ","
-						+ pin);
+				p4.log("P4: Polling with label/change: " + last + "," + pin);
 				changes = p4.listChanges(last, pin);
 			} else {
 				List<Integer> have = p4.listHaveChanges();
@@ -81,11 +73,11 @@ public class CheckoutChanges {
 				if (!have.isEmpty()) {
 					last = have.get(have.size() - 1);
 				}
-				log.println("P4: Polling with label/change: " + last + ",now");
+				p4.log("P4: Polling with label/change: " + last + ",now");
 				changes = p4.listChanges(last);
 			}
 		} catch (Exception e) {
-			log.println("P4: Unable to fetch changes:" + e);
+			p4.log("P4: Unable to fetch changes:" + e);
 			p4.disconnect();
 		}
 
@@ -97,12 +89,12 @@ public class CheckoutChanges {
 				// add unfiltered changes to remainder list
 				if (!filterChange(changelist, filter)) {
 					remainder.add(changelist.getId());
-					log.println("... found change: " + changelist.getId());
+					p4.log("... found change: " + changelist.getId());
 				}
 			}
 			changes = remainder;
 		} catch (Exception e) {
-			log.println("P4: Unable to filter changes:" + e);
+			p4.log("P4: Unable to filter changes:" + e);
 		} finally {
 			p4.disconnect();
 		}
@@ -111,8 +103,17 @@ public class CheckoutChanges {
 		if (!changes.isEmpty() && perChange) {
 			int lowest = changes.get(changes.size() - 1);
 			changes = Arrays.asList(lowest);
-			log.println("next change: " + lowest);
+			p4.log("next change: " + lowest);
 		}
+		return true;
+	}
+
+	public void setLimit(String expandedPin) {
+		pin = expandedPin;
+	}
+
+	public List<Integer> getChanges() {
+		return changes;
 	}
 
 	/**

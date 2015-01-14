@@ -24,7 +24,6 @@ import hudson.util.ListBoxModel;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,9 +41,7 @@ import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.tasks.CheckoutChanges;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
@@ -625,8 +622,7 @@ public class ConnectionTest {
 		// Poll for changes
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		CheckoutChanges changes = scm.getNewChanges();
-		List<Integer> buildList = changes.getChanges();
+		List<Integer> buildList = scm.getChanges();
 		assertEquals(12, buildList.size());
 	}
 
@@ -675,8 +671,7 @@ public class ConnectionTest {
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		CheckoutChanges changes = scm.getNewChanges();
-		List<Integer> buildList = changes.getChanges();
+		List<Integer> buildList = scm.getChanges();
 		assertEquals(1, buildList.size());
 		int change = buildList.get(0);
 		assertEquals(4, change);
@@ -715,7 +710,7 @@ public class ConnectionTest {
 		ClientHelper p4 = new ClientHelper(auth, null, client);
 		boolean mod = p4.getClient().getOptions().isModtime();
 		assertEquals(true, mod);
-		
+
 		// Check file exists with the correct date
 		String ws = build.getWorkspace().getRemote();
 		File file = new File(ws + "/file-0.dat");
@@ -723,7 +718,7 @@ public class ConnectionTest {
 
 		String ver = Metadata.getP4JVersionString();
 		logger.info("P4Java Version: " + ver);
-		
+
 		long epoch = file.lastModified();
 		assertEquals(1397049803000L, epoch);
 	}

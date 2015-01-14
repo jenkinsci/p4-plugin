@@ -48,8 +48,8 @@ import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
-import org.jenkinsci.plugins.p4.tasks.CheckoutChanges;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
+import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -70,7 +70,7 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 
-	private transient CheckoutChanges newChanges;
+	private transient List<Integer> changes;
 
 	public String getCredential() {
 		return credential;
@@ -93,8 +93,8 @@ public class PerforceScm extends SCM {
 		return browser;
 	}
 
-	public CheckoutChanges getNewChanges() {
-		return newChanges;
+	public List<Integer> getChanges() {
+		return changes;
 	}
 
 	/**
@@ -154,7 +154,7 @@ public class PerforceScm extends SCM {
 				// Poll PARENT only
 				Node node = project.getLastBuiltOn();
 				EnvVars envVars = project.getEnvironment(node, listener);
-				state = pollWorkspace(envVars, listener);
+				state = pollWorkspace(envVars, listener, buildWorkspace);
 			} else {
 				// Poll CHILDREN only
 				MatrixProject matrixProj = (MatrixProject) project;
@@ -165,7 +165,7 @@ public class PerforceScm extends SCM {
 				for (MatrixConfiguration config : configs) {
 					Node node = config.getLastBuiltOn();
 					EnvVars envVars = config.getEnvironment(node, listener);
-					state = pollWorkspace(envVars, listener);
+					state = pollWorkspace(envVars, listener, buildWorkspace);
 					// exit early if changes found
 					if (state == PollingResult.BUILD_NOW) {
 						return PollingResult.BUILD_NOW;
@@ -175,7 +175,7 @@ public class PerforceScm extends SCM {
 		} else {
 			Node node = project.getLastBuiltOn();
 			EnvVars envVars = project.getEnvironment(node, listener);
-			state = pollWorkspace(envVars, listener);
+			state = pollWorkspace(envVars, listener, buildWorkspace);
 		}
 
 		return state;
@@ -187,8 +187,11 @@ public class PerforceScm extends SCM {
 	 * @param envVars
 	 * @param listener
 	 * @return
+	 * @throws InterruptedException
+	 * @throws IOException
 	 */
-	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener) {
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener,
+			FilePath buildWorkspace) throws InterruptedException, IOException {
 		PrintStream log = listener.getLogger();
 
 		// set NODE_NAME to default "master" if not set
@@ -210,12 +213,20 @@ public class PerforceScm extends SCM {
 			ws.set(ReviewProp.LABEL.toString(), pin);
 		}
 
-		newChanges = new CheckoutChanges(credential, listener, client);
-		newChanges.setFilter(filter);
-		newChanges.setLimit(pin);
-		newChanges.process();
+		// Create task
+		PollTask task = new PollTask(filter);
+		task.setCredential(credential);
+		task.setWorkspace(ws);
+		task.setListener(listener);
+		task.setLimit(pin);
 
-		List<Integer> changes = newChanges.getChanges();
+		// Execute remote task
+		if (!buildWorkspace.act(task)) {
+			return PollingResult.NO_CHANGES;
+		}
+
+		// Report changes
+		changes = task.getChanges();
 		if (!changes.isEmpty()) {
 			return PollingResult.BUILD_NOW;
 		}
@@ -245,8 +256,7 @@ public class PerforceScm extends SCM {
 		ws.setRootPath(buildWorkspace.getRemote());
 
 		// Set label for changes to build
-		if (newChanges != null) {
-			List<Integer> changes = newChanges.getChanges();
+		if (changes != null) {
 			if (!changes.isEmpty()) {
 				String label = Integer.toString(changes.get(0));
 				ws.set(ReviewProp.LABEL.toString(), label);
