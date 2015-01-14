@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4;
+package org.jenkinsci.plugins.p4.tasks;
 
 import hudson.model.TaskListener;
 

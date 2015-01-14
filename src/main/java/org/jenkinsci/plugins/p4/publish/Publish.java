@@ -3,12 +3,18 @@ package org.jenkinsci.plugins.p4.publish;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
+
+import java.io.Serializable;
+
 import jenkins.model.Jenkins;
 
-public abstract class Publish implements ExtensionPoint, Describable<Publish> {
+public abstract class Publish implements ExtensionPoint, Describable<Publish>,
+		Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String description;
-	
+
 	private String expandedDesc;
 
 	public String getDescription() {

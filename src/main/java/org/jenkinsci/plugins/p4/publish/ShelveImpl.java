@@ -2,16 +2,20 @@ package org.jenkinsci.plugins.p4.publish;
 
 import hudson.Extension;
 
+import java.io.Serializable;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class ShelveImpl extends Publish {
+public class ShelveImpl extends Publish implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final boolean revert;
 
 	public boolean isRevert() {
 		return revert;
 	}
-	
+
 	@DataBoundConstructor
 	public ShelveImpl(String description, boolean revert) {
 		super(description);

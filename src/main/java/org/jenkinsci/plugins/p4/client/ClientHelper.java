@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.p4.TimeTask;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -22,6 +21,7 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
+import org.jenkinsci.plugins.p4.tasks.TimeTask;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -369,12 +369,13 @@ public class ClientHelper extends ConnectionHelper {
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
+		log("... sync -k");
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncStat, "file(s) up-to-date.");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
-		statusOpts.setUseWildcards(true);
+		//statusOpts.setUseWildcards(true);
 		log("... [list] = reconcile");
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of",

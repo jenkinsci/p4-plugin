@@ -48,6 +48,8 @@ import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.tasks.CheckoutChanges;
+import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -252,10 +254,11 @@ public class PerforceScm extends SCM {
 		}
 
 		// Create task
-		CheckoutTask task;
-		task = new CheckoutTask(credential, ws, listener);
-		task.setPopulateOpts(populate);
-		task.setBuildOpts(ws);
+		CheckoutTask task = new CheckoutTask(populate);
+		task.setCredential(credential);
+		task.setWorkspace(ws);
+		task.setListener(listener);
+		task.initialise();
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(build);

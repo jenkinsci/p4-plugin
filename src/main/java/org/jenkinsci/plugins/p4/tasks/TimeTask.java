@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4;
+package org.jenkinsci.plugins.p4.tasks;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;

@@ -1,8 +1,7 @@
-package org.jenkinsci.plugins.p4;
+package org.jenkinsci.plugins.p4.tasks;
 
 import hudson.AbortException;
 import hudson.FilePath.FileCallable;
-import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 
 import java.io.File;
@@ -14,64 +13,44 @@ import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.impl.generic.core.Label;
 
-public class CheckoutTask implements FileCallable<Boolean>, Serializable {
+public class CheckoutTask extends AbstractTask implements
+		FileCallable<Boolean>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(CheckoutTask.class
 			.getName());
 
-	private final P4StandardCredentials credential;
-	private final TaskListener listener;
-	private final String client;
+	private final Populate populate;
 
 	private CheckoutStatus status;
 	private int head;
 	private Object buildChange;
 	private int review;
-	private Populate populate;
 
 	/**
 	 * Constructor
 	 * 
-	 * @param config
-	 *            - Server connection details
-	 * @param auth
-	 *            - Server login details
+	 * @param populate
 	 */
-	public CheckoutTask(String credentialID, Workspace config,
-			TaskListener listener) {
-		this.credential = ConnectionHelper.findCredential(credentialID);
-		this.listener = listener;
-		this.client = config.getFullName();
+	public CheckoutTask(Populate populate) {
+		this.populate = populate;
 	}
 
-	public void setBuildOpts(Workspace workspace) throws AbortException {
-
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
-
+	public void initialise() throws AbortException {
+		ClientHelper p4 = getConnection();
 		try {
-			// setup the client workspace to use for the build.
-			if (!p4.setClient(workspace)) {
-				String err = "Undefined workspace: " + workspace.getFullName();
-				logger.severe(err);
-				listener.error(err);
-				throw new AbortException(err);
-			}
-
 			// fetch and calculate change to sync to or review to unshelve.
-			status = getStatus(workspace);
+			status = getStatus(getWorkspace());
 			head = p4.getClientHead();
-			review = getReview(workspace);
-			buildChange = getBuildChange(workspace);
+			review = getReview(getWorkspace());
+			buildChange = getBuildChange(getWorkspace());
 
 			// try to get change-number if automatic label
 			if (buildChange instanceof String) {
@@ -90,19 +69,14 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 					}
 				}
 			}
-
 		} catch (Exception e) {
-			String err = "Unable to setup workspace: " + e;
+			String err = "P4: Unable to initialise CheckoutTask: " + e;
 			logger.severe(err);
-			listener.error(err);
+			p4.log(err);
 			throw new AbortException(err);
 		} finally {
 			p4.disconnect();
 		}
-	}
-
-	public void setPopulateOpts(Populate populate) {
-		this.populate = populate;
 	}
 
 	/**
@@ -113,22 +87,12 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 	public Boolean invoke(File workspace, VirtualChannel channel)
 			throws IOException {
 
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
-
+		ClientHelper p4 = getConnection();
 		try {
-			// test server connection
-			if (!p4.isConnected()) {
-				p4.log("P4: Server connection error:" + credential.getP4port());
+			// Check connection (might be on remote slave)
+			if (!checkConnection(p4)) {
 				return false;
 			}
-			p4.log("Connected to server: " + credential.getP4port());
-
-			// test client connection
-			if (p4.getClient() == null) {
-				p4.log("P4: Client unknown: " + client);
-				return false;
-			}
-			p4.log("Connected to client: " + client);
 
 			// Tidy the workspace before sync/build
 			p4.tidyWorkspace(populate);
@@ -222,13 +186,14 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
+				getClient());
 		try {
 			changes = p4.listChanges(last, buildChange);
 		} catch (Exception e) {
 			String err = "Unable to get changes: " + e;
 			logger.severe(err);
-			listener.getLogger().println(err);
+			p4.log(err);
 			e.printStackTrace();
 		} finally {
 			p4.disconnect();
@@ -248,7 +213,8 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
+				getClient());
 		try {
 			if (status == CheckoutStatus.SHELVED) {
 				P4ChangeEntry cl = new P4ChangeEntry();
@@ -266,7 +232,7 @@ public class CheckoutTask implements FileCallable<Boolean>, Serializable {
 		} catch (Exception e) {
 			String err = "Unable to get changes: " + e;
 			logger.severe(err);
-			listener.getLogger().println(err);
+			p4.log(err);
 			e.printStackTrace();
 		} finally {
 			p4.disconnect();

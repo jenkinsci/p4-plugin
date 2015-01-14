@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4;
+package org.jenkinsci.plugins.p4.tasks;
 
 public enum CheckoutStatus {
 	HEAD,

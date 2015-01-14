@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.asset;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
@@ -20,10 +21,9 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -64,11 +64,9 @@ public class AssetNotifier extends Notifier {
 
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) throws InterruptedException {
+			BuildListener listener) throws InterruptedException, IOException {
 
-		// open connection to Perforce
-		P4StandardCredentials cdt;
-		cdt = ConnectionHelper.findCredential(credential);
+		boolean success = true;
 
 		Workspace ws = (Workspace) workspace.clone();
 		try {
@@ -83,43 +81,16 @@ public class AssetNotifier extends Notifier {
 			e.printStackTrace();
 		}
 
-		String client = ws.getFullName();
-		ClientHelper p4 = new ClientHelper(cdt, listener, client);
+		// Create task
+		PublishTask task = new PublishTask(publish);
+		task.setCredential(credential);
+		task.setWorkspace(ws);
+		task.setListener(listener);
 
-		// test server connection
-		try {
-			if (!p4.isConnected()) {
-				p4.log("P4: Server connection error:" + cdt.getP4port());
-				return false;
-			}
-			p4.log("Connected to server: " + cdt.getP4port());
+		FilePath buildWorkspace = build.getWorkspace();
+		success &= buildWorkspace.act(task);
 
-			// setup the client workspace to publish asset.
-			if (!p4.setClient(ws)) {
-				p4.log("P4: Undefined workspace: " + ws.getFullName());
-				return false;
-			}
-
-			// test client connection
-			if (p4.getClient() == null) {
-				p4.log("P4: Client unknown: " + client);
-				return false;
-			}
-			p4.log("Connected to client: " + client);
-
-			boolean open = p4.buildChange();
-			if (open) {
-				p4.publishChange(publish);
-			}
-
-		} catch (Exception e) {
-			String msg = "Unable to update workspace: " + e;
-			logger.warning(msg);
-			throw new InterruptedException(msg);
-		} finally {
-			p4.disconnect();
-		}
-		return true;
+		return success;
 	}
 
 	public static DescriptorImpl descriptor() {

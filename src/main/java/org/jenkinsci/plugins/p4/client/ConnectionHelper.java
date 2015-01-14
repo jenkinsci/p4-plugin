@@ -25,7 +25,6 @@ import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
@@ -261,11 +260,11 @@ public class ConnectionHelper {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
 		GetDepotFilesOptions opts = new GetDepotFilesOptions();
 		opts.setMaxResults(limit);
-		
+
 		List<IFileSpec> tagged = connection.getDepotFiles(spec, opts);
 		return tagged;
 	}
-	
+
 	public List<IFileSpec> getChangeFiles(int id) throws Exception {
 		IChangelist change = connection.getChangelist(id);
 		List<IFileSpec> files = change.getFiles(false);
@@ -336,7 +335,7 @@ public class ConnectionHelper {
 			String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
-		
+
 		for (IFileSpec fileSpec : fileSpecs) {
 			FileSpecOpStatus status = fileSpec.getOpStatus();
 			if (status != FileSpecOpStatus.VALID) {
@@ -368,7 +367,7 @@ public class ConnectionHelper {
 				}
 			}
 		}
-		
+
 		if (!quiet && abort) {
 			String msg = "P4JAVA: Error(s)";
 			throw new AbortException(msg);
