@@ -21,16 +21,15 @@ import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 
-public class PollTask extends AbstractTask implements FileCallable<Boolean>,
-		Serializable {
+public class PollTask extends AbstractTask implements
+		FileCallable<List<Integer>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private final List<Filter> filter;
 	private final boolean perChange;
 
 	private String pin;
-	private List<Integer> changes = new ArrayList<Integer>();
 
 	public PollTask(List<Filter> filter) {
 		this.filter = filter;
@@ -49,13 +48,15 @@ public class PollTask extends AbstractTask implements FileCallable<Boolean>,
 		this.perChange = incremental;
 	}
 
-	public Boolean invoke(File f, VirtualChannel channel) throws IOException,
-			InterruptedException {
+	public List<Integer> invoke(File f, VirtualChannel channel)
+			throws IOException, InterruptedException {
+		List<Integer> changes = new ArrayList<Integer>();
+		
 		ClientHelper p4 = getConnection();
 		try {
 			// Check connection (might be on remote slave)
 			if (!checkConnection(p4)) {
-				return false;
+				return changes;
 			}
 
 			// find changes...
@@ -105,15 +106,11 @@ public class PollTask extends AbstractTask implements FileCallable<Boolean>,
 			changes = Arrays.asList(lowest);
 			p4.log("next change: " + lowest);
 		}
-		return true;
+		return changes;
 	}
 
 	public void setLimit(String expandedPin) {
 		pin = expandedPin;
-	}
-
-	public List<Integer> getChanges() {
-		return changes;
 	}
 
 	/**

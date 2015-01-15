@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.filters;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +14,9 @@ import org.kohsuke.stapler.QueryParameter;
 import com.perforce.p4java.core.IUserSummary;
 import com.perforce.p4java.server.IOptionsServer;
 
-public class FilterUserImpl extends Filter {
+public class FilterUserImpl extends Filter implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String user;
 

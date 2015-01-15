@@ -221,12 +221,9 @@ public class PerforceScm extends SCM {
 		task.setLimit(pin);
 
 		// Execute remote task
-		if (!buildWorkspace.act(task)) {
-			return PollingResult.NO_CHANGES;
-		}
+		changes = buildWorkspace.act(task);
 
 		// Report changes
-		changes = task.getChanges();
 		if (!changes.isEmpty()) {
 			return PollingResult.BUILD_NOW;
 		}
