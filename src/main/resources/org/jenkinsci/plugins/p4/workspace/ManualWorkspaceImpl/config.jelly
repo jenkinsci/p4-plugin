@@ -6,7 +6,8 @@
 	</f:entry>
 	
 	<f:entry title="${%Workspace name }" field="name">
-		<f:textbox id="id.name" onfocus="updateWorkspaceSpec()" onkeyup="updateWorkspaceSpec()" />
+		<!--f:textbox id="id.name" onfocus="updateWorkspaceSpec()" onkeyup="updateWorkspaceSpec()" /-->
+		<f:textbox />
 	</f:entry>
 	
 	<f:entry>
