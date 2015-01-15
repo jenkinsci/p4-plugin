@@ -366,6 +366,13 @@ public class ClientHelper extends ConnectionHelper {
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
+		// cleanup pending changes (revert -k)
+		RevertFilesOptions revertOpts = new RevertFilesOptions();
+		revertOpts.setNoClientRefresh(true);
+		log("... revert -k");
+		List<IFileSpec> revertStat = iclient.revertFiles(files, revertOpts);
+		validateFileSpecs(revertStat, "");
+
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
@@ -375,7 +382,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
-		//statusOpts.setUseWildcards(true);
+		statusOpts.setUseWildcards(true);
 		log("... [list] = reconcile");
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of",
@@ -428,14 +435,16 @@ public class ClientHelper extends ConnectionHelper {
 		// if SHELVE
 		if (publish instanceof ShelveImpl) {
 			ShelveImpl shelve = (ShelveImpl) publish;
-			iclient.shelveChangelist(change);
 			log("... shelving files");
-			if (shelve.isRevert()) {
-				RevertFilesOptions revertOpts = new RevertFilesOptions();
-				revertOpts.setChangelistId(change.getId());
-				revertOpts.setNoClientRefresh(true);
-				iclient.revertFiles(files, revertOpts);
-			}
+			iclient.shelveChangelist(change);
+
+			// post shelf cleanup
+			RevertFilesOptions revertOpts = new RevertFilesOptions();
+			revertOpts.setChangelistId(change.getId());
+			revertOpts.setNoClientRefresh(!shelve.isRevert());
+			String r = (shelve.isRevert()) ? "(revert)" : "(revert -k)";
+			log("... reverting open files " + r);
+			iclient.revertFiles(files, revertOpts);
 		}
 		log("... duration: " + timer.toString());
 	}
