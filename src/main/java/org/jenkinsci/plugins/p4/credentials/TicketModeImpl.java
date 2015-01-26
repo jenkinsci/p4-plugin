@@ -49,11 +49,11 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl>
 	}
 
 	public boolean isTicketValueSet() {
-		return "ticketValueSet".equals(value);
+		return getTicketValue() != null;
 	}
 
 	public boolean isTicketPathSet() {
-		return "ticketPathSet".equals(value);
+		return getTicketValue() == null;
 	}
 
 	@Extension
