@@ -328,7 +328,7 @@ public class ConnectionHelper {
 	 */
 	public void validateFileSpecs(List<IFileSpec> fileSpecs, String... ignore)
 			throws Exception {
-		validateFileSpecs(fileSpecs, false, ignore);
+		validateFileSpecs(fileSpecs, true, ignore);
 	}
 
 	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet,

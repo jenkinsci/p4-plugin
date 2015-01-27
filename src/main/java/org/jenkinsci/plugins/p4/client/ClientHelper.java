@@ -236,6 +236,10 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		if (populate instanceof ForceCleanImpl) {
+
+			// remove all pending files within workspace
+			tidyPending(files);
+
 			// remove all versioned files (clean have list)
 			syncFiles(0, populate);
 
@@ -256,12 +260,17 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(list, "not opened on this client");
+		log("... size[list] = " + list.size());
 
 		// check for added files and remove...
 		log("... rm [list] | ABANDONED");
 		for (IFileSpec file : list) {
 			if (file.getAction() == FileAction.ABANDONED) {
-				String path = depotToLocal(file);
+				// first check if we have the local path
+				String path = file.getLocalPathString();
+				if (path == null) {
+					path = depotToLocal(file);
+				}
 				if (path != null) {
 					File unlink = new File(path);
 					unlink.delete();
@@ -298,6 +307,8 @@ public class ClientHelper extends ConnectionHelper {
 		validateFileSpecs(update, "also opened by", "no file(s) to reconcile",
 				"must sync/resolve", "exclusive file already opened",
 				"cannot submit from stream");
+
+		log("... size[list] = " + update.size());
 
 		// force sync to update files only if "no file(s) to reconcile" is not
 		// present.
@@ -346,10 +357,15 @@ public class ClientHelper extends ConnectionHelper {
 		validateFileSpecs(extra, "- no file(s) to reconcile", "instead of",
 				"empty, assuming text");
 
+		log("... size[list] = " + extra.size());
+
 		// remove added files
 		log("... rm [list]");
 		for (IFileSpec e : extra) {
-			String path = depotToLocal(e);
+			String path = e.getLocalPathString();
+			if (path == null) {
+				path = depotToLocal(e);
+			}
 			if (path != null) {
 				File unlink = new File(path);
 				unlink.delete();
