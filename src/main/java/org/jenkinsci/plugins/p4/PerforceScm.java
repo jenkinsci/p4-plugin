@@ -13,6 +13,7 @@ import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Computer;
 import hudson.model.Node;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
@@ -147,12 +148,12 @@ public class PerforceScm extends SCM {
 			SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
+		Node node = workspaceToNode(buildWorkspace);
 
 		if (project instanceof MatrixProject) {
 			MatrixOptions matrix = getMatrixOptions(project);
 			if (matrix.isBuildParent()) {
 				// Poll PARENT only
-				Node node = project.getLastBuiltOn();
 				EnvVars envVars = project.getEnvironment(node, listener);
 				state = pollWorkspace(envVars, listener, buildWorkspace);
 			} else {
@@ -163,7 +164,6 @@ public class PerforceScm extends SCM {
 						.getActiveConfigurations();
 
 				for (MatrixConfiguration config : configs) {
-					Node node = config.getLastBuiltOn();
 					EnvVars envVars = config.getEnvironment(node, listener);
 					state = pollWorkspace(envVars, listener, buildWorkspace);
 					// exit early if changes found
@@ -173,7 +173,6 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} else {
-			Node node = project.getLastBuiltOn();
 			EnvVars envVars = project.getEnvironment(node, listener);
 			state = pollWorkspace(envVars, listener, buildWorkspace);
 		}
@@ -194,8 +193,11 @@ public class PerforceScm extends SCM {
 			FilePath buildWorkspace) throws InterruptedException, IOException {
 		PrintStream log = listener.getLogger();
 
-		// set NODE_NAME to default "master" if not set
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		// set NODE_NAME to Node or default "master" if not set
+		Node node = workspaceToNode(buildWorkspace);
+		String nodeName = node.getNodeName();
+		nodeName = (nodeName.isEmpty()) ? "master" : nodeName;
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
 
 		Workspace ws = (Workspace) workspace.clone();
 		ws.clear();
@@ -203,8 +205,7 @@ public class PerforceScm extends SCM {
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
-		String node = envVars.get("NODE_NAME");
-		log.println("P4: Polling on: " + node + " with:" + client);
+		log.println("P4: Polling on: " + nodeName + " with:" + client);
 
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
@@ -228,6 +229,21 @@ public class PerforceScm extends SCM {
 			return PollingResult.BUILD_NOW;
 		}
 		return PollingResult.NO_CHANGES;
+	}
+
+	private static Node workspaceToNode(FilePath workspace) {
+		Jenkins jenkins = Jenkins.getInstance();
+		if (workspace.isRemote()) {
+			for (Computer computer : jenkins.getComputers()) {
+				if (computer.getChannel() == workspace.getChannel()) {
+					Node node = computer.getNode();
+					if (node != null) {
+						return node;
+					}
+				}
+			}
+		}
+		return jenkins;
 	}
 
 	/**
