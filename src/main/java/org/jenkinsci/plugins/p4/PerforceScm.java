@@ -267,6 +267,7 @@ public class PerforceScm extends SCM {
 		ws.clear();
 		ws.load(envVars);
 		ws.setRootPath(buildWorkspace.getRemote());
+		ws.setHostName(envVars.get("NODE_NAME", ""));
 
 		// Set label for changes to build
 		if (changes != null) {
