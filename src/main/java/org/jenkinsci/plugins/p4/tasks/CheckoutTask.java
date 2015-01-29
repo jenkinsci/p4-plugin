@@ -257,6 +257,10 @@ public class CheckoutTask extends AbstractTask implements
 		return buildChange;
 	}
 
+	public void setBuildChange(Object parentChange) {
+		buildChange = parentChange;
+	}
+
 	public int getReview() {
 		return review;
 	}

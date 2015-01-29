@@ -10,6 +10,7 @@ import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.model.BuildListener;
+import hudson.model.ItemGroup;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -74,6 +75,7 @@ public class PerforceScm extends SCM {
 	private final P4Browser browser;
 
 	private transient List<Integer> changes;
+	private transient Object parentChange;
 
 	public String getCredential() {
 		return credential;
@@ -292,6 +294,7 @@ public class PerforceScm extends SCM {
 		String node = ws.get("NODE_NAME");
 		if (matrix != null) {
 			if (build instanceof MatrixBuild) {
+				parentChange = task.getBuildChange();
 				if (matrix.isBuildParent()) {
 					log.println("Building Parent on Node: " + node);
 					success &= buildWorkspace.act(task);
@@ -301,7 +304,14 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} else {
-			log.println("Building on Node: " + node);
+			ItemGroup<?> parent = project.getParent();
+			if (parent instanceof MatrixProject) {
+				log.println("Building Child on Node: " + node);
+				log.println("Using parent change: " + parentChange);
+				task.setBuildChange(parentChange);
+			} else {
+				log.println("Building on Node: " + node);
+			}
 			success &= buildWorkspace.act(task);
 		}
 
