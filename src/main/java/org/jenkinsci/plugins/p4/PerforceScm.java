@@ -27,6 +27,8 @@ import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -231,21 +233,6 @@ public class PerforceScm extends SCM {
 		return PollingResult.NO_CHANGES;
 	}
 
-	private static Node workspaceToNode(FilePath workspace) {
-		Jenkins jenkins = Jenkins.getInstance();
-		if (workspace.isRemote()) {
-			for (Computer computer : jenkins.getComputers()) {
-				if (computer.getChannel() == workspace.getChannel()) {
-					Node node = computer.getNode();
-					if (node != null) {
-						return node;
-					}
-				}
-			}
-		}
-		return jenkins;
-	}
-
 	/**
 	 * The checkout method is expected to check out modified files into the
 	 * project workspace. In Perforce terms a 'p4 sync' on the project's
@@ -267,7 +254,13 @@ public class PerforceScm extends SCM {
 		ws.clear();
 		ws.load(envVars);
 		ws.setRootPath(buildWorkspace.getRemote());
-		ws.setHostName(envVars.get("NODE_NAME", ""));
+
+		if (ws.isPinHost()) {
+			String hostname = workspaceToHost(buildWorkspace);
+			ws.setHostName(hostname);
+		} else {
+			ws.setHostName("");
+		}
 
 		// Set label for changes to build
 		if (changes != null) {
@@ -610,4 +603,57 @@ public class PerforceScm extends SCM {
 		return true;
 	}
 
+	/**
+	 * Helper: find the Remote/Local Computer used for build
+	 * 
+	 * @param workspace
+	 * @return
+	 */
+	private static Computer workspaceToComputer(FilePath workspace) {
+		Jenkins jenkins = Jenkins.getInstance();
+		if (workspace.isRemote()) {
+			for (Computer computer : jenkins.getComputers()) {
+				if (computer.getChannel() == workspace.getChannel()) {
+					return computer;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Helper: find the Node for slave build or return current instance.
+	 * 
+	 * @param workspace
+	 * @return
+	 */
+	private static Node workspaceToNode(FilePath workspace) {
+		Computer computer = workspaceToComputer(workspace);
+		if (computer != null) {
+			return computer.getNode();
+		}
+		Jenkins jenkins = Jenkins.getInstance();
+		return jenkins;
+	}
+
+	/**
+	 * Helper: find the hostname for the build Computer
+	 * 
+	 * @param workspace
+	 * @return
+	 */
+	private static String workspaceToHost(FilePath workspace) {
+		Computer computer = workspaceToComputer(workspace);
+		if (computer != null) {
+			try {
+				return computer.getHostName();
+			} catch (Exception e) {
+			}
+		}
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			return "";
+		}
+	}
 }

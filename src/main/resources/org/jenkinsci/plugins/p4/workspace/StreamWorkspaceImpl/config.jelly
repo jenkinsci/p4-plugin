@@ -1,13 +1,19 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
  	<f:entry title="${%Character Set}" field="charset">
 		<f:select default="none"/>
 	</f:entry>
-	
+		
 	<f:entry title="Stream Codeline" field="streamName">
 		<f:textbox />
+	</f:entry>
+	
+	<f:entry field="pinHost">
+		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
 	</f:entry>
     				
 	<f:entry title="Workspace Name Format" field="format">
 		<f:textbox default="${descriptor.defaultFormat}"/>
 	</f:entry>
+	
 </j:jelly>

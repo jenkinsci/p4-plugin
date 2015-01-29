@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
@@ -22,6 +23,7 @@ import hudson.util.LogTaskListener;
 import hudson.util.ListBoxModel;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,6 +65,7 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
+import com.perforce.p4java.client.IClient;
 
 public class ConnectionTest {
 
@@ -135,7 +138,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Head");
-		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -162,7 +165,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Head");
-		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -186,6 +189,37 @@ public class ConnectionTest {
 	}
 
 	@Test
+	public void testPinHost_StaticWs() throws Exception {
+
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
+				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
+		SystemCredentialsProvider.getInstance().save();
+
+		FreeStyleProject project = jenkins
+				.createFreeStyleProject("Static-Head");
+		Workspace workspace = new StaticWorkspaceImpl("none", true, "test.ws");
+		Populate populate = new AutoCleanImpl(true, true, false, null);
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build;
+		UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Log in with client for next set of tests...
+		ClientHelper p4 = new ClientHelper(auth, null, "test.ws");
+		IClient iclient = p4.getClient();
+		String clienthost = iclient.getHostName();
+		String hostname = InetAddress.getLocalHost().getHostName();
+
+		assertNotNull(clienthost);
+		assertEquals(hostname, clienthost);
+	}
+
+	@Test
 	public void testFreeStyleProject_buildChange() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
@@ -195,7 +229,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Change");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none",
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false,
 				"test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
@@ -257,7 +291,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Change");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none",
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false,
 				"test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, null,
@@ -320,7 +354,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Shelf");
-		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, null,
 				populate, browser);
@@ -378,8 +412,8 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
-				spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+				client, spec);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -438,7 +472,7 @@ public class ConnectionTest {
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Template-Head");
 		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
-				client, format);
+				false, client, format);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -482,8 +516,8 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Stream-Head");
-		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", stream,
-				format);
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false,
+				stream, format);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -522,7 +556,7 @@ public class ConnectionTest {
 		SystemCredentialsProvider.getInstance().save();
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("TPI83");
-		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -556,7 +590,7 @@ public class ConnectionTest {
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Template-Head");
 		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
-				client, format);
+				false, client, format);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
@@ -598,8 +632,8 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
-				spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+				client, spec);
 
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false, "auto15");
@@ -643,8 +677,8 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
-				spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+				client, spec);
 
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false, "auto15");
@@ -693,8 +727,8 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Manual_Modtime");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", client,
-				spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+				client, spec);
 		boolean isModtime = true;
 		Populate populate = new AutoCleanImpl(true, true, isModtime, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);

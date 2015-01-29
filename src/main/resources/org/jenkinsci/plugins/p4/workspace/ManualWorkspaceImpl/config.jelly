@@ -10,6 +10,10 @@
 		<f:textbox />
 	</f:entry>
 	
+	<f:entry field="pinHost">
+		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
+	</f:entry>
+	
 	<f:entry>
 		<f:property field="spec" />
 	</f:entry>

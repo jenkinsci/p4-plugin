@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import hudson.model.FreeStyleProject;
 import hudson.scm.SCM;
 
-import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -24,14 +23,13 @@ public class PerforceScmTest {
 		FreeStyleProject project = jenkins.createFreeStyleProject();
 
 		String credential = "123";
-		Workspace workspace = new StaticWorkspaceImpl("none", "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 
 		project.setScm(scm);
 		SCM testScm = project.getScm();
-		assertEquals("org.jenkinsci.plugins.p4.PerforceScm",
-				testScm.getType());
+		assertEquals("org.jenkinsci.plugins.p4.PerforceScm", testScm.getType());
 
 		assertTrue(testScm.supportsPolling());
 		assertTrue(testScm.requiresWorkspaceForPolling());

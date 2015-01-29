@@ -24,12 +24,14 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	private static Logger logger = Logger.getLogger(Workspace.class.getName());
 
 	private String charset;
+	private boolean pinHost;
 	private String rootPath;
 	private String hostname;
 	private Map<String, String> formatTags;
 
-	public Workspace(String charset) {
+	public Workspace(String charset, boolean pinHost) {
 		this.charset = charset;
+		this.pinHost = pinHost;
 	}
 
 	public abstract WorkspaceType getType();
@@ -44,6 +46,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 
 	public String getCharset() {
 		return charset;
+	}
+
+	public boolean isPinHost() {
+		return pinHost;
 	}
 
 	/**

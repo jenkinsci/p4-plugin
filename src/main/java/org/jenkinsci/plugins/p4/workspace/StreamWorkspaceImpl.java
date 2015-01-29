@@ -34,7 +34,7 @@ public class StreamWorkspaceImpl extends Workspace {
 	public String getFormat() {
 		return format;
 	}
-	
+
 	@Override
 	public String getName() {
 		return format;
@@ -46,8 +46,9 @@ public class StreamWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public StreamWorkspaceImpl(String charset, String streamName, String format) {
-		super(charset);
+	public StreamWorkspaceImpl(String charset, boolean pinHost,
+			String streamName, String format) {
+		super(charset, pinHost);
 		this.streamName = streamName;
 		this.format = format;
 	}
@@ -57,7 +58,7 @@ public class StreamWorkspaceImpl extends Workspace {
 			throws Exception {
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
-				
+
 		IClient iclient = connection.getClient(clientName);
 		if (iclient == null) {
 			logger.info("P4: Creating stream client: " + clientName);
@@ -68,11 +69,11 @@ public class StreamWorkspaceImpl extends Workspace {
 		}
 		// Set owner (not set during create)
 		iclient.setOwnerName(user);
-		
+
 		// Expand Stream name
 		String streamFullName = expand(getStreamName(), false);
 		iclient.setStream(streamFullName);
-		
+
 		return iclient;
 	}
 

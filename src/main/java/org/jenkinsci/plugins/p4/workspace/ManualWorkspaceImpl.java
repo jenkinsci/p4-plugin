@@ -46,8 +46,9 @@ public class ManualWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public ManualWorkspaceImpl(String charset, String name, WorkspaceSpec spec) {
-		super(charset);
+	public ManualWorkspaceImpl(String charset, boolean pinHost, String name,
+			WorkspaceSpec spec) {
+		super(charset, pinHost);
 		this.name = name;
 		this.spec = spec;
 	}

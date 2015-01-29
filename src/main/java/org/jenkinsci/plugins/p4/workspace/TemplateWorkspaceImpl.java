@@ -45,9 +45,9 @@ public class TemplateWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public TemplateWorkspaceImpl(String charset, String templateName,
-			String format) {
-		super(charset);
+	public TemplateWorkspaceImpl(String charset, boolean pinHost,
+			String templateName, String format) {
+		super(charset, pinHost);
 		this.templateName = templateName;
 		this.format = format;
 	}
@@ -79,7 +79,7 @@ public class TemplateWorkspaceImpl extends Workspace {
 		// Root required to switch view; must reload values in iclient.
 		iclient.setRoot(getRootPath());
 		iclient.update();
-		
+
 		// Use template with client
 		SwitchClientViewOptions opts = new SwitchClientViewOptions();
 		opts.setForce(true);

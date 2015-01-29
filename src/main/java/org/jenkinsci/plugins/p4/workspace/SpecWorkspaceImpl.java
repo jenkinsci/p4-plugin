@@ -44,8 +44,9 @@ public class SpecWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public SpecWorkspaceImpl(String charset, String name, String specPath) {
-		super(charset);
+	public SpecWorkspaceImpl(String charset, boolean pinHost, String name,
+			String specPath) {
+		super(charset, pinHost);
 		this.name = name;
 		this.specPath = specPath;
 	}

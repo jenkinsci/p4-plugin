@@ -25,8 +25,8 @@ public class StaticWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public StaticWorkspaceImpl(String charset, String name) {
-		super(charset);
+	public StaticWorkspaceImpl(String charset, boolean pinHost, String name) {
+		super(charset, pinHost);
 		this.name = name;
 	}
 

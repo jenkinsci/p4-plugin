@@ -3,11 +3,15 @@
  	<f:entry title="${%Character Set}" field="charset">
 		<f:select default="none"/>
 	</f:entry>
-	
+		
 	<f:entry title="${%Workspace name}" field="name">
 		<f:textbox/>
 	</f:entry>
-	
+
+	<f:entry field="pinHost">
+		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
+	</f:entry>
+		
 	<f:entry title="${%Depot path for workspace spec}" field="specPath">
 		<f:textbox/>
 	</f:entry>
