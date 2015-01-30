@@ -112,17 +112,17 @@ public class ReviewAction implements Action {
 
 	private List<ParameterDefinition> getParameterDefinitions() {
 		List<ParameterDefinition> swarm = new ArrayList<ParameterDefinition>();
-		swarm.add(new StringParameterDefinition(ReviewProp.REVIEW.getProp(),
-				null));
-		swarm.add(new StringParameterDefinition(ReviewProp.CHANGE.getProp(),
-				null));
-		swarm.add(new StringParameterDefinition(ReviewProp.LABEL.getProp(),
-				null));
-		swarm.add(new StringParameterDefinition(ReviewProp.STATUS.getProp(),
-				null));
+		
+		// Swarm parameters
+		swarm.add(new StringParameterDefinition(ReviewProp.REVIEW.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.CHANGE.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.STATUS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.PASS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.FAIL.getProp(), null));
-
+		
+		// Custom parameters
+		swarm.add(new StringParameterDefinition(ReviewProp.LABEL.toString(), null));
+		
 		return swarm;
 	}
 

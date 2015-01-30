@@ -307,8 +307,10 @@ public class PerforceScm extends SCM {
 			ItemGroup<?> parent = project.getParent();
 			if (parent instanceof MatrixProject) {
 				log.println("Building Child on Node: " + node);
-				log.println("Using parent change: " + parentChange);
-				task.setBuildChange(parentChange);
+				if (parentChange != null) {
+					log.println("Using parent change: " + parentChange);
+					task.setBuildChange(parentChange);
+				}
 			} else {
 				log.println("Building on Node: " + node);
 			}
