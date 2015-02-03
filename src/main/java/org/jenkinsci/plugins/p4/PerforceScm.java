@@ -28,8 +28,6 @@ import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,6 +51,7 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
+import org.jenkinsci.plugins.p4.tasks.HostnameTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -258,7 +257,7 @@ public class PerforceScm extends SCM {
 		ws.setRootPath(buildWorkspace.getRemote());
 
 		if (ws.isPinHost()) {
-			String hostname = workspaceToHost(buildWorkspace);
+			String hostname = getHostName(buildWorkspace);
 			ws.setHostName(hostname);
 		} else {
 			ws.setHostName("");
@@ -649,22 +648,17 @@ public class PerforceScm extends SCM {
 	}
 
 	/**
-	 * Helper: find the hostname for the build Computer
+	 * Remote execute to find hostname.
 	 * 
-	 * @param workspace
+	 * @param buildWorkspace
 	 * @return
 	 */
-	private static String workspaceToHost(FilePath workspace) {
-		Computer computer = workspaceToComputer(workspace);
-		if (computer != null) {
-			try {
-				return computer.getHostName();
-			} catch (Exception e) {
-			}
-		}
+	private static String getHostName(FilePath buildWorkspace) {
 		try {
-			return InetAddress.getLocalHost().getHostName();
-		} catch (UnknownHostException e) {
+			HostnameTask task = new HostnameTask();
+			String hostname = buildWorkspace.act(task);
+			return hostname;
+		} catch (Exception e) {
 			return "";
 		}
 	}
