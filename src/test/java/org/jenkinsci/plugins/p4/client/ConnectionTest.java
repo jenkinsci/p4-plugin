@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
@@ -189,16 +188,24 @@ public class ConnectionTest {
 	}
 
 	@Test
-	public void testPinHost_StaticWs() throws Exception {
+	public void testPinHost_ManualWs() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
 				credential, "desc", P4PORT, null, "jenkins", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
+				false, false, stream, line, view);
+
 		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Head");
-		Workspace workspace = new StaticWorkspaceImpl("none", true, "test.ws");
+				.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+				client, spec);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
