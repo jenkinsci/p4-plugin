@@ -205,6 +205,7 @@ public class PerforceScm extends SCM {
 		Workspace ws = (Workspace) workspace.clone();
 		ws.clear();
 		ws.load(envVars);
+		// don't call setRootPath() here, polling is often on the master
 
 		// Set EXPANDED client
 		String client = ws.getFullName();

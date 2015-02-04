@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.tasks.TimeTask;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -91,9 +92,19 @@ public class ClientHelper extends ConnectionHelper {
 			return false;
 		}
 
-		// Ensure root and host fields are set
-		iclient.setRoot(workspace.getRootPath());
-		iclient.setHostName(workspace.getHostName());
+		// Exit early if client is Static
+		if (workspace instanceof StaticWorkspaceImpl) {
+			connection.setCurrentClient(iclient);
+			return true;
+		}
+
+		// Ensure root and host fields are not null
+		if (workspace.getRootPath() != null) {
+			iclient.setRoot(workspace.getRootPath());
+		}
+		if (workspace.getHostName() != null) {
+			iclient.setHostName(workspace.getHostName());
+		}
 
 		// Set clobber on to ensure workspace is always good
 		IClientOptions options = iclient.getOptions();
