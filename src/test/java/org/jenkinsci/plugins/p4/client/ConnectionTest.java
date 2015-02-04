@@ -204,7 +204,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true,
 				client, spec);
 		Populate populate = new AutoCleanImpl(true, true, false, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
