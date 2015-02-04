@@ -217,7 +217,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in with client for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, "test.ws");
+		ClientHelper p4 = new ClientHelper(auth, null, "manual.ws");
 		IClient iclient = p4.getClient();
 		String clienthost = iclient.getHostName();
 		String hostname = InetAddress.getLocalHost().getHostName();
