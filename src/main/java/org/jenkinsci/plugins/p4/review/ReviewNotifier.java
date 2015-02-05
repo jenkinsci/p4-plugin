@@ -84,9 +84,7 @@ public class ReviewNotifier extends RunListener<Run> {
 				if (rootUrl == null) {
 					postURL(url, null);
 				} else {
-					String name = r.getParent().getName();
-					int id = r.getNumber();
-					String path = "job/" + name + "/" + id + "/";
+					String path = r.getUrl();
 					postURL(url, rootUrl + path);
 				}
 			}
