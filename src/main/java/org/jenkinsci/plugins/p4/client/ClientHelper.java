@@ -363,7 +363,8 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setNoUpdate(true);
 		statusOpts.setUseWildcards(true);
-		log("... [list] = reconcile -n -a");
+		statusOpts.setLocalSyntax(true);
+		log("... [list] = reconcile -n -a -l");
 		List<IFileSpec> extra = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(extra, "- no file(s) to reconcile", "instead of",
 				"empty, assuming text");
