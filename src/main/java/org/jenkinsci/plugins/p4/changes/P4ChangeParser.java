@@ -1,12 +1,10 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.generic.core.file.FileSpec;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.User;
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
+import hudson.scm.RepositoryBrowser;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
@@ -21,11 +19,13 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.core.file.FileSpec;
 
 public class P4ChangeParser extends ChangeLogParser {
 
@@ -36,12 +36,13 @@ public class P4ChangeParser extends ChangeLogParser {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public ChangeLogSet<? extends Entry> parse(AbstractBuild build, File file)
-			throws IOException, SAXException {
+	public ChangeLogSet<? extends Entry> parse(Run run,
+			RepositoryBrowser<?> browser, File file) throws IOException,
+			SAXException {
 		try {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser parser = factory.newSAXParser();
-			ChangeLogHandler handler = new ChangeLogHandler(build);
+			ChangeLogHandler handler = new ChangeLogHandler(run, browser);
 			parser.parse(file, handler);
 			P4ChangeSet changeSet = handler.getChangeLogSet();
 			return changeSet;
@@ -56,10 +57,12 @@ public class P4ChangeParser extends ChangeLogParser {
 
 		private List<P4ChangeEntry> changeEntries;
 		private P4ChangeSet changeSet;
-		private AbstractBuild<?, ?> build;
+		private Run<?, ?> run;
+		private RepositoryBrowser<?> browser;
 
-		public ChangeLogHandler(AbstractBuild<?, ?> build) {
-			this.build = build;
+		public ChangeLogHandler(Run<?, ?> run, RepositoryBrowser<?> browser) {
+			this.run = run;
+			this.browser = browser;
 		}
 
 		@Override
@@ -71,7 +74,7 @@ public class P4ChangeParser extends ChangeLogParser {
 		@Override
 		public void startDocument() throws SAXException {
 			changeEntries = new ArrayList<P4ChangeEntry>();
-			changeSet = new P4ChangeSet(build, changeEntries);
+			changeSet = new P4ChangeSet(run, browser, changeEntries);
 		}
 
 		@Override
@@ -139,8 +142,12 @@ public class P4ChangeParser extends ChangeLogParser {
 					if (text.toString().trim().length() != 0
 							&& (qName.equalsIgnoreCase("changenumber") || qName
 									.equalsIgnoreCase("label"))) {
+
+						// CASTING: is this safe?
+						Job<?, ?> job = run.getParent();
+						AbstractProject<?, ?> project = (AbstractProject<?, ?>) job;
+						
 						// Find Credential ID and Workspace for this build
-						AbstractProject<?, ?> project = build.getProject();
 						PerforceScm scm = (PerforceScm) project.getScm();
 						String credential = scm.getCredential();
 
@@ -163,6 +170,7 @@ public class P4ChangeParser extends ChangeLogParser {
 
 						// disconnect from Perforce
 						p4.disconnect();
+
 					} else {
 
 						String elementText = text.toString().trim();
@@ -170,10 +178,10 @@ public class P4ChangeParser extends ChangeLogParser {
 						if (qName.equalsIgnoreCase("changeInfo")) {
 							int id = new Integer(elementText);
 							entry.setId(id);
-
 							text.setLength(0);
 							return;
 						}
+
 						if (qName.equalsIgnoreCase("shelved")) {
 							entry.setShelved(elementText.equals("true"));
 							text.setLength(0);
@@ -191,18 +199,16 @@ public class P4ChangeParser extends ChangeLogParser {
 						}
 
 						if (qName.equalsIgnoreCase("changeUser")) {
-
 							entry.setAuthor(elementText);
 							text.setLength(0);
 							return;
 						}
-						if (qName.equalsIgnoreCase("changeTime")) {
 
+						if (qName.equalsIgnoreCase("changeTime")) {
 							entry.setDate(elementText);
 							text.setLength(0);
 							return;
 						}
-
 					}
 
 					text.setLength(0);

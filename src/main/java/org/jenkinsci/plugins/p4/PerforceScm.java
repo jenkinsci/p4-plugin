@@ -9,13 +9,13 @@ import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.BuildListener;
-import hudson.model.ItemGroup;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
+import hudson.model.Job;
 import hudson.model.Node;
+import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
 import hudson.scm.SCMDescriptor;
@@ -132,9 +132,9 @@ public class PerforceScm extends SCM {
 	 * the build as an Action for later retrieval.
 	 */
 	@Override
-	public SCMRevisionState calcRevisionsFromBuild(AbstractBuild<?, ?> build,
-			Launcher launcher, TaskListener listener) throws IOException,
-			InterruptedException {
+	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run,
+			FilePath buildWorkspace, Launcher launcher, TaskListener listener)
+			throws IOException, InterruptedException {
 		// Method not required by Perforce
 		return null;
 	}
@@ -145,9 +145,8 @@ public class PerforceScm extends SCM {
 	 * detected by this poll.
 	 */
 	@Override
-	protected PollingResult compareRemoteRevisionWith(
-			AbstractProject<?, ?> project, Launcher launcher,
-			FilePath buildWorkspace, TaskListener listener,
+	public PollingResult compareRemoteRevisionWith(Job<?, ?> project,
+			Launcher launcher, FilePath buildWorkspace, TaskListener listener,
 			SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
@@ -241,15 +240,15 @@ public class PerforceScm extends SCM {
 	 * workspace. Authorisation
 	 */
 	@Override
-	public boolean checkout(AbstractBuild<?, ?> build, Launcher launcher,
-			FilePath buildWorkspace, BuildListener listener, File changelogFile)
-			throws IOException, InterruptedException {
+	public void checkout(Run<?, ?> run, Launcher launcher,
+			FilePath buildWorkspace, TaskListener listener, File changelogFile,
+			SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
 		// Set environment
-		EnvVars envVars = build.getEnvironment(listener);
+		EnvVars envVars = run.getEnvironment(listener);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
 
 		Workspace ws = (Workspace) workspace.clone();
@@ -280,32 +279,27 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(build);
+		TagAction tag = new TagAction(run);
 		tag.setClient(ws.getFullName());
 		tag.setCredential(credential);
 		tag.setBuildChange(task.getSyncChange());
-		build.addAction(tag);
-
-		// Get Matrix Execution options
-		AbstractProject<?, ?> project = build.getProject();
-		MatrixOptions matrix = getMatrixOptions(project);
+		run.addAction(tag);
 
 		// Invoke build.
 		String node = ws.get("NODE_NAME");
-		if (matrix != null) {
-			if (build instanceof MatrixBuild) {
-				parentChange = task.getBuildChange();
-				if (matrix.isBuildParent()) {
-					log.println("Building Parent on Node: " + node);
-					success &= buildWorkspace.act(task);
-				} else {
-					listener.getLogger().println("Skipping Parent build... ");
-					success = true;
-				}
+		Job<?, ?> job = run.getParent();
+		if (run instanceof MatrixBuild) {
+			MatrixOptions matrix = getMatrixOptions(job);
+			parentChange = task.getBuildChange();
+			if (matrix.isBuildParent()) {
+				log.println("Building Parent on Node: " + node);
+				success &= buildWorkspace.act(task);
+			} else {
+				listener.getLogger().println("Skipping Parent build... ");
+				success = true;
 			}
 		} else {
-			ItemGroup<?> parent = project.getParent();
-			if (parent instanceof MatrixProject) {
+			if (job instanceof MatrixProject) {
 				log.println("Building Child on Node: " + node);
 				if (parentChange != null) {
 					log.println("Using parent change: " + parentChange);
@@ -321,7 +315,7 @@ public class PerforceScm extends SCM {
 		if (success) {
 			// Calculate changes prior to build (based on last build)
 			listener.getLogger().println("Calculating built changes... ");
-			List<Object> changes = calculateChanges(build, task);
+			List<Object> changes = calculateChanges(run, task);
 			P4ChangeSet.store(changelogFile, changes);
 			listener.getLogger().println("Saved to file... ");
 		} else {
@@ -329,14 +323,13 @@ public class PerforceScm extends SCM {
 			logger.warning(msg);
 			throw new AbortException(msg);
 		}
-		return success;
 	}
 
 	// Get Matrix Execution options
-	private MatrixOptions getMatrixOptions(AbstractProject<?, ?> project) {
+	private MatrixOptions getMatrixOptions(Job<?, ?> job) {
 		MatrixOptions matrix = null;
-		if (project instanceof MatrixProject) {
-			MatrixProject matrixProj = (MatrixProject) project;
+		if (job instanceof MatrixProject) {
+			MatrixProject matrixProj = (MatrixProject) job;
 			MatrixExecutionStrategy exec = matrixProj.getExecutionStrategy();
 			if (exec instanceof MatrixOptions) {
 				matrix = (MatrixOptions) exec;
@@ -345,11 +338,10 @@ public class PerforceScm extends SCM {
 		return matrix;
 	}
 
-	private List<Object> calculateChanges(AbstractBuild<?, ?> build,
-			CheckoutTask task) {
+	private List<Object> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<Object> list = new ArrayList<Object>();
 
-		AbstractBuild<?, ?> lastBuild = build.getPreviousSuccessfulBuild();
+		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
 			if (lastTag != null) {
@@ -443,21 +435,24 @@ public class PerforceScm extends SCM {
 	 * opportunity to perform clean up.
 	 */
 	@Override
-	public boolean processWorkspaceBeforeDeletion(
-			AbstractProject<?, ?> project, FilePath buildWorkspace, Node node) {
+	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job,
+			FilePath workspace, Node node) throws IOException,
+			InterruptedException {
 
+		// CASTING: is this safe?
+		AbstractProject<?, ?> project = (AbstractProject<?, ?>) job;
 		PerforceScm scm = (PerforceScm) project.getScm();
 		String scmCredential = scm.getCredential();
-		AbstractBuild<?, ?> build = project.getLastBuild();
+		Run<?, ?> run = job.getLastBuild();
 
-		if (build == null) {
+		if (run == null) {
 			logger.warning("P4: No previous builds found");
 			return true;
 		}
 
 		String client = "unset";
 		try {
-			EnvVars envVars = build.getEnvironment(null);
+			EnvVars envVars = run.getEnvironment(null);
 			client = envVars.get("P4_CLIENT");
 		} catch (Exception e) {
 			logger.warning("P4: Unable to read P4_CLIENT");

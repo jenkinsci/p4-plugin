@@ -8,9 +8,20 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 
-public class HostnameTask implements FileCallable<String>, Serializable {
+import jenkins.security.Roles;
+
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
+
+public class HostnameTask implements FileCallable<String>, RoleSensitive,
+		Serializable {
 
 	private static final long serialVersionUID = 1L;
+
+	@Override
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		checker.check((RoleSensitive) this, Roles.SLAVE);
+	}
 
 	public String invoke(File f, VirtualChannel channel) throws IOException,
 			InterruptedException {

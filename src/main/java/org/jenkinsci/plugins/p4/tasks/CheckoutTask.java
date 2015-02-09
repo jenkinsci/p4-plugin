@@ -11,16 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import jenkins.security.Roles;
+
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
 
 import com.perforce.p4java.impl.generic.core.Label;
 
 public class CheckoutTask extends AbstractTask implements
-		FileCallable<Boolean>, Serializable {
+		FileCallable<Boolean>, RoleSensitive, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -41,6 +45,11 @@ public class CheckoutTask extends AbstractTask implements
 	 */
 	public CheckoutTask(Populate populate) {
 		this.populate = populate;
+	}
+
+	@Override
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 
 	public void initialise() throws AbortException {

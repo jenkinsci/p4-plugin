@@ -1,9 +1,7 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import com.perforce.p4java.core.ChangelistStatus;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
+import hudson.scm.RepositoryBrowser;
 import hudson.scm.ChangeLogSet;
 
 import java.io.BufferedOutputStream;
@@ -13,24 +11,24 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
-import com.perforce.p4java.impl.generic.core.Changelist;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.kohsuke.stapler.export.ExportedBean;
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
 
 public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 	private List<P4ChangeEntry> history;
 
-	protected P4ChangeSet(AbstractBuild<?, ?> build, List<P4ChangeEntry> logs) {
-		super(build);
+	protected P4ChangeSet(Run<?, ?> run, RepositoryBrowser<?> browser,
+			List<P4ChangeEntry> logs) {
+		super(run, browser);
 		this.history = Collections.unmodifiableList(logs);
 	}
 

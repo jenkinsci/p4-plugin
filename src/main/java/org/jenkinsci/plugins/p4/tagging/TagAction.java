@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.scm.AbstractScmTagAction;
 
 import java.util.ArrayList;
@@ -28,8 +28,8 @@ public class TagAction extends AbstractScmTagAction {
 	private String client;
 	private Object buildChange;
 
-	public TagAction(AbstractBuild<?, ?> build) {
-		super(build);
+	public TagAction(Run<?, ?> run) {
+		super(run);
 	}
 
 	public String getIconFileName() {
@@ -86,7 +86,7 @@ public class TagAction extends AbstractScmTagAction {
 		// save label
 		if (!tags.contains(name)) {
 			tags.add(name);
-			build.save();
+			getRun().save();
 		}
 
 		// update Perforce
