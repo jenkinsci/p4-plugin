@@ -145,22 +145,22 @@ public class PerforceScm extends SCM {
 	 * detected by this poll.
 	 */
 	@Override
-	public PollingResult compareRemoteRevisionWith(Job<?, ?> project,
+	public PollingResult compareRemoteRevisionWith(Job<?, ?> job,
 			Launcher launcher, FilePath buildWorkspace, TaskListener listener,
 			SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
 
-		if (project instanceof MatrixProject) {
-			MatrixOptions matrix = getMatrixOptions(project);
+		if (job instanceof MatrixProject) {
+			MatrixOptions matrix = getMatrixOptions(job);
 			if (matrix.isBuildParent()) {
 				// Poll PARENT only
-				EnvVars envVars = project.getEnvironment(node, listener);
+				EnvVars envVars = job.getEnvironment(node, listener);
 				state = pollWorkspace(envVars, listener, buildWorkspace);
 			} else {
 				// Poll CHILDREN only
-				MatrixProject matrixProj = (MatrixProject) project;
+				MatrixProject matrixProj = (MatrixProject) job;
 
 				Collection<MatrixConfiguration> configs = matrixProj
 						.getActiveConfigurations();
@@ -175,7 +175,7 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} else {
-			EnvVars envVars = project.getEnvironment(node, listener);
+			EnvVars envVars = job.getEnvironment(node, listener);
 			state = pollWorkspace(envVars, listener, buildWorkspace);
 		}
 
