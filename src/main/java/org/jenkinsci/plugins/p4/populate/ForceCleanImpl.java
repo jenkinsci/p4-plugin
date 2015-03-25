@@ -8,12 +8,12 @@ public class ForceCleanImpl extends Populate {
 
 	/**
 	 * Force sync of workspace (optional have update)
-	 * 
+	 *
 	 * @param have
 	 */
 	@DataBoundConstructor
-	public ForceCleanImpl(boolean have, boolean modtime, String pin) {
-		super(have, true, modtime, pin);
+	public ForceCleanImpl(boolean have, boolean modtime, String label) {
+		super(have, true, modtime, label);
 	}
 
 	@Extension

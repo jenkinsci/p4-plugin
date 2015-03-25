@@ -21,3 +21,7 @@ target/
 work/
 
 *.prefs
+
+# Ignore IntelliJ related files
+*.iml
+.idea/

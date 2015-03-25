@@ -1,42 +1,34 @@
 package org.jenkinsci.plugins.p4;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
-import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
-import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
+import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.scm.SCM;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
@@ -58,9 +50,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.perforce.p4java.impl.generic.core.Label;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 public class PerforceScm extends SCM {
 
@@ -184,7 +181,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Construct workspace from environment and then look for changes.
-	 * 
+	 *
 	 * @param envVars
 	 * @param listener
 	 * @return
@@ -211,10 +208,10 @@ public class PerforceScm extends SCM {
 		log.println("P4: Polling on: " + nodeName + " with:" + client);
 
 		// Set EXPANDED pinned label/change
-		String pin = populate.getPin();
-		if (pin != null && !pin.isEmpty()) {
-			pin = ws.expand(pin, false);
-			ws.set(ReviewProp.LABEL.toString(), pin);
+		String populateLabel = populate.getLabel();
+		if (populateLabel != null && !populateLabel.isEmpty()) {
+			populateLabel = ws.expand(populateLabel, false);
+			ws.set(ReviewProp.LABEL.toString(), populateLabel);
 		}
 
 		// Create task
@@ -222,7 +219,7 @@ public class PerforceScm extends SCM {
 		task.setCredential(credential);
 		task.setWorkspace(ws);
 		task.setListener(listener);
-		task.setLimit(pin);
+		task.setLimit(populateLabel);
 
 		// Execute remote task
 		changes = buildWorkspace.act(task);
@@ -491,9 +488,9 @@ public class PerforceScm extends SCM {
 	 * in the SCM class named DescriptorImpl. The Descriptor should also contain
 	 * the global configuration options as fields, just like the SCM class
 	 * contains the configurations options for a job.
-	 * 
+	 *
 	 * @author pallen
-	 * 
+	 *
 	 */
 	@Extension
 	public static class DescriptorImpl extends SCMDescriptor<PerforceScm> {
@@ -528,7 +525,7 @@ public class PerforceScm extends SCM {
 		 * the Descriptor's fields. To persist the fields to the global
 		 * configuration XML file, the save() method must be called. Data is
 		 * defined in the global.jelly page.
-		 * 
+		 *
 		 */
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject json)
@@ -539,7 +536,7 @@ public class PerforceScm extends SCM {
 
 		/**
 		 * Credentials list, a Jelly config method for a build job.
-		 * 
+		 *
 		 * @return A list of Perforce credential items to populate the jelly
 		 *         Select list.
 		 */
@@ -612,7 +609,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Helper: find the Remote/Local Computer used for build
-	 * 
+	 *
 	 * @param workspace
 	 * @return
 	 */
@@ -630,7 +627,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Helper: find the Node for slave build or return current instance.
-	 * 
+	 *
 	 * @param workspace
 	 * @return
 	 */
@@ -645,7 +642,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Remote execute to find hostname.
-	 * 
+	 *
 	 * @param buildWorkspace
 	 * @return
 	 */

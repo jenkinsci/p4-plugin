@@ -1,16 +1,14 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Descriptor;
-
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.core.ILabelSummary;
 import com.perforce.p4java.option.server.GetLabelsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.util.List;
 
 public abstract class PopulateDescriptor extends Descriptor<Populate> {
 
@@ -21,7 +19,7 @@ public abstract class PopulateDescriptor extends Descriptor<Populate> {
 	protected PopulateDescriptor() {
 	}
 
-	public AutoCompletionCandidates doAutoCompletePin(
+	public AutoCompletionCandidates doAutoCompleteLabel(
 			@QueryParameter String value) {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
 		try {

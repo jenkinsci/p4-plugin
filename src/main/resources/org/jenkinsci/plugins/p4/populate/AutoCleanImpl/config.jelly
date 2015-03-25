@@ -1,24 +1,24 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
- 	
+
 	<f:entry field="replace">
 		<f:checkbox title="${%REPLACE missing/modified files}" default="true"/>
 	</f:entry>
-		
+
 	<f:entry field="delete">
 		<f:checkbox title="${%DELETE generated files}" default="true"/>
 	</f:entry>
-	
+
 	<f:entry field="modtime">
 		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
 	</f:entry>
-	
-	<f:entry field="pin">
+
+	<f:entry field="label">
 		<table border="0" width="100%">
 			<tr>
-				<td nowrap="true">Pin build at Perforce Label</td>
+				<td nowrap="true">Sync build at Perforce Label</td>
 				<td width="100%"><f:textbox/></td>
 			</tr>
 		</table>
 	</f:entry>
-		  
+
 </j:jelly>
