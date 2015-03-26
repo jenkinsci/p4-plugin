@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import javax.servlet.ServletException;
 
@@ -19,7 +18,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class P4TicketImpl extends P4StandardCredentials implements Serializable {
+public class P4TicketImpl extends P4StandardCredentials {
 
 	/**
 	 * Ensure consistent serialisation.
