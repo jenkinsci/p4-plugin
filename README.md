@@ -92,7 +92,7 @@ In this mode the workspace View is generated using the specified template worksp
 
 ## Populating
 
-Perforce will populate the workspace with the file revisions needed for the build, the way the workspace is populated is configured on the Jenkins Job configuration page and support the following behaviours:
+Perforce will populate the workspace with the file revisions needed for the build, the way the workspace is populated is configured on the Jenkin Job configuration page and support the following behaviours:
 
 * Automatic cleanup and sync
 
@@ -113,8 +113,6 @@ This method is not recommended as the cost of IO resources on server and client 
 Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
 ![Sync populate](docs/images/sync_pop.png)
-
-All populate behaviours have a "Sync build at Perforce Label" field to instruct the workspace to sync only to the specified label. Any other specified change or label will be ignored.
 
 ## Building
 

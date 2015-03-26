@@ -11,8 +11,8 @@ public class AutoCleanImpl extends Populate {
 
 	@DataBoundConstructor
 	public AutoCleanImpl(boolean replace, boolean delete, boolean modtime,
-			String label) {
-		super(true, false, modtime, label); // normal sync; no -f, no -p
+			String pin) {
+		super(true, false, modtime, pin); // normal sync; no -f, no -p
 		this.replace = replace;
 		this.delete = delete;
 	}

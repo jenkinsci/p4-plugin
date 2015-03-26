@@ -12,8 +12,8 @@ public class ForceCleanImpl extends Populate {
 	 * @param have
 	 */
 	@DataBoundConstructor
-	public ForceCleanImpl(boolean have, boolean modtime, String label) {
-		super(have, true, modtime, label);
+	public ForceCleanImpl(boolean have, boolean modtime, String pin) {
+		super(have, true, modtime, pin);
 	}
 
 	@Extension

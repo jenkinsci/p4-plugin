@@ -3,9 +3,10 @@ package org.jenkinsci.plugins.p4.populate;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
-import jenkins.model.Jenkins;
 
 import java.io.Serializable;
+
+import jenkins.model.Jenkins;
 
 public abstract class Populate implements ExtensionPoint,
 		Describable<Populate>, Serializable {
@@ -15,13 +16,13 @@ public abstract class Populate implements ExtensionPoint,
 	private final boolean have; // ! sync '-p'
 	private final boolean force; // sync '-f'
 	private final boolean modtime;
-	private final String label;
+	private final String pin;
 
-	public Populate(boolean have, boolean force, boolean modtime, String label) {
+	public Populate(boolean have, boolean force, boolean modtime, String pin) {
 		this.have = have;
 		this.force = force;
 		this.modtime = modtime;
-		this.label = label;
+		this.pin = pin;
 	}
 
 	public boolean isHave() {
@@ -36,8 +37,8 @@ public abstract class Populate implements ExtensionPoint,
 		return modtime;
 	}
 
-	public String getLabel() {
-		return label;
+	public String getPin() {
+		return pin;
 	}
 
 	public PopulateDescriptor getDescriptor() {

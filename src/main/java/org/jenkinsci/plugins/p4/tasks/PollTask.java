@@ -1,12 +1,17 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.RequestException;
-import com.perforce.p4java.impl.generic.core.Changelist;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import jenkins.security.Roles;
+
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
@@ -15,12 +20,10 @@ import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.RequestException;
+import com.perforce.p4java.impl.generic.core.Changelist;
 
 public class PollTask extends AbstractTask implements
 		FileCallable<List<Integer>>, RoleSensitive, Serializable {
@@ -30,7 +33,7 @@ public class PollTask extends AbstractTask implements
 	private final List<Filter> filter;
 	private final boolean perChange;
 
-	private String label;
+	private String pin;
 
 	public PollTask(List<Filter> filter) {
 		this.filter = filter;
@@ -66,14 +69,14 @@ public class PollTask extends AbstractTask implements
 			}
 
 			// find changes...
-			if (label != null && !label.isEmpty()) {
-				List<Integer> have = p4.listHaveChanges(label);
+			if (pin != null && !pin.isEmpty()) {
+				List<Integer> have = p4.listHaveChanges(pin);
 				int last = 0;
 				if (!have.isEmpty()) {
 					last = have.get(have.size() - 1);
 				}
-				p4.log("P4: Polling with label/change: " + last + "," + label);
-				changes = p4.listChanges(last, label);
+				p4.log("P4: Polling with label/change: " + last + "," + pin);
+				changes = p4.listChanges(last, pin);
 			} else {
 				List<Integer> have = p4.listHaveChanges();
 				int last = 0;
@@ -115,8 +118,8 @@ public class PollTask extends AbstractTask implements
 		return changes;
 	}
 
-	public void setLimit(String expandedLabel) {
-		label = expandedLabel;
+	public void setLimit(String expandedPin) {
+		pin = expandedPin;
 	}
 
 	/**

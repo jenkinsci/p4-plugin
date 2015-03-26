@@ -12,10 +12,10 @@
 		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
 	</f:entry>
 
-	<f:entry field="label">
+	<f:entry field="pin">
 		<table border="0" width="100%">
 			<tr>
-				<td nowrap="true">Sync build at Perforce Label</td>
+				<td nowrap="true">Pin build at Perforce Label</td>
 				<td width="100%"><f:textbox/></td>
 			</tr>
 		</table>
