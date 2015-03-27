@@ -73,14 +73,20 @@
                                         <img src="${rootURL}/plugin/p4/icons/action-${entry.getAction(file)}.gif" border="0" style="vertical-align"/>
                                         <st:nbsp/> 
                                         <a href="${browser.getFileLink(file)}">${file.depotPathString}</a>
-                                        <j:set var="diff" value="${browser.getDiffLink(file)}"/>
                                         <j:choose>
-                                            <j:when test="${diff!=null}">
-                                                <st:nbsp/>
-                                                <a href="${diff}">#${file.endRevision}</a>
-                                            </j:when>
+                                            <j:when test="${entry.shelved}">                                    
+                                            </j:when>	
                                             <j:otherwise>
-                                                #${file.endRevision}
+                                                <j:set var="diff" value="${browser.getDiffLink(file)}"/>
+                                                <j:choose>
+                                                    <j:when test="${diff!=null}">
+                                                        <st:nbsp/>
+                                                        <a href="${diff}">#${file.endRevision}</a>
+                                                    </j:when>
+                                                    <j:otherwise>
+                                                        #${file.endRevision}
+                                                    </j:otherwise>
+                                                </j:choose>
                                             </j:otherwise>
                                         </j:choose>
                                     </li>
