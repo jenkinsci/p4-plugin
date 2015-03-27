@@ -551,6 +551,13 @@ public class ClientHelper extends ConnectionHelper {
 		String path = iclient.getRoot() + "/...";
 		files = FileSpecBuilder.makeFileSpecList(path);
 
+		// Remove opened files from have list.
+		RevertFilesOptions rOpts = new RevertFilesOptions();
+		rOpts.setNoUpdate(true);
+		log("... revert -k " + path);
+		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
+		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
+
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		log("... unshelve -f -s " + review);
@@ -570,12 +577,6 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 
-		// Remove opened files from have list.
-		RevertFilesOptions rOpts = new RevertFilesOptions();
-		rOpts.setNoUpdate(true);
-		log("... revert -k " + path);
-		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
-		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
 		log("... duration: " + timer.toString());
 	}
 
