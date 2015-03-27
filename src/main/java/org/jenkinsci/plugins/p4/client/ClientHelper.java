@@ -572,7 +572,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Remove opened files from have list.
 		RevertFilesOptions rOpts = new RevertFilesOptions();
-		rOpts.setNoUpdate(true);
+		rOpts.setNoClientRefresh(true);
 		log("... revert -k " + path);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
