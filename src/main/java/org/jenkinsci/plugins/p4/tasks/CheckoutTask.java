@@ -149,6 +149,19 @@ public class CheckoutTask extends AbstractTask implements
 		// Use head as the default
 		Object build = this.head;
 
+		// if a pinned change/label is specified the update
+		String populateLabel = populate.getPin();
+		if (populateLabel != null && !populateLabel.isEmpty()) {
+			// Expand label with environment vars if one was defined
+			populateLabel = getWorkspace().expand(populateLabel, false);
+			try {
+				// if build is a change-number passed as a label
+				build = Integer.parseInt(populateLabel);
+			} catch (NumberFormatException e) {
+				build = populateLabel;
+			}
+		}
+
 		// if change is specified then update
 		String change = workspace.get(ReviewProp.CHANGE.toString());
 		if (change != null && !change.isEmpty()) {
