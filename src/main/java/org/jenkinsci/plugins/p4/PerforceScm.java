@@ -290,7 +290,7 @@ public class PerforceScm extends SCM {
 		Job<?, ?> job = run.getParent();
 		if (run instanceof MatrixBuild) {
 			MatrixOptions matrix = getMatrixOptions(job);
-			parentChange = task.getBuildChange();
+			parentChange = task.getSyncChange();
 			if (matrix.isBuildParent()) {
 				log.println("Building Parent on Node: " + node);
 				success &= buildWorkspace.act(task);
@@ -361,7 +361,8 @@ public class PerforceScm extends SCM {
 	}
 
 	@Override
-	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+	public void
+			buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = build.getAction(TagAction.class);
