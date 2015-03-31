@@ -349,6 +349,8 @@ public class ClientHelper extends ConnectionHelper {
 					validateFileSpecs(syncMsg, "file(s) up-to-date.",
 							"file does not exist");
 				}
+			} else {
+				log(spec.getOriginalPathString());
 			}
 		}
 		log("... duration: " + timer.toString());
@@ -567,6 +569,8 @@ public class ClientHelper extends ConnectionHelper {
 					printFile(rev);
 					log("... print " + rev);
 				}
+			} else {
+				log(spec.getDepotPathString());
 			}
 		}
 
