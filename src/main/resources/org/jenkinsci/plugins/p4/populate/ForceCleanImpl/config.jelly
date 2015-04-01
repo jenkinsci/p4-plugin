@@ -1,13 +1,13 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
- 
+
  	<f:entry>
 		<f:checkbox title="${%Populate have list}" field="have" default="false"/>
 	</f:entry>
-	
+
 	<f:entry field="modtime">
 		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
 	</f:entry>
-	
+
 	<f:entry field="pin">
 		<table border="0" width="100%">
 			<tr>
@@ -16,5 +16,5 @@
 			</tr>
 		</table>
 	</f:entry>
-	
+
 </j:jelly>

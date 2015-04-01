@@ -124,7 +124,7 @@ public class PollTask extends AbstractTask implements
 
 	/**
 	 * Returns true if change should be filtered
-	 * 
+	 *
 	 * @param changelist
 	 * @return
 	 * @throws AccessException

@@ -40,7 +40,7 @@ public class CheckoutTask extends AbstractTask implements
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param populate
 	 */
 	public CheckoutTask(Populate populate) {
@@ -90,7 +90,7 @@ public class CheckoutTask extends AbstractTask implements
 
 	/**
 	 * Invoke sync on build node (master or remote node).
-	 * 
+	 *
 	 * @return true if updated, false if no change.
 	 */
 	public Boolean invoke(File workspace, VirtualChannel channel)
@@ -125,7 +125,7 @@ public class CheckoutTask extends AbstractTask implements
 
 	/**
 	 * Get the build status for the parameter map.
-	 * 
+	 *
 	 * @param map
 	 * @return
 	 */
@@ -141,7 +141,7 @@ public class CheckoutTask extends AbstractTask implements
 	/**
 	 * Get the sync point from the parameter map. Returns the head if no change
 	 * found in the map.
-	 * 
+	 *
 	 * @param map
 	 * @return
 	 */
@@ -171,6 +171,19 @@ public class CheckoutTask extends AbstractTask implements
 			}
 		}
 
+		// if label is specified via label in populate config then update
+		String populateLabel = populate.getPin();
+		if (populateLabel != null && !populateLabel.isEmpty()) {
+			// Expand label with environment vars if one was defined
+			populateLabel = getWorkspace().expand(populateLabel, false);
+			try {
+				// if build is a change-number passed as a label
+				build = Integer.parseInt(populateLabel);
+			} catch (NumberFormatException e) {
+				build = populateLabel;
+			}
+		}
+
 		// if label is specified then update
 		String label = workspace.get(ReviewProp.LABEL.toString());
 		if (label != null && !label.isEmpty()) {
@@ -187,7 +200,7 @@ public class CheckoutTask extends AbstractTask implements
 
 	/**
 	 * Get the unshelve point from the parameter map.
-	 * 
+	 *
 	 * @param map
 	 * @return
 	 */

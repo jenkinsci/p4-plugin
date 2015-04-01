@@ -8,7 +8,7 @@ public class SyncOnlyImpl extends Populate {
 
 	/**
 	 * Sync only (optional have update)
-	 * 
+	 *
 	 * @param have
 	 */
 	@DataBoundConstructor
