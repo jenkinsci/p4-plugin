@@ -36,6 +36,7 @@ import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
+import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
@@ -235,19 +236,11 @@ public class ClientHelper extends ConnectionHelper {
 			// remove all pending files within workspace
 			tidyPending(files);
 
-			// remove extra files within workspace
-			if (((AutoCleanImpl) populate).isDelete()) {
-				tidyDelete(files);
-			}
-
-			// replace any missing/modified files within workspace
-			if (((AutoCleanImpl) populate).isReplace()) {
-				tidyReplace(files, populate);
-			}
+			// clean files within workspace
+			tidyRevisions(files, populate);
 		}
 
 		if (populate instanceof ForceCleanImpl) {
-
 			// remove all pending files within workspace
 			tidyPending(files);
 
@@ -291,13 +284,16 @@ public class ClientHelper extends ConnectionHelper {
 		log("... duration: " + timer.toString());
 	}
 
-	private void tidyReplace(List<IFileSpec> files, Populate populate)
+	private void tidyRevisions(List<IFileSpec> files, Populate populate)
 			throws Exception {
 		TimeTask timer = new TimeTask();
-		log("SCM Task: restoring all missing and changed revisions.");
+		log("SCM Task: cleaning workspace to match have list.");
 
-		// check status - find all missing or changed
-		String[] base = { "-n", "-e", "-d", "-f" };
+		boolean delete = ((AutoCleanImpl) populate).isDelete();
+		boolean replace = ((AutoCleanImpl) populate).isReplace();
+
+		// check status - find all missing, changed or added files
+		String[] base = { "-n", "-a", "-e", "-d", "-l", "-f" };
 		List<String> list = new ArrayList<String>();
 		list.addAll(Arrays.asList(base));
 
@@ -314,76 +310,55 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
 
 		log("... [list] = reconcile " + list.toString());
-		List<IFileSpec> update = iclient.reconcileFiles(files, statusOpts);
-		validateFileSpecs(update, "also opened by", "no file(s) to reconcile",
-				"must sync/resolve", "exclusive file already opened",
-				"cannot submit from stream");
 
-		log("... size[list] = " + update.size());
-
-		// force sync to update files only if "no file(s) to reconcile" is not
-		// present.
-		if (validateFileSpecs(update, true, "also opened by",
+		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
+		validateFileSpecs(status, "also opened by", "no file(s) to reconcile",
 				"must sync/resolve", "exclusive file already opened",
-				"cannot submit from stream")) {
+				"cannot submit from stream", "instead of",
+				"empty, assuming text");
+
+		log("... size[list] = " + status.size());
+
+		// Add missing, modified or locked files to a list, and delete the
+		// unversioned files.
+		List<IFileSpec> update = new ArrayList<IFileSpec>();
+		for (IFileSpec s : status) {
+			if (s.getOpStatus() == FileSpecOpStatus.VALID) {
+				String path = s.getLocalPathString();
+				if (path == null) {
+					path = depotToLocal(s);
+				}
+				switch (s.getAction()) {
+				case ADD:
+					if (path != null && delete) {
+						File unlink = new File(path);
+						log("\tdelete: " + path);
+						unlink.delete();
+					}
+					break;
+				default:
+					update.add(s);
+					break;
+				}
+			} else {
+				String msg = s.getStatusMessage();
+				if (msg.contains("exclusive file already opened")) {
+					String rev = msg.substring(0, msg.indexOf(" - can't "));
+					IFileSpec spec = new FileSpec(rev);
+					update.add(spec);
+				}
+			}
+		}
+
+		// Force sync missing and modified files
+		if (!update.isEmpty() && replace) {
+			log("... sync -f [list]");
+
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
-			log("... sync -f [list]");
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
 			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");
-		}
-
-		// force sync any files missed due to INFO messages e.g. exclusive files
-		for (IFileSpec spec : update) {
-			if (spec.getOpStatus() != FileSpecOpStatus.VALID) {
-				String msg = spec.getStatusMessage();
-				if (msg.contains("exclusive file already opened")) {
-					String rev = msg.substring(0, msg.indexOf(" - can't "));
-					List<IFileSpec> f = FileSpecBuilder.makeFileSpecList(rev);
-
-					SyncOptions syncOpts = new SyncOptions();
-					syncOpts.setForceUpdate(true);
-					log("... sync -f " + rev);
-					List<IFileSpec> syncMsg = iclient.sync(f, syncOpts);
-					validateFileSpecs(syncMsg, "file(s) up-to-date.",
-							"file does not exist");
-				}
-			} else {
-				log(spec.getOriginalPathString());
-			}
-		}
-		log("... duration: " + timer.toString());
-	}
-
-	private void tidyDelete(List<IFileSpec> files) throws Exception {
-		TimeTask timer = new TimeTask();
-		log("SCM Task: removing all non-versioned files.");
-
-		// check status - find all extra files
-		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
-		statusOpts.setOutsideAdd(true);
-		statusOpts.setNoUpdate(true);
-		statusOpts.setUseWildcards(true);
-		statusOpts.setLocalSyntax(true);
-		log("... [list] = reconcile -n -a -l");
-		List<IFileSpec> extra = iclient.reconcileFiles(files, statusOpts);
-		validateFileSpecs(extra, "- no file(s) to reconcile", "instead of",
-				"empty, assuming text");
-
-		log("... size[list] = " + extra.size());
-
-		// remove added files
-		log("... rm [list]");
-		for (IFileSpec e : extra) {
-			String path = e.getLocalPathString();
-			if (path == null) {
-				path = depotToLocal(e);
-			}
-			if (path != null) {
-				File unlink = new File(path);
-				unlink.delete();
-			}
 		}
 		log("... duration: " + timer.toString());
 	}
