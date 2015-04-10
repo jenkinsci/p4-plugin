@@ -32,6 +32,7 @@ import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.callback.IProgressCallback;
 
 public class ConnectionHelper {
 
@@ -42,6 +43,7 @@ public class ConnectionHelper {
 	protected final AuthorisationConfig authorisationConfig;
 	protected IOptionsServer connection;
 	protected final TaskListener listener;
+	protected IProgressCallback progress;
 
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
@@ -90,6 +92,10 @@ public class ConnectionHelper {
 			log(err);
 			return;
 		}
+		
+		// Register progress callback
+		progress = new ClientProgress(listener);
+		this.connection.registerProgressCallback(progress);
 	}
 
 	public String getTrust() throws Exception {
