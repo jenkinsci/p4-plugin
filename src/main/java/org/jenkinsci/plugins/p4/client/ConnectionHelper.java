@@ -346,6 +346,9 @@ public class ConnectionHelper {
 		boolean success = true;
 		boolean abort = false;
 
+		ArrayList<String> ignoreList = new ArrayList<String>();
+		ignoreList.addAll(Arrays.asList(ignore));
+
 		for (IFileSpec fileSpec : fileSpecs) {
 			FileSpecOpStatus status = fileSpec.getOpStatus();
 			if (status != FileSpecOpStatus.VALID) {
@@ -353,12 +356,11 @@ public class ConnectionHelper {
 
 				// superfluous p4java message
 				boolean unknownMsg = true;
-				ArrayList<String> ignoreList = new ArrayList<String>();
-				ignoreList.addAll(Arrays.asList(ignore));
 				for (String istring : ignoreList) {
 					if (msg.contains(istring)) {
 						// its a known message
 						unknownMsg = false;
+						break;
 					}
 				}
 

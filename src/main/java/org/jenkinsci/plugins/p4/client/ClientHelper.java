@@ -332,7 +332,6 @@ public class ClientHelper extends ConnectionHelper {
 				case ADD:
 					if (path != null && delete) {
 						File unlink = new File(path);
-						log("\tdelete: " + path);
 						unlink.delete();
 					}
 					break;
