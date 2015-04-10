@@ -92,7 +92,7 @@ public class ConnectionHelper {
 			log(err);
 			return;
 		}
-		
+
 		// Register progress callback
 		progress = new ClientProgress(listener);
 		this.connection.registerProgressCallback(progress);
@@ -137,8 +137,7 @@ public class ConnectionHelper {
 
 		switch (authorisationConfig.getType()) {
 		case PASSWORD:
-			String status = connection.getLoginStatus();
-			if (!status.contains("not necessary")) {
+			if (!isLogin()) {
 				String pass = authorisationConfig.getPassword();
 				connection.login(pass);
 			}
@@ -159,7 +158,14 @@ public class ConnectionHelper {
 					+ authorisationConfig.getType());
 		}
 
-		return isLogin();
+		// return login status...
+		if (isLogin()) {
+			return true;
+		} else {
+			String status = connection.getLoginStatus();
+			logger.info("P4: login failed '" + status + "'");
+			return false;
+		}
 	}
 
 	public void logout() throws Exception {
@@ -180,8 +186,6 @@ public class ConnectionHelper {
 		if (status.isEmpty()) {
 			return true;
 		}
-
-		logger.info("P4: login failed '" + status + "'");
 		return false;
 	}
 
