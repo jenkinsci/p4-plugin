@@ -13,11 +13,9 @@ public class ClientProgress implements IProgressCallback {
 		this.listener = listener;
 	}
 
-	@Override
 	public void start(int key) {
 	}
 
-	@Override
 	public boolean tick(int key, String msg) {
 		if (msg != null && !msg.isEmpty()) {
 			StringBuffer sb = new StringBuffer();
@@ -29,7 +27,6 @@ public class ClientProgress implements IProgressCallback {
 		return !abort;
 	}
 
-	@Override
 	public void stop(int key) {
 	}
 

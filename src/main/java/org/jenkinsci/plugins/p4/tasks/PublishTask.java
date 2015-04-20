@@ -8,15 +8,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-import jenkins.security.Roles;
-
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.publish.Publish;
-import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
-		RoleSensitive, Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -27,11 +23,6 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public PublishTask(Publish publish) {
 		this.publish = publish;
-	}
-
-	@Override
-	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 
 	public Boolean invoke(File f, VirtualChannel channel) throws IOException,
