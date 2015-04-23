@@ -1,4 +1,4 @@
-# p4-jenkins
+﻿# p4-jenkins
 
 ## Requirements
 
@@ -244,6 +244,21 @@ Link to change in Swarm
 
 ![Repo list](docs/images/swarm.png)
  
+## Troubleshooting
+
+### Connection issues
+
+
+**Error**: "*Unable to connect: com.perforce.p4java.exception.ConnectionException: Error occurred during the SSL handshake: invalid SSL session*"
+
+**Solution**: Due to current US export control restrictions for some countries, the standard JDK package only comes with 128 bit encryption level cyphers. In order to use P4Java to connect to an SSL-enabled Perforce server, those living in eligible countries may download the unlimited strength JCE (Java Cryptography Extension) package and replace the current default cryptography jar files on the build server with the unlimited strength files. 
+
+The libraries can be downloaded from:
+
+   http://www.oracle.com/technetwork/java/javase/downloads/jce-7-download-432124.html
+
+Installation instructions can be found in the file 'README.txt' in the JCE download.
+
 ## Release notes
 
 ### 2014.2 release
