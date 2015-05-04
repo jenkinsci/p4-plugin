@@ -3,10 +3,7 @@ package org.jenkinsci.plugins.p4.client;
 import hudson.AbortException;
 import hudson.model.TaskListener;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -150,7 +147,8 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Sync files to workspace at the specified change/label.
 	 * 
-	 * @param change
+	 * @param buildChange Change to sync from
+     * @param populate Populate strategy
 	 * @throws Exception
 	 */
 	public void syncFiles(Object buildChange, Populate populate)
@@ -233,28 +231,44 @@ public class ClientHelper extends ConnectionHelper {
 		files = FileSpecBuilder.makeFileSpecList(path);
 
 		if (populate instanceof AutoCleanImpl) {
-			// remove all pending files within workspace
-			tidyPending(files);
-
-			// clean files within workspace
-			tidyRevisions(files, populate);
-		}
+            tidyAutoCleanImpl(populate, files);
+        }
 
 		if (populate instanceof ForceCleanImpl) {
-			// remove all pending files within workspace
-			tidyPending(files);
-
-			// remove all versioned files (clean have list)
-			syncFiles(0, populate);
-
-			// remove all files from workspace
-			String root = iclient.getRoot();
-			log("... rm -rf " + root);
-			FileUtils.forceDelete(new File(root));
-		}
+            tidyForceSyncImpl(populate, files);
+        }
 	}
 
-	private void tidyPending(List<IFileSpec> files) throws Exception {
+    private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files) throws Exception {
+        // remove all pending files within workspace
+        tidyPending(files);
+
+        // remove all versioned files (clean have list)
+        syncFiles(0, populate);
+
+        // remove all files from workspace
+        String root = iclient.getRoot();
+        log("... rm -rf " + root);
+        silentlyForceDelete(root);
+    }
+
+    private void silentlyForceDelete(String root) throws IOException {
+        try {
+            FileUtils.forceDelete(new File(root));
+        } catch (FileNotFoundException ignored) {
+
+        }
+    }
+
+    private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files) throws Exception {
+        // remove all pending files within workspace
+        tidyPending(files);
+
+        // clean files within workspace
+        tidyRevisions(files, populate);
+    }
+
+    private void tidyPending(List<IFileSpec> files) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("SCM Task: reverting all pending and shelved revisions.");
 
@@ -624,8 +638,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Show all changes within the scope of the client.
-	 * 
-	 * @param from
+	 *
 	 * @return
 	 * @throws Exception
 	 */
@@ -669,7 +682,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number or label.
 	 * 
-	 * @param limit
+	 * @param changeLimit
 	 * @return
 	 * @throws Exception
 	 */
