@@ -1,23 +1,23 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import com.perforce.p4java.client.IClient;
-import com.perforce.p4java.server.IOptionsServer;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
-import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
+
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+
+import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.server.IOptionsServer;
 
 public abstract class Workspace implements Cloneable, ExtensionPoint,
 		Describable<Workspace> {
-
-	private static Logger logger = Logger.getLogger(Workspace.class.getName());
 
 	private String charset;
 	private boolean pinHost;
