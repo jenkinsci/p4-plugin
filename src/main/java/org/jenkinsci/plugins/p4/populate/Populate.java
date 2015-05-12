@@ -16,13 +16,15 @@ public abstract class Populate implements ExtensionPoint,
 	private final boolean have; // ! sync '-p'
 	private final boolean force; // sync '-f'
 	private final boolean modtime;
+	private final boolean quiet; // task '-q'
 	private final String pin;
 
-	public Populate(boolean have, boolean force, boolean modtime, String pin) {
+	public Populate(boolean have, boolean force, boolean modtime, boolean quiet, String pin) {
 		this.have = have;
 		this.force = force;
 		this.modtime = modtime;
 		this.pin = pin;
+        this.quiet = quiet;
 	}
 
 	public boolean isHave() {
@@ -36,6 +38,8 @@ public abstract class Populate implements ExtensionPoint,
 	public boolean isModtime() {
 		return modtime;
 	}
+
+    public boolean isQuiet() { return quiet; }
 
 	public String getPin() {
 		return pin;

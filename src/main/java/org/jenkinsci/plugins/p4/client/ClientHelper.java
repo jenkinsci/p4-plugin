@@ -130,7 +130,6 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Sync revision to re-edit
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setNoUpdate(true);
 		List<IFileSpec> syncMsg = iclient.sync(syncFiles, syncOpts);
 
 		for (IFileSpec fileSpec : syncMsg) {
@@ -207,8 +206,10 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
 		syncOpts.setForceUpdate(populate.isForce());
+        syncOpts.setQuiet(populate.isQuiet());
 		log("... force update " + populate.isForce());
 		log("... bypass have " + !populate.isHave());
+        log("... quiet " + populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
@@ -369,6 +370,7 @@ public class ClientHelper extends ConnectionHelper {
 
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
+            syncOpts.setQuiet(populate.isQuiet());
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
 			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");

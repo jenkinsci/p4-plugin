@@ -11,6 +11,10 @@
 	<f:entry field="modtime">
 		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
 	</f:entry>
+
+	<f:entry field="quiet">
+		<f:checkbox title="${%Suppress Perforce generated info messages}" default="false"/>
+	</f:entry>
 	
 	<f:entry field="pin">
 		<table border="0" width="100%">
