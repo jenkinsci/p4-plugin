@@ -1,15 +1,12 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-import hudson.model.Hudson;
-
-import org.kohsuke.stapler.export.ExportedBean;
-
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsScope;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.export.ExportedBean;
 
 @ExportedBean
 public class P4Credentials implements Credentials {
@@ -39,7 +36,7 @@ public class P4Credentials implements Credentials {
 
 	@NonNull
 	public CredentialsDescriptor getDescriptor() {
-		return (CredentialsDescriptor) Hudson.getInstance().getDescriptorOrDie(
+		return (CredentialsDescriptor) Jenkins.getInstance().getDescriptorOrDie(
 				getClass());
 	}
 
