@@ -1,12 +1,15 @@
 package org.jenkinsci.plugins.p4.credentials;
 
+import jenkins.model.Jenkins;
+
+import org.kohsuke.stapler.export.ExportedBean;
+
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.export.ExportedBean;
 
 @ExportedBean
 public class P4Credentials implements Credentials {
@@ -16,10 +19,10 @@ public class P4Credentials implements Credentials {
 	@CheckForNull
 	private final CredentialsScope scope;
 
-    protected P4Credentials() {
-        this.scope = null;
-    }
-    
+	protected P4Credentials() {
+		this.scope = null;
+	}
+
 	/**
 	 * Create instance with specified scope.
 	 * 
@@ -36,8 +39,8 @@ public class P4Credentials implements Credentials {
 
 	@NonNull
 	public CredentialsDescriptor getDescriptor() {
-		return (CredentialsDescriptor) Jenkins.getInstance().getDescriptorOrDie(
-				getClass());
+		return (CredentialsDescriptor) Jenkins.getInstance()
+				.getDescriptorOrDie(getClass());
 	}
 
 }

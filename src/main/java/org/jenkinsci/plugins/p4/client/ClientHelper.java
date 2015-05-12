@@ -3,7 +3,12 @@ package org.jenkinsci.plugins.p4.client;
 import hudson.AbortException;
 import hudson.model.TaskListener;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -147,8 +152,10 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Sync files to workspace at the specified change/label.
 	 * 
-	 * @param buildChange Change to sync from
-     * @param populate Populate strategy
+	 * @param buildChange
+	 *            Change to sync from
+	 * @param populate
+	 *            Populate strategy
 	 * @throws Exception
 	 */
 	public void syncFiles(Object buildChange, Populate populate)
@@ -231,44 +238,46 @@ public class ClientHelper extends ConnectionHelper {
 		files = FileSpecBuilder.makeFileSpecList(path);
 
 		if (populate instanceof AutoCleanImpl) {
-            tidyAutoCleanImpl(populate, files);
-        }
+			tidyAutoCleanImpl(populate, files);
+		}
 
 		if (populate instanceof ForceCleanImpl) {
-            tidyForceSyncImpl(populate, files);
-        }
+			tidyForceSyncImpl(populate, files);
+		}
 	}
 
-    private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files) throws Exception {
-        // remove all pending files within workspace
-        tidyPending(files);
+	private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files)
+			throws Exception {
+		// remove all pending files within workspace
+		tidyPending(files);
 
-        // remove all versioned files (clean have list)
-        syncFiles(0, populate);
+		// remove all versioned files (clean have list)
+		syncFiles(0, populate);
 
-        // remove all files from workspace
-        String root = iclient.getRoot();
-        log("... rm -rf " + root);
-        silentlyForceDelete(root);
-    }
+		// remove all files from workspace
+		String root = iclient.getRoot();
+		log("... rm -rf " + root);
+		silentlyForceDelete(root);
+	}
 
-    private void silentlyForceDelete(String root) throws IOException {
-        try {
-            FileUtils.forceDelete(new File(root));
-        } catch (FileNotFoundException ignored) {
+	private void silentlyForceDelete(String root) throws IOException {
+		try {
+			FileUtils.forceDelete(new File(root));
+		} catch (FileNotFoundException ignored) {
 
-        }
-    }
+		}
+	}
 
-    private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files) throws Exception {
-        // remove all pending files within workspace
-        tidyPending(files);
+	private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files)
+			throws Exception {
+		// remove all pending files within workspace
+		tidyPending(files);
 
-        // clean files within workspace
-        tidyRevisions(files, populate);
-    }
+		// clean files within workspace
+		tidyRevisions(files, populate);
+	}
 
-    private void tidyPending(List<IFileSpec> files) throws Exception {
+	private void tidyPending(List<IFileSpec> files) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("SCM Task: reverting all pending and shelved revisions.");
 
