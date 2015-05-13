@@ -13,7 +13,7 @@
 	</f:entry>
 
 	<f:entry field="quiet">
-		<f:checkbox title="${%Suppress Perforce generated info messages}" default="false"/>
+		<f:checkbox title="${%Suppress Perforce generated info messages}" default="true"/>
 	</f:entry>
 	
 	<f:entry field="pin">
