@@ -3,7 +3,12 @@ package org.jenkinsci.plugins.p4.client;
 import hudson.AbortException;
 import hudson.model.TaskListener;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -119,7 +124,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Test to see if workspace is at the latest revision.
-	 *
+	 * 
 	 * @throws Exception
 	 */
 	public boolean updateFiles() throws Exception {
@@ -130,7 +135,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Sync revision to re-edit
 		SyncOptions syncOpts = new SyncOptions();
-        syncOpts.setNoUpdate(true);
+		syncOpts.setNoUpdate(true);
 		List<IFileSpec> syncMsg = iclient.sync(syncFiles, syncOpts);
 
 		for (IFileSpec fileSpec : syncMsg) {
@@ -146,7 +151,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Sync files to workspace at the specified change/label.
-	 *
+	 * 
 	 * @param buildChange Change to sync from
      * @param populate Populate strategy
 	 * @throws Exception
@@ -207,10 +212,8 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
 		syncOpts.setForceUpdate(populate.isForce());
-        syncOpts.setQuiet(populate.isQuiet());
 		log("... force update " + populate.isForce());
 		log("... bypass have " + !populate.isHave());
-        log("... quiet " + populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
@@ -220,7 +223,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Cleans up the Perforce workspace after a previous build. Removes all
 	 * pending and abandoned files (equivalent to 'p4 revert -w').
-	 *
+	 * 
 	 * @throws Exception
 	 */
 	public void tidyWorkspace(Populate populate) throws Exception {
@@ -233,44 +236,46 @@ public class ClientHelper extends ConnectionHelper {
 		files = FileSpecBuilder.makeFileSpecList(path);
 
 		if (populate instanceof AutoCleanImpl) {
-            tidyAutoCleanImpl(populate, files);
-        }
+			tidyAutoCleanImpl(populate, files);
+		}
 
 		if (populate instanceof ForceCleanImpl) {
-            tidyForceSyncImpl(populate, files);
-        }
+			tidyForceSyncImpl(populate, files);
+		}
 	}
 
-    private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files) throws Exception {
-        // remove all pending files within workspace
-        tidyPending(files);
+	private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files)
+			throws Exception {
+		// remove all pending files within workspace
+		tidyPending(files);
 
-        // remove all versioned files (clean have list)
-        syncFiles(0, populate);
+		// remove all versioned files (clean have list)
+		syncFiles(0, populate);
 
-        // remove all files from workspace
-        String root = iclient.getRoot();
-        log("... rm -rf " + root);
-        silentlyForceDelete(root);
-    }
+		// remove all files from workspace
+		String root = iclient.getRoot();
+		log("... rm -rf " + root);
+		silentlyForceDelete(root);
+	}
 
-    private void silentlyForceDelete(String root) throws IOException {
-        try {
-            FileUtils.forceDelete(new File(root));
-        } catch (FileNotFoundException ignored) {
+	private void silentlyForceDelete(String root) throws IOException {
+		try {
+			FileUtils.forceDelete(new File(root));
+		} catch (FileNotFoundException ignored) {
 
-        }
-    }
+		}
+	}
 
-    private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files) throws Exception {
-        // remove all pending files within workspace
-        tidyPending(files);
+	private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files)
+			throws Exception {
+		// remove all pending files within workspace
+		tidyPending(files);
 
-        // clean files within workspace
-        tidyRevisions(files, populate);
-    }
+		// clean files within workspace
+		tidyRevisions(files, populate);
+	}
 
-    private void tidyPending(List<IFileSpec> files) throws Exception {
+	private void tidyPending(List<IFileSpec> files) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("SCM Task: reverting all pending and shelved revisions.");
 
@@ -371,7 +376,6 @@ public class ClientHelper extends ConnectionHelper {
 
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
-            syncOpts.setQuiet(populate.isQuiet());
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
 			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");
@@ -485,7 +489,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Workaround for p4java bug. The 'setLocalSyntax(true)' option does not
 	 * provide local syntax, so I have to use 'p4 where' to translate through
 	 * the client view.
-	 *
+	 * 
 	 * @param fileSpec
 	 * @return
 	 * @throws Exception
@@ -531,7 +535,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Unshelve review into workspace. Workspace is sync'ed to head first then
 	 * review unshelved.
-	 *
+	 * 
 	 * @param review
 	 * @throws Exception
 	 */
@@ -577,7 +581,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Get the change number for the last change within the scope of the
 	 * workspace view.
-	 *
+	 * 
 	 * @return
 	 * @throws Exception
 	 */
@@ -606,7 +610,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Show all changes within the scope of the client, between the 'from' and
 	 * 'to' change limits.
-	 *
+	 * 
 	 * @param from
 	 * @return
 	 * @throws Exception
@@ -627,7 +631,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Show all changes within the scope of the client, from the 'from' change
 	 * limits.
-	 *
+	 * 
 	 * @param from
 	 * @return
 	 * @throws Exception
@@ -672,7 +676,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Fetches a list of changes needed to update the workspace to head.
-	 *
+	 * 
 	 * @return
 	 * @throws Exception
 	 */
@@ -684,7 +688,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number or label.
-	 *
+	 * 
 	 * @param changeLimit
 	 * @return
 	 * @throws Exception
