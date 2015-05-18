@@ -39,6 +39,7 @@ import net.sf.json.JSONObject;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -347,13 +348,16 @@ public class PerforceScm extends SCM {
 			if (lastTag != null) {
 				Object lastChange = lastTag.getBuildChange();
 				if (lastChange != null) {
-					List<Object> changes = task.getChangesFull(lastChange);
-					for (Object c : changes) {
+					List<P4ChangeEntry> changes;
+					changes = task.getChangesFull(lastChange);
+					for (P4ChangeEntry c : changes) {
 						list.add(c);
 					}
 				}
 			}
-		} else {
+		}
+
+		if (list.isEmpty()) {
 			// No previous build, so add current
 			list.add(task.getBuildChange());
 		}
@@ -378,7 +382,7 @@ public class PerforceScm extends SCM {
 				String client = tagAction.getClient();
 				env.put("P4_CLIENT", client);
 			}
-			
+
 			// Set P4_PORT connection
 			if (tagAction.getPort() != null) {
 				String port = tagAction.getPort();

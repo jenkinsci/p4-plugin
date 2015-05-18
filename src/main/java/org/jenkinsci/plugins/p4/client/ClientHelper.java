@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.Publish;
@@ -123,33 +124,6 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
-	 * Test to see if workspace is at the latest revision.
-	 * 
-	 * @throws Exception
-	 */
-	public boolean updateFiles() throws Exception {
-		// build file revision spec
-		List<IFileSpec> syncFiles;
-		String path = iclient.getRoot() + "/...";
-		syncFiles = FileSpecBuilder.makeFileSpecList(path);
-
-		// Sync revision to re-edit
-		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setNoUpdate(true);
-		List<IFileSpec> syncMsg = iclient.sync(syncFiles, syncOpts);
-
-		for (IFileSpec fileSpec : syncMsg) {
-			if (fileSpec.getOpStatus() != FileSpecOpStatus.VALID) {
-				String msg = fileSpec.getStatusMessage();
-				if (msg.contains("file(s) up-to-date.")) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	/**
 	 * Sync files to workspace at the specified change/label.
 	 * 
 	 * @param buildChange
@@ -191,8 +165,38 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Sync files
 		files = FileSpecBuilder.makeFileSpecList(revisions);
-		syncFiles(files, populate);
+
+		if (populate instanceof CheckOnlyImpl) {
+			syncHaveList(files);
+		} else {
+			syncFiles(files, populate);
+		}
 		log("... duration: " + timer.toString());
+	}
+
+	/**
+	 * Test to see if workspace is at the latest revision.
+	 * 
+	 * @throws Exception
+	 */
+	private boolean syncHaveList(List<IFileSpec> files) throws Exception {
+		// Preview (sync -k)
+		SyncOptions syncOpts = new SyncOptions();
+		syncOpts.setClientBypass(true);
+		log("... no update: true");
+		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
+		validateFileSpecs(syncMsg, "file(s) up-to-date.",
+				"file does not exist", "no file(s) as of that date");
+
+		for (IFileSpec fileSpec : syncMsg) {
+			if (fileSpec.getOpStatus() != FileSpecOpStatus.VALID) {
+				String msg = fileSpec.getStatusMessage();
+				if (msg.contains("file(s) up-to-date.")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private void syncFiles(List<IFileSpec> files, Populate populate)
@@ -214,8 +218,8 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
 		syncOpts.setForceUpdate(populate.isForce());
-		log("... force update " + populate.isForce());
-		log("... bypass have " + !populate.isHave());
+		log("... force update: " + populate.isForce());
+		log("... bypass have: " + !populate.isHave());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",

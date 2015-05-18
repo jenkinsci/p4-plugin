@@ -220,9 +220,9 @@ public class CheckoutTask extends AbstractTask implements
 		return changes;
 	}
 
-	public List<Object> getChangesFull(Object last) {
+	public List<P4ChangeEntry> getChangesFull(Object last) {
 
-		List<Object> changesFull = new ArrayList<Object>();
+		List<P4ChangeEntry> changesFull = new ArrayList<P4ChangeEntry>();
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
@@ -235,6 +235,7 @@ public class CheckoutTask extends AbstractTask implements
 				changesFull.add(cl);
 			}
 
+			// add all changes to list
 			changes = p4.listChanges(last, buildChange);
 			for (Integer change : changes) {
 				P4ChangeEntry cl = new P4ChangeEntry();
