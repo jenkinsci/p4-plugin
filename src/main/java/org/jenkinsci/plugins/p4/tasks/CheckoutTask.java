@@ -106,6 +106,7 @@ public class CheckoutTask extends AbstractTask implements
 			}
 		} catch (Exception e) {
 			String msg = "Unable to update workspace: " + e;
+			e.printStackTrace();
 			logger.warning(msg);
 			throw new AbortException(msg);
 		} finally {

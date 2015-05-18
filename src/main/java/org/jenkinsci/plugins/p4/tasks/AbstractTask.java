@@ -87,21 +87,22 @@ public abstract class AbstractTask implements Serializable {
 		} catch (UnknownHostException e) {
 			host = "unknown";
 		}
-		p4.log("Connected to node: " + host);
+		p4.log("P4 Task: establishing connection.");
+		p4.log("... node: " + host);
 
 		// test server connection
 		if (!p4.isConnected()) {
 			p4.log("P4: Server connection error:" + getCredential().getP4port());
 			return false;
 		}
-		p4.log("Connected to server: " + getCredential().getP4port());
+		p4.log("... server: " + getCredential().getP4port());
 
 		// test client connection
 		if (p4.getClient() == null) {
 			p4.log("P4: Client unknown: " + getClient());
 			return false;
 		}
-		p4.log("Connected to client: " + getClient());
+		p4.log("... client: " + getClient() + "\n");
 		return true;
 	}
 }

@@ -293,21 +293,21 @@ public class PerforceScm extends SCM {
 			MatrixOptions matrix = getMatrixOptions(job);
 			parentChange = task.getSyncChange();
 			if (matrix.isBuildParent()) {
-				log.println("Building Parent on Node: " + node);
+				log.println("Building Parent on Node: " + node + "\n");
 				success &= buildWorkspace.act(task);
 			} else {
-				listener.getLogger().println("Skipping Parent build... ");
+				listener.getLogger().println("Skipping Parent build...\n");
 				success = true;
 			}
 		} else {
 			if (job instanceof MatrixProject) {
-				log.println("Building Child on Node: " + node);
 				if (parentChange != null) {
 					log.println("Using parent change: " + parentChange);
 					task.setBuildChange(parentChange);
 				}
+				log.println("Building Child on Node: " + node + "\n");
 			} else {
-				log.println("Building on Node: " + node);
+				log.println("Building on Node: " + node + "\n");
 			}
 			success &= buildWorkspace.act(task);
 		}
@@ -315,10 +315,10 @@ public class PerforceScm extends SCM {
 		// Only write change log if build succeed.
 		if (success) {
 			// Calculate changes prior to build (based on last build)
-			listener.getLogger().println("Calculating built changes... ");
+			listener.getLogger().println("P4 Task: saving built changes.");
 			List<Object> changes = calculateChanges(run, task);
 			P4ChangeSet.store(changelogFile, changes);
-			listener.getLogger().println("Saved to file... ");
+			listener.getLogger().println("... done\n");
 		} else {
 			String msg = "P4: Build failed";
 			logger.warning(msg);

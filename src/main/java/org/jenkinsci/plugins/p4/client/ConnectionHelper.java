@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
+import org.jenkinsci.plugins.p4.console.P4Callback;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -99,7 +100,7 @@ public class ConnectionHelper {
 		}
 
 		// Register progress callback
-		progress = new ClientProgress(listener);
+		progress = new P4Callback(listener);
 		this.connection.registerProgressCallback(progress);
 		return true;
 	}

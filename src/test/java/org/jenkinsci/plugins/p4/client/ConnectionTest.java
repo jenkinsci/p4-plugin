@@ -176,7 +176,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: syncing files at change: 40"));
+		assertTrue(log.contains("P4 Task: syncing files at change: 40"));
 
 		CredentialsDescriptor desc = auth.getDescriptor();
 		assertNotNull(desc);
@@ -255,7 +255,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: syncing files at change: 9"));
+		assertTrue(log.contains("P4 Task: syncing files at change: 9"));
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
@@ -320,7 +320,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: syncing files at change: 15"));
+		assertTrue(log.contains("P4 Task: syncing files at change: 15"));
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
@@ -382,7 +382,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: unshelve review: 19"));
+		assertTrue(log.contains("P4 Task: unshelve review: 19"));
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
@@ -615,7 +615,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("SCM Task: unshelve review: 19"));
+		assertTrue(log.contains("P4 Task: unshelve review: 19"));
 
 		// TPI-95 Second build with template ws
 		build = project.scheduleBuild2(0, cause).get();
