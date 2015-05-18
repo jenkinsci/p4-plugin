@@ -378,6 +378,12 @@ public class PerforceScm extends SCM {
 				String client = tagAction.getClient();
 				env.put("P4_CLIENT", client);
 			}
+			
+			// Set P4_PORT connection
+			if (tagAction.getPort() != null) {
+				String port = tagAction.getPort();
+				env.put("P4_PORT", port);
+			}
 		}
 	}
 

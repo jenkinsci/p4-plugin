@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -104,6 +105,13 @@ public class TagAction extends AbstractScmTagAction {
 
 	public String getClient() {
 		return client;
+	}
+
+	public String getPort() {
+		ConnectionHelper p4 = new ConnectionHelper(credential, null);
+		String p4port = p4.getPort();
+		p4.disconnect();
+		return p4port;
 	}
 
 	public void setCredential(String credential) {

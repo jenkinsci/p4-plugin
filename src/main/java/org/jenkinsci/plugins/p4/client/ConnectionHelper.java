@@ -44,11 +44,13 @@ public class ConnectionHelper {
 	protected final AuthorisationConfig authorisationConfig;
 	protected IOptionsServer connection;
 	protected final TaskListener listener;
+	protected final P4StandardCredentials p4credential;
 	protected IProgressCallback progress;
 
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
 		P4StandardCredentials credential = findCredential(credentialID);
+		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry(3);
@@ -57,6 +59,7 @@ public class ConnectionHelper {
 	public ConnectionHelper(P4StandardCredentials credential,
 			TaskListener listener) {
 		this.listener = listener;
+		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry(3);
@@ -64,6 +67,7 @@ public class ConnectionHelper {
 
 	public ConnectionHelper(P4StandardCredentials credential) {
 		this.listener = new LogTaskListener(logger, Level.INFO);
+		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry(3);
@@ -126,6 +130,10 @@ public class ConnectionHelper {
 		String err = "P4: Connection retry giving up...";
 		logger.severe(err);
 		log(err);
+	}
+
+	public String getPort() {
+		return p4credential.getP4port();
 	}
 
 	public String getTrust() throws Exception {
