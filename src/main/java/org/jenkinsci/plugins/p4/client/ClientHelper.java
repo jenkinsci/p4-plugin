@@ -183,8 +183,6 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 
-		log("... sync -k " + files.toString());
-
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
 				"file does not exist", "no file(s) as of that date");
@@ -217,11 +215,6 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
 		syncOpts.setForceUpdate(populate.isForce());
-
-		String flags = "";
-		flags += (syncOpts.isServerBypass()) ? "-p " : "";
-		flags += (syncOpts.isForceUpdate()) ? "-f " : "";
-		log("... sync " + flags + files.get(0).toString());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
@@ -286,8 +279,6 @@ public class ClientHelper extends ConnectionHelper {
 
 		// revert all pending and shelved revisions
 		RevertFilesOptions rOpts = new RevertFilesOptions();
-		log("... p4 revert");
-
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(list, "not opened on this client");
 
@@ -334,8 +325,6 @@ public class ClientHelper extends ConnectionHelper {
 		String[] args = list.toArray(new String[list.size()]);
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
 
-		log("... p4 reconcile " + list.toString());
-
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "also opened by", "no file(s) to reconcile",
 				"must sync/resolve", "exclusive file already opened",
@@ -374,8 +363,6 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Force sync missing and modified files
 		if (!update.isEmpty() && replace) {
-			log("... p4 sync -f [list]");
-
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
@@ -396,21 +383,18 @@ public class ClientHelper extends ConnectionHelper {
 		// cleanup pending changes (revert -k)
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
-		log("... p4 revert -k");
 		List<IFileSpec> revertStat = iclient.revertFiles(files, revertOpts);
 		validateFileSpecs(revertStat, "");
 
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
-		log("... p4 sync -k");
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncStat, "file(s) up-to-date.");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
 		statusOpts.setUseWildcards(true);
-		log("... p4 reconcile -f");
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of",
 				"empty, assuming text", "also opened by");
@@ -580,7 +564,6 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
-		log("... unshelve -f -s " + review);
 		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
 		validateFileSpecs(shelveMsg, "also opened by", "no such file(s)",
 				"exclusive file already opened");
@@ -592,7 +575,6 @@ public class ClientHelper extends ConnectionHelper {
 				if (msg.contains("exclusive file already opened")) {
 					String rev = msg.substring(0, msg.indexOf(" - can't "));
 					printFile(rev);
-					log("... print " + rev);
 				}
 			} else {
 				log(spec.getDepotPathString());
@@ -602,7 +584,6 @@ public class ClientHelper extends ConnectionHelper {
 		// Remove opened files from have list.
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		rOpts.setNoClientRefresh(true);
-		log("... revert -k " + path);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
 		log("... duration: " + timer.toString());
@@ -686,10 +667,6 @@ public class ClientHelper extends ConnectionHelper {
 
 	private List<Integer> listChanges(String ws) throws Exception {
 		List<Integer> list = new ArrayList<Integer>();
-
-		String msg = "listing changes: " + ws;
-		log(msg);
-		logger.info(msg);
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
 		GetChangelistsOptions opts = new GetChangelistsOptions();

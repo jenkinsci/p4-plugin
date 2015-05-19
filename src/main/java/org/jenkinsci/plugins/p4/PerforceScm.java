@@ -293,10 +293,10 @@ public class PerforceScm extends SCM {
 			MatrixOptions matrix = getMatrixOptions(job);
 			parentChange = task.getSyncChange();
 			if (matrix.isBuildParent()) {
-				log.println("Building Parent on Node: " + node + "\n");
+				log.println("Building Parent on Node: " + node);
 				success &= buildWorkspace.act(task);
 			} else {
-				listener.getLogger().println("Skipping Parent build...\n");
+				listener.getLogger().println("Skipping Parent build...");
 				success = true;
 			}
 		} else {
@@ -305,9 +305,9 @@ public class PerforceScm extends SCM {
 					log.println("Using parent change: " + parentChange);
 					task.setBuildChange(parentChange);
 				}
-				log.println("Building Child on Node: " + node + "\n");
+				log.println("Building Child on Node: " + node);
 			} else {
-				log.println("Building on Node: " + node + "\n");
+				log.println("Building on Node: " + node);
 			}
 			success &= buildWorkspace.act(task);
 		}

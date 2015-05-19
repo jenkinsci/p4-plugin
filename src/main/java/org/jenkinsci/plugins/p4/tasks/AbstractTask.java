@@ -87,7 +87,7 @@ public abstract class AbstractTask implements Serializable {
 		} catch (UnknownHostException e) {
 			host = "unknown";
 		}
-		p4.log("P4 Task: establishing connection.");
+		p4.log("\nP4 Task: establishing connection.");
 		p4.log("... node: " + host);
 
 		// test server connection

@@ -16,7 +16,8 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
-import org.jenkinsci.plugins.p4.console.P4Callback;
+import org.jenkinsci.plugins.p4.console.P4Logging;
+import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -34,6 +35,7 @@ import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
 
 public class ConnectionHelper {
@@ -46,7 +48,6 @@ public class ConnectionHelper {
 	protected IOptionsServer connection;
 	protected final TaskListener listener;
 	protected final P4StandardCredentials p4credential;
-	protected IProgressCallback progress;
 
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
@@ -100,8 +101,13 @@ public class ConnectionHelper {
 		}
 
 		// Register progress callback
-		progress = new P4Callback(listener);
+		IProgressCallback progress = new P4Progress(listener);
 		this.connection.registerProgressCallback(progress);
+
+		// Register logging callback
+		ICommandCallback logging = new P4Logging(listener);
+		this.connection.registerCallback(logging);
+
 		return true;
 	}
 
