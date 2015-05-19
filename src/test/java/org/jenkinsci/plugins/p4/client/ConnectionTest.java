@@ -643,7 +643,8 @@ public class ConnectionTest {
 				client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15");
+		Populate populate = new AutoCleanImpl(true, true, false, false,
+				"auto15");
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -688,7 +689,8 @@ public class ConnectionTest {
 				client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15");
+		Populate populate = new AutoCleanImpl(true, true, false, false,
+				"auto15");
 		List<Filter> filter = new ArrayList<Filter>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
@@ -737,7 +739,8 @@ public class ConnectionTest {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
 				client, spec);
 		boolean isModtime = true;
-		Populate populate = new AutoCleanImpl(true, true, isModtime, false, null);
+		Populate populate = new AutoCleanImpl(true, true, isModtime, false,
+				null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();

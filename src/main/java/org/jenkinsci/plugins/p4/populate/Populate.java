@@ -19,12 +19,13 @@ public abstract class Populate implements ExtensionPoint,
 	private final boolean quiet; // task '-q'
 	private final String pin;
 
-	public Populate(boolean have, boolean force, boolean modtime, boolean quiet, String pin) {
+	public Populate(boolean have, boolean force, boolean modtime,
+			boolean quiet, String pin) {
 		this.have = have;
 		this.force = force;
 		this.modtime = modtime;
 		this.pin = pin;
-        this.quiet = quiet;
+		this.quiet = quiet;
 	}
 
 	public boolean isHave() {
@@ -39,7 +40,9 @@ public abstract class Populate implements ExtensionPoint,
 		return modtime;
 	}
 
-    public boolean isQuiet() { return quiet; }
+	public boolean isQuiet() {
+		return quiet;
+	}
 
 	public String getPin() {
 		return pin;

@@ -126,8 +126,10 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Sync files to workspace at the specified change/label.
 	 * 
-	 * @param buildChange Change to sync from
-     * @param populate Populate strategy
+	 * @param buildChange
+	 *            Change to sync from
+	 * @param populate
+	 *            Populate strategy
 	 * @throws Exception
 	 */
 	public void syncFiles(Object buildChange, Populate populate)
@@ -437,7 +439,7 @@ public class ClientHelper extends ConnectionHelper {
 			SubmitImpl submit = (SubmitImpl) publish;
 			SubmitOptions submitOpts = new SubmitOptions();
 			submitOpts.setReOpen(submit.isReopen());
-			
+
 			log("... submitting files");
 			List<IFileSpec> submitted = change.submit(submitOpts);
 			validateFileSpecs(submitted, "Submitted as change");
@@ -451,7 +453,7 @@ public class ClientHelper extends ConnectionHelper {
 		// if SHELVE
 		if (publish instanceof ShelveImpl) {
 			ShelveImpl shelve = (ShelveImpl) publish;
-			
+
 			log("... shelving files");
 			List<IFileSpec> shelved = iclient.shelveChangelist(change);
 			validateFileSpecs(shelved, "");

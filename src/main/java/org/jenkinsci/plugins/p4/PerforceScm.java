@@ -472,7 +472,8 @@ public class PerforceScm extends SCM {
 
 		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
 		try {
-			ForceCleanImpl forceClean = new ForceCleanImpl(false, false, populate.isQuiet(), null);
+			ForceCleanImpl forceClean = new ForceCleanImpl(false, false,
+					populate.isQuiet(), null);
 			logger.info("P4: unsyncing client: " + client);
 			p4.syncFiles(0, forceClean);
 		} catch (Exception e) {
