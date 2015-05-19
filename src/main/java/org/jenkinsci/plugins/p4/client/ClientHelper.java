@@ -126,10 +126,8 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Sync files to workspace at the specified change/label.
 	 * 
-	 * @param buildChange
-	 *            Change to sync from
-	 * @param populate
-	 *            Populate strategy
+	 * @param buildChange Change to sync from
+     * @param populate Populate strategy
 	 * @throws Exception
 	 */
 	public void syncFiles(Object buildChange, Populate populate)
