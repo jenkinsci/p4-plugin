@@ -166,7 +166,7 @@ public class ClientHelper extends ConnectionHelper {
 		files = FileSpecBuilder.makeFileSpecList(revisions);
 
 		if (populate instanceof CheckOnlyImpl) {
-			syncHaveList(files);
+			syncHaveList(files, populate);
 		} else {
 			syncFiles(files, populate);
 		}
@@ -178,10 +178,12 @@ public class ClientHelper extends ConnectionHelper {
 	 * 
 	 * @throws Exception
 	 */
-	private boolean syncHaveList(List<IFileSpec> files) throws Exception {
+	private boolean syncHaveList(List<IFileSpec> files, Populate populate)
+			throws Exception {
 		// Preview (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
+		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
@@ -215,6 +217,7 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
 		syncOpts.setForceUpdate(populate.isForce());
+		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.",
@@ -365,6 +368,8 @@ public class ClientHelper extends ConnectionHelper {
 		if (!update.isEmpty() && replace) {
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
+			syncOpts.setQuiet(populate.isQuiet());
+			
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
 			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");
