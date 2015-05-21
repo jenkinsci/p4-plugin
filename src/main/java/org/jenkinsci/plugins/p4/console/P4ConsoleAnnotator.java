@@ -7,6 +7,7 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 
 	private static final long serialVersionUID = 1L;
 	private int id = 0;
+	private int depth = 0;
 
 	private static String COMMAND = "(p4):cmd:";
 	private static String STOP = "(p4):stop:";
@@ -52,14 +53,18 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 
 		text.hide(text.length() - 1, text.length());
 		id++;
+		depth++;
 	}
 
 	private void pop(MarkupText text) {
 		text.hide(0, text.length());
 
-		StringBuffer sb = new StringBuffer();
-		sb.append("</div></div>");
-		text.addMarkup(text.length(), sb.toString());
+		if (depth > 0) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("</div></div>");
+			text.addMarkup(text.length(), sb.toString());
+			depth--;
+		}
 	}
 
 }

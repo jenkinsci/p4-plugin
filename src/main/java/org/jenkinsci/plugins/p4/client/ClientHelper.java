@@ -85,7 +85,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 	}
 
-	public boolean setClient(Workspace workspace) throws Exception {
+	public void setClient(Workspace workspace) throws Exception {
 
 		if (isUnicode()) {
 			String charset = "utf8";
@@ -98,13 +98,14 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Exit early if client is not defined
 		if (!isClientValid(workspace)) {
-			return false;
+			String err = "P4: Undefined workspace: " + workspace.getFullName();
+			throw new AbortException(err);
 		}
 
 		// Exit early if client is Static
 		if (workspace instanceof StaticWorkspaceImpl) {
 			connection.setCurrentClient(iclient);
-			return true;
+			return;
 		}
 
 		// Ensure root and host fields are not null
@@ -125,7 +126,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Set active client for this connection
 		connection.setCurrentClient(iclient);
-		return true;
+		return;
 	}
 
 	/**

@@ -58,9 +58,9 @@ public abstract class AbstractTask implements Serializable {
 		}
 
 		// Set the client
-		boolean status = false;
 		try {
-			status = p4.setClient(workspace);
+			p4.setClient(workspace);
+			p4.log("... client: " + getClient() + "\n");
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
 			logger.severe(err);
@@ -68,14 +68,6 @@ public abstract class AbstractTask implements Serializable {
 			throw new AbortException(err);
 		} finally {
 			p4.disconnect();
-		}
-
-		// Verify the status
-		if (!status) {
-			String err = "P4: Undefined workspace: " + workspace.getFullName();
-			logger.severe(err);
-			p4.log(err);
-			throw new AbortException(err);
 		}
 	}
 
@@ -112,12 +104,7 @@ public abstract class AbstractTask implements Serializable {
 		}
 		p4.log("... node: " + host);
 
-		// test client connection
-		if (p4.getClient() == null) {
-			p4.log("P4: Client unknown: " + getClient());
-			return false;
-		}
-		p4.log("... client: " + getClient() + "\n");
+
 
 		return true;
 	}
