@@ -83,9 +83,9 @@ public class AssetNotifier extends Notifier {
 
 		// Create task
 		PublishTask task = new PublishTask(publish);
+		task.setListener(listener);
 		task.setCredential(credential);
 		task.setWorkspace(ws);
-		task.setListener(listener);
 
 		FilePath buildWorkspace = build.getWorkspace();
 		success &= buildWorkspace.act(task);

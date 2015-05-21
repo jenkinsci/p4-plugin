@@ -68,6 +68,11 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private void clientLogin(String client) {
+		// Exit early if no connection
+		if(connection == null) {
+			return;
+		}
+		
 		// Find workspace and set as current
 		try {
 			iclient = connection.getClient(client);

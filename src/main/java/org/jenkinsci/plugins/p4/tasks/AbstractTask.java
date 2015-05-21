@@ -42,44 +42,67 @@ public abstract class AbstractTask implements Serializable {
 		this.listener = listener;
 	}
 
-	public void setWorkspace(Workspace workspace) throws InterruptedException {
+	public void setWorkspace(Workspace workspace) throws AbortException {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
 
 		// setup the client workspace to use for the build.
 		ClientHelper p4 = getConnection();
+
+		// Check connection (might be on remote slave)
+		if (!checkConnection(p4)) {
+			String err = "P4: Abort, no server connection.\n";
+			logger.severe(err);
+			p4.log(err);
+			throw new AbortException(err);
+		}
+
+		// Set the client
+		boolean status = false;
 		try {
-			if (!p4.setClient(workspace)) {
-				String err = "P4: Undefined workspace: "
-						+ workspace.getFullName();
-				logger.severe(err);
-				p4.log(err);
-				throw new AbortException(err);
-			}
+			status = p4.setClient(workspace);
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
 			logger.severe(err);
 			p4.log(err);
-			throw new InterruptedException(err);
+			throw new AbortException(err);
 		} finally {
 			p4.disconnect();
 		}
+
+		// Verify the status
+		if (!status) {
+			String err = "P4: Undefined workspace: " + workspace.getFullName();
+			logger.severe(err);
+			p4.log(err);
+			throw new AbortException(err);
+		}
 	}
 
-	public String getClient() {
+	protected String getClient() {
 		return client;
 	}
 
-	public Workspace getWorkspace() {
+	protected Workspace getWorkspace() {
 		return workspace;
 	}
 
-	public ClientHelper getConnection() {
+	protected ClientHelper getConnection() {
 		ClientHelper p4 = new ClientHelper(credential, listener, client);
 		return p4;
 	}
 
-	public boolean checkConnection(ClientHelper p4) {
+	protected boolean checkConnection(ClientHelper p4) {
+		p4.log("\nP4 Task: establishing connection.");
+
+		// test server connection
+		if (!p4.isConnected()) {
+			p4.log("P4: Server connection error: "
+					+ getCredential().getP4port());
+			return false;
+		}
+		p4.log("... server: " + getCredential().getP4port());
+
 		// test node hostname
 		String host;
 		try {
@@ -87,15 +110,7 @@ public abstract class AbstractTask implements Serializable {
 		} catch (UnknownHostException e) {
 			host = "unknown";
 		}
-		p4.log("\nP4 Task: establishing connection.");
 		p4.log("... node: " + host);
-
-		// test server connection
-		if (!p4.isConnected()) {
-			p4.log("P4: Server connection error:" + getCredential().getP4port());
-			return false;
-		}
-		p4.log("... server: " + getCredential().getP4port());
 
 		// test client connection
 		if (p4.getClient() == null) {
@@ -103,6 +118,7 @@ public abstract class AbstractTask implements Serializable {
 			return false;
 		}
 		p4.log("... client: " + getClient() + "\n");
+
 		return true;
 	}
 }

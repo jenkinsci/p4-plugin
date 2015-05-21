@@ -148,6 +148,9 @@ public class ConnectionHelper {
 	}
 
 	public boolean isConnected() {
+		if(connection == null) {
+			return false;
+		}
 		return connection.isConnected();
 	}
 
@@ -366,10 +369,9 @@ public class ConnectionHelper {
 			connection.disconnect();
 			logger.fine("P4: closed connection OK");
 		} catch (Exception e) {
-			String err = "P4: Unable to close Perforce connection: " + e;
+			String err = "P4: Unable to close Perforce connection.";
 			logger.severe(err);
 			log(err);
-			e.printStackTrace();
 		}
 	}
 
