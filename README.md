@@ -1,4 +1,4 @@
-﻿# p4-jenkins
+# p4-jenkins
 
 ## Requirements
 
@@ -129,6 +129,15 @@ To build immediately select the Build now button...
 Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobID/build
 
 (where myJobID is the name of your job and jenkins_host the name or IP address of your Jenkins server).
+
+### Building at a change
+
+A Jenkins job can build at any point in the codes history, identified by a Perforce change or label.
+
+The Jenkins job can be _pinned_ to a Perforce change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
+
+Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
+
 
 ## Filtering
 
