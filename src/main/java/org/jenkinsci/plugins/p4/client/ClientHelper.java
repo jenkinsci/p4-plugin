@@ -69,10 +69,10 @@ public class ClientHelper extends ConnectionHelper {
 
 	private void clientLogin(String client) {
 		// Exit early if no connection
-		if(connection == null) {
+		if (connection == null) {
 			return;
 		}
-		
+
 		// Find workspace and set as current
 		try {
 			iclient = connection.getClient(client);
@@ -279,7 +279,7 @@ public class ClientHelper extends ConnectionHelper {
 		tidyPending(files);
 
 		// clean files within workspace
-		tidyRevisions(files, populate);
+		tidyClean(files, populate);
 	}
 
 	private void tidyPending(List<IFileSpec> files) throws Exception {
@@ -309,10 +309,54 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
+	private void tidyClean(List<IFileSpec> files, Populate populate)
+			throws Exception {
+
+		// Use old method if 'p4 clean' is not supported
+		if (!checkVersion(20141)) {
+			tidyRevisions(files, populate);
+			return;
+		}
+
+		// Set options
+		boolean delete = ((AutoCleanImpl) populate).isDelete();
+		boolean replace = ((AutoCleanImpl) populate).isReplace();
+
+		String[] base = { "-w", "-f" };
+		List<String> list = new ArrayList<String>();
+		list.addAll(Arrays.asList(base));
+
+		if (delete && !replace) {
+			list.add("-a");
+		}
+		if (replace && !delete) {
+			list.add("-e");
+			list.add("-d");
+		}
+		if (!replace && !delete) {
+			log("P4 Task: skipping clean, no options set.");
+			return;
+		}
+
+		TimeTask timer = new TimeTask();
+		log("P4 Task: cleaning workspace to match have list.");
+
+		String[] args = list.toArray(new String[list.size()]);
+		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
+
+		List<IFileSpec> status = iclient.reconcileFiles(files, cleanOpts);
+		validateFileSpecs(status, "also opened by", "no file(s) to reconcile",
+				"must sync/resolve", "exclusive file already opened",
+				"cannot submit from stream", "instead of",
+				"empty, assuming text");
+
+		log("duration: " + timer.toString() + "\n");
+	}
+
 	private void tidyRevisions(List<IFileSpec> files, Populate populate)
 			throws Exception {
 		TimeTask timer = new TimeTask();
-		log("P4 Task: cleaning workspace to match have list.");
+		log("P4 Task: tidying workspace to match have list.");
 
 		boolean delete = ((AutoCleanImpl) populate).isDelete();
 		boolean replace = ((AutoCleanImpl) populate).isReplace();
@@ -375,7 +419,7 @@ public class ClientHelper extends ConnectionHelper {
 			SyncOptions syncOpts = new SyncOptions();
 			syncOpts.setForceUpdate(true);
 			syncOpts.setQuiet(populate.isQuiet());
-			
+
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
 			validateFileSpecs(syncMsg, "file(s) up-to-date.",
 					"file does not exist");
