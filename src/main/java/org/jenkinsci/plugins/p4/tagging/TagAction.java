@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.p4.tagging;
 
+import hudson.EnvVars;
+import hudson.model.TaskListener;
 import hudson.model.Run;
 import hudson.scm.AbstractScmTagAction;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +14,7 @@ import javax.servlet.ServletException;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -28,9 +32,13 @@ public class TagAction extends AbstractScmTagAction {
 	private String credential;
 	private String client;
 	private Object buildChange;
+	private Expand expand;
 
-	public TagAction(Run<?, ?> run) {
+	public TagAction(Run<?, ?> run, TaskListener listener) throws IOException,
+			InterruptedException {
 		super(run);
+		EnvVars env = run.getEnvironment(listener);
+		expand = new Expand(env);
 	}
 
 	public String getIconFileName() {
@@ -64,6 +72,9 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public void labelBuild(String name, String description) throws Exception {
+		// Expand label name and description
+		name = expand.format(name, false);
+		description = expand.format(description, false);
 
 		tag = name;
 		ClientHelper p4 = new ClientHelper(credential, null, client);

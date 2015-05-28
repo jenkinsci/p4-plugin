@@ -71,11 +71,10 @@ public class AssetNotifier extends Notifier {
 		Workspace ws = (Workspace) workspace.clone();
 		try {
 			EnvVars envVars = build.getEnvironment(listener);
-			ws.clear();
-			ws.load(envVars);
+			ws.setExpand(envVars);
 			ws.setRootPath(build.getWorkspace().getRemote());
 			String desc = publish.getDescription();
-			desc = ws.expand(desc, false);
+			desc = ws.getExpand().format(desc, false);
 			publish.setExpandedDesc(desc);
 		} catch (IOException e) {
 			e.printStackTrace();

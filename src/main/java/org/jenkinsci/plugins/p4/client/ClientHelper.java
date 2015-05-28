@@ -238,6 +238,7 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public void tidyWorkspace(Populate populate) throws Exception {
 		// relies on workspace view for scope.
+		log("\n");
 		List<IFileSpec> files;
 		String path = iclient.getRoot() + "/...";
 		files = FileSpecBuilder.makeFileSpecList(path);

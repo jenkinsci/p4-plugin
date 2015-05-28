@@ -203,8 +203,8 @@ public class PerforceScm extends SCM {
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
 
 		Workspace ws = (Workspace) workspace.clone();
-		ws.clear();
-		ws.load(envVars);
+		ws.setExpand(envVars);
+
 		// don't call setRootPath() here, polling is often on the master
 
 		// Set EXPANDED client
@@ -214,8 +214,8 @@ public class PerforceScm extends SCM {
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
 		if (pin != null && !pin.isEmpty()) {
-			pin = ws.expand(pin, false);
-			ws.set(ReviewProp.LABEL.toString(), pin);
+			pin = ws.getExpand().format(pin, false);
+			ws.getExpand().set(ReviewProp.LABEL.toString(), pin);
 		}
 
 		// Create task
@@ -253,8 +253,8 @@ public class PerforceScm extends SCM {
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
 
 		Workspace ws = (Workspace) workspace.clone();
-		ws.clear();
-		ws.load(envVars);
+		ws.setExpand(envVars);
+
 		ws.setRootPath(buildWorkspace.getRemote());
 
 		if (ws.isPinHost()) {
@@ -268,7 +268,7 @@ public class PerforceScm extends SCM {
 		if (changes != null) {
 			if (!changes.isEmpty()) {
 				String label = Integer.toString(changes.get(0));
-				ws.set(ReviewProp.LABEL.toString(), label);
+				ws.getExpand().set(ReviewProp.LABEL.toString(), label);
 			}
 		}
 
@@ -280,14 +280,14 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(run);
+		TagAction tag = new TagAction(run, listener);
 		tag.setClient(ws.getFullName());
 		tag.setCredential(credential);
 		tag.setBuildChange(task.getSyncChange());
 		run.addAction(tag);
 
 		// Invoke build.
-		String node = ws.get("NODE_NAME");
+		String node = ws.getExpand().get("NODE_NAME");
 		Job<?, ?> job = run.getParent();
 		if (run instanceof MatrixBuild) {
 			MatrixOptions matrix = getMatrixOptions(job);

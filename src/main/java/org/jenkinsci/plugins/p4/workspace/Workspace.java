@@ -3,15 +3,10 @@ package org.jenkinsci.plugins.p4.workspace;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
-import hudson.slaves.NodeProperty;
-import hudson.slaves.EnvironmentVariablesNodeProperty;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import jenkins.model.Jenkins;
-
-import org.jenkinsci.plugins.p4.review.ReviewProp;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
@@ -23,7 +18,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	private boolean pinHost;
 	private String rootPath;
 	private String hostname;
-	private Map<String, String> formatTags;
+	private Expand expand;
 
 	public Workspace(String charset, boolean pinHost) {
 		this.charset = charset;
@@ -86,45 +81,12 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		this.rootPath = rootPath;
 	}
 
-	public String expand(String format, boolean wildcard) {
-		if (formatTags != null) {
-			for (String tag : formatTags.keySet()) {
-				String value = formatTags.get(tag);
-				if (value != null) {
-					format = format.replace("${" + tag + "}", value);
-				}
-			}
-		}
-
-		// cleanup undefined tags
-		if (wildcard) {
-			format = format.replaceAll("\\$\\{.+?\\}", "*");
-		}
-		format = format.replace("${", "");
-		format = format.replace("}", "");
-		return format;
+	public void setExpand(Map<String, String> map) {
+		expand = new Expand(map);
 	}
 
-	public void set(String tag, String value) {
-		formatTags.put(tag, value);
-	}
-
-	public String get(String tag) {
-		if (formatTags == null) {
-			return null;
-		}
-		return formatTags.get(tag);
-	}
-
-	public void load(Map<String, String> map) {
-		for (String key : map.keySet()) {
-			String value = map.get(key);
-			if (ReviewProp.isProp(key)) {
-				// Known Perforce Review property; prefix with namespace
-				key = ReviewProp.NAMESPACE + key;
-			}
-			set(key, value);
-		}
+	public Expand getExpand() {
+		return expand;
 	}
 
 	/**
@@ -134,7 +96,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	 */
 	public String getFullName() {
 		// expands Workspace name if formatters are used.
-		String clientName = expand(getName(), false);
+		String clientName = expand.format(getName(), false);
 
 		// replace restricted characters with "-" as per the old plugin
 		clientName = clientName.replaceAll(" ", "_");
@@ -142,18 +104,6 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		clientName = clientName.replaceAll("=", "-");
 		clientName = clientName.replaceAll("/", "-");
 		return clientName;
-	}
-
-	public void clear() {
-		formatTags = new HashMap<String, String>();
-		Jenkins jenkins = Jenkins.getInstance();
-
-		for (NodeProperty<?> node : jenkins.getGlobalNodeProperties()) {
-			if (node instanceof EnvironmentVariablesNodeProperty) {
-				EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty) node;
-				formatTags.putAll((env).getEnvVars());
-			}
-		}
 	}
 
 	public Object clone() {

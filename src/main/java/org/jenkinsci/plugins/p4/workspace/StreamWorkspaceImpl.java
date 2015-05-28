@@ -71,7 +71,7 @@ public class StreamWorkspaceImpl extends Workspace {
 		iclient.setOwnerName(user);
 
 		// Expand Stream name
-		String streamFullName = expand(getStreamName(), false);
+		String streamFullName = getExpand().format(getStreamName(), false);
 		iclient.setStream(streamFullName);
 
 		return iclient;

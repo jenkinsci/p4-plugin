@@ -60,7 +60,7 @@ public abstract class AbstractTask implements Serializable {
 		// Set the client
 		try {
 			p4.setClient(workspace);
-			p4.log("... client: " + getClient() + "\n");
+			p4.log("... client: " + getClient());
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
 			logger.severe(err);

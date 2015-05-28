@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import com.perforce.p4java.impl.generic.core.Label;
@@ -123,7 +124,7 @@ public class CheckoutTask extends AbstractTask implements
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
-		String value = workspace.get(ReviewProp.STATUS.toString());
+		String value = workspace.getExpand().get(ReviewProp.STATUS.toString());
 		if (value != null && !value.isEmpty()) {
 			status = CheckoutStatus.parse(value);
 		}
@@ -140,12 +141,15 @@ public class CheckoutTask extends AbstractTask implements
 	private Object getBuildChange(Workspace workspace) {
 		// Use head as the default
 		Object build = this.head;
+		
+		// Get Environment parameters from expand 
+		Expand expand = workspace.getExpand();
 
 		// if a pinned change/label is specified the update
 		String populateLabel = populate.getPin();
 		if (populateLabel != null && !populateLabel.isEmpty()) {
 			// Expand label with environment vars if one was defined
-			populateLabel = getWorkspace().expand(populateLabel, false);
+			populateLabel = expand.format(populateLabel, false);
 			try {
 				// if build is a change-number passed as a label
 				build = Integer.parseInt(populateLabel);
@@ -155,7 +159,7 @@ public class CheckoutTask extends AbstractTask implements
 		}
 
 		// if change is specified then update
-		String change = workspace.get(ReviewProp.CHANGE.toString());
+		String change = expand.get(ReviewProp.CHANGE.toString());
 		if (change != null && !change.isEmpty()) {
 			try {
 				build = Integer.parseInt(change);
@@ -164,7 +168,7 @@ public class CheckoutTask extends AbstractTask implements
 		}
 
 		// if label is specified then update
-		String label = workspace.get(ReviewProp.LABEL.toString());
+		String label = expand.get(ReviewProp.LABEL.toString());
 		if (label != null && !label.isEmpty()) {
 			try {
 				// if build is a change-number passed as a label
@@ -185,7 +189,8 @@ public class CheckoutTask extends AbstractTask implements
 	 */
 	private int getReview(Workspace workspace) {
 		int review = 0;
-		String value = workspace.get(ReviewProp.REVIEW.toString());
+		Expand expand = workspace.getExpand();
+		String value = expand.get(ReviewProp.REVIEW.toString());
 		if (value != null && !value.isEmpty()) {
 			try {
 				review = Integer.parseInt(value);
