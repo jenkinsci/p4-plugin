@@ -103,9 +103,6 @@ public abstract class AbstractTask implements Serializable {
 			host = "unknown";
 		}
 		p4.log("... node: " + host);
-
-
-
 		return true;
 	}
 }
