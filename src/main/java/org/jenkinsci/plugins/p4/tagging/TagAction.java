@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.tagging;
 
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.Run;
 import hudson.scm.AbstractScmTagAction;
@@ -14,30 +15,29 @@ import javax.servlet.ServletException;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.perforce.p4java.client.IClientViewMapping;
-import com.perforce.p4java.core.ILabelMapping;
-import com.perforce.p4java.core.ViewMap;
-import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Label;
-import com.perforce.p4java.impl.generic.core.Label.LabelMapping;
 
 public class TagAction extends AbstractScmTagAction {
 
+	private final Expand expand;
+
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
+
 	private String credential;
+	private Workspace workspace;
 	private String client;
 	private Object buildChange;
-	private Expand expand;
 
-	public TagAction(Run<?, ?> run, TaskListener listener) throws IOException,
-			InterruptedException {
+	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
 		super(run);
-		EnvVars env = run.getEnvironment(listener);
+		EnvVars env = run.getEnvironment(null);
 		expand = new Expand(env);
 	}
 
@@ -66,44 +66,32 @@ public class TagAction extends AbstractScmTagAction {
 
 		String description = req.getParameter("desc");
 		String name = req.getParameter("name");
-		labelBuild(name, description);
+		labelBuild(null, name, description);
 
 		rsp.sendRedirect(".");
 	}
 
-	public void labelBuild(String name, String description) throws Exception {
+	public void labelBuild(TaskListener listener, String name,
+			String description) throws Exception {
 		// Expand label name and description
 		name = expand.format(name, false);
 		description = expand.format(description, false);
 
-		tag = name;
-		ClientHelper p4 = new ClientHelper(credential, null, client);
-		Label label = new Label();
+		TaggingTask task = new TaggingTask(name, description);
+		task.setListener(listener);
+		task.setCredential(credential);
+		task.setWorkspace(workspace);
+		task.setBuildChange(buildChange);
 
-		label.setDescription(description);
-		label.setName(name);
-		label.setRevisionSpec("@" + buildChange);
-
-		// set label view to match workspace
-		ViewMap<ILabelMapping> viewMapping = new ViewMap<ILabelMapping>();
-		ClientView view = p4.getClientView();
-		for (IClientViewMapping entry : view) {
-			String left = entry.getLeft();
-			LabelMapping lblMap = new LabelMapping();
-			lblMap.setLeft(left);
-			viewMapping.addEntry(lblMap);
-		}
-		label.setViewMapping(viewMapping);
+		// Invoke the Label Task
+		FilePath buildWorkspace = build.getWorkspace();
+		buildWorkspace.act(task);
 
 		// save label
 		if (!tags.contains(name)) {
 			tags.add(name);
 			getRun().save();
 		}
-
-		// update Perforce
-		p4.setLabel(label);
-		p4.disconnect();
 	}
 
 	public void setBuildChange(Object buildChange) {
@@ -114,8 +102,21 @@ public class TagAction extends AbstractScmTagAction {
 		return buildChange;
 	}
 
-	public String getClient() {
-		return client;
+	public String getCredential() {
+		return credential;
+	}
+
+	public void setCredential(String credential) {
+		this.credential = credential;
+	}
+
+	public Workspace getWorkspace() {
+		return workspace;
+	}
+
+	public void setWorkspace(Workspace workspace) {
+		this.workspace = workspace;
+		this.client = workspace.getFullName();
 	}
 
 	public String getPort() {
@@ -125,12 +126,8 @@ public class TagAction extends AbstractScmTagAction {
 		return p4port;
 	}
 
-	public void setCredential(String credential) {
-		this.credential = credential;
-	}
-
-	public void setClient(String client) {
-		this.client = client;
+	public String getClient() {
+		return client;
 	}
 
 	public String getTag() {

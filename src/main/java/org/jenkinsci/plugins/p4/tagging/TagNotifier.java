@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -12,12 +13,11 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
 
+import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class TagNotifier extends Notifier {
@@ -28,6 +28,8 @@ public class TagNotifier extends Notifier {
 	public final String rawLabelName;
 	public final String rawLabelDesc;
 	public final boolean onlyOnSuccess;
+
+	private TaskListener listener;
 
 	@DataBoundConstructor
 	public TagNotifier(String rawLabelName, String rawLabelDesc,
@@ -45,36 +47,46 @@ public class TagNotifier extends Notifier {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws InterruptedException {
 
-		PrintStream log = listener.getLogger();
+		// Enable logging
+		this.listener = listener;
 
 		// return early if label not required
 		if (onlyOnSuccess && build.getResult() != Result.SUCCESS) {
 			return true;
 		}
-
-		// fetch build environment
-		EnvVars environment;
 		try {
-			environment = build.getEnvironment(listener);
-		} catch (IOException e) {
-			log.println("Could not load build environment.");
-			return false;
-		}
+			// Expand label name and description
+			EnvVars env = build.getEnvironment(listener);
+			Expand expand = new Expand(env);
+			String name = expand.format(rawLabelName, false);
+			String description = expand.format(rawLabelDesc, false);
 
+			// Get TagAction and check for promoted builds
+			TagAction tagAction = getTagAction(env, build);
+
+			// Label with TagAction
+			tagAction.labelBuild(listener, name, description);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+
+	private TagAction getTagAction(EnvVars env, AbstractBuild<?, ?> build) {
 		TagAction tagAction = (TagAction) build.getAction(TagAction.class);
 
 		// process promoted builds?
 		if (tagAction == null) {
-			String jobName = environment.get("PROMOTED_JOB_NAME");
+			String jobName = env.get("PROMOTED_JOB_NAME");
 			if (jobName == null || jobName.isEmpty()) {
-				log.println("No tag information; not a promotion job.");
-				return false;
+				log("No tag information; not a promotion job.");
+				return tagAction;
 			}
 
-			String buildNumber = environment.get("PROMOTED_NUMBER");
+			String buildNumber = env.get("PROMOTED_NUMBER");
 			if (buildNumber == null || buildNumber.isEmpty()) {
-				log.println("No tag information; not a promotion job.");
-				return false;
+				log("No tag information; not a promotion job.");
+				return tagAction;
 			}
 
 			AbstractProject<?, ?> project;
@@ -86,21 +98,18 @@ public class TagNotifier extends Notifier {
 			tagAction = (TagAction) build.getAction(TagAction.class);
 
 			if (tagAction == null) {
-				log.println("No tag information; is it a valid Perforce job?");
-				return false;
+				log("No tag information; is it a valid Perforce job?");
+				return tagAction;
 			}
 		}
+		return tagAction;
+	}
 
-		// label build
-		listener.getLogger().println("Tagging build: " + rawLabelName);
-		try {
-			tagAction.labelBuild(rawLabelName, rawLabelDesc);
-		} catch (Exception e) {
-			log.println(e.getMessage());
-			return false;
+	private void log(String msg) {
+		if (listener == null) {
+			return;
 		}
-
-		return true;
+		listener.getLogger().println(msg);
 	}
 
 	public static DescriptorImpl descriptor() {

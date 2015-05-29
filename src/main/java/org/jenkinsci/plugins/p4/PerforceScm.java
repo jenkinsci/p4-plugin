@@ -274,15 +274,15 @@ public class PerforceScm extends SCM {
 
 		// Create task
 		CheckoutTask task = new CheckoutTask(populate);
+		task.setListener(listener);
 		task.setCredential(credential);
 		task.setWorkspace(ws);
-		task.setListener(listener);
 		task.initialise();
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(run, listener);
-		tag.setClient(ws.getFullName());
+		TagAction tag = new TagAction(run);
 		tag.setCredential(credential);
+		tag.setWorkspace(ws);
 		tag.setBuildChange(task.getSyncChange());
 		run.addAction(tag);
 
