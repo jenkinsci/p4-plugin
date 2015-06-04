@@ -154,8 +154,7 @@ public class PerforceScm extends SCM {
 		Node node = workspaceToNode(buildWorkspace);
 
 		if (job instanceof MatrixProject) {
-			MatrixOptions matrix = getMatrixOptions(job);
-			if (matrix.isBuildParent()) {
+			if (isBuildParent(job)) {
 				// Poll PARENT only
 				EnvVars envVars = job.getEnvironment(node, listener);
 				state = pollWorkspace(envVars, listener, buildWorkspace);
@@ -290,9 +289,8 @@ public class PerforceScm extends SCM {
 		String node = ws.getExpand().get("NODE_NAME");
 		Job<?, ?> job = run.getParent();
 		if (run instanceof MatrixBuild) {
-			MatrixOptions matrix = getMatrixOptions(job);
 			parentChange = task.getSyncChange();
-			if (matrix.isBuildParent()) {
+			if (isBuildParent(job)) {
 				log.println("Building Parent on Node: " + node);
 				success &= buildWorkspace.act(task);
 			} else {
@@ -327,17 +325,25 @@ public class PerforceScm extends SCM {
 	}
 
 	// Get Matrix Execution options
-	private MatrixOptions getMatrixOptions(Job<?, ?> job) {
-		MatrixOptions matrix = null;
+	private MatrixExecutionStrategy getMatrixExecutionStrategy(Job<?, ?> job) {
 		if (job instanceof MatrixProject) {
 			MatrixProject matrixProj = (MatrixProject) job;
-			MatrixExecutionStrategy exec = matrixProj.getExecutionStrategy();
-			if (exec instanceof MatrixOptions) {
-				matrix = (MatrixOptions) exec;
-			}
+			return matrixProj.getExecutionStrategy();
 		}
-		return matrix;
+		return null;
 	}
+
+	boolean isBuildParent(Job<?, ?> job) {
+		MatrixExecutionStrategy matrix = getMatrixExecutionStrategy(job);
+		if (matrix instanceof MatrixOptions) {
+			return ((MatrixOptions) matrix).isBuildParent();
+		} else {
+			// if user hasn't configured "Perforce: Matrix Options" execution strategy,
+			// default to false
+			return false;
+		}
+	}
+
 
 	private List<Object> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<Object> list = new ArrayList<Object>();

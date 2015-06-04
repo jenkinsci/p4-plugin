@@ -1,10 +1,13 @@
 package org.jenkinsci.plugins.p4;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+
+import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
+import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleProject;
 import hudson.scm.SCM;
 
+import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -12,6 +15,8 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.io.IOException;
 
 public class PerforceScmTest {
 
@@ -35,6 +40,29 @@ public class PerforceScmTest {
 		assertTrue(testScm.requiresWorkspaceForPolling());
 
 		assertEquals(testScm, project.getScm());
+	}
+
+	@Test
+	public void testIsBuildParent() throws IOException {
+		MatrixProject project = jenkins.createMatrixProject();
+
+		String credential = "123";
+		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
+		project.setScm(scm);
+
+		project.setExecutionStrategy(new DefaultMatrixExecutionStrategyImpl());
+		assertFalse("isBuildParent should be false for default execution strategy",
+				scm.isBuildParent(project));
+
+		project.setExecutionStrategy(new MatrixOptions(true, false, false));
+		assertTrue("isBuildParent should be true when MatrixOptions#buildParent is true",
+				scm.isBuildParent(project));
+
+		project.setExecutionStrategy(new MatrixOptions(false, true, true));
+		assertFalse("isBuildParent should be false when MatrixOptions#buildParent is false",
+				scm.isBuildParent(project));
 	}
 
 }
