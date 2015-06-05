@@ -24,3 +24,5 @@ vagrant/
 *.prefs
 
 .pydevproject
+.idea
+*.iml
