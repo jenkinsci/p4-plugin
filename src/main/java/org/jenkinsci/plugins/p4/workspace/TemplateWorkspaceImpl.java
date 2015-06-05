@@ -76,6 +76,9 @@ public class TemplateWorkspaceImpl extends Workspace {
 		// Set owner (not set during create)
 		iclient.setOwnerName(user);
 
+		// set line endings explicitly (JENKINS-28760)
+		iclient.setLineEnd(itemplate.getLineEnd());
+
 		// Root required to switch view; must reload values in iclient.
 		iclient.setRoot(getRootPath());
 		iclient.update();
