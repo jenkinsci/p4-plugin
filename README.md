@@ -258,7 +258,13 @@ Link to change in Swarm
 ### Connection issues
 
 
-**Error**: "*Unable to connect: com.perforce.p4java.exception.ConnectionException: Error occurred during the SSL handshake: invalid SSL session*"
+**Error**: Setting up a SSL Credentials connection to Perforce.
+
+```
+Unable to connect: com.perforce.p4java.exception.ConnectionException:
+Error occurred during the SSL handshake:
+invalid SSL session
+```
 
 **Solution**: Due to current US export control restrictions for some countries, the standard JDK package only comes with 128 bit encryption level cyphers. In order to use P4Java to connect to an SSL-enabled Perforce server, those living in eligible countries may download the unlimited strength JCE (Java Cryptography Extension) package and replace the current default cryptography jar files on the build server with the unlimited strength files. 
 
@@ -268,9 +274,69 @@ The libraries can be downloaded from:
 
 Installation instructions can be found in the file 'README.txt' in the JCE download.
 
+---
+
+**Error**: Perforce login error part way through a build with an Edge/Commit setup.
+
+```
+Perforce password (P4PASSWD) invalid or unset.
+- no such file(s).
+ERROR: Unable to update workspace:
+com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) invalid or unset.
+```
+
+**Solution**: The following configurables must be set to allow the Edge to forward the login information to the Commit server.  
+
+`p4 configure set cluster.id=myID`
+`p4 configure set myEdge#rpl.forward.login=1`
+
+
+
 ## Release notes
 
-### 2014.2 release
+### Release 1.2.4 (major features/fixes)
 
-Known limitations:
+[@13800](swarm.workshop.perforce.com/changes/13800) - 
+Updated P4Java to 15.1
+
+
+[@13795](swarm.workshop.perforce.com/changes/13795) - 
+(matthauck) Fix JENKINS-28760: Set line endings explicitly for template workspaces
+
+
+[@13777](swarm.workshop.perforce.com/changes/13777) - 
+(matthauck) Fix JENKINS-28726: Allow for default matrix execution strategy
+
+
+[@13701](swarm.workshop.perforce.com/changes/13701) - 
+Move Labelling into a Task.
+
+
+[@13681](swarm.workshop.perforce.com/changes/13681) - 
+Abstracted Expand class from Workspace.  Added support for Label variable expansion in the name and description.
+
+
+[@13676](swarm.workshop.perforce.com/changes/13676) - 
+Added support for `p4 clean`. If the Perforce server is 14.1 or greater then the `-w` flag is used (p4 clean), otherwise the original auto clean up code.
+
+
+### Release 1.2.3 (major features/fixes)
+
+[@13619](swarm.workshop.perforce.com/changes/13619) - 
+Document building at a change. JENKINS-28301
+
+
+[@13604](swarm.workshop.perforce.com/changes/13604) - 
+Improved error handling and fixed test case issue.
+
+
+[@13603](swarm.workshop.perforce.com/changes/13603) - 
+Improved Error for Publish step when connection is down.
+
+
+### Older Releases
+
+Please refer to the [Activity](https://swarm.workshop.perforce.com/projects/p4-jenkins/activity) feed.
+
+## Known limitations
 * One Jenkins Job per Swarm branch
