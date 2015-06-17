@@ -29,7 +29,7 @@ public class TagNotifier extends Notifier {
 	public final String rawLabelDesc;
 	public final boolean onlyOnSuccess;
 
-	private TaskListener listener;
+	private transient TaskListener listener;
 
 	@DataBoundConstructor
 	public TagNotifier(String rawLabelName, String rawLabelDesc,
