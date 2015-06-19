@@ -14,6 +14,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>,
 	private static final long serialVersionUID = 1L;
 
 	private final String description;
+	private final boolean onlyOnSuccess;
 
 	private String expandedDesc;
 
@@ -21,8 +22,13 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>,
 		return description;
 	}
 
-	public Publish(String description) {
+	public boolean isOnlyOnSuccess() {
+		return onlyOnSuccess;
+	}
+
+	public Publish(String description, boolean onlyOnSuccess) {
 		this.description = description;
+		this.onlyOnSuccess = onlyOnSuccess;
 	}
 
 	public PublishDescriptor getDescriptor() {

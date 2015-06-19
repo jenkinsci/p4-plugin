@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.security.ACL;
@@ -66,7 +67,10 @@ public class AssetNotifier extends Notifier {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) throws InterruptedException, IOException {
 
-		boolean success = true;
+		// return early if publish not required
+		if (publish.isOnlyOnSuccess() && build.getResult() != Result.SUCCESS) {
+			return true;
+		}
 
 		Workspace ws = (Workspace) workspace.clone();
 		try {
@@ -87,8 +91,7 @@ public class AssetNotifier extends Notifier {
 		task.setWorkspace(ws);
 
 		FilePath buildWorkspace = build.getWorkspace();
-		success &= buildWorkspace.act(task);
-
+		boolean success = buildWorkspace.act(task);
 		return success;
 	}
 

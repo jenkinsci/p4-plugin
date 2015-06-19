@@ -17,8 +17,8 @@ public class SubmitImpl extends Publish implements Serializable {
 	}
 
 	@DataBoundConstructor
-	public SubmitImpl(String description, boolean reopen) {
-		super(description);
+	public SubmitImpl(String description, boolean onlyOnSuccess, boolean reopen) {
+		super(description, onlyOnSuccess);
 		this.reopen = reopen;
 	}
 

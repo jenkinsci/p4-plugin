@@ -5,6 +5,10 @@
 		<f:textarea default="Shelved by Jenkins. Build: $${BUILD_TAG}"/>
 	</f:entry>
 	
+	<f:entry field="onlyOnSuccess">
+		<f:checkbox title="${%Only publish on build success}" default="false"/>
+	</f:entry>
+	
 	<f:entry field="revert">
 		<f:checkbox title="${%Revert opened file list}" default="false"/>
 	</f:entry>
