@@ -153,6 +153,12 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
 
+		// Delay polling if build is in progress
+		if (job.isBuilding()) {
+			listener.getLogger().println("Build in progress, polling delayed.");
+			return PollingResult.NO_CHANGES;
+		}
+
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
 				// Poll PARENT only
@@ -338,12 +344,11 @@ public class PerforceScm extends SCM {
 		if (matrix instanceof MatrixOptions) {
 			return ((MatrixOptions) matrix).isBuildParent();
 		} else {
-			// if user hasn't configured "Perforce: Matrix Options" execution strategy,
-			// default to false
+			// if user hasn't configured "Perforce: Matrix Options" execution
+			// strategy, default to false
 			return false;
 		}
 	}
-
 
 	private List<Object> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<Object> list = new ArrayList<Object>();
