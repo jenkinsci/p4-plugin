@@ -10,6 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
@@ -88,10 +90,15 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 					stream.println("\t\t<files>");
 					for (IFileSpec filespec : cl.getFiles()) {
 						FileAction action = filespec.getAction();
-						stream.println("\t\t<file endRevision=\""
-								+ filespec.getEndRevision() + "\" action=\""
-								+ action.name() + "\" depot=\""
-								+ filespec.getDepotPathString() + "\" />");
+						int revision = filespec.getEndRevision();
+
+						// URL encode depot path
+						String depotPath = filespec.getDepotPathString();
+						String safePath = URLEncoder.encode(depotPath, "UTF-8");
+
+						stream.println("\t\t<file endRevision=\"" + revision
+								+ "\" action=\"" + action.name()
+								+ "\" depot=\"" + safePath + "\" />");
 					}
 					stream.println("\t\t</files>");
 
@@ -106,6 +113,8 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 			stream.println("</changelog>");
 			stream.close();
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 	}

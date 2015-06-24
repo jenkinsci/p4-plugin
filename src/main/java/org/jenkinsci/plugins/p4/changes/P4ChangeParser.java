@@ -10,6 +10,7 @@ import hudson.scm.ChangeLogSet.Entry;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -99,14 +100,20 @@ public class P4ChangeParser extends ChangeLogParser {
 				P4ChangeEntry entry = (P4ChangeEntry) objects.peek();
 				try {
 					if (qName.equalsIgnoreCase("file")) {
-
 						IFileSpec temp = new FileSpec();
-						temp.setDepotPath(attributes.getValue("depot"));
-						temp.setAction(FileAction.fromString(attributes
-								.getValue("action")));
-						int endRevision = new Integer(
-								attributes.getValue("endRevision"));
+
+						// URL decode depot path
+						String safePath = attributes.getValue("depot");
+						String depotPath = URLDecoder.decode(safePath, "UTF-8");
+						temp.setDepotPath(depotPath);
+
+						String action = attributes.getValue("action");
+						temp.setAction(FileAction.fromString(action));
+
+						String strRev = attributes.getValue("endRevision");
+						int endRevision = new Integer(strRev);
 						temp.setEndRevision(endRevision);
+						
 						entry.files.add(temp);
 						text.setLength(0);
 						return;
@@ -146,7 +153,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						// CASTING: is this safe?
 						Job<?, ?> job = run.getParent();
 						AbstractProject<?, ?> project = (AbstractProject<?, ?>) job;
-						
+
 						// Find Credential ID and Workspace for this build
 						PerforceScm scm = (PerforceScm) project.getScm();
 						String credential = scm.getCredential();
