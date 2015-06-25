@@ -209,8 +209,8 @@ public class ClientHelper extends ConnectionHelper {
 	private void syncFiles(List<IFileSpec> files, Populate populate)
 			throws Exception {
 
-		// set MODTIME if populate options is used
-		if (populate.isModtime()) {
+		// set MODTIME if populate options is used only required before 15.1
+		if (populate.isModtime() && !checkVersion(20151)) {
 			IClientOptions options = iclient.getOptions();
 			if (!options.isModtime()) {
 				options.setModtime(true);
@@ -372,7 +372,7 @@ public class ClientHelper extends ConnectionHelper {
 			if (checkVersion(20141)) {
 				list.add("-m");
 			} else {
-				log("P4: Resolving files by MODTIME not supported (requires 2014.1)");
+				log("P4: Resolving files by MODTIME not supported (requires 2014.1 or above)");
 			}
 		}
 
