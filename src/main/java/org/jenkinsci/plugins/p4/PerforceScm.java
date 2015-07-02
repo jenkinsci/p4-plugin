@@ -353,6 +353,7 @@ public class PerforceScm extends SCM {
 	private List<Object> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<Object> list = new ArrayList<Object>();
 
+		// Look for all changes since the last build
 		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
@@ -368,8 +369,21 @@ public class PerforceScm extends SCM {
 			}
 		}
 
+		// if empty, look for shelves in current build. The latest change
+		// will not get listed as 'p4 changes n,n' will return no change
 		if (list.isEmpty()) {
-			// No previous build, so add current
+			Object lastChange = task.getBuildChange();
+			if (lastChange != null) {
+				List<P4ChangeEntry> changes;
+				changes = task.getChangesFull(lastChange);
+				for (P4ChangeEntry c : changes) {
+					list.add(c);
+				}
+			}
+		}
+
+		// still empty! No previous build, so add current
+		if (list.isEmpty()) {
 			list.add(task.getBuildChange());
 		}
 		return list;
