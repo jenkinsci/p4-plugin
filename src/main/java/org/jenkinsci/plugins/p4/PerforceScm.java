@@ -486,6 +486,7 @@ public class PerforceScm extends SCM {
 			return true;
 		}
 
+		// exit early if client workspace is undefined
 		String client = "unset";
 		try {
 			EnvVars envVars = run.getEnvironment(null);
@@ -495,6 +496,18 @@ public class PerforceScm extends SCM {
 			return true;
 		}
 
+		// exit early if client workspace does not exist
+		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+		try {
+			if (!connection.isClient(client)) {
+				return true;
+			}
+		} catch (Exception e) {
+			logger.warning("P4: Not able to get connection");
+			return true;
+		}
+		
+		// Remove have entries from client workspace
 		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
 		try {
 			ForceCleanImpl forceClean = new ForceCleanImpl(false, false,

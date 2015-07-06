@@ -148,7 +148,7 @@ public class ConnectionHelper {
 	}
 
 	public boolean isConnected() {
-		if(connection == null) {
+		if (connection == null) {
 			return false;
 		}
 		return connection.isConnected();
@@ -273,6 +273,9 @@ public class ConnectionHelper {
 	 */
 	public boolean isClient(String name) throws Exception {
 		try {
+			if (name == null) {
+				return false;
+			}
 			IClient client = connection.getClient(name);
 			return (client != null);
 		} catch (RequestException e) {
