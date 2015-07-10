@@ -294,6 +294,29 @@ com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) inva
 
 ## Release notes
 
+### Release 1.2.5 (major features/fixes)
+
+[@14838](swarm.workshop.perforce.com/changes/14838) - Check if the workspace exists before cleanup. JENKINS-29030
+
+
+[@14779](swarm.workshop.perforce.com/changes/14779) - Add shelved changes to built changes list. JENKINS-25724
+
+
+[@14173](swarm.workshop.perforce.com/changes/14173) - Support P4D 15.1 'reconcile -m'. Client workspace MODTIME option is no longer required with -m.
+
+
+[@14150](swarm.workshop.perforce.com/changes/14150) - URL Encode/Decode the depot path for changes. Filenames with ampersands was causing Jelly to break when showing the change detail. JENKINS-29017
+
+
+[@14040](swarm.workshop.perforce.com/changes/14040) - Delay polling if a build is in progress.
+
+
+[@14035](swarm.workshop.perforce.com/changes/14035) - Publish on Success option. Added a checkbox to the Publish step to only shelve/submit change if the build succeeded.
+
+
+[@13994](swarm.workshop.perforce.com/changes/13994) - Make TaskListener as transient.
+
+
 ### Release 1.2.4 (major features/fixes)
 
 [@13800](swarm.workshop.perforce.com/changes/13800) - 
