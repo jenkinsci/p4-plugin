@@ -32,7 +32,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 	private final String line;
 	private final String view;
 
-	public String getStream() {
+	public String getStreamName() {
 		return streamName;
 	}
 

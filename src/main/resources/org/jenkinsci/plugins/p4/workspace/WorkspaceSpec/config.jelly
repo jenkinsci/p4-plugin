@@ -12,7 +12,7 @@
 	</f:entry>
 	
 	<f:entry title="${%Stream }" field="streamName">
-		<f:textbox id="id.stream" />
+		<f:textbox id="id.streamName" />
 	</f:entry>
 	
 	<f:entry title="${%Line Endings }" field="line">
