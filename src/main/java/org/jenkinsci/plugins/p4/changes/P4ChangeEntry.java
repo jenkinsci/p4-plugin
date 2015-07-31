@@ -11,11 +11,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.print.attribute.standard.DateTimeAtCompleted;
-
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
 
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IJob;
@@ -104,6 +101,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set author
 		String user = label.getOwnerName();
+		user = (user != null && !user.isEmpty()) ? user : "unknown";
 		author = User.get(user);
 
 		// set date of change
