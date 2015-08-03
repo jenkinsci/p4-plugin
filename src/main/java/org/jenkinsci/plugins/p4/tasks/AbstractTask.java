@@ -6,6 +6,7 @@ import hudson.model.TaskListener;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -25,6 +26,15 @@ public abstract class AbstractTask implements Serializable {
 	private String client;
 
 	transient private Workspace workspace;
+
+	/**
+	 * Implements the Perforce task to retry if necessary
+	 * 
+	 * @param p4
+	 * @return
+	 * @throws Exception 
+	 */
+	public abstract Object task(ClientHelper p4) throws Exception;
 
 	public P4StandardCredentials getCredential() {
 		return credential;
@@ -104,5 +114,44 @@ public abstract class AbstractTask implements Serializable {
 		}
 		p4.log("... node: " + host);
 		return true;
+	}
+
+	protected Object tryTask() throws AbortException {
+		ClientHelper p4 = getConnection();
+
+		// Check connection (might be on remote slave)
+		if (!checkConnection(p4)) {
+			String msg = "\nP4 Task: Unable to connect.";
+			logger.warning(msg);
+			throw new AbortException(msg);
+		}
+
+		int trys = 0;
+		int attempt = p4.getRetry();
+		Exception last = null;
+		while (trys <= attempt) {
+			try {
+				Object result = task(p4);
+				p4.disconnect();
+				return result;
+			} catch (Exception e) {
+				last = e;
+				String err = "P4 Task: retry: " + trys;
+				logger.severe(err);
+
+				// back off n^2 seconds, before retry
+				try {
+					TimeUnit.SECONDS.sleep(trys ^ 2);
+				} catch (InterruptedException e2) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
+
+		p4.disconnect();
+		String msg = "P4 Task: failed: " + last;
+		last.printStackTrace();
+		logger.warning(msg);
+		throw new AbortException(msg);
 	}
 }

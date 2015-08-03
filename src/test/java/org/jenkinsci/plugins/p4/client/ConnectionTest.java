@@ -131,7 +131,7 @@ public class ConnectionTest {
 	@Test
 	public void testCredentialsList() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -158,7 +158,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_buildHead() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -183,7 +183,7 @@ public class ConnectionTest {
 		assertEquals("Perforce Password Credential", desc.getDisplayName());
 		P4PasswordImpl.DescriptorImpl impl = (P4PasswordImpl.DescriptorImpl) desc;
 		FormValidation form = impl.doTestConnection(P4PORT, "false", null,
-				"jenkins", "jenkins");
+				"jenkins", "0", "jenkins");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
@@ -191,7 +191,7 @@ public class ConnectionTest {
 	public void testPinHost_ManualWs() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -230,7 +230,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_buildChange() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -289,7 +289,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_buildLabel() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -352,7 +352,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_buildShelf() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -406,7 +406,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_ManualWs() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -469,7 +469,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_TemplateWs() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -514,7 +514,7 @@ public class ConnectionTest {
 	public void testFreeStyleProject_StreamWs() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -558,7 +558,7 @@ public class ConnectionTest {
 	@Test
 	public void testTPI83() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -587,7 +587,7 @@ public class ConnectionTest {
 	@Test
 	public void testTPI95() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -626,7 +626,7 @@ public class ConnectionTest {
 	public void testPolling_Pin() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -672,7 +672,7 @@ public class ConnectionTest {
 	public void testPolling_Inc() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
@@ -723,7 +723,7 @@ public class ConnectionTest {
 	@Test
 	public void testManual_Modtime() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 

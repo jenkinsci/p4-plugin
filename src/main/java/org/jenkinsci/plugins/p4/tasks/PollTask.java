@@ -48,57 +48,46 @@ public class PollTask extends AbstractTask implements
 		this.perChange = incremental;
 	}
 
-	public List<Integer> invoke(File f, VirtualChannel channel)
-			throws IOException, InterruptedException {
+	@SuppressWarnings("unchecked")
+	public List<Integer> invoke(File workspace, VirtualChannel channel)
+			throws IOException {
+		return (List<Integer>) tryTask();
+	}
+
+	@Override
+	public Object task(ClientHelper p4) throws Exception {
 		List<Integer> changes = new ArrayList<Integer>();
 
-		ClientHelper p4 = getConnection();
-		try {
-			// Check connection (might be on remote slave)
-			if (!checkConnection(p4)) {
-				return changes;
+		// find changes...
+		if (pin != null && !pin.isEmpty()) {
+			List<Integer> have = p4.listHaveChanges(pin);
+			int last = 0;
+			if (!have.isEmpty()) {
+				last = have.get(have.size() - 1);
 			}
-
-			// find changes...
-			if (pin != null && !pin.isEmpty()) {
-				List<Integer> have = p4.listHaveChanges(pin);
-				int last = 0;
-				if (!have.isEmpty()) {
-					last = have.get(have.size() - 1);
-				}
-				p4.log("P4: Polling with label/change: " + last + "," + pin);
-				changes = p4.listChanges(last, pin);
-			} else {
-				List<Integer> have = p4.listHaveChanges();
-				int last = 0;
-				if (!have.isEmpty()) {
-					last = have.get(have.size() - 1);
-				}
-				p4.log("P4: Polling with label/change: " + last + ",now");
-				changes = p4.listChanges(last);
+			p4.log("P4: Polling with label/change: " + last + "," + pin);
+			changes = p4.listChanges(last, pin);
+		} else {
+			List<Integer> have = p4.listHaveChanges();
+			int last = 0;
+			if (!have.isEmpty()) {
+				last = have.get(have.size() - 1);
 			}
-		} catch (Exception e) {
-			p4.log("P4: Unable to fetch changes:" + e);
-			p4.disconnect();
+			p4.log("P4: Polling with label/change: " + last + ",now");
+			changes = p4.listChanges(last);
 		}
 
 		// filter changes...
-		try {
-			List<Integer> remainder = new ArrayList<Integer>();
-			for (int c : changes) {
-				Changelist changelist = p4.getChange(c);
-				// add unfiltered changes to remainder list
-				if (!filterChange(changelist, filter)) {
-					remainder.add(changelist.getId());
-					p4.log("... found change: " + changelist.getId());
-				}
+		List<Integer> remainder = new ArrayList<Integer>();
+		for (int c : changes) {
+			Changelist changelist = p4.getChange(c);
+			// add unfiltered changes to remainder list
+			if (!filterChange(changelist, filter)) {
+				remainder.add(changelist.getId());
+				p4.log("... found change: " + changelist.getId());
 			}
-			changes = remainder;
-		} catch (Exception e) {
-			p4.log("P4: Unable to filter changes:" + e);
-		} finally {
-			p4.disconnect();
 		}
+		changes = remainder;
 
 		// if build per change...
 		if (!changes.isEmpty() && perChange) {

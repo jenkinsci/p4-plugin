@@ -31,6 +31,9 @@ public abstract class P4StandardCredentials extends P4Credentials implements
 	@NonNull
 	private final String username;
 
+	@NonNull
+	private final String retry;
+
 	/**
 	 * Constructor.
 	 * 
@@ -41,13 +44,15 @@ public abstract class P4StandardCredentials extends P4Credentials implements
 	 */
 	public P4StandardCredentials(@CheckForNull String id,
 			@CheckForNull String description, @CheckForNull String p4port,
-			@CheckForNull TrustImpl ssl, @CheckForNull String username) {
+			@CheckForNull TrustImpl ssl, @CheckForNull String username,
+			@CheckForNull String retry) {
 		super();
 		this.id = IdCredentials.Helpers.fixEmptyId(id);
 		this.description = Util.fixNull(description);
 		this.p4port = Util.fixNull(p4port);
 		this.ssl = ssl;
 		this.username = Util.fixNull(username);
+		this.retry = retry;
 	}
 
 	/**
@@ -63,13 +68,14 @@ public abstract class P4StandardCredentials extends P4Credentials implements
 	public P4StandardCredentials(@CheckForNull CredentialsScope scope,
 			@CheckForNull String id, @CheckForNull String description,
 			@CheckForNull String p4port, @CheckForNull TrustImpl ssl,
-			@CheckForNull String username) {
+			@CheckForNull String username, @CheckForNull String retry) {
 		super(scope);
 		this.id = IdCredentials.Helpers.fixEmptyId(id);
 		this.description = Util.fixNull(description);
 		this.p4port = Util.fixNull(p4port);
 		this.ssl = ssl;
 		this.username = Util.fixNull(username);
+		this.retry = retry;
 	}
 
 	@NonNull
@@ -99,6 +105,14 @@ public abstract class P4StandardCredentials extends P4Credentials implements
 	@NonNull
 	public String getUsername() {
 		return username;
+	}
+
+	public int getRetry() {
+		if (retry != null && !retry.isEmpty()) {
+			return Integer.parseInt(retry);
+		} else {
+			return 0;
+		}
 	}
 
 	@Override

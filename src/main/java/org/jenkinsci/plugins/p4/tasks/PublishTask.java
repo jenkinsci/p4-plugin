@@ -25,10 +25,13 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
 		this.publish = publish;
 	}
 
-	public Boolean invoke(File f, VirtualChannel channel) throws IOException,
-			InterruptedException {
+	public Boolean invoke(File workspace, VirtualChannel channel)
+			throws IOException {
+		return (Boolean) tryTask();
+	}
 
-		ClientHelper p4 = getConnection();
+	@Override
+	public Object task(ClientHelper p4) throws Exception {
 		try {
 			// Check connection (might be on remote slave)
 			if (!checkConnection(p4)) {
@@ -44,9 +47,7 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
 			p4.log("(p4):stop:exception\n");
 			String msg = "Unable to publish workspace: " + e;
 			logger.warning(msg);
-			throw new InterruptedException(msg);
-		} finally {
-			p4.disconnect();
+			throw e;
 		}
 		return true;
 	}

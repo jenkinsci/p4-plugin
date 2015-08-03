@@ -66,7 +66,7 @@ public class P4Server {
 		logger.info("start signal sent...");
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
-				"desc", p4port, null, "admin", "Password");
+				"desc", p4port, null, "admin", "0", "Password");
 
 		int retry = 0;
 		while (retry < 20) {
@@ -81,7 +81,7 @@ public class P4Server {
 
 	public void stop() throws Exception {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
-				"desc", p4port, null, "admin", "Password");
+				"desc", p4port, null, "admin", "0", "Password");
 
 		p4 = new ConnectionHelper(auth);
 		p4.login();

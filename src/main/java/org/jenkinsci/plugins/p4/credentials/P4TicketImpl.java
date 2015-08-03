@@ -32,9 +32,10 @@ public class P4TicketImpl extends P4StandardCredentials {
 	public P4TicketImpl(@CheckForNull CredentialsScope scope,
 			@CheckForNull String id, @CheckForNull String description,
 			@CheckForNull String p4port, TrustImpl ssl,
-			@CheckForNull String username, TicketModeImpl ticket) {
+			@CheckForNull String username, @CheckForNull String retry,
+			TicketModeImpl ticket) {
 
-		super(scope, id, description, p4port, ssl, username);
+		super(scope, id, description, p4port, ssl, username, retry);
 		this.ticket = ticket;
 
 	}
@@ -70,6 +71,7 @@ public class P4TicketImpl extends P4StandardCredentials {
 				@QueryParameter("ssl") String ssl,
 				@QueryParameter("trust") String trust,
 				@QueryParameter("username") String username,
+				@QueryParameter("retry") String retry,
 				@QueryParameter("ticket") String value,
 				@QueryParameter("ticketValue") String ticketValue,
 				@QueryParameter("ticketPath") String ticketPath)
@@ -92,7 +94,7 @@ public class P4TicketImpl extends P4StandardCredentials {
 				ticket = new TicketModeImpl(value, ticketValue, ticketPath);
 
 				P4TicketImpl test = new P4TicketImpl(null, null, null, p4port,
-						sslTrust, username, ticket);
+						sslTrust, username, retry, ticket);
 
 				ConnectionHelper p4 = new ConnectionHelper(test);
 

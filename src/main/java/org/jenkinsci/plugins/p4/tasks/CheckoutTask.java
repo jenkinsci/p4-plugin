@@ -87,31 +87,20 @@ public class CheckoutTask extends AbstractTask implements
 	 */
 	public Boolean invoke(File workspace, VirtualChannel channel)
 			throws IOException {
+		return (Boolean) tryTask();
+	}
 
-		ClientHelper p4 = getConnection();
-		try {
-			// Check connection (might be on remote slave)
-			if (!checkConnection(p4)) {
-				return false;
-			}
+	@Override
+	public Object task(ClientHelper p4) throws Exception {
+		// Tidy the workspace before sync/build
+		p4.tidyWorkspace(populate);
 
-			// Tidy the workspace before sync/build
-			p4.tidyWorkspace(populate);
+		// Sync workspace to label, head or specified change
+		p4.syncFiles(buildChange, populate);
 
-			// Sync workspace to label, head or specified change
-			p4.syncFiles(buildChange, populate);
-
-			// Unshelve review if specified
-			if (status == CheckoutStatus.SHELVED) {
-				p4.unshelveFiles(review);
-			}
-		} catch (Exception e) {
-			String msg = "Unable to update workspace: " + e;
-			e.printStackTrace();
-			logger.warning(msg);
-			throw new AbortException(msg);
-		} finally {
-			p4.disconnect();
+		// Unshelve review if specified
+		if (status == CheckoutStatus.SHELVED) {
+			p4.unshelveFiles(review);
 		}
 		return true;
 	}
@@ -141,8 +130,8 @@ public class CheckoutTask extends AbstractTask implements
 	private Object getBuildChange(Workspace workspace) {
 		// Use head as the default
 		Object build = this.head;
-		
-		// Get Environment parameters from expand 
+
+		// Get Environment parameters from expand
 		Expand expand = workspace.getExpand();
 
 		// if a pinned change/label is specified the update

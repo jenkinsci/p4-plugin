@@ -33,8 +33,9 @@ public class P4PasswordImpl extends P4StandardCredentials {
 	public P4PasswordImpl(@CheckForNull CredentialsScope scope,
 			@CheckForNull String id, @CheckForNull String description,
 			@CheckForNull String p4port, TrustImpl ssl,
-			@CheckForNull String username, @CheckForNull String password) {
-		super(scope, id, description, p4port, ssl, username);
+			@CheckForNull String username, @CheckForNull String retry,
+			@CheckForNull String password) {
+		super(scope, id, description, p4port, ssl, username, retry);
 		this.password = Secret.fromString(password);
 	}
 
@@ -56,6 +57,7 @@ public class P4PasswordImpl extends P4StandardCredentials {
 				@QueryParameter("ssl") String ssl,
 				@QueryParameter("trust") String trust,
 				@QueryParameter("username") String username,
+				@QueryParameter("retry") String retry,
 				@QueryParameter("password") String password)
 				throws IOException, ServletException {
 			try {
@@ -73,7 +75,7 @@ public class P4PasswordImpl extends P4StandardCredentials {
 				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
 
 				P4PasswordImpl test = new P4PasswordImpl(null, null, null,
-						p4port, sslTrust, username, password);
+						p4port, sslTrust, username, retry, password);
 
 				ConnectionHelper p4 = new ConnectionHelper(test);
 

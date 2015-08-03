@@ -55,7 +55,7 @@ public class ConnectionHelper {
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry(3);
+		connectionRetry();
 	}
 
 	public ConnectionHelper(P4StandardCredentials credential,
@@ -64,7 +64,7 @@ public class ConnectionHelper {
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry(3);
+		connectionRetry();
 	}
 
 	public ConnectionHelper(P4StandardCredentials credential) {
@@ -72,7 +72,7 @@ public class ConnectionHelper {
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry(3);
+		connectionRetry();
 	}
 
 	/**
@@ -116,9 +116,10 @@ public class ConnectionHelper {
 	 * 
 	 * @param attempt
 	 */
-	private void connectionRetry(int attempt) {
+	private void connectionRetry() {
 		int trys = 0;
-		while (trys < attempt) {
+		int attempt = getRetry();
+		while (trys <= attempt) {
 			if (connect()) {
 				return;
 			}
@@ -139,6 +140,10 @@ public class ConnectionHelper {
 		log(err);
 	}
 
+	public int getRetry() {
+		return p4credential.getRetry();
+	}
+	
 	public String getPort() {
 		return p4credential.getP4port();
 	}
