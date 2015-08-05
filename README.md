@@ -294,6 +294,17 @@ com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) inva
 
 ## Release notes
 
+### Release 1.2.6 (major features/fixes)
+
+[@15293](swarm.workshop.perforce.com/changes/15293) - Add retry attempts to Perforce Tasks. If a task fails due to an exception then the task will retry based on the value specified in the connection Credential.
+
+
+[@15249](swarm.workshop.perforce.com/changes/15249) - Null protection if Label Owner is not set.  Fall back to “unknown” for user.
+
+
+[@15138](swarm.workshop.perforce.com/changes/15138) - StreamName not shown in Manual Workspace config.
+
+
 ### Release 1.2.5 (major features/fixes)
 
 [@14838](swarm.workshop.perforce.com/changes/14838) - Check if the workspace exists before cleanup. JENKINS-29030
