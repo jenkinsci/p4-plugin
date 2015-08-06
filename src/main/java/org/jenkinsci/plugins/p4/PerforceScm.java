@@ -316,13 +316,17 @@ public class PerforceScm extends SCM {
 			success &= buildWorkspace.act(task);
 		}
 
-		// Only write change log if build succeed.
+		// Only write change log if build succeeded and changeLogFile has been set.
 		if (success) {
-			// Calculate changes prior to build (based on last build)
-			listener.getLogger().println("P4 Task: saving built changes.");
-			List<Object> changes = calculateChanges(run, task);
-			P4ChangeSet.store(changelogFile, changes);
-			listener.getLogger().println("... done\n");
+			if (changelogFile != null) {
+				// Calculate changes prior to build (based on last build)
+				listener.getLogger().println("P4 Task: saving built changes.");
+				List<Object> changes = calculateChanges(run, task);
+				P4ChangeSet.store(changelogFile, changes);
+				listener.getLogger().println("... done\n");
+			} else {
+				listener.getLogger().println("P4 Task: changeLogFile not set. Not saving built changes.");
+			}
 		} else {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
