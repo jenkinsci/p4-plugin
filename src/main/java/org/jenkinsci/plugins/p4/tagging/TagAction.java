@@ -25,8 +25,6 @@ import com.perforce.p4java.impl.generic.core.Label;
 
 public class TagAction extends AbstractScmTagAction {
 
-	private final Expand expand;
-
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
 
@@ -37,8 +35,6 @@ public class TagAction extends AbstractScmTagAction {
 
 	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
 		super(run);
-		EnvVars env = run.getEnvironment(null);
-		expand = new Expand(env);
 	}
 
 	public String getIconFileName() {
@@ -74,6 +70,8 @@ public class TagAction extends AbstractScmTagAction {
 	public void labelBuild(TaskListener listener, String name,
 			String description) throws Exception {
 		// Expand label name and description
+		EnvVars env = getRun().getEnvironment(listener);
+		Expand expand = new Expand(env);
 		name = expand.format(name, false);
 		description = expand.format(description, false);
 
