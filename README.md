@@ -296,6 +296,15 @@ com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) inva
 
 ### Release 1.2.6 (major features/fixes)
 
+
+[@15347](swarm.workshop.perforce.com/changes/15347) - Moved the Expand setup into labelBuild() in order to pass listener (and not null) to getEnvironment().
+
+
+[@15345](swarm.workshop.perforce.com/changes/15345) - Fixed issue with workflow-plugin when setting changelog to false.
+
+
+### Release 1.2.6 (major features/fixes)
+
 [@15293](swarm.workshop.perforce.com/changes/15293) - Add retry attempts to Perforce Tasks. If a task fails due to an exception then the task will retry based on the value specified in the connection Credential.
 
 
