@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.tagging;
 
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.Result;
@@ -65,7 +66,8 @@ public class TagNotifier extends Notifier {
 			TagAction tagAction = getTagAction(env, build);
 
 			// Label with TagAction
-			tagAction.labelBuild(listener, name, description);
+			FilePath workspace = build.getWorkspace();
+			tagAction.labelBuild(listener, name, description, workspace);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -105,7 +107,7 @@ public class TagNotifier extends Notifier {
 		return tagAction;
 	}
 
-	private void log(String msg) {
+	protected void log(String msg) {
 		if (listener == null) {
 			return;
 		}

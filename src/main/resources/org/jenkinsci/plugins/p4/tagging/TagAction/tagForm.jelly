@@ -12,9 +12,9 @@
 	</d:taglib>
 
 	<l:layout norefresh="true" xmlns:local="local">
-		<st:include it="${it.build}" page="sidepanel.jelly" />
+		<st:include it="${it.run}" page="sidepanel.jelly" />
 		<l:main-panel>
-			<h1>Build #${it.build.number}</h1>
+			<h1>Build #${it.run.number}</h1>
 
 			<j:if test="${it.isTagged()}">
 				<p>This build is labelled:</p>
@@ -44,7 +44,7 @@
 					<tr>
 						<td nowrap="nowrap"><b>Label Name:</b> </td>
 						<td><input type="text" name="name"
-						value="jenkins-${it.build.project.name}-Build-${it.build.number}" 
+						value="jenkins-${it.run.project.name}-Build-${it.build.number}" 
 						style="width:70%" id="name" 
 						checkUrl="'checkTag?value='+escape(this.value)"/>
 						</td>
@@ -52,7 +52,7 @@
 					<tr>
 						<td><b>Description:</b> </td>
 						<td><textarea name="desc" rows="5" cols="60" style="width:70%">
-						JenkinsBuild: #${it.build.number}
+						JenkinsBuild: #${it.run.number}
 						</textarea></td>
 					</tr>
 					<tr>

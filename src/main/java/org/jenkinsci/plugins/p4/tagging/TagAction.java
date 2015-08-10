@@ -62,13 +62,13 @@ public class TagAction extends AbstractScmTagAction {
 
 		String description = req.getParameter("desc");
 		String name = req.getParameter("name");
-		labelBuild(null, name, description);
+		labelBuild(null, name, description, null);
 
 		rsp.sendRedirect(".");
 	}
 
 	public void labelBuild(TaskListener listener, String name,
-			String description) throws Exception {
+			String description, final FilePath nodeWorkspace) throws Exception {
 		// Expand label name and description
 		EnvVars env = getRun().getEnvironment(listener);
 		Expand expand = new Expand(env);
@@ -81,8 +81,12 @@ public class TagAction extends AbstractScmTagAction {
 		task.setWorkspace(workspace);
 		task.setBuildChange(buildChange);
 
+		FilePath buildWorkspace = nodeWorkspace;
+		if( nodeWorkspace == null) {
+			buildWorkspace = build.getWorkspace();
+		}
+
 		// Invoke the Label Task
-		FilePath buildWorkspace = build.getWorkspace();
 		buildWorkspace.act(task);
 
 		// save label

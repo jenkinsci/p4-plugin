@@ -21,7 +21,6 @@ import hudson.scm.PollingResult;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
 import hudson.scm.SCM;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
@@ -37,14 +36,13 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -59,8 +57,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.impl.generic.core.Label;
 
 public class PerforceScm extends SCM {
@@ -394,8 +390,7 @@ public class PerforceScm extends SCM {
 	}
 
 	@Override
-	public void
-			buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = build.getAction(TagAction.class);
@@ -598,51 +593,11 @@ public class PerforceScm extends SCM {
 		 *         Select list.
 		 */
 		public ListBoxModel doFillCredentialItems() {
-			ListBoxModel list = new ListBoxModel();
-
-			Class<P4StandardCredentials> type = P4StandardCredentials.class;
-			Jenkins scope = Jenkins.getInstance();
-			Authentication acl = ACL.SYSTEM;
-			DomainRequirement domain = new DomainRequirement();
-
-			List<P4StandardCredentials> credentials;
-			credentials = CredentialsProvider.lookupCredentials(type, scope,
-					acl, domain);
-
-			if (credentials.isEmpty()) {
-				list.add("Select credential...", null);
-			}
-			for (P4StandardCredentials c : credentials) {
-				StringBuffer sb = new StringBuffer();
-				sb.append(c.getDescription());
-				sb.append(" (");
-				sb.append(c.getUsername());
-				sb.append(":");
-				sb.append(c.getP4port());
-				sb.append(")");
-				list.add(sb.toString(), c.getId());
-			}
-			return list;
+			return P4CredentialsImpl.doFillCredentialItems();
 		}
 
 		public FormValidation doCheckCredential(@QueryParameter String value) {
-			if (value == null) {
-				return FormValidation.ok();
-			}
-			try {
-				ConnectionHelper p4 = new ConnectionHelper(value, null);
-				if (!p4.login()) {
-					return FormValidation
-							.error("Authentication Error: Unable to login.");
-				}
-				if (!p4.checkVersion(20121)) {
-					return FormValidation
-							.error("Server version is too old (min 2012.1)");
-				}
-				return FormValidation.ok();
-			} catch (Exception e) {
-				return FormValidation.error(e.getMessage());
-			}
+			return P4CredentialsImpl.doCheckCredential(value);
 		}
 	}
 
