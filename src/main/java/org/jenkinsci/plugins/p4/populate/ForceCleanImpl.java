@@ -6,6 +6,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class ForceCleanImpl extends Populate {
 
+	private static final long serialVersionUID = 1L;
+	
 	/**
 	 * Force sync of workspace (optional have update)
 	 * 

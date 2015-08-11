@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.remoting.RoleChecker;
 
 import com.perforce.p4java.client.IClientViewMapping;
 import com.perforce.p4java.core.ILabelMapping;
@@ -80,5 +81,11 @@ public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public void setBuildChange(Object buildChange) {
 		this.buildChange = buildChange;
+	}
+
+	@Override
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		// TODO Auto-generated method stub
+		
 	}
 }

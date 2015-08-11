@@ -7,7 +7,6 @@ import hudson.util.ListBoxModel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.QueryParameter;
@@ -21,9 +20,6 @@ import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.IOptionsServer;
 
 public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
-
-	private static Logger logger = Logger.getLogger(WorkspaceDescriptor.class
-			.getName());
 
 	public WorkspaceDescriptor(Class<? extends Workspace> clazz) {
 		super(clazz);
@@ -48,7 +44,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 			return FormValidation.error(e.getMessage());
 		}
 	}
-	
+
 	static public AutoCompletionCandidates autoCompleteName(
 			@QueryParameter String value) {
 
@@ -68,7 +64,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 
 		return c;
 	}
-	
+
 	static public ListBoxModel doFillCharsetItems() {
 		ListBoxModel list = new ListBoxModel();
 		try {
@@ -108,8 +104,8 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 	}
 
 	/**
-	 * Provides auto-completion for workspace names. Stapler finds this
-	 * method via the naming convention.
+	 * Provides auto-completion for workspace names. Stapler finds this method
+	 * via the naming convention.
 	 * 
 	 * @param value
 	 *            The text that the user entered.
@@ -135,8 +131,9 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 
 		return c;
 	}
-	
-	static public FormValidation doCheckStreamName(@QueryParameter final String value) {
+
+	static public FormValidation doCheckStreamName(
+			@QueryParameter final String value) {
 		try {
 			IOptionsServer p4 = ConnectionFactory.getConnection();
 			IStream stream = p4.getStream(value);
@@ -149,7 +146,8 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 		}
 	}
 
-	static public FormValidation doCheckFormat(@QueryParameter final String value) {
+	static public FormValidation doCheckFormat(
+			@QueryParameter final String value) {
 		if (value == null || value.isEmpty())
 			return FormValidation.error("Workspace Name format is mandatory.");
 

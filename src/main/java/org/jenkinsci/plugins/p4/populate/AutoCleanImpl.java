@@ -6,6 +6,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class AutoCleanImpl extends Populate {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final boolean replace;
 	private final boolean delete;
 

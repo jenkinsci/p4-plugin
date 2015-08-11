@@ -8,6 +8,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 
+import jenkins.security.Roles;
+
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
+
 public class HostnameTask implements FileCallable<String>, Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -16,6 +21,10 @@ public class HostnameTask implements FileCallable<String>, Serializable {
 			InterruptedException {
 		String hostname = InetAddress.getLocalHost().getHostName();
 		return hostname;
+	}
+
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 
 }

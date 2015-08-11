@@ -6,6 +6,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SyncOnlyImpl extends Populate {
 
+	private static final long serialVersionUID = 1L;
+	
 	/**
 	 * Sync only (optional have update)
 	 * 

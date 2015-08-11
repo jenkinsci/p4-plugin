@@ -1,13 +1,10 @@
 package org.jenkinsci.plugins.p4.workspace;
 
 import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.util.FormValidation;
 
 import java.util.logging.Logger;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.impl.mapbased.client.Client;

@@ -6,6 +6,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 
 public class CheckOnlyImpl extends Populate {
 
+	private static final long serialVersionUID = 1L;
+	
 	/**
 	 * No sync, check change only
 	 * 

@@ -17,7 +17,6 @@ import hudson.util.ListBoxModel;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
 
@@ -32,9 +31,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
 public class AssetNotifier extends Notifier {
-
-	private static Logger logger = Logger.getLogger(AssetNotifier.class
-			.getName());
 
 	private final String credential;
 	private final Workspace workspace;

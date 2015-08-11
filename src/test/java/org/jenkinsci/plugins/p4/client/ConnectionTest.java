@@ -22,6 +22,7 @@ import hudson.util.LogTaskListener;
 import hudson.util.ListBoxModel;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
@@ -50,6 +51,9 @@ import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -83,6 +87,8 @@ public class ConnectionTest {
 	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT,
 			P4PORT);
 
+	private P4PasswordImpl auth;
+
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
 
@@ -110,6 +116,7 @@ public class ConnectionTest {
 	@Before
 	public void startServer() throws Exception {
 		p4d.start();
+		auth = createCredentials();
 	}
 
 	@After
@@ -122,6 +129,14 @@ public class ConnectionTest {
 		p4d.clean();
 	}
 
+	private P4PasswordImpl createCredentials() throws IOException {
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
+				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
+		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
+		SystemCredentialsProvider.getInstance().save();
+		return auth;
+	}
+
 	@Test
 	public void testCheckP4d() throws Exception {
 		int ver = p4d.getVersion();
@@ -130,10 +145,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testCredentialsList() throws Exception {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Head");
@@ -156,11 +167,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testFreeStyleProject_buildHead() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Head");
@@ -189,11 +195,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testPinHost_ManualWs() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "manual.ws";
 		String stream = null;
@@ -228,11 +229,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testFreeStyleProject_buildChange() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Change");
@@ -270,7 +266,7 @@ public class ConnectionTest {
 		WorkspaceDescriptor desc = workspace.getDescriptor();
 		assertNotNull(desc);
 		assertEquals("Static (static view, master only)", desc.getDisplayName());
-		ListBoxModel charsets = desc.doFillCharsetItems();
+		ListBoxModel charsets = WorkspaceDescriptor.doFillCharsetItems();
 		assertTrue(charsets.size() > 1);
 
 		// Log in for next set of tests...
@@ -287,11 +283,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testFreeStyleProject_buildLabel() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		URL url = new URL("http://localhost");
 		P4WebBrowser browser = new P4WebBrowser(url);
@@ -351,11 +342,6 @@ public class ConnectionTest {
 	@Test
 	public void testFreeStyleProject_buildShelf() throws Exception {
 
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
-
 		URL url = new URL("http://localhost");
 		SwarmBrowser browser = new SwarmBrowser(url);
 
@@ -404,11 +390,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testFreeStyleProject_ManualWs() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "manual.ws";
 		String stream = null;
@@ -468,11 +449,6 @@ public class ConnectionTest {
 	@Test
 	public void testFreeStyleProject_TemplateWs() throws Exception {
 
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
-
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -503,20 +479,15 @@ public class ConnectionTest {
 		FormValidation form = impl.doCheckTemplateName("test.ws");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 
-		AutoCompletionCandidates list = impl.doAutoCompleteTemplateName("t");
+		AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteTemplateName("t");
 		assertTrue(list.getValues().contains("test.ws"));
 
-		form = impl.doCheckFormat(format);
+		form = WorkspaceDescriptor.doCheckFormat(format);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
 	@Test
 	public void testFreeStyleProject_StreamWs() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String stream = "//stream/main";
 		String format = "jenkins-${node}-${project}.ws";
@@ -544,23 +515,18 @@ public class ConnectionTest {
 		ConnectionHelper p4 = new ConnectionHelper(auth);
 		p4.login();
 
-		StreamWorkspaceImpl.DescriptorImpl impl = (StreamWorkspaceImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doCheckStreamName("//stream/main");
+		FormValidation form = WorkspaceDescriptor.doCheckStreamName("//stream/main");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 
-		AutoCompletionCandidates list = impl.doAutoCompleteStreamName("//");
+		AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteStreamName("//");
 		assertTrue(list.getValues().contains("//stream/main"));
 
-		form = impl.doCheckFormat(format);
+		form = WorkspaceDescriptor.doCheckFormat(format);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
 	@Test
 	public void testTPI83() throws Exception {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("TPI83");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
@@ -586,10 +552,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testTPI95() throws Exception {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
@@ -624,11 +586,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testPolling_Pin() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "manual.ws";
 		String stream = null;
@@ -670,11 +627,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testPolling_Inc() throws Exception {
-
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "manual.ws";
 		String stream = null;
@@ -722,10 +674,6 @@ public class ConnectionTest {
 
 	@Test
 	public void testManual_Modtime() throws Exception {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
-		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
-		SystemCredentialsProvider.getInstance().save();
 
 		String client = "modtime.ws";
 		String stream = null;
@@ -765,6 +713,35 @@ public class ConnectionTest {
 
 		long epoch = file.lastModified();
 		assertEquals(1397049803000L, epoch);
+	}
+
+	@Test
+	public void testWorkflow() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class,
+				"demo");
+		job.setDefinition(new CpsFlowDefinition(
+				"node {\n"
+						+ "   p4sync credential: '"
+						+ id
+						+ "', template: 'test.ws'"
+						+ "\n"
+						+ "   p4tag rawLabelDesc: 'TestLabel', rawLabelName: 'jenkins-label'"
+						+ "\n"
+						+ "   publisher = [$class: 'SubmitImpl', description: 'Submitted by Jenkins', onlyOnSuccess: false, reopen: false]"
+						+ "\n"
+						+ "   buildWorkspace = [$class: 'TemplateWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, templateName: 'test.ws']"
+						+ "\n" + "   p4publish credential: '" + id
+						+ "', publish: publisher, workspace: buildWorkspace"
+						+ " \n" + "}"));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job
+				.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run);
+		jenkins.assertLogContains("P4 Task: tagging build.", run);
+		jenkins.assertLogContains("P4 Task: reconcile files to changelist.",
+				run);
 	}
 
 	private static void startHttpServer(int port) throws Exception {

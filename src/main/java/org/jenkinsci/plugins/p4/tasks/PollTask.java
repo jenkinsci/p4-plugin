@@ -10,11 +10,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jenkins.security.Roles;
+
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
 
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.AccessException;
@@ -153,5 +157,9 @@ public class PollTask extends AbstractTask implements
 			}
 		}
 		return false;
+	}
+
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 }

@@ -8,8 +8,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
+import jenkins.security.Roles;
+
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
 
 public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
 		Serializable {
@@ -50,5 +54,9 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>,
 			throw e;
 		}
 		return true;
+	}
+
+	public void checkRoles(RoleChecker checker) throws SecurityException {
+		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 }
