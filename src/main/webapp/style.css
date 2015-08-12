@@ -1,0 +1,14 @@
+div.titleDiv {
+	color: #008000;
+}
+
+a.linkDiv {
+	text-decoration: none;
+	font-weight: bold;
+	color: #0000FF;
+}
+
+div.contentDiv {
+	color: #505050;
+	background-color: #f0f0f0;
+}

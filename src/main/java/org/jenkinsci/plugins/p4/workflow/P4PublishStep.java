@@ -45,7 +45,7 @@ public class P4PublishStep extends AbstractStepImpl {
 		this.publish = publish;
 	}
 
-	@Extension
+	@Extension(optional = true)
 	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
 		public DescriptorImpl() {

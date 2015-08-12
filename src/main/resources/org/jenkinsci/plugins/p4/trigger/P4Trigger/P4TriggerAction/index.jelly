@@ -1,0 +1,22 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <l:layout>
+        <st:include it="${it.owner}" page="sidepanel.jelly" />
+        <l:main-panel>
+            <h1>${%Last Perforce Change}</h1>
+            <j:set var="log" value="${it.log}" />
+            <j:choose>
+                <j:when test="${empty(log)}">
+                    ${%P4 trigger has not run yet.}
+                </j:when>
+                <j:otherwise>
+                	<link rel="stylesheet" href="${rootURL}/plugin/p4/style.css"></link>
+                	<script type="text/javascript" src="${rootURL}/plugin/p4/script.js"></script>
+                    <pre>
+                        <st:getOutput var="output" />
+                        <j:whitespace>${it.writeLogTo(output)}</j:whitespace>
+                    </pre>
+                </j:otherwise>
+            </j:choose>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

@@ -34,7 +34,7 @@ public class P4TaggingStep extends AbstractStepImpl {
 		return rawLabelDesc;
 	}
 
-	@Extension
+	@Extension(optional = true)
 	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
 		public DescriptorImpl() {
