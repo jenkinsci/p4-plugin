@@ -138,6 +138,7 @@ The Jenkins job can be _pinned_ to a Perforce change or label by setting the `Pi
 
 Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
 
+Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296)
 
 ## Filtering
 
