@@ -142,12 +142,14 @@ public class CheckoutTask extends AbstractTask implements
 		String populateLabel = populate.getPin();
 		if (populateLabel != null && !populateLabel.isEmpty()) {
 			// Expand label with environment vars if one was defined
-			populateLabel = expand.format(populateLabel, false);
-			try {
-				// if build is a change-number passed as a label
-				build = Integer.parseInt(populateLabel);
-			} catch (NumberFormatException e) {
-				build = populateLabel;
+			String expandedPopulateLabel = expand.format(populateLabel, false);
+			if(!expandedPopulateLabel.isEmpty()) {
+				try {
+					// if build is a change-number passed as a label
+					build = Integer.parseInt(expandedPopulateLabel);
+				} catch (NumberFormatException e) {
+					build = expandedPopulateLabel;
+				}
 			}
 		}
 
