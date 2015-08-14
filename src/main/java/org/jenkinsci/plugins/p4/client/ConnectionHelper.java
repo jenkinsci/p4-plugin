@@ -25,6 +25,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.ILabel;
+import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
@@ -44,7 +45,7 @@ public class ConnectionHelper {
 			.getName());
 
 	private boolean abort = false;
-	
+
 	protected final ConnectionConfig connectionConfig;
 	protected final AuthorisationConfig authorisationConfig;
 	protected IOptionsServer connection;
@@ -288,6 +289,12 @@ public class ConnectionHelper {
 		} catch (RequestException e) {
 			return false;
 		}
+	}
+
+	public String getEmail(String userName) throws Exception {
+		IUser user = connection.getUser(userName);
+		String email = user.getEmail();
+		return email;
 	}
 
 	/**

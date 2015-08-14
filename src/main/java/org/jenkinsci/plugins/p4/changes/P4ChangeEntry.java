@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.changes;
 
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.tasks.Mailer.UserProperty;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -59,6 +60,11 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		// set author
 		String user = changelist.getUsername();
 		author = User.get(user);
+
+		// set email property on user
+		String email = p4.getEmail(user);
+		UserProperty userProp = new UserProperty(email);
+		author.addProperty(userProp);
 
 		// set date of change
 		date = changelist.getDate();
