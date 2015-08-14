@@ -43,6 +43,8 @@ public class ConnectionHelper {
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class
 			.getName());
 
+	private boolean abort = false;
+	
 	protected final ConnectionConfig connectionConfig;
 	protected final AuthorisationConfig authorisationConfig;
 	protected IOptionsServer connection;
@@ -101,7 +103,7 @@ public class ConnectionHelper {
 		}
 
 		// Register progress callback
-		IProgressCallback progress = new P4Progress(listener);
+		IProgressCallback progress = new P4Progress(listener, this);
 		this.connection.registerProgressCallback(progress);
 
 		// Register logging callback
@@ -143,7 +145,7 @@ public class ConnectionHelper {
 	public int getRetry() {
 		return p4credential.getRetry();
 	}
-	
+
 	public String getPort() {
 		return p4credential.getP4port();
 	}
@@ -473,5 +475,14 @@ public class ConnectionHelper {
 
 	public void stop() throws Exception {
 		connection.execMapCmd("admin", new String[] { "stop" }, null);
+	}
+
+	public boolean hasAborted() {
+		return abort;
+	}
+
+	public void abort() {
+		this.abort = true;
+		disconnect();
 	}
 }

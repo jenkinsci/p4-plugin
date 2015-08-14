@@ -32,7 +32,7 @@ public abstract class AbstractTask implements Serializable {
 	 * 
 	 * @param p4
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
 
@@ -119,10 +119,19 @@ public abstract class AbstractTask implements Serializable {
 	protected Object tryTask() throws AbortException {
 		ClientHelper p4 = getConnection();
 
+		if (p4.hasAborted()) {
+			String msg = "P4: Previous Task Aborted!";
+			logger.warning(msg);
+			p4.log(msg);
+			p4.disconnect();
+			throw new AbortException(msg);
+		}
+
 		// Check connection (might be on remote slave)
 		if (!checkConnection(p4)) {
 			String msg = "\nP4 Task: Unable to connect.";
 			logger.warning(msg);
+			p4.log(msg);
 			throw new AbortException(msg);
 		}
 
@@ -130,15 +139,27 @@ public abstract class AbstractTask implements Serializable {
 		int attempt = p4.getRetry();
 		Exception last = null;
 		while (trys <= attempt) {
+			trys++;
 			try {
 				Object result = task(p4);
 				p4.disconnect();
+
+				if (p4.hasAborted()) {
+					String msg = "P4: Task Aborted!";
+					logger.warning(msg);
+					p4.log(msg);
+					throw new AbortException(msg);
+				}
+
 				return result;
+			} catch (AbortException e) {
+				throw e;
 			} catch (Exception e) {
 				last = e;
-				String err = "P4 Task: retry: " + trys;
-				logger.severe(err);
-
+				String msg = "P4 Task: attempt: " + trys;
+				logger.severe(msg);
+				p4.log(msg);
+				
 				// back off n^2 seconds, before retry
 				try {
 					TimeUnit.SECONDS.sleep(trys ^ 2);
@@ -152,6 +173,7 @@ public abstract class AbstractTask implements Serializable {
 		String msg = "P4 Task: failed: " + last;
 		last.printStackTrace();
 		logger.warning(msg);
+		p4.log(msg);
 		throw new AbortException(msg);
 	}
 }
