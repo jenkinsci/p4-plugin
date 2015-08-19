@@ -298,83 +298,83 @@ com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) inva
 ### Release 1.2.6 (major features/fixes)
 
 
-[@15347](swarm.workshop.perforce.com/changes/15347) - Moved the Expand setup into labelBuild() in order to pass listener (and not null) to getEnvironment().
+[@15347](https://swarm.workshop.perforce.com/changes/15347) - Moved the Expand setup into labelBuild() in order to pass listener (and not null) to getEnvironment().
 
 
-[@15345](swarm.workshop.perforce.com/changes/15345) - Fixed issue with workflow-plugin when setting changelog to false.
+[@15345](https://swarm.workshop.perforce.com/changes/15345) - Fixed issue with workflow-plugin when setting changelog to false.
 
 
 ### Release 1.2.6 (major features/fixes)
 
-[@15293](swarm.workshop.perforce.com/changes/15293) - Add retry attempts to Perforce Tasks. If a task fails due to an exception then the task will retry based on the value specified in the connection Credential.
+[@15293](https://swarm.workshop.perforce.com/changes/15293) - Add retry attempts to Perforce Tasks. If a task fails due to an exception then the task will retry based on the value specified in the connection Credential.
 
 
-[@15249](swarm.workshop.perforce.com/changes/15249) - Null protection if Label Owner is not set.  Fall back to “unknown” for user.
+[@15249](https://swarm.workshop.perforce.com/changes/15249) - Null protection if Label Owner is not set.  Fall back to “unknown” for user.
 
 
-[@15138](swarm.workshop.perforce.com/changes/15138) - StreamName not shown in Manual Workspace config.
+[@15138](https://swarm.workshop.perforce.com/changes/15138) - StreamName not shown in Manual Workspace config.
 
 
 ### Release 1.2.5 (major features/fixes)
 
-[@14838](swarm.workshop.perforce.com/changes/14838) - Check if the workspace exists before cleanup. JENKINS-29030
+[@14838](https://swarm.workshop.perforce.com/changes/14838) - Check if the workspace exists before cleanup. JENKINS-29030
 
 
-[@14779](swarm.workshop.perforce.com/changes/14779) - Add shelved changes to built changes list. JENKINS-25724
+[@14779](https://swarm.workshop.perforce.com/changes/14779) - Add shelved changes to built changes list. JENKINS-25724
 
 
-[@14173](swarm.workshop.perforce.com/changes/14173) - Support P4D 15.1 'reconcile -m'. Client workspace MODTIME option is no longer required with -m.
+[@14173](https://swarm.workshop.perforce.com/changes/14173) - Support P4D 15.1 'reconcile -m'. Client workspace MODTIME option is no longer required with -m.
 
 
-[@14150](swarm.workshop.perforce.com/changes/14150) - URL Encode/Decode the depot path for changes. Filenames with ampersands was causing Jelly to break when showing the change detail. JENKINS-29017
+[@14150](https://swarm.workshop.perforce.com/changes/14150) - URL Encode/Decode the depot path for changes. Filenames with ampersands was causing Jelly to break when showing the change detail. JENKINS-29017
 
 
-[@14040](swarm.workshop.perforce.com/changes/14040) - Delay polling if a build is in progress.
+[@14040](https://swarm.workshop.perforce.com/changes/14040) - Delay polling if a build is in progress.
 
 
-[@14035](swarm.workshop.perforce.com/changes/14035) - Publish on Success option. Added a checkbox to the Publish step to only shelve/submit change if the build succeeded.
+[@14035](https://swarm.workshop.perforce.com/changes/14035) - Publish on Success option. Added a checkbox to the Publish step to only shelve/submit change if the build succeeded.
 
 
-[@13994](swarm.workshop.perforce.com/changes/13994) - Make TaskListener as transient.
+[@13994](https://swarm.workshop.perforce.com/changes/13994) - Make TaskListener as transient.
 
 
 ### Release 1.2.4 (major features/fixes)
 
-[@13800](swarm.workshop.perforce.com/changes/13800) - 
+[@13800](https://swarm.workshop.perforce.com/changes/13800) - 
 Updated P4Java to 15.1
 
 
-[@13795](swarm.workshop.perforce.com/changes/13795) - 
+[@13795](https://swarm.workshop.perforce.com/changes/13795) - 
 (matthauck) Fix JENKINS-28760: Set line endings explicitly for template workspaces
 
 
-[@13777](swarm.workshop.perforce.com/changes/13777) - 
+[@13777](https://swarm.workshop.perforce.com/changes/13777) - 
 (matthauck) Fix JENKINS-28726: Allow for default matrix execution strategy
 
 
-[@13701](swarm.workshop.perforce.com/changes/13701) - 
+[@13701](https://swarm.workshop.perforce.com/changes/13701) - 
 Move Labelling into a Task.
 
 
-[@13681](swarm.workshop.perforce.com/changes/13681) - 
+[@13681](https://swarm.workshop.perforce.com/changes/13681) - 
 Abstracted Expand class from Workspace.  Added support for Label variable expansion in the name and description.
 
 
-[@13676](swarm.workshop.perforce.com/changes/13676) - 
+[@13676](https://swarm.workshop.perforce.com/changes/13676) - 
 Added support for `p4 clean`. If the Perforce server is 14.1 or greater then the `-w` flag is used (p4 clean), otherwise the original auto clean up code.
 
 
 ### Release 1.2.3 (major features/fixes)
 
-[@13619](swarm.workshop.perforce.com/changes/13619) - 
+[@13619](https://swarm.workshop.perforce.com/changes/13619) - 
 Document building at a change. JENKINS-28301
 
 
-[@13604](swarm.workshop.perforce.com/changes/13604) - 
+[@13604](https://swarm.workshop.perforce.com/changes/13604) - 
 Improved error handling and fixed test case issue.
 
 
-[@13603](swarm.workshop.perforce.com/changes/13603) - 
+[@13603](https://swarm.workshop.perforce.com/changes/13603) - 
 Improved Error for Publish step when connection is down.
 
 
