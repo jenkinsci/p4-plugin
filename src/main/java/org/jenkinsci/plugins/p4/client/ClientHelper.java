@@ -181,6 +181,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Test to see if workspace is at the latest revision.
+	 *
 	 * @throws Exception
 	 */
 	private boolean syncHaveList(List<IFileSpec> files, Populate populate)
@@ -232,6 +233,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Cleans up the Perforce workspace after a previous build. Removes all
 	 * pending and abandoned files (equivalent to 'p4 revert -w').
+	 *
 	 * @throws Exception
 	 */
 	public void tidyWorkspace(Populate populate) throws Exception {
@@ -557,6 +559,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Workaround for p4java bug. The 'setLocalSyntax(true)' option does not
 	 * provide local syntax, so I have to use 'p4 where' to translate through
 	 * the client view.
+	 *
 	 * @param fileSpec
 	 * @return
 	 * @throws Exception
@@ -602,6 +605,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Unshelve review into workspace. Workspace is sync'ed to head first then
 	 * review unshelved.
+	 *
 	 * @param review
 	 * @throws Exception
 	 */
@@ -644,6 +648,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Get the change number for the last change within the scope of the
 	 * workspace view.
+	 *
 	 * @return
 	 * @throws Exception
 	 */
@@ -672,6 +677,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Show all changes within the scope of the client, between the 'from' and
 	 * 'to' change limits.
+	 *
 	 * @param from
 	 * @return
 	 * @throws Exception
@@ -692,6 +698,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Show all changes within the scope of the client, from the 'from' change
 	 * limits.
+	 *
 	 * @param from
 	 * @return
 	 * @throws Exception
@@ -732,6 +739,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Fetches a list of changes needed to update the workspace to head.
+	 *
 	 * @return
 	 * @throws Exception
 	 */
@@ -743,6 +751,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number or label.
+	 *
 	 * @param changeLimit
 	 * @return
 	 * @throws Exception
@@ -756,7 +765,7 @@ public class ClientHelper extends ConnectionHelper {
 	private List<Integer> listHaveChanges(String fileSpec) throws Exception {
 		List<Integer> haveChanges = new ArrayList<Integer>();
 		Map<String, Object>[] map;
-		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
+		map = connection.execMapCmd("cstat", new String[]{ fileSpec }, null);
 
 		for (Map<String, Object> entry : map) {
 			String status = (String) entry.get("status");
@@ -781,6 +790,7 @@ public class ClientHelper extends ConnectionHelper {
 			if (workspace instanceof TemplateWorkspaceImpl) {
 				TemplateWorkspaceImpl template = ((TemplateWorkspaceImpl) workspace);
 				String name = template.getTemplateName();
+				msg = "P4: Template workspace not found: " + name;
 			} else {
 				String name = workspace.getFullName();
 				msg = "P4: Unable to use workspace: " + name;
