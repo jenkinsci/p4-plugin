@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.export.Exported;
@@ -23,6 +24,9 @@ import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
+
+	private static Logger logger = Logger.getLogger(P4ChangeEntry.class
+			.getName());
 
 	private int FILE_COUNT_LIMIT = 50;
 
@@ -62,9 +66,14 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		author = User.get(user);
 
 		// set email property on user
-		String email = p4.getEmail(user);
-		UserProperty userProp = new UserProperty(email);
-		author.addProperty(userProp);
+		UserProperty prop = author.getProperty(UserProperty.class);
+		if (prop == null || prop.getAddress() == null
+				|| prop.getAddress().isEmpty()) {
+			String email = p4.getEmail(user);
+			UserProperty userProp = new UserProperty(email);
+			author.addProperty(userProp);
+			logger.fine("Setting email for user: " + user + ":" + email);
+		}
 
 		// set date of change
 		date = changelist.getDate();
