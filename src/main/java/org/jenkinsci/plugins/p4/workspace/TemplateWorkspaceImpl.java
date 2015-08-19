@@ -50,8 +50,12 @@ public class TemplateWorkspaceImpl extends Workspace {
 	@Override
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
+
+		// Expand env variables in Template name
+		Expand expand = getExpand();
+		String template = expand.format(getTemplateName(), false);
+
 		// Check template exists or exit early
-		String template = getTemplateName();
 		IClient itemplate = connection.getClient(template);
 		if (itemplate == null) {
 			return null;
