@@ -90,6 +90,41 @@ In this mode the workspace View is generated using the specified template worksp
 
 ![Stream config](docs/images/6.png)
 
+## Variable expansion
+
+Many of the workspace fields can include environment variables to help define their  value.  Take the 'Worksapce name' often I use:
+
+    jenkins-${NODE_NAME}-${JOB_NAME}
+    
+If the job is called 'foo' and built on a slave 'linux' it expands to:
+
+    jenkins-linux-foo
+       
+Jenkins provides a set of environment variable and you can also define your own. Here is a list of built in variables:
+
+`BUILD_NUMBER` - The current build number, such as "153"  
+`BUILD_ID` - The current build id, such as "2005-08-22_23-59-59"  
+`BUILD_DISPLAY_NAME` - The name of the current build, something like "#153".  
+`JOB_NAME` - Name of the project of this build, such as "foo"  
+`BUILD_TAG` - String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}".  
+`EXECUTOR_NUMBER` - The unique number that identifies the current executor.  
+`NODE_NAME` - Name of the slave or "master".  
+`NODE_LABELS` - Whitespace-separated list of labels that the node is assigned.  
+`WORKSPACE` - Absolute path of the build as a workspace.  
+`JENKINS_HOME` - Absolute path on the master node for Jenkins to store data.  
+`JENKINS_URL` - URL of Jenkins, like http://server:port/jenkins/  
+`BUILD_URL` - Full URL of this build, like http://server:port/jenkins/job/foo/15/  
+`JOB_URL` - Full URL of this job, like http://server:port/jenkins/job/foo/  
+
+The p4 plugin allows the use of environemnt vaiables in fields like the Workspace view and Stream path.  For example:
+
+    //depot/main/proj/... //jenkins-${NODE_NAME}-${JOB_NAME}/...
+    
+or with a Matrix build you might have defined your own variables like `${OS}`.  Remember they can be used anywhere in the mapping:
+
+    //depot/main/${JOB_NAME}/bin.${OS}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${OS}/bin/${OS}/... 
+
+
 ## Populating
 
 Perforce will populate the workspace with the file revisions needed for the build, the way the workspace is populated is configured on the Jenkin Job configuration page and support the following behaviours:
@@ -295,8 +330,36 @@ com.perforce.p4java.exception.AccessException: Perforce password (P4PASSWD) inva
 
 ## Release notes
 
-### Release 1.2.6 (major features/fixes)
+### Release 1.3.0 (major features/fixes)
 
+[@15515](swarm.workshop.perforce.com/changes/15515) - Update P4Java to 2015.1.1210288
+
+
+[@15503](swarm.workshop.perforce.com/changes/15503) - Created P4UserProperty to store Email address. P4UserProperty extends UserProperty to store the Perforce User’s email. Then retrieves it with P4AddressResolver by extending MailAddressResolver. JENKINS-28421
+
+
+[@15491](swarm.workshop.perforce.com/changes/15491) - This fix is to expand the Template name. @mjoubert When using a Template the name does not expand (unlike the client name) if it contains variables.
+
+
+[@15490](swarm.workshop.perforce.com/changes/15490) - Check for empty param values. JENKINS-29943
+
+
+[@15430](swarm.workshop.perforce.com/changes/15430) - Trap User Abort and stop Perforce. Uses the ‘tick’ function on Progress to check if the Thread has been interrupted. If a user aborts the build then the Perforce connection is dropped at the next tick. JENKINS-26650
+
+
+[@15419](swarm.workshop.perforce.com/changes/15419) - Updates README with 'change' vs 'P4_CHANGELIST' issue
+
+
+[@15403](swarm.workshop.perforce.com/changes/15403) - Perforce triggered polling BETA. Perforce triggers on a change-submit and sends a POST to the endpoint http://${JENKINS}/p4/change with the data: payload={"change":"12345","p4port":"localhost:1666"}.  Note: ‘change’ is not used (yet).
+
+
+[@15394](swarm.workshop.perforce.com/changes/15394) - Workflow-DSL functionality. Tested workflow DSL against 1.596.1 older functionality tested against 1.580.1 @sven_erik_knop
+
+
+[@15379](swarm.workshop.perforce.com/changes/15379) - Ground-work for Workflow-DSL @sven_erik_knop
+
+
+### Release 1.2.7 (major features/fixes)
 
 [@15347](https://swarm.workshop.perforce.com/changes/15347) - Moved the Expand setup into labelBuild() in order to pass listener (and not null) to getEnvironment().
 
