@@ -6,6 +6,8 @@ import hudson.model.Descriptor;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.StringUtils;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -49,11 +51,11 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl>
 	}
 
 	public boolean isTicketValueSet() {
-		return getTicketValue() != null;
+		return !StringUtils.isEmpty(getTicketValue());
 	}
 
 	public boolean isTicketPathSet() {
-		return getTicketValue() == null;
+		return !StringUtils.isEmpty(getTicketPath());
 	}
 
 	@Extension
