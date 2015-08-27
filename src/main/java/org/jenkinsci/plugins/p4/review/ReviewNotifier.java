@@ -1,109 +1,75 @@
 package org.jenkinsci.plugins.p4.review;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.Launcher;
 import hudson.matrix.MatrixRun;
-import hudson.model.BuildListener;
-import hudson.model.Environment;
 import hudson.model.Result;
-import hudson.model.AbstractBuild;
+import hudson.model.TaskListener;
 import hudson.model.Run;
-import hudson.model.Run.RunnerAbortedException;
 import hudson.model.listeners.RunListener;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.logging.Logger;
 
 import jenkins.model.Jenkins;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.message.BasicNameValuePair;
-
 @Extension
-@SuppressWarnings("rawtypes")
 public class ReviewNotifier extends RunListener<Run> {
 
 	private static Logger logger = Logger.getLogger(ReviewNotifier.class
 			.getName());
 
-	private String rootUrl = Jenkins.getInstance().getRootUrl();
-	private String fail;
-	private String pass;
-
-	public ReviewNotifier() {
-		super(Run.class);
-	}
-
 	@Override
-	public Environment setUpEnvironment(AbstractBuild build, Launcher launcher,
-			BuildListener listener) throws IOException, InterruptedException,
-			RunnerAbortedException {
+	public void onCompleted(Run run, TaskListener listener) {
 
-		// Ensure Urls are reset from previous build
-		fail = null;
-		pass = null;
-
-		@SuppressWarnings("unchecked")
-		Map<String, String> map = build.getBuildVariables();
-		if (map != null) {
-			if (map.containsKey(ReviewProp.FAIL.getProp())) {
-				fail = map.get(ReviewProp.FAIL.getProp());
-			}
-			if (map.containsKey(ReviewProp.PASS.getProp())) {
-				pass = map.get(ReviewProp.PASS.getProp());
-			}
-		}
-
-		return new Environment() {
-		};
-	}
-
-	@Override
-	public void onFinalized(Run r) {
-
-		if (r instanceof MatrixRun) {
+		if (run instanceof MatrixRun) {
 			return;
 		}
 
-		String url = fail;
-
-		Result result = r.getResult();
-		if (result.equals(Result.SUCCESS)) {
-			url = pass;
-		}
-
 		try {
+			EnvVars env = run.getEnvironment(listener);
+			String fail = env.get(ReviewProp.FAIL.getProp());
+			String pass = env.get(ReviewProp.PASS.getProp());
+
+			Result result = run.getResult();
+			String url = (result.equals(Result.SUCCESS)) ? pass : fail;
+
 			if (url != null && !url.isEmpty()) {
+				String rootUrl = Jenkins.getInstance().getRootUrl();
 				if (rootUrl == null) {
 					postURL(url, null);
 				} else {
-					String path = r.getUrl();
+					String path = run.getUrl();
 					postURL(url, rootUrl + path);
 				}
 			}
 		} catch (Exception e) {
+			logger.warning("Unable to Notify Review");
 			e.printStackTrace();
 		}
 		return;
 	}
 
-	private void postURL(String url, String buildUrl) throws Exception {
-		HttpClient client = HttpClientBuilder.create().build();
-		HttpPost post = new HttpPost(url);
-		if (buildUrl != null) {
-			ArrayList<NameValuePair> postParameters;
-			postParameters = new ArrayList<NameValuePair>();
-			postParameters.add(new BasicNameValuePair("url", buildUrl));
-			post.setEntity(new UrlEncodedFormEntity(postParameters, "UTF-8"));
-		}
-		HttpResponse response = client.execute(post);
+	private void postURL(String postUrl, String buildUrl) throws Exception {
+		logger.info("ReviewNotifier: " + postUrl + " url=" + buildUrl);
+
+		URL url = new URL(postUrl);
+
+		HttpURLConnection http = (HttpURLConnection) url.openConnection();
+		http.setDoInput(true);
+		http.setDoOutput(true);
+		http.setUseCaches(false);
+		http.setRequestMethod("POST");
+		http.connect();
+
+		OutputStreamWriter writer = new OutputStreamWriter(http.getOutputStream());
+		writer.write("url=" + buildUrl);
+		writer.flush();
+		writer.close();
+		
+		int response = http.getResponseCode();
 		logger.info("Response code: " + response);
 	}
 }
