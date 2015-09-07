@@ -106,8 +106,9 @@ public class ManualWorkspaceImpl extends Workspace {
 
 	private ClientLineEnd parseLineEnd(String line) {
 		for (ClientLineEnd end : ClientLineEnd.values()) {
-			end.name().equalsIgnoreCase(line);
-			return end;
+			if (end.name().equalsIgnoreCase(line)) {
+				return end;
+			}
 		}
 		return ClientLineEnd.LOCAL;
 	}
