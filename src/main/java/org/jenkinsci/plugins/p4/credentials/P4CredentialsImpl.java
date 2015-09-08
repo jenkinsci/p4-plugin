@@ -20,19 +20,19 @@ public class P4CredentialsImpl {
 	static public ListBoxModel doFillCredentialItems() {
 		ListBoxModel list = new ListBoxModel();
 
-		Class<P4StandardCredentials> type = P4StandardCredentials.class;
+		Class<P4BaseCredentials> type = P4BaseCredentials.class;
 		Jenkins scope = Jenkins.getInstance();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
-		List<P4StandardCredentials> credentials;
+		List<P4BaseCredentials> credentials;
 		credentials = CredentialsProvider.lookupCredentials(type, scope,
 				acl, domain);
 
 		if (credentials.isEmpty()) {
 			list.add("Select credential...", null);
 		}
-		for (P4StandardCredentials c : credentials) {
+		for (P4BaseCredentials c : credentials) {
 			StringBuffer sb = new StringBuffer();
 			sb.append(c.getDescription());
 			sb.append(" (");

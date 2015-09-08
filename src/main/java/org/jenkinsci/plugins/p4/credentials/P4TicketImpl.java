@@ -16,31 +16,28 @@ import org.kohsuke.stapler.QueryParameter;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class P4TicketImpl extends P4StandardCredentials {
+public class P4TicketImpl extends P4BaseCredentials {
 
 	/**
 	 * Ensure consistent serialisation.
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@NonNull
+	@CheckForNull
 	private final TicketModeImpl ticket;
 
 	@DataBoundConstructor
-	public P4TicketImpl(@CheckForNull CredentialsScope scope,
-			@CheckForNull String id, @CheckForNull String description,
+	public P4TicketImpl(CredentialsScope scope, String id, String description,
 			@CheckForNull String p4port, TrustImpl ssl,
 			@CheckForNull String username, @CheckForNull String retry,
 			TicketModeImpl ticket) {
 
 		super(scope, id, description, p4port, ssl, username, retry);
 		this.ticket = ticket;
-
 	}
 
-	@NonNull
+	@CheckForNull
 	public String getTicketValue() {
 		return ticket.getTicketValue();
 	}
@@ -49,7 +46,7 @@ public class P4TicketImpl extends P4StandardCredentials {
 		return ticket.isTicketValueSet();
 	}
 
-	@NonNull
+	@CheckForNull
 	public String getTicketPath() {
 		return ticket.getTicketPath();
 	}
@@ -59,11 +56,20 @@ public class P4TicketImpl extends P4StandardCredentials {
 	}
 
 	@Extension
-	public static class DescriptorImpl extends P4CredentialsDescriptor {
+	public static class DescriptorImpl extends
+			BaseStandardCredentialsDescriptor {
 
 		@Override
 		public String getDisplayName() {
 			return "Perforce Ticket Credential";
+		}
+
+		public FormValidation doCheckP4port(@QueryParameter String value) {
+			if (value != null && value.startsWith("ssl:")) {
+				return FormValidation
+						.error("Do not prefix P4PORT with 'ssl:', use the SSL checkbox.");
+			}
+			return FormValidation.ok();
 		}
 
 		public FormValidation doTestConnection(

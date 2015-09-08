@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.p4.client;
 
 import java.io.Serializable;
 
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 public class ConnectionConfig implements Serializable {
 
@@ -13,7 +13,7 @@ public class ConnectionConfig implements Serializable {
 	private final String serverUri;
 	private final String trust;
 
-	public ConnectionConfig(P4StandardCredentials credential) {
+	public ConnectionConfig(P4BaseCredentials credential) {
 		this.p4port = credential.getP4port();
 		this.ssl = credential.isSsl();
 		this.trust = credential.getTrust();

@@ -5,7 +5,7 @@ import hudson.util.Secret;
 import java.io.Serializable;
 
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4TicketImpl;
 
 public class AuthorisationConfig implements Serializable {
@@ -19,7 +19,7 @@ public class AuthorisationConfig implements Serializable {
 	private String ticketPath;
 	private String client;
 
-	public AuthorisationConfig(P4StandardCredentials credential) {
+	public AuthorisationConfig(P4BaseCredentials credential) {
 		if (credential instanceof P4PasswordImpl) {
 			P4PasswordImpl p = (P4PasswordImpl) credential;
 			this.type = AuthorisationType.PASSWORD;

@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 public abstract class AbstractTask implements Serializable {
@@ -21,7 +21,7 @@ public abstract class AbstractTask implements Serializable {
 	private static Logger logger = Logger.getLogger(AbstractTask.class
 			.getName());
 
-	private P4StandardCredentials credential;
+	private P4BaseCredentials credential;
 	private TaskListener listener;
 	private String client;
 
@@ -36,7 +36,7 @@ public abstract class AbstractTask implements Serializable {
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
 
-	public P4StandardCredentials getCredential() {
+	public P4BaseCredentials getCredential() {
 		return credential;
 	}
 

@@ -17,39 +17,47 @@ import org.kohsuke.stapler.QueryParameter;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
-public class P4PasswordImpl extends P4StandardCredentials {
+public class P4PasswordImpl extends P4BaseCredentials {
 
 	/**
 	 * Ensure consistent serialisation.
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@NonNull
+	@CheckForNull
 	private final Secret password;
 
 	@DataBoundConstructor
-	public P4PasswordImpl(@CheckForNull CredentialsScope scope,
-			@CheckForNull String id, @CheckForNull String description,
-			@CheckForNull String p4port, TrustImpl ssl,
+	public P4PasswordImpl(CredentialsScope scope, String id,
+			String description, @CheckForNull String p4port, TrustImpl ssl,
 			@CheckForNull String username, @CheckForNull String retry,
 			@CheckForNull String password) {
+
 		super(scope, id, description, p4port, ssl, username, retry);
 		this.password = Secret.fromString(password);
 	}
 
-	@NonNull
+	@CheckForNull
 	public Secret getPassword() {
 		return password;
 	}
 
 	@Extension
-	public static class DescriptorImpl extends P4CredentialsDescriptor {
+	public static class DescriptorImpl extends
+			BaseStandardCredentialsDescriptor {
 
 		@Override
 		public String getDisplayName() {
 			return "Perforce Password Credential";
+		}
+
+		public FormValidation doCheckP4port(@QueryParameter String value) {
+			if (value != null && value.startsWith("ssl:")) {
+				return FormValidation
+						.error("Do not prefix P4PORT with 'ssl:', use the SSL checkbox.");
+			}
+			return FormValidation.ok();
 		}
 
 		public FormValidation doTestConnection(

@@ -30,7 +30,7 @@ public class PerforceCredentialsTest {
 
 	@Test
 	public void testAddStandardCredentials() throws IOException {
-		P4StandardCredentials credential = new P4PasswordImpl(
+		P4BaseCredentials credential = new P4PasswordImpl(
 				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhost:1666",
 				null, "user", "0", "pass");
 
@@ -46,7 +46,7 @@ public class PerforceCredentialsTest {
 		assertEquals("desc:passwd", credential.getDescription());
 		assertEquals("id", credential.getId());
 
-		List<P4StandardCredentials> list = lookupCredentials();
+		List<P4BaseCredentials> list = lookupCredentials();
 		assertEquals("localhost:1666", list.get(0).getP4port());
 		assertEquals("user", list.get(0).getUsername());
 		assertFalse(list.get(0).isSsl());
@@ -157,8 +157,8 @@ public class PerforceCredentialsTest {
 		assertEquals("~/.p4ticket", auth.getTicketPath());
 	}
 
-	private List<P4StandardCredentials> lookupCredentials() {
-		Class<P4StandardCredentials> type = P4StandardCredentials.class;
+	private List<P4BaseCredentials> lookupCredentials() {
+		Class<P4BaseCredentials> type = P4BaseCredentials.class;
 		Jenkins scope = Jenkins.getInstance();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();

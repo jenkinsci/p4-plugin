@@ -26,7 +26,7 @@ import jenkins.triggers.SCMTriggerItem;
 import org.apache.commons.jelly.XMLOutput;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class P4Trigger extends Trigger<Job<?, ?>> {
@@ -92,7 +92,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 			if (scm instanceof PerforceScm) {
 				PerforceScm p4scm = (PerforceScm) scm;
 				String id = p4scm.getCredential();
-				P4StandardCredentials credential = ConnectionHelper
+				P4BaseCredentials credential = ConnectionHelper
 						.findCredential(id);
 				if (port.equals(credential.getP4port())) {
 					return true;

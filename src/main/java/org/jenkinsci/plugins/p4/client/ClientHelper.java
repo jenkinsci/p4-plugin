@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
@@ -61,7 +61,7 @@ public class ClientHelper extends ConnectionHelper {
 		clientLogin(client);
 	}
 
-	public ClientHelper(P4StandardCredentials credential,
+	public ClientHelper(P4BaseCredentials credential,
 			TaskListener listener, String client) {
 		super(credential, listener);
 		clientLogin(client);

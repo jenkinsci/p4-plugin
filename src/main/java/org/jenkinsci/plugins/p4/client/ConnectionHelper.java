@@ -18,7 +18,7 @@ import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
-import org.jenkinsci.plugins.p4.credentials.P4StandardCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
@@ -50,18 +50,18 @@ public class ConnectionHelper {
 	protected final AuthorisationConfig authorisationConfig;
 	protected IOptionsServer connection;
 	protected final TaskListener listener;
-	protected final P4StandardCredentials p4credential;
+	protected final P4BaseCredentials p4credential;
 
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
-		P4StandardCredentials credential = findCredential(credentialID);
+		P4BaseCredentials credential = findCredential(credentialID);
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
 	}
 
-	public ConnectionHelper(P4StandardCredentials credential,
+	public ConnectionHelper(P4BaseCredentials credential,
 			TaskListener listener) {
 		this.listener = listener;
 		this.p4credential = credential;
@@ -70,7 +70,7 @@ public class ConnectionHelper {
 		connectionRetry();
 	}
 
-	public ConnectionHelper(P4StandardCredentials credential) {
+	public ConnectionHelper(P4BaseCredentials credential) {
 		this.listener = new LogTaskListener(logger, Level.INFO);
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
@@ -456,16 +456,16 @@ public class ConnectionHelper {
 	 * 
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
-	public static P4StandardCredentials findCredential(String id) {
-		Class<P4StandardCredentials> type = P4StandardCredentials.class;
+	public static P4BaseCredentials findCredential(String id) {
+		Class<P4BaseCredentials> type = P4BaseCredentials.class;
 		Jenkins scope = Jenkins.getInstance();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
-		List<P4StandardCredentials> list;
+		List<P4BaseCredentials> list;
 		list = CredentialsProvider.lookupCredentials(type, scope, acl, domain);
 
-		for (P4StandardCredentials c : list) {
+		for (P4BaseCredentials c : list) {
 			if (c.getId().equals(id)) {
 				return c;
 			}
