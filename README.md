@@ -175,6 +175,20 @@ Alternativly, a change or label can be passed using the `Build Review` paramiter
 
 Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296)
 
+### Parallel builds
+
+The plugin supports parallel execution of Jenkins Jobs.  Jenkins will create a new workspace directory `workspace@2` and so on.  The plugin will automatically template the current workspace appending `.clone2` for the templates' name.
+
+### Custom parellel builds
+
+For custom workspaces, where an alternative location has been set e.g. _Advanced_ --> _Use custom workspace_ --> _Provide a Directory_.  Then you will need to add the executor number to the end of your path.  
+
+For example:
+
+    /Users/pallen/Workspaces/custom@${EXECUTOR_NUMBER}
+    
+The plugin will then correctly template the workspaces as needed.
+
 ## Filtering
 
 When polling is used, changes can be filtered to not trigger a build; the filters are configured on the Jenkin Job configuration page and support the following types:
