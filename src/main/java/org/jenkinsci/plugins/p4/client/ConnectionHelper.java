@@ -61,8 +61,7 @@ public class ConnectionHelper {
 		connectionRetry();
 	}
 
-	public ConnectionHelper(P4BaseCredentials credential,
-			TaskListener listener) {
+	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
 		this.listener = listener;
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
@@ -153,6 +152,16 @@ public class ConnectionHelper {
 
 	public String getTrust() throws Exception {
 		return connection.getTrust();
+	}
+
+	public String getTicket() {
+		try {
+			if (login()) {
+				return connection.getAuthTicket();
+			}
+		} catch (Exception e) {
+		}
+		return null;
 	}
 
 	public boolean isConnected() {

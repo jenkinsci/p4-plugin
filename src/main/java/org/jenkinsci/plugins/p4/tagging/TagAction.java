@@ -15,6 +15,7 @@ import javax.servlet.ServletException;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -82,7 +83,7 @@ public class TagAction extends AbstractScmTagAction {
 		task.setBuildChange(buildChange);
 
 		FilePath buildWorkspace = nodeWorkspace;
-		if( nodeWorkspace == null) {
+		if (nodeWorkspace == null) {
 			buildWorkspace = build.getWorkspace();
 		}
 
@@ -122,14 +123,25 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public String getPort() {
-		ConnectionHelper p4 = new ConnectionHelper(credential, null);
-		String p4port = p4.getPort();
-		p4.disconnect();
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
+		String p4port = auth.getP4port();
 		return p4port;
 	}
 
 	public String getClient() {
 		return client;
+	}
+
+	public String getUser() {
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
+		String p4user = auth.getUsername();
+		return p4user;
+	}
+
+	public String getTicket() {
+		ConnectionHelper p4 = new ConnectionHelper(credential, null);
+		String p4ticket = p4.getTicket();
+		return p4ticket;
 	}
 
 	public String getTag() {
