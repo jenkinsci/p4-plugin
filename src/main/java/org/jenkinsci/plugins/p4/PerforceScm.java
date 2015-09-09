@@ -52,6 +52,7 @@ import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.HostnameTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -249,14 +250,31 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
+		// Clone workspace (this SCM object seems to get reused)
+		Workspace ws = (Workspace) workspace.clone();
+
 		// Set environment
 		EnvVars envVars = run.getEnvironment(listener);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
-
-		Workspace ws = (Workspace) workspace.clone();
 		ws.setExpand(envVars);
 
-		ws.setRootPath(buildWorkspace.getRemote());
+		// Set workspace root (check for parallel execution)
+		String root = buildWorkspace.getRemote();
+		if (root.contains("@")) {
+			root = root.replace("@", "%40");
+			String client = ws.getFullName();
+			String name = buildWorkspace.getName();
+			String[] parts = name.split("@");
+			String exec = parts[1];
+
+			// Template workspace to .cloneN (where N is the @ number)
+			String charset = ws.getCharset();
+			boolean pin = ws.isPinHost();
+			String template = client + ".clone" + exec;
+			ws = new TemplateWorkspaceImpl(charset, pin, client, template);
+			ws.setExpand(envVars);
+		}
+		ws.setRootPath(root);
 
 		if (ws.isPinHost()) {
 			String hostname = getHostName(buildWorkspace);
