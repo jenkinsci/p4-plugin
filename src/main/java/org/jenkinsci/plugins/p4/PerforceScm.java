@@ -251,6 +251,11 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
+		// Create task
+		CheckoutTask task = new CheckoutTask(populate);
+		task.setListener(listener);
+		task.setCredential(credential);
+
 		// Clone workspace (this SCM object seems to get reused)
 		Workspace ws = (Workspace) workspace.clone();
 
@@ -267,6 +272,9 @@ public class PerforceScm extends SCM {
 			String name = buildWorkspace.getName();
 			String[] parts = name.split("@");
 			String exec = parts[1];
+
+			// Update Workspace before cloning
+			task.setWorkspace(ws);
 
 			// Template workspace to .cloneN (where N is the @ number)
 			String charset = ws.getCharset();
@@ -292,10 +300,7 @@ public class PerforceScm extends SCM {
 			}
 		}
 
-		// Create task
-		CheckoutTask task = new CheckoutTask(populate);
-		task.setListener(listener);
-		task.setCredential(credential);
+		// Set workspace used for the Task
 		task.setWorkspace(ws);
 		task.initialise();
 
