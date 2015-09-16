@@ -51,7 +51,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 		return history;
 	}
 
-	public static void store(File file, List<Object> changes) {
+	public static void store(File file, List<P4ChangeEntry> changes) {
 		try {
 			FileOutputStream o = new FileOutputStream(file);
 			BufferedOutputStream b = new BufferedOutputStream(o);
@@ -62,52 +62,42 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 			stream.println("<?xml version='1.0' encoding='UTF-8'?>");
 			stream.println("<changelog>");
-			for (Object change : changes) {
+			for (P4ChangeEntry cl : changes) {
 				stream.println("\t<entry>");
-				if (change instanceof String) {
-					stream.println("\t\t<label>" + change + "</label>");
-				} else if (change instanceof P4ChangeEntry) {
-					P4ChangeEntry cl = (P4ChangeEntry) change;
-					stream.println("\t\t<changenumber><changeInfo>"
-							+ cl.getId() + "</changeInfo>");
-					stream.println("\t\t<clientId>" + cl.getClientId()
-							+ "</clientId>");
+				stream.println("\t\t<changenumber><changeInfo>" + cl.getId()
+						+ "</changeInfo>");
+				stream.println("\t\t<clientId>" + cl.getClientId()
+						+ "</clientId>");
 
-					stream.println("\t\t<msg>"
-							+ StringEscapeUtils.escapeXml(cl.getMsg())
-							+ "</msg>");
-					stream.println("\t\t<changeUser>"
-							+ StringEscapeUtils.escapeXml(cl.getAuthor()
-									.getDisplayName()) + "</changeUser>");
+				stream.println("\t\t<msg>"
+						+ StringEscapeUtils.escapeXml(cl.getMsg()) + "</msg>");
+				stream.println("\t\t<changeUser>"
+						+ StringEscapeUtils.escapeXml(cl.getAuthor()
+								.getDisplayName()) + "</changeUser>");
 
-					stream.println("\t\t<changeTime>"
-							+ StringEscapeUtils.escapeXml(cl.getChangeTime())
-							+ "</changeTime>");
+				stream.println("\t\t<changeTime>"
+						+ StringEscapeUtils.escapeXml(cl.getChangeTime())
+						+ "</changeTime>");
 
-					stream.println("\t\t<shelved>" + cl.isShelved()
-							+ "</shelved>");
+				stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 
-					stream.println("\t\t<files>");
-					for (IFileSpec filespec : cl.getFiles()) {
-						FileAction action = filespec.getAction();
-						int revision = filespec.getEndRevision();
+				stream.println("\t\t<files>");
+				for (IFileSpec filespec : cl.getFiles()) {
+					FileAction action = filespec.getAction();
+					int revision = filespec.getEndRevision();
 
-						// URL encode depot path
-						String depotPath = filespec.getDepotPathString();
-						String safePath = URLEncoder.encode(depotPath, "UTF-8");
+					// URL encode depot path
+					String depotPath = filespec.getDepotPathString();
+					String safePath = URLEncoder.encode(depotPath, "UTF-8");
 
-						stream.println("\t\t<file endRevision=\"" + revision
-								+ "\" action=\"" + action.name()
-								+ "\" depot=\"" + safePath + "\" />");
-					}
-					stream.println("\t\t</files>");
-
-					stream.println("\t\t</changenumber>");
-
-				} else {
-					stream.println("\t\t<changenumber>" + change
-							+ "</changenumber>");
+					stream.println("\t\t<file endRevision=\"" + revision
+							+ "\" action=\"" + action.name() + "\" depot=\""
+							+ safePath + "\" />");
 				}
+				stream.println("\t\t</files>");
+
+				stream.println("\t\t</changenumber>");
+
 				stream.println("\t</entry>");
 			}
 			stream.println("</changelog>");

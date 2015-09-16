@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
@@ -61,8 +62,8 @@ public class ClientHelper extends ConnectionHelper {
 		clientLogin(client);
 	}
 
-	public ClientHelper(P4BaseCredentials credential,
-			TaskListener listener, String client) {
+	public ClientHelper(P4BaseCredentials credential, TaskListener listener,
+			String client) {
 		super(credential, listener);
 		clientLogin(client);
 	}
@@ -138,13 +139,13 @@ public class ClientHelper extends ConnectionHelper {
 	 *            Populate strategy
 	 * @throws Exception
 	 */
-	public void syncFiles(Object buildChange, Populate populate)
+	public void syncFiles(P4Revision buildChange, Populate populate)
 			throws Exception {
 		TimeTask timer = new TimeTask();
 
 		// test label is valid
-		if (buildChange instanceof String) {
-			String label = (String) buildChange;
+		if (buildChange.isLabel()) {
+			String label = buildChange.toString();
 			try {
 				int change = Integer.parseInt(label);
 				log("P4 Task: label is a number! syncing files at change: "
@@ -258,7 +259,7 @@ public class ClientHelper extends ConnectionHelper {
 		tidyPending(files);
 
 		// remove all versioned files (clean have list)
-		syncFiles(0, populate);
+		syncFiles(new P4Revision(0), populate);
 
 		// remove all files from workspace
 		String root = iclient.getRoot();
@@ -682,7 +683,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listChanges(Object from, Object to) throws Exception {
+	public List<Integer> listChanges(P4Revision from, P4Revision to) throws Exception {
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
@@ -691,7 +692,10 @@ public class ClientHelper extends ConnectionHelper {
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
 		List<Integer> list = listChanges(ws);
-		list.remove(from);
+		if(!from.isLabel()) {
+			Object obj = from.getChange();
+			list.remove(obj);
+		}
 		return list;
 	}
 
@@ -703,10 +707,13 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listChanges(Object from) throws Exception {
+	public List<Integer> listChanges(P4Revision from) throws Exception {
 		String ws = "//" + iclient.getName() + "/...@" + from + ",now";
 		List<Integer> list = listChanges(ws);
-		list.remove(from);
+		if(!from.isLabel()) {
+			Object obj = from.getChange();
+			list.remove(obj);
+		}
 		return list;
 	}
 
@@ -756,7 +763,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listHaveChanges(Object changeLimit) throws Exception {
+	public List<Integer> listHaveChanges(P4Revision changeLimit) throws Exception {
 		String path = "//" + iclient.getName() + "/...";
 		String fileSpec = path + "@" + changeLimit;
 		return listHaveChanges(fileSpec);
@@ -765,7 +772,7 @@ public class ClientHelper extends ConnectionHelper {
 	private List<Integer> listHaveChanges(String fileSpec) throws Exception {
 		List<Integer> haveChanges = new ArrayList<Integer>();
 		Map<String, Object>[] map;
-		map = connection.execMapCmd("cstat", new String[]{ fileSpec }, null);
+		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
 
 		for (Map<String, Object> entry : map) {
 			String status = (String) entry.get("status");

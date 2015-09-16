@@ -12,6 +12,7 @@ import java.util.List;
 
 import jenkins.security.Roles;
 
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
@@ -64,13 +65,13 @@ public class PollTask extends AbstractTask implements
 
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			List<Integer> have = p4.listHaveChanges(pin);
+			List<Integer> have = p4.listHaveChanges(new P4Revision(pin));
 			int last = 0;
 			if (!have.isEmpty()) {
 				last = have.get(have.size() - 1);
 			}
 			p4.log("P4: Polling with label/change: " + last + "," + pin);
-			changes = p4.listChanges(last, pin);
+			changes = p4.listChanges(new P4Revision(last), new P4Revision(pin));
 		} else {
 			List<Integer> have = p4.listHaveChanges();
 			int last = 0;
@@ -78,7 +79,7 @@ public class PollTask extends AbstractTask implements
 				last = have.get(have.size() - 1);
 			}
 			p4.log("P4: Polling with label/change: " + last + ",now");
-			changes = p4.listChanges(last);
+			changes = p4.listChanges(new P4Revision(last));
 		}
 
 		// filter changes...

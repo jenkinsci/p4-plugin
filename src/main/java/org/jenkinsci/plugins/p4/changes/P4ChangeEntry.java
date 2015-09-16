@@ -30,14 +30,15 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private int FILE_COUNT_LIMIT = 50;
 
-	private Object id;
+	private P4Revision id;
+
 	private User author;
 	private Date date = new Date();
 	private String clientId = "";
 	private String msg = "";
 	private Collection<String> affectedPaths;
 	private boolean shelved;
-	private boolean label;
+
 	private boolean fileLimit = false;
 	public List<IFileSpec> files;
 	private List<IJob> jobs;
@@ -59,7 +60,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		Changelist changelist = (Changelist) p4.getChange(changeId);
 
 		// set id
-		id = changelist.getId();
+		id = new P4Revision(changeId);
 
 		// set author
 		String user = changelist.getUsername();
@@ -104,11 +105,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public void setLabel(ConnectionHelper p4, String labelId) throws Exception {
-		label = true;
 		Label label = (Label) p4.getLabel(labelId);
 
 		// set id
-		id = labelId;
+		id = new P4Revision(labelId);
 
 		// set author
 		String user = label.getOwnerName();
@@ -139,8 +139,8 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	@Exported
-	public Object getChangeNumber() {
-		return id;
+	public String getChangeNumber() {
+		return id.toString();
 	}
 
 	@Exported
@@ -149,11 +149,11 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return sdf.format(date);
 	}
 
-	public Object getId() {
+	public P4Revision getId() {
 		return id;
 	}
 
-	public void setId(Object value) {
+	public void setId(P4Revision value) {
 		id = value;
 	}
 
@@ -228,7 +228,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public boolean isLabel() {
-		return label;
+		return id.isLabel();
 	}
 
 	public List<IJob> getJobs() {

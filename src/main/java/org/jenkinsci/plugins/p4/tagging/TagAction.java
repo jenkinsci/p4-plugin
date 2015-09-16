@@ -13,6 +13,7 @@ import java.util.List;
 import javax.servlet.ServletException;
 
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -32,7 +33,7 @@ public class TagAction extends AbstractScmTagAction {
 	private String credential;
 	private Workspace workspace;
 	private String client;
-	private Object buildChange;
+	private P4Revision buildChange;
 
 	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
 		super(run);
@@ -97,11 +98,11 @@ public class TagAction extends AbstractScmTagAction {
 		}
 	}
 
-	public void setBuildChange(Object buildChange) {
+	public void setBuildChange(P4Revision buildChange) {
 		this.buildChange = buildChange;
 	}
 
-	public Object getBuildChange() {
+	public P4Revision getBuildChange() {
 		return buildChange;
 	}
 

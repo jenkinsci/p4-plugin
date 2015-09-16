@@ -113,7 +113,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						String strRev = attributes.getValue("endRevision");
 						int endRevision = new Integer(strRev);
 						temp.setEndRevision(endRevision);
-						
+
 						entry.files.add(temp);
 						text.setLength(0);
 						return;
@@ -184,7 +184,7 @@ public class P4ChangeParser extends ChangeLogParser {
 
 						if (qName.equalsIgnoreCase("changeInfo")) {
 							int id = new Integer(elementText);
-							entry.setId(id);
+							entry.setId(new P4Revision(id));
 							text.setLength(0);
 							return;
 						}

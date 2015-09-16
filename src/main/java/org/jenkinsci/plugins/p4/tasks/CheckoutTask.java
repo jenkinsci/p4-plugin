@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import jenkins.security.Roles;
 
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -36,7 +37,7 @@ public class CheckoutTask extends AbstractTask implements
 
 	private CheckoutStatus status;
 	private int head;
-	private Object buildChange;
+	private P4Revision buildChange;
 	private int review;
 
 	/**
@@ -58,8 +59,8 @@ public class CheckoutTask extends AbstractTask implements
 			buildChange = getBuildChange(getWorkspace());
 
 			// try to get change-number if automatic label
-			if (buildChange instanceof String) {
-				String label = (String) buildChange;
+			if (buildChange.isLabel()) {
+				String label = buildChange.toString();
 				if (p4.isLabel(label)) {
 					Label labelSpec = p4.getLabel(label);
 					String revSpec = labelSpec.getRevisionSpec();
@@ -67,7 +68,7 @@ public class CheckoutTask extends AbstractTask implements
 							&& revSpec.startsWith("@")) {
 						try {
 							int change = Integer.parseInt(revSpec.substring(1));
-							buildChange = change;
+							buildChange = new P4Revision(change);
 						} catch (NumberFormatException e) {
 							// leave buildChange as is
 						}
@@ -131,9 +132,9 @@ public class CheckoutTask extends AbstractTask implements
 	 * @param map
 	 * @return
 	 */
-	private Object getBuildChange(Workspace workspace) {
+	private P4Revision getBuildChange(Workspace workspace) {
 		// Use head as the default
-		Object build = this.head;
+		P4Revision build = new P4Revision(this.head);
 
 		// Get Environment parameters from expand
 		Expand expand = workspace.getExpand();
@@ -143,33 +144,36 @@ public class CheckoutTask extends AbstractTask implements
 		if (populateLabel != null && !populateLabel.isEmpty()) {
 			// Expand label with environment vars if one was defined
 			String expandedPopulateLabel = expand.format(populateLabel, false);
-			if(!expandedPopulateLabel.isEmpty()) {
+			if (!expandedPopulateLabel.isEmpty()) {
 				try {
 					// if build is a change-number passed as a label
-					build = Integer.parseInt(expandedPopulateLabel);
+					int change = Integer.parseInt(expandedPopulateLabel);
+					build = new P4Revision(change);
 				} catch (NumberFormatException e) {
-					build = expandedPopulateLabel;
+					build = new P4Revision(expandedPopulateLabel);
 				}
 			}
 		}
 
 		// if change is specified then update
-		String change = expand.get(ReviewProp.CHANGE.toString());
-		if (change != null && !change.isEmpty()) {
+		String cngStr = expand.get(ReviewProp.CHANGE.toString());
+		if (cngStr != null && !cngStr.isEmpty()) {
 			try {
-				build = Integer.parseInt(change);
+				int change = Integer.parseInt(cngStr);
+				build = new P4Revision(change);
 			} catch (NumberFormatException e) {
 			}
 		}
 
 		// if label is specified then update
-		String label = expand.get(ReviewProp.LABEL.toString());
-		if (label != null && !label.isEmpty()) {
+		String lblStr = expand.get(ReviewProp.LABEL.toString());
+		if (lblStr != null && !lblStr.isEmpty()) {
 			try {
 				// if build is a change-number passed as a label
-				build = Integer.parseInt(label);
+				int change = Integer.parseInt(lblStr);
+				build = new P4Revision(change);
 			} catch (NumberFormatException e) {
-				build = label;
+				build = new P4Revision(lblStr);
 			}
 		}
 
@@ -195,7 +199,7 @@ public class CheckoutTask extends AbstractTask implements
 		return review;
 	}
 
-	public List<Integer> getChanges(Object last) {
+	public List<Integer> getChanges(P4Revision last) {
 
 		List<Integer> changes = new ArrayList<Integer>();
 
@@ -221,7 +225,7 @@ public class CheckoutTask extends AbstractTask implements
 		return changes;
 	}
 
-	public List<P4ChangeEntry> getChangesFull(Object last) {
+	public List<P4ChangeEntry> getChangesFull(P4Revision last) {
 
 		List<P4ChangeEntry> changesFull = new ArrayList<P4ChangeEntry>();
 		List<Integer> changes = new ArrayList<Integer>();
@@ -245,7 +249,7 @@ public class CheckoutTask extends AbstractTask implements
 			}
 
 		} catch (Exception e) {
-			String err = "Unable to get changes: " + e;
+			String err = "Unable to get full changes: " + e;
 			logger.severe(err);
 			p4.log(err);
 			e.printStackTrace();
@@ -256,23 +260,44 @@ public class CheckoutTask extends AbstractTask implements
 		return changesFull;
 	}
 
+	public P4ChangeEntry getCurrentChange() {
+		P4ChangeEntry cl = new P4ChangeEntry();
+		P4Revision current = getBuildChange();
+
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
+				getClient());
+
+		try {
+			cl = current.getChangeEntry(p4);
+		} catch (Exception e) {
+			String err = "Unable to get current change: " + e;
+			logger.severe(err);
+			p4.log(err);
+			e.printStackTrace();
+		} finally {
+			p4.disconnect();
+		}
+
+		return cl;
+	}
+
 	public CheckoutStatus getStatus() {
 		return status;
 	}
 
 	// Returns the number of the build change not the review change
-	public Object getSyncChange() {
+	public P4Revision getSyncChange() {
 		return buildChange;
 	}
 
-	public Object getBuildChange() {
+	public P4Revision getBuildChange() {
 		if (status == CheckoutStatus.SHELVED) {
-			return review;
+			return new P4Revision(review);
 		}
 		return buildChange;
 	}
 
-	public void setBuildChange(Object parentChange) {
+	public void setBuildChange(P4Revision parentChange) {
 		buildChange = parentChange;
 	}
 

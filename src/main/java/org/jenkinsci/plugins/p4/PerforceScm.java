@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -72,7 +73,7 @@ public class PerforceScm extends SCM {
 	private final P4Browser browser;
 
 	private transient List<Integer> changes;
-	private transient Object parentChange;
+	private transient P4Revision parentChange;
 
 	public String getCredential() {
 		return credential;
@@ -330,16 +331,19 @@ public class PerforceScm extends SCM {
 			success &= buildWorkspace.act(task);
 		}
 
-		// Only write change log if build succeeded and changeLogFile has been set.
+		// Only write change log if build succeeded and changeLogFile has been
+		// set.
 		if (success) {
 			if (changelogFile != null) {
 				// Calculate changes prior to build (based on last build)
 				listener.getLogger().println("P4 Task: saving built changes.");
-				List<Object> changes = calculateChanges(run, task);
+				List<P4ChangeEntry> changes = calculateChanges(run, task);
 				P4ChangeSet.store(changelogFile, changes);
 				listener.getLogger().println("... done\n");
 			} else {
-				listener.getLogger().println("P4 Task: changeLogFile not set. Not saving built changes.");
+				listener.getLogger()
+						.println(
+								"P4 Task: changeLogFile not set. Not saving built changes.");
 			}
 		} else {
 			String msg = "P4: Build failed";
@@ -368,15 +372,16 @@ public class PerforceScm extends SCM {
 		}
 	}
 
-	private List<Object> calculateChanges(Run<?, ?> run, CheckoutTask task) {
-		List<Object> list = new ArrayList<Object>();
+	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run,
+			CheckoutTask task) {
+		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
 
 		// Look for all changes since the last build
 		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
 		if (lastBuild != null) {
 			TagAction lastTag = lastBuild.getAction(TagAction.class);
 			if (lastTag != null) {
-				Object lastChange = lastTag.getBuildChange();
+				P4Revision lastChange = lastTag.getBuildChange();
 				if (lastChange != null) {
 					List<P4ChangeEntry> changes;
 					changes = task.getChangesFull(lastChange);
@@ -390,10 +395,10 @@ public class PerforceScm extends SCM {
 		// if empty, look for shelves in current build. The latest change
 		// will not get listed as 'p4 changes n,n' will return no change
 		if (list.isEmpty()) {
-			Object lastChange = task.getBuildChange();
-			if (lastChange != null) {
+			P4Revision lastRevision = task.getBuildChange();
+			if (lastRevision != null) {
 				List<P4ChangeEntry> changes;
-				changes = task.getChangesFull(lastChange);
+				changes = task.getChangesFull(lastRevision);
 				for (P4ChangeEntry c : changes) {
 					list.add(c);
 				}
@@ -402,13 +407,14 @@ public class PerforceScm extends SCM {
 
 		// still empty! No previous build, so add current
 		if (list.isEmpty()) {
-			list.add(task.getBuildChange());
+			list.add(task.getCurrentChange());
 		}
 		return list;
 	}
 
 	@Override
-	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+	public void
+			buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = build.getAction(TagAction.class);
@@ -446,23 +452,22 @@ public class PerforceScm extends SCM {
 	}
 
 	private String getChangeNumber(TagAction tagAction) {
-		Object buildChange = tagAction.getBuildChange();
+		P4Revision buildChange = tagAction.getBuildChange();
 
-		if (buildChange instanceof Integer) {
-			// it already an Integer, so add change...
-			String change = String.valueOf(buildChange);
-			return change;
+		if (!buildChange.isLabel()) {
+			// its a change, so return...
+			return buildChange.toString();
 		}
 
 		try {
 			// it is really a change number, so add change...
-			int change = Integer.parseInt((String) buildChange);
+			int change = Integer.parseInt(buildChange.toString());
 			return String.valueOf(change);
 		} catch (NumberFormatException n) {
 		}
 
 		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
-		String name = (String) buildChange;
+		String name = buildChange.toString();
 		try {
 			Label label = p4.getLabel(name);
 			String spec = label.getRevisionSpec();
@@ -535,14 +540,14 @@ public class PerforceScm extends SCM {
 			logger.warning("P4: Not able to get connection");
 			return true;
 		}
-		
+
 		// Remove have entries from client workspace
 		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
 		try {
 			ForceCleanImpl forceClean = new ForceCleanImpl(false, false,
 					populate.isQuiet(), null);
 			logger.info("P4: unsyncing client: " + client);
-			p4.syncFiles(0, forceClean);
+			p4.syncFiles(new P4Revision(0), forceClean);
 		} catch (Exception e) {
 			logger.warning("P4: Not able to unsync client: " + client);
 			return true;
