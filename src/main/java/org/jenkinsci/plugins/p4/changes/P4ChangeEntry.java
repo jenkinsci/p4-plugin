@@ -145,7 +145,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	@Exported
 	public String getChangeTime() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return sdf.format(date);
 	}
 
@@ -172,7 +172,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public void setDate(String value) {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 		try {
 			date = sdf.parse(value);
