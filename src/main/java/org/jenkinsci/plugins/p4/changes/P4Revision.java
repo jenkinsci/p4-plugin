@@ -1,8 +1,12 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import java.io.Serializable;
+
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 
-public class P4Revision {
+public class P4Revision implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final int change;
 	private final String label;
