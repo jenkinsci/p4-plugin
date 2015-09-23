@@ -302,7 +302,56 @@ To enable the feature select the Repository browser from the Job Configuration p
 Link to change in Swarm
 
 ![Repo list](docs/images/swarm.png)
- 
+
+## Workflow support
+
+The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce `p4sync`, `p4tag` and `p4publish`.
+
+To use the Workflow install the plugin(s) as needed.  Create a new Workflow Job by selecting 'New Item' from the left hand menu, provide an 'Item name' and choose a 'Workflow' project.
+
+The Workflow plugin requires a Groovy script.  Currently the `Groovy CPS DSL from SCM` is *not* supported.  Select `Groovy CPS DSL` and provide your script in the text box below.
+
+You can use the snippet genertor to create each step and use the code to compose your workflow script.  
+
+For example, a basic sync script:
+
+1. Check the 'Snippet Generator' box and from the 'Sample Step' drop down choose `P4 Sync`.
+2. Select a valid Perforce Credential
+3. Fill out *ONLY ONE* of the three boxes for the code source.
+
+e.g.
+
+        Stream Codeline    : //streams/st1-main
+
+or
+
+        Template Workspace : template_ws
+        
+or
+
+        Depot path         : //depot/projX
+
+![Snippet genertor](docs/images/snippet.png)    
+        
+Press the 'Generate Groovy' button...
+
+![P4Sync Groovy](docs/images/p4sync.png)
+
+Use this snippet with your intended target e.g. a slave calles 'my_slave'
+
+    node('my_slave') {
+       p4sync credential: 'server_id', stream: '//stream/main'
+    }
+
+For more examples and usage please refer to the [Workflow docs](https://github.com/jenkinsci/workflow-plugin/blob/master/README.md).
+
+### Workflow Limitations
+
+There are several limitations as the Workflow plugin is relativly new, these include:
+
+* SCM Polling (not functional)
+* No access to Environment ${VAR} varables
+
 ## Troubleshooting
 
 ### Connection issues
