@@ -453,7 +453,7 @@ public class ConnectionHelper {
 			}
 		}
 
-		if (!quiet && abort) {
+		if (abort) {
 			String msg = "P4JAVA: Error(s)";
 			throw new AbortException(msg);
 		}

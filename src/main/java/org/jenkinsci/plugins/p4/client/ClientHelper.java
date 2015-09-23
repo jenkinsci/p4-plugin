@@ -622,8 +622,8 @@ public class ClientHelper extends ConnectionHelper {
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
-		validateFileSpecs(shelveMsg, "also opened by", "no such file(s)",
-				"exclusive file already opened");
+		validateFileSpecs(shelveMsg, false, "also opened by",
+				"no such file(s)", "exclusive file already opened");
 
 		// force sync any files missed due to INFO messages e.g. exclusive files
 		for (IFileSpec spec : shelveMsg) {
@@ -683,7 +683,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listChanges(P4Revision from, P4Revision to) throws Exception {
+	public List<Integer> listChanges(P4Revision from, P4Revision to)
+			throws Exception {
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
@@ -692,7 +693,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
 		List<Integer> list = listChanges(ws);
-		if(!from.isLabel()) {
+		if (!from.isLabel()) {
 			Object obj = from.getChange();
 			list.remove(obj);
 		}
@@ -710,7 +711,7 @@ public class ClientHelper extends ConnectionHelper {
 	public List<Integer> listChanges(P4Revision from) throws Exception {
 		String ws = "//" + iclient.getName() + "/...@" + from + ",now";
 		List<Integer> list = listChanges(ws);
-		if(!from.isLabel()) {
+		if (!from.isLabel()) {
 			Object obj = from.getChange();
 			list.remove(obj);
 		}
@@ -763,7 +764,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listHaveChanges(P4Revision changeLimit) throws Exception {
+	public List<Integer> listHaveChanges(P4Revision changeLimit)
+			throws Exception {
 		String path = "//" + iclient.getName() + "/...";
 		String fileSpec = path + "@" + changeLimit;
 		return listHaveChanges(fileSpec);
