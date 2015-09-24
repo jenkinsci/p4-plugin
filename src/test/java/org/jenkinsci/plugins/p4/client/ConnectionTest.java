@@ -345,15 +345,18 @@ public class ConnectionTest {
 		URL url = new URL("http://localhost");
 		SwarmBrowser browser = new SwarmBrowser(url);
 
+		String client = "test.ws";
+		String format = "jenkins-${node}-${project}.ws";
+
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("Static-Shelf");
-		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
+				false, client, format);
 		Populate populate = new AutoCleanImpl(true, true, false, false, null);
-		PerforceScm scm = new PerforceScm(credential, workspace, null,
-				populate, browser);
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
-
+		
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
 				"shelved"));
