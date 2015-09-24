@@ -78,6 +78,9 @@ public class TemplateWorkspaceImpl extends Workspace {
 		// set line endings explicitly (JENKINS-28760)
 		iclient.setLineEnd(itemplate.getLineEnd());
 
+		// set options explicitly (JENKINS-30546)
+		iclient.setOptions(itemplate.getOptions());
+
 		// Root required to switch view; must reload values in iclient.
 		iclient.setRoot(getRootPath());
 		iclient.update();
