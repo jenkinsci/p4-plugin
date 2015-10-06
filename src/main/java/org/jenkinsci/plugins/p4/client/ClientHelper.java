@@ -339,6 +339,15 @@ public class ClientHelper extends ConnectionHelper {
 			log("P4 Task: skipping clean, no options set.");
 			return;
 		}
+		
+		// set MODTIME if populate options is used and server supports flag
+		if (populate.isModtime()) {
+			if (checkVersion(20141)) {
+				list.add("-m");
+			} else {
+				log("P4: Resolving files by MODTIME not supported (requires 2014.1 or above)");
+			}
+		}
 
 		TimeTask timer = new TimeTask();
 		log("P4 Task: cleaning workspace to match have list.");
@@ -367,15 +376,6 @@ public class ClientHelper extends ConnectionHelper {
 		String[] base = { "-n", "-a", "-e", "-d", "-l", "-f" };
 		List<String> list = new ArrayList<String>();
 		list.addAll(Arrays.asList(base));
-
-		// set MODTIME if populate options is used and server supports flag
-		if (populate.isModtime()) {
-			if (checkVersion(20141)) {
-				list.add("-m");
-			} else {
-				log("P4: Resolving files by MODTIME not supported (requires 2014.1 or above)");
-			}
-		}
 
 		String[] args = list.toArray(new String[list.size()]);
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
