@@ -1,10 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import hudson.AbortException;
-import hudson.model.TaskListener;
-import hudson.security.ACL;
-import hudson.util.LogTaskListener;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,8 +7,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.console.P4Logging;
@@ -33,16 +26,22 @@ import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
+import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
 
+import hudson.AbortException;
+import hudson.model.TaskListener;
+import hudson.security.ACL;
+import hudson.util.LogTaskListener;
+import jenkins.model.Jenkins;
+
 public class ConnectionHelper {
 
-	private static Logger logger = Logger.getLogger(ConnectionHelper.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
 	private boolean abort = false;
 
@@ -219,8 +218,7 @@ public class ConnectionHelper {
 			break;
 
 		default:
-			throw new Exception("Unknown Authorisation type: "
-					+ authorisationConfig.getType());
+			throw new Exception("Unknown Authorisation type: " + authorisationConfig.getType());
 		}
 
 		// return login status...
@@ -263,7 +261,13 @@ public class ConnectionHelper {
 	 * @throws Exception
 	 */
 	public Changelist getChange(int id) throws Exception {
-		return (Changelist) connection.getChangelist(id);
+		try {
+			return (Changelist) connection.getChangelist(id);
+		} catch (RequestException e) {
+			ChangelistOptions opts = new ChangelistOptions();
+			opts.setOriginalChangelist(true);
+			return (Changelist) connection.getChangelist(id, opts);
+		}
 	}
 
 	/**
@@ -409,13 +413,11 @@ public class ConnectionHelper {
 	 * @return
 	 * @throws ConverterException
 	 */
-	public void validateFileSpecs(List<IFileSpec> fileSpecs, String... ignore)
-			throws Exception {
+	public void validateFileSpecs(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
 		validateFileSpecs(fileSpecs, true, ignore);
 	}
 
-	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet,
-			String... ignore) throws Exception {
+	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
 
@@ -443,8 +445,7 @@ public class ConnectionHelper {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
-						if (status == FileSpecOpStatus.ERROR
-								|| status == FileSpecOpStatus.CLIENT_ERROR) {
+						if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
 							abort = true;
 						}
 					}
