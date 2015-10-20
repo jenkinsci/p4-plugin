@@ -26,6 +26,7 @@ import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
+import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
@@ -108,6 +109,17 @@ public class ConnectionHelper {
 		// Register logging callback
 		ICommandCallback logging = new P4Logging(listener);
 		this.connection.registerCallback(logging);
+
+		// Get Environment
+		String ignore = ".p4ignore";
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win")) {
+			ignore = "p4ignore.txt";
+		}
+
+		// Set p4ignore file
+		Server server = (Server) this.connection;
+		server.setIgnoreFileName(ignore);
 
 		return true;
 	}
