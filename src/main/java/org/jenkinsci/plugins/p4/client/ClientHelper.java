@@ -214,7 +214,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setServerBypass(!populate.isHave() && !populate.isForce());
+		syncOpts.setServerBypass(!populate.isHave());
 		syncOpts.setForceUpdate(populate.isForce());
 		syncOpts.setQuiet(populate.isQuiet());
 
