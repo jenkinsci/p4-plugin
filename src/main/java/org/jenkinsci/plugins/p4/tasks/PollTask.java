@@ -1,16 +1,11 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import jenkins.security.Roles;
 
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -26,8 +21,11 @@ import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 
-public class PollTask extends AbstractTask implements
-		FileCallable<List<Integer>>, Serializable {
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
+
+public class PollTask extends AbstractTask implements FileCallable<List<Integer>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -54,8 +52,7 @@ public class PollTask extends AbstractTask implements
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Integer> invoke(File workspace, VirtualChannel channel)
-			throws IOException {
+	public List<Integer> invoke(File workspace, VirtualChannel channel) throws IOException {
 		return (List<Integer>) tryTask();
 	}
 
@@ -116,8 +113,7 @@ public class PollTask extends AbstractTask implements
 	 * @throws RequestException
 	 * @throws Exception
 	 */
-	private boolean filterChange(Changelist changelist, List<Filter> scmFilter)
-			throws Exception {
+	private boolean filterChange(Changelist changelist, List<Filter> scmFilter) throws Exception {
 		// exit early if no filters
 		if (scmFilter == null) {
 			return false;

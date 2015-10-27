@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 
+import com.perforce.p4java.core.IChangelistSummary;
+
 public class P4Revision implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -45,7 +47,8 @@ public class P4Revision implements Serializable {
 		if (isLabel) {
 			cl.setLabel(p4, label);
 		} else {
-			cl.setChange(p4, change);
+			IChangelistSummary summary = p4.getChangeSummary(change);
+			cl.setChange(p4, summary);
 		}
 		return cl;
 	}

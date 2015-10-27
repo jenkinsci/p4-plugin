@@ -1,17 +1,11 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import hudson.AbortException;
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import jenkins.security.Roles;
 
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
@@ -23,15 +17,19 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
+import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.impl.generic.core.Label;
 
-public class CheckoutTask extends AbstractTask implements
-		FileCallable<Boolean>, Serializable {
+import hudson.AbortException;
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
+
+public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(CheckoutTask.class
-			.getName());
+	private static Logger logger = Logger.getLogger(CheckoutTask.class.getName());
 
 	private final Populate populate;
 
@@ -64,8 +62,7 @@ public class CheckoutTask extends AbstractTask implements
 				if (p4.isLabel(label)) {
 					Label labelSpec = p4.getLabel(label);
 					String revSpec = labelSpec.getRevisionSpec();
-					if (revSpec != null && !revSpec.isEmpty()
-							&& revSpec.startsWith("@")) {
+					if (revSpec != null && !revSpec.isEmpty() && revSpec.startsWith("@")) {
 						try {
 							int change = Integer.parseInt(revSpec.substring(1));
 							buildChange = new P4Revision(change);
@@ -90,8 +87,7 @@ public class CheckoutTask extends AbstractTask implements
 	 * 
 	 * @return true if updated, false if no change.
 	 */
-	public Boolean invoke(File workspace, VirtualChannel channel)
-			throws IOException {
+	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
 		return (Boolean) tryTask();
 	}
 
@@ -204,8 +200,7 @@ public class CheckoutTask extends AbstractTask implements
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
-				getClient());
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
 		try {
 			changes = p4.listChanges(last, buildChange);
 		} catch (Exception e) {
@@ -231,12 +226,12 @@ public class CheckoutTask extends AbstractTask implements
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
-				getClient());
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
 		try {
 			if (status == CheckoutStatus.SHELVED) {
 				P4ChangeEntry cl = new P4ChangeEntry();
-				cl.setChange(p4, review);
+				IChangelistSummary pending = p4.getChange(review);
+				cl.setChange(p4, pending);
 				changesFull.add(cl);
 			}
 
@@ -244,7 +239,8 @@ public class CheckoutTask extends AbstractTask implements
 			changes = p4.listChanges(last, buildChange);
 			for (Integer change : changes) {
 				P4ChangeEntry cl = new P4ChangeEntry();
-				cl.setChange(p4, change);
+				IChangelistSummary summary = p4.getChangeSummary(change);
+				cl.setChange(p4, summary);
 				changesFull.add(cl);
 			}
 
@@ -264,8 +260,7 @@ public class CheckoutTask extends AbstractTask implements
 		P4ChangeEntry cl = new P4ChangeEntry();
 		P4Revision current = getBuildChange();
 
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(),
-				getClient());
+		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
 
 		try {
 			cl = current.getChangeEntry(p4);

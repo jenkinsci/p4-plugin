@@ -24,6 +24,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
@@ -165,8 +166,8 @@ public class P4ChangeParser extends ChangeLogParser {
 						// Add changelist to entry
 						if (qName.equalsIgnoreCase("changenumber")) {
 							int id = new Integer(text.toString());
-							entry.setChange(p4, id);
-
+							IChangelistSummary summary = p4.getChangeSummary(id);
+							entry.setChange(p4, summary);
 						}
 
 						// Add label to entry

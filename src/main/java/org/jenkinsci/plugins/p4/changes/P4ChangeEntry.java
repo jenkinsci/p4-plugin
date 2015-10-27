@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import hudson.model.User;
-import hudson.scm.ChangeLogSet;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,16 +14,18 @@ import org.jenkinsci.plugins.p4.email.P4UserProperty;
 import org.kohsuke.stapler.export.Exported;
 
 import com.perforce.p4java.core.ChangelistStatus;
+import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
+
+import hudson.model.User;
+import hudson.scm.ChangeLogSet;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
-	private static Logger logger = Logger.getLogger(P4ChangeEntry.class
-			.getName());
+	private static Logger logger = Logger.getLogger(P4ChangeEntry.class.getName());
 
 	private int FILE_COUNT_LIMIT = 50;
 
@@ -56,10 +55,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	}
 
-	public void setChange(ConnectionHelper p4, int changeId) throws Exception {
-		Changelist changelist = (Changelist) p4.getChange(changeId);
+	public void setChange(ConnectionHelper p4, IChangelistSummary changelist) throws Exception {
 
 		// set id
+		int changeId = changelist.getId();
 		id = new P4Revision(changeId);
 
 		// set author
@@ -86,7 +85,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			files = p4.getShelvedFiles(changeId);
 			shelved = true;
 		} else {
-			files = p4.getChangeFiles(changeId);
+			files = p4.getChangeFiles(changeId, FILE_COUNT_LIMIT + 1);
 			shelved = false;
 		}
 		if (files.size() > FILE_COUNT_LIMIT) {
@@ -101,7 +100,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 
 		// set list of jobs in change
-		this.jobs = changelist.getJobs();
+		this.jobs = p4.getJobs(changeId);
 	}
 
 	public void setLabel(ConnectionHelper p4, String labelId) throws Exception {
