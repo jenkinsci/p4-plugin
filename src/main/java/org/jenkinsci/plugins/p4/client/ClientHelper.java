@@ -214,8 +214,12 @@ public class ClientHelper extends ConnectionHelper {
 
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
+		
+		// setServerBypass (-p no have list)
 		syncOpts.setServerBypass(!populate.isHave());
-		syncOpts.setForceUpdate(populate.isForce());
+		
+		// setForceUpdate (-f only if no -p is set)
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
