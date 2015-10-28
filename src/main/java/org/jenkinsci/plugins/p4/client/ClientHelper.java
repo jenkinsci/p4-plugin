@@ -253,7 +253,9 @@ public class ClientHelper extends ConnectionHelper {
 		tidyPending(files);
 
 		// remove all versioned files (clean have list)
-		syncFiles(new P4Revision(0), populate);
+		String revisions = iclient.getRoot() + "/...#0";
+		files = FileSpecBuilder.makeFileSpecList(revisions);
+		syncFiles(files, populate);
 
 		// remove all files from workspace
 		String root = iclient.getRoot();
