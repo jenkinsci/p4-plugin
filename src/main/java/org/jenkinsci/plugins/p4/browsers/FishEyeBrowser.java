@@ -74,7 +74,7 @@ public class FishEyeBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getJobLink(IJob job) throws Exception {
+	public URL getJobLink(String job) throws Exception {
 		// Not implemented for FishEye
 		return null;
 	}

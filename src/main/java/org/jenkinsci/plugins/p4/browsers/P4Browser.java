@@ -1,13 +1,12 @@
 package org.jenkinsci.plugins.p4.browsers;
 
-import hudson.scm.RepositoryBrowser;
-
 import java.net.URL;
 
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 
-import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.file.IFileSpec;
+
+import hudson.scm.RepositoryBrowser;
 
 public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 
@@ -29,6 +28,6 @@ public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 	 */
 	public abstract URL getFileLink(IFileSpec file) throws Exception;
 
-	public abstract URL getJobLink(IJob job) throws Exception;
+	public abstract URL getJobLink(String job) throws Exception;
 
 }

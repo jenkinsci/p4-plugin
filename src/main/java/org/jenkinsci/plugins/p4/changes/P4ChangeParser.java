@@ -1,13 +1,5 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import hudson.model.AbstractProject;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.scm.ChangeLogParser;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -25,9 +17,19 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.core.Fix;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
+
+import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.scm.ChangeLogParser;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.ChangeLogSet.Entry;
 
 public class P4ChangeParser extends ChangeLogParser {
 
@@ -38,9 +40,8 @@ public class P4ChangeParser extends ChangeLogParser {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public ChangeLogSet<? extends Entry> parse(Run run,
-			RepositoryBrowser<?> browser, File file) throws IOException,
-			SAXException {
+	public ChangeLogSet<? extends Entry> parse(Run run, RepositoryBrowser<?> browser, File file)
+			throws IOException, SAXException {
 		try {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser parser = factory.newSAXParser();
@@ -68,8 +69,7 @@ public class P4ChangeParser extends ChangeLogParser {
 		}
 
 		@Override
-		public void characters(char[] ch, int start, int length)
-				throws SAXException {
+		public void characters(char[] ch, int start, int length) throws SAXException {
 			text.append(ch, start, length);
 		}
 
@@ -84,8 +84,8 @@ public class P4ChangeParser extends ChangeLogParser {
 		}
 
 		@Override
-		public void startElement(String uri, String localName, String qName,
-				Attributes attributes) throws SAXException {
+		public void startElement(String uri, String localName, String qName, Attributes attributes)
+				throws SAXException {
 
 			if (qName.equalsIgnoreCase("changelog")) {
 				// this is the root, so don't do anything
@@ -120,6 +120,20 @@ public class P4ChangeParser extends ChangeLogParser {
 						return;
 					}
 
+					if (qName.equalsIgnoreCase("job")) {
+						IFix temp = new Fix();
+
+						String id = attributes.getValue("id");
+						temp.setJobId(id);
+
+						String status = attributes.getValue("status");
+						temp.setStatus(status);
+
+						entry.jobs.add(temp);
+						text.setLength(0);
+						return;
+					}
+
 				} catch (Exception e) {
 					entry = null;
 				}
@@ -129,8 +143,7 @@ public class P4ChangeParser extends ChangeLogParser {
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName)
-				throws SAXException {
+		public void endElement(String uri, String localName, String qName) throws SAXException {
 			if (qName.equalsIgnoreCase("changelog")) {
 				// this is the root, so don't do anything
 				return;
@@ -148,8 +161,7 @@ public class P4ChangeParser extends ChangeLogParser {
 				try {
 
 					if (text.toString().trim().length() != 0
-							&& (qName.equalsIgnoreCase("changenumber") || qName
-									.equalsIgnoreCase("label"))) {
+							&& (qName.equalsIgnoreCase("changenumber") || qName.equalsIgnoreCase("label"))) {
 
 						// CASTING: is this safe?
 						Job<?, ?> job = run.getParent();
@@ -160,8 +172,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						String credential = scm.getCredential();
 
 						// Log in to Perforce and find change-list
-						ConnectionHelper p4 = new ConnectionHelper(credential,
-								null);
+						ConnectionHelper p4 = new ConnectionHelper(credential, null);
 
 						// Add changelist to entry
 						if (qName.equalsIgnoreCase("changenumber")) {

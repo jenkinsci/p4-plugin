@@ -69,8 +69,8 @@ public class P4WebBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getJobLink(IJob job) throws Exception {
-		return new URL(url.toString() + job.getId() + p4JobEnd);
+	public URL getJobLink(String job) throws Exception {
+		return new URL(url.toString() + job + p4JobEnd);
 	}
 
 	@Extension

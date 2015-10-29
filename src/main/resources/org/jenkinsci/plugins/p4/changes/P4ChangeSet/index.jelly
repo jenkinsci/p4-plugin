@@ -105,10 +105,7 @@
                                     <p>
                                         <img src="${rootURL}/plugin/p4/icons/job.gif" border="0" style="vertical-align"/>
                                         <st:nbsp/>
-                                        <a href="${browser.getJobLink(job)}">${job.id}</a>
-                                        - ${entry.getJobStatus(job)}
-                                        <br/>
-                                        ${entry.getJobSummary(job)}
+                                        <a href="${browser.getJobLink(job.getJobId())}">${job.getJobId()}</a> - ${entry.getJobStatus(job)}
                                     </p>
                                 </j:forEach>
                             </ul>

@@ -15,6 +15,7 @@ import org.kohsuke.stapler.export.Exported;
 
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
@@ -40,14 +41,14 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private boolean fileLimit = false;
 	public List<IFileSpec> files;
-	private List<IJob> jobs;
+	public List<IFix> jobs;
 
 	public P4ChangeEntry(P4ChangeSet parent) {
 		super();
 		setParent(parent);
 
 		files = new ArrayList<IFileSpec>();
-		jobs = new ArrayList<IJob>();
+		jobs = new ArrayList<IFix>();
 		affectedPaths = new ArrayList<String>();
 	}
 
@@ -230,22 +231,13 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return id.isLabel();
 	}
 
-	public List<IJob> getJobs() {
+	public List<IFix> getJobs() {
 		return jobs;
 	}
 
-	public String getJobStatus(IJob job) {
-		Map<String, Object> map = job.getRawFields();
-		String status = (String) map.get("Status");
+	public String getJobStatus(IFix job) {
+		String status = job.getStatus();
 		return status;
-	}
-
-	public String getJobSummary(IJob job) {
-		String summary = job.getDescription();
-		if (summary.length() > 80) {
-			summary = summary.substring(0, 80) + "...";
-		}
-		return summary;
 	}
 
 	public int getMaxLimit() {

@@ -70,7 +70,7 @@ public class OpenGrokBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getJobLink(IJob job) throws Exception {
+	public URL getJobLink(String job) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -17,6 +17,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.IUser;
@@ -31,6 +32,7 @@ import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
+import com.perforce.p4java.option.server.GetFixesOptions;
 import com.perforce.p4java.option.server.GetJobsOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
@@ -291,11 +293,11 @@ public class ConnectionHelper {
 		return summary.get(0);
 	}
 
-	public List<IJob> getJobs(int id) throws P4JavaException {
-		GetJobsOptions opts = new GetJobsOptions();
-		opts.setOptions("-c" + id);
-		List<IJob> jobs = connection.getJobs(null, opts);
-		return jobs;
+	public List<IFix> getJobs(int id) throws P4JavaException {
+		GetFixesOptions opts = new GetFixesOptions();
+		opts.setChangelistId(id);
+		List<IFix> fixes = connection.getFixes(null, opts);
+		return fixes;
 	}
 
 	/**

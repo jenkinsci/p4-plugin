@@ -1,9 +1,5 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import hudson.model.Run;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.ChangeLogSet;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,15 +17,19 @@ import java.util.List;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
+import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
+
+import hudson.model.Run;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.RepositoryBrowser;
 
 public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 	private List<P4ChangeEntry> history;
 
-	protected P4ChangeSet(Run<?, ?> run, RepositoryBrowser<?> browser,
-			List<P4ChangeEntry> logs) {
+	protected P4ChangeSet(Run<?, ?> run, RepositoryBrowser<?> browser, List<P4ChangeEntry> logs) {
 		super(run, browser);
 		this.history = Collections.unmodifiableList(logs);
 	}
@@ -64,20 +64,14 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 			stream.println("<changelog>");
 			for (P4ChangeEntry cl : changes) {
 				stream.println("\t<entry>");
-				stream.println("\t\t<changenumber><changeInfo>" + cl.getId()
-						+ "</changeInfo>");
-				stream.println("\t\t<clientId>" + cl.getClientId()
-						+ "</clientId>");
+				stream.println("\t\t<changenumber><changeInfo>" + cl.getId() + "</changeInfo>");
+				stream.println("\t\t<clientId>" + cl.getClientId() + "</clientId>");
 
-				stream.println("\t\t<msg>"
-						+ StringEscapeUtils.escapeXml(cl.getMsg()) + "</msg>");
-				stream.println("\t\t<changeUser>"
-						+ StringEscapeUtils.escapeXml(cl.getAuthor()
-								.getDisplayName()) + "</changeUser>");
+				stream.println("\t\t<msg>" + StringEscapeUtils.escapeXml(cl.getMsg()) + "</msg>");
+				stream.println("\t\t<changeUser>" + StringEscapeUtils.escapeXml(cl.getAuthor().getDisplayName())
+						+ "</changeUser>");
 
-				stream.println("\t\t<changeTime>"
-						+ StringEscapeUtils.escapeXml(cl.getChangeTime())
-						+ "</changeTime>");
+				stream.println("\t\t<changeTime>" + StringEscapeUtils.escapeXml(cl.getChangeTime()) + "</changeTime>");
 
 				stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 
@@ -90,11 +84,19 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 					String depotPath = filespec.getDepotPathString();
 					String safePath = URLEncoder.encode(depotPath, "UTF-8");
 
-					stream.println("\t\t<file endRevision=\"" + revision
-							+ "\" action=\"" + action.name() + "\" depot=\""
-							+ safePath + "\" />");
+					stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action.name()
+							+ "\" depot=\"" + safePath + "\" />");
 				}
 				stream.println("\t\t</files>");
+
+				stream.println("\t\t<jobs>");
+				for (IFix job : cl.getJobs()) {
+					String id = job.getJobId();
+					String status = job.getStatus();
+
+					stream.println("\t\t<job id=\"" + id + "\" status=\"" + status + "\" />");
+				}
+				stream.println("\t\t</jobs>");
 
 				stream.println("\t\t</changenumber>");
 
