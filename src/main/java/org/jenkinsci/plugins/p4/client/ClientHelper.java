@@ -255,7 +255,11 @@ public class ClientHelper extends ConnectionHelper {
 		// remove all versioned files (clean have list)
 		String revisions = iclient.getRoot() + "/...#0";
 		files = FileSpecBuilder.makeFileSpecList(revisions);
-		syncFiles(files, populate);
+		
+		// Only use quiet populate option to insure a clean sync
+		boolean quiet = populate.isQuiet();
+		Populate clean = new AutoCleanImpl(false, false, false, quiet, null);
+		syncFiles(files, clean);
 
 		// remove all files from workspace
 		String root = iclient.getRoot();
