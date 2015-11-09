@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -16,7 +15,6 @@ import org.kohsuke.stapler.export.Exported;
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.core.Label;
@@ -202,6 +200,12 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	@Override
 	public Collection<String> getAffectedPaths() {
+		// JENKINS-31306
+		if (affectedPaths.size() < 1 && files != null && files.size() > 0) {
+			for (IFileSpec item : files) {
+				affectedPaths.add(item.getDepotPathString());
+			}
+		}
 		return affectedPaths;
 	}
 
