@@ -157,12 +157,15 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	@Override
 	public User getAuthor() {
+		// JENKINS-31169
+		if (author == null) {
+			return User.getUnknown();
+		}
 		return author;
 	}
 
 	public void setAuthor(String value) {
 		author = User.get(value);
-
 	}
 
 	public Date getDate() {
