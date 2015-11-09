@@ -12,12 +12,14 @@ public class ConnectionConfig implements Serializable {
 	private final boolean ssl;
 	private final String serverUri;
 	private final String trust;
+	private final int timeout;
 
 	public ConnectionConfig(P4BaseCredentials credential) {
 		this.p4port = credential.getP4port();
 		this.ssl = credential.isSsl();
 		this.trust = credential.getTrust();
 		this.serverUri = toUri();
+		this.timeout = credential.getTimeout();
 	}
 
 	public ConnectionConfig(String p4port, boolean ssl, String trust) {
@@ -25,6 +27,7 @@ public class ConnectionConfig implements Serializable {
 		this.ssl = ssl;
 		this.trust = trust;
 		this.serverUri = toUri();
+		this.timeout = 0;
 	}
 
 	private String toUri() {
@@ -49,6 +52,10 @@ public class ConnectionConfig implements Serializable {
 
 	public String getServerUri() {
 		return serverUri;
+	}
+
+	public int getTimeout() {
+		return timeout;
 	}
 
 	public String toString() {

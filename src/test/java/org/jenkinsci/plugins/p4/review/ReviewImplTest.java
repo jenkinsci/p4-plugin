@@ -30,7 +30,7 @@ public class ReviewImplTest {
 	public void testStaticReviewImpl() throws Exception {
 
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 

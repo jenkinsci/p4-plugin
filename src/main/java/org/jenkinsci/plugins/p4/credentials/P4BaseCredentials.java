@@ -22,6 +22,9 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 
 	@CheckForNull
 	private final String retry;
+	
+	@CheckForNull
+	private final String timeout;
 
 	/**
 	 * Constructor.
@@ -36,12 +39,13 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 	public P4BaseCredentials(CredentialsScope scope, String id,
 			String description, @CheckForNull String p4port,
 			@CheckForNull TrustImpl ssl, @CheckForNull String username,
-			@CheckForNull String retry) {
+			@CheckForNull String retry, @CheckForNull String timeout) {
 		super(scope, id, description);
 		this.p4port = Util.fixNull(p4port);
 		this.ssl = ssl;
 		this.username = Util.fixNull(username);
 		this.retry = retry;
+		this.timeout = timeout;
 	}
 
 	@CheckForNull
@@ -66,6 +70,14 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 	public int getRetry() {
 		if (retry != null && !retry.isEmpty()) {
 			return Integer.parseInt(retry);
+		} else {
+			return 0;
+		}
+	}
+	
+	public int getTimeout() {
+		if (timeout != null && !timeout.isEmpty()) {
+			return Integer.parseInt(timeout);
 		} else {
 			return 0;
 		}

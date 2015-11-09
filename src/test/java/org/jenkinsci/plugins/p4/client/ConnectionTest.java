@@ -131,7 +131,7 @@ public class ConnectionTest {
 
 	private P4PasswordImpl createCredentials() throws IOException {
 		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "jenkins");
+				credential, "desc", P4PORT, null, "jenkins", "0", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 		return auth;
@@ -189,7 +189,7 @@ public class ConnectionTest {
 		assertEquals("Perforce Password Credential", desc.getDisplayName());
 		P4PasswordImpl.DescriptorImpl impl = (P4PasswordImpl.DescriptorImpl) desc;
 		FormValidation form = impl.doTestConnection(P4PORT, "false", null,
-				"jenkins", "0", "jenkins");
+				"jenkins", "0", "0", "jenkins");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

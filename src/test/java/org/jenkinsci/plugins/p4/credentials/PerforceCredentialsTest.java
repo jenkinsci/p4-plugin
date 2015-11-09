@@ -32,7 +32,7 @@ public class PerforceCredentialsTest {
 	public void testAddStandardCredentials() throws IOException {
 		P4BaseCredentials credential = new P4PasswordImpl(
 				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhost:1666",
-				null, "user", "0", "pass");
+				null, "user", "0", "0", "pass");
 
 		assertTrue(lookupCredentials().isEmpty());
 		SystemCredentialsProvider.getInstance().getCredentials()
@@ -58,7 +58,7 @@ public class PerforceCredentialsTest {
 	@Test
 	public void testAddPasswordCredentials() throws IOException {
 		P4PasswordImpl credential = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				"id", "description", "localhost:1666", null, "user", "0",
+				"id", "description", "localhost:1666", null, "user", "0", "0",
 				"pass");
 
 		assertTrue(lookupCredentials().isEmpty());
@@ -89,7 +89,7 @@ public class PerforceCredentialsTest {
 	public void testAddSslCredentials() throws IOException {
 		TrustImpl ssl = new TrustImpl("12345ABCD");
 		P4PasswordImpl credential = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				"id", "description", "localhost:1666", ssl, "user", "0", "pass");
+				"id", "description", "localhost:1666", ssl, "user", "0", "0", "pass");
 
 		assertTrue(lookupCredentials().isEmpty());
 		SystemCredentialsProvider.getInstance().getCredentials()
@@ -110,7 +110,7 @@ public class PerforceCredentialsTest {
 				null);
 
 		P4TicketImpl credential = new P4TicketImpl(CredentialsScope.SYSTEM,
-				"id", "desc:ticket", "localhost:1666", null, "user", "0",
+				"id", "desc:ticket", "localhost:1666", null, "user", "0", "0",
 				ticket);
 
 		assertTrue(lookupCredentials().isEmpty());
@@ -138,7 +138,7 @@ public class PerforceCredentialsTest {
 				"~/.p4ticket");
 
 		P4TicketImpl credential = new P4TicketImpl(CredentialsScope.SYSTEM,
-				"id", "description", "localhost:1666", null, "user", "0",
+				"id", "description", "localhost:1666", null, "user", "0", "0",
 				ticket);
 
 		assertTrue(lookupCredentials().isEmpty());

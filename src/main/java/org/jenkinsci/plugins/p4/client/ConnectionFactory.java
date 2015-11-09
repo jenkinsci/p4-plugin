@@ -103,7 +103,8 @@ public class ConnectionFactory {
 		props.put(RpcPropertyDefs.RPC_RELAX_CMD_NAME_CHECKS_NICK, "true");
 
 		// disable timeout for slow servers / large db lock times
-		props.put(RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK, "0");
+		String timeout = String.valueOf(config.getTimeout());
+		props.put(RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK, timeout);
 
 		// Get a server connection
 		String serverUri = config.getServerUri();
