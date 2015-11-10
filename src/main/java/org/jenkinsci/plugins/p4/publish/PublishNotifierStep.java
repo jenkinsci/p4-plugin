@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4.asset;
+package org.jenkinsci.plugins.p4.publish;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -12,16 +12,15 @@ import java.io.IOException;
 
 import jenkins.tasks.SimpleBuildStep;
 
-import org.jenkinsci.plugins.p4.asset.AssetNotifier;
-import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class AssetNotifierStep extends AssetNotifier implements SimpleBuildStep {
+public class PublishNotifierStep extends PublishNotifier implements SimpleBuildStep {
 
 	@DataBoundConstructor
-	public AssetNotifierStep(String credential, Workspace workspace,
+	public PublishNotifierStep(String credential, Workspace workspace,
 			Publish publish) {
 		super(credential, workspace, publish);
 	}

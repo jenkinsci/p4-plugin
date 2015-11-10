@@ -10,8 +10,8 @@ import hudson.util.ListBoxModel;
 
 import javax.inject.Inject;
 
-import org.jenkinsci.plugins.p4.asset.AssetNotifierStep;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.publish.PublishNotifierStep;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
@@ -90,7 +90,7 @@ public class P4PublishStep extends AbstractStepImpl {
 
 		@Override
 		protected Void run() throws Exception {
-			AssetNotifierStep notifier = new AssetNotifierStep(
+			PublishNotifierStep notifier = new PublishNotifierStep(
 					step.getCredential(), step.getWorkspace(),
 					step.getPublish());
 			notifier.perform(run, workspace, launcher, listener);

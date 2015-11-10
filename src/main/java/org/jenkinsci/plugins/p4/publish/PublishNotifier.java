@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4.asset;
+package org.jenkinsci.plugins.p4.publish;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -22,7 +22,6 @@ import jenkins.model.Jenkins;
 
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -30,7 +29,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 
-public class AssetNotifier extends Notifier {
+public class PublishNotifier extends Notifier {
 
 	private final String credential;
 	private final Workspace workspace;
@@ -49,7 +48,7 @@ public class AssetNotifier extends Notifier {
 	}
 
 	@DataBoundConstructor
-	public AssetNotifier(String credential, Workspace workspace, Publish publish) {
+	public PublishNotifier(String credential, Workspace workspace, Publish publish) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.publish = publish;
@@ -93,7 +92,7 @@ public class AssetNotifier extends Notifier {
 
 	public static DescriptorImpl descriptor() {
 		return Jenkins.getInstance().getDescriptorByType(
-				AssetNotifier.DescriptorImpl.class);
+				PublishNotifier.DescriptorImpl.class);
 	}
 
 	@Extension
