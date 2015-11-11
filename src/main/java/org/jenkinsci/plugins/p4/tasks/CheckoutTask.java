@@ -146,7 +146,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					int change = Integer.parseInt(expandedPopulateLabel);
 					build = new P4Revision(change);
 				} catch (NumberFormatException e) {
-					build = new P4Revision(expandedPopulateLabel);
+					if (!"now".equals(expandedPopulateLabel)) {
+						build = new P4Revision(expandedPopulateLabel);
+					}
 				}
 			}
 		}
@@ -169,7 +171,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				int change = Integer.parseInt(lblStr);
 				build = new P4Revision(change);
 			} catch (NumberFormatException e) {
-				build = new P4Revision(lblStr);
+				if (!"now".equals(lblStr)) {
+					build = new P4Revision(lblStr);
+				}
 			}
 		}
 

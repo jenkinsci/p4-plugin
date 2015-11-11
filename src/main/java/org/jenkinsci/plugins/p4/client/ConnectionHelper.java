@@ -307,7 +307,7 @@ public class ConnectionHelper {
 	 */
 	public boolean isLabel(String name) throws Exception {
 		if (name.equals("now")) {
-			return true;
+			return false;
 		}
 		try {
 			ILabel label = connection.getLabel(name);
