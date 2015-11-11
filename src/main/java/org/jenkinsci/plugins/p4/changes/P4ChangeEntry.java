@@ -66,9 +66,11 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set email property on user
 		String email = p4.getEmail(user);
-		P4UserProperty p4prop = new P4UserProperty(email);
-		author.addProperty(p4prop);
-		logger.fine("Setting email for user: " + user + ":" + email);
+		if (email != null && !email.isEmpty()) {
+			P4UserProperty p4prop = new P4UserProperty(email);
+			author.addProperty(p4prop);
+			logger.fine("Setting email for user: " + user + ":" + email);
+		}
 
 		// set date of change
 		date = changelist.getDate();

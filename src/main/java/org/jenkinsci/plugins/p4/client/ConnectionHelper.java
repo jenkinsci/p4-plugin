@@ -18,7 +18,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.IJob;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
@@ -33,7 +32,6 @@ import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
-import com.perforce.p4java.option.server.GetJobsOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
@@ -336,8 +334,11 @@ public class ConnectionHelper {
 
 	public String getEmail(String userName) throws Exception {
 		IUser user = connection.getUser(userName);
-		String email = user.getEmail();
-		return email;
+		if (user != null) {
+			String email = user.getEmail();
+			return email;
+		}
+		return "";
 	}
 
 	/**
