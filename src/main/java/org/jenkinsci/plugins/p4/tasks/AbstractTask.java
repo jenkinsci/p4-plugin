@@ -1,25 +1,31 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import hudson.AbortException;
-import hudson.model.TaskListener;
-
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
 public abstract class AbstractTask implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(AbstractTask.class
-			.getName());
+	private static Logger logger = Logger.getLogger(AbstractTask.class.getName());
 
 	private P4BaseCredentials credential;
 	private TaskListener listener;
@@ -81,6 +87,73 @@ public abstract class AbstractTask implements Serializable {
 		}
 	}
 
+	public Workspace setEnvironment(Run<?, ?> run, Workspace wsType, FilePath buildWorkspace)
+			throws IOException, InterruptedException {
+
+		Workspace ws = (Workspace) wsType.clone();
+
+		// Set environment
+		EnvVars envVars = run.getEnvironment(listener);
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		ws.setExpand(envVars);
+
+		// Set workspace root (check for parallel execution)
+		String root = buildWorkspace.getRemote();
+		if (root.contains("@")) {
+			root = root.replace("@", "%40");
+			String client = ws.getFullName();
+			String name = buildWorkspace.getName();
+			String[] parts = name.split("@");
+			String exec = parts[1];
+
+			// Update Workspace before cloning
+			setWorkspace(ws);
+
+			// Template workspace to .cloneN (where N is the @ number)
+			String charset = ws.getCharset();
+			boolean pin = ws.isPinHost();
+			String template = client + ".clone" + exec;
+			ws = new TemplateWorkspaceImpl(charset, pin, client, template);
+			ws.setExpand(envVars);
+		}
+		ws.setRootPath(root);
+		
+		if (ws.isPinHost()) {
+			String hostname = getHostName(buildWorkspace);
+			ws.setHostName(hostname);
+		} else {
+			ws.setHostName("");
+		}
+		return ws;
+	}
+	
+	public Workspace setNextChange(Workspace ws, List<Integer> changes) {
+		// Set label for changes to build
+		if (changes != null) {
+			if (!changes.isEmpty()) {
+				String label = Integer.toString(changes.get(0));
+				ws.getExpand().set(ReviewProp.LABEL.toString(), label);
+			}
+		}
+		return ws;
+	}
+
+	/**
+	 * Remote execute to find hostname.
+	 * 
+	 * @param buildWorkspace
+	 * @return
+	 */
+	private static String getHostName(FilePath buildWorkspace) {
+		try {
+			HostnameTask task = new HostnameTask();
+			String hostname = buildWorkspace.act(task);
+			return hostname;
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
 	protected String getClient() {
 		return client;
 	}
@@ -99,8 +172,7 @@ public abstract class AbstractTask implements Serializable {
 
 		// test server connection
 		if (!p4.isConnected()) {
-			p4.log("P4: Server connection error: "
-					+ getCredential().getP4port());
+			p4.log("P4: Server connection error: " + getCredential().getP4port());
 			return false;
 		}
 		p4.log("... server: " + getCredential().getP4port());
@@ -159,7 +231,7 @@ public abstract class AbstractTask implements Serializable {
 				String msg = "P4 Task: attempt: " + trys;
 				logger.severe(msg);
 				p4.log(msg);
-				
+
 				// back off n^2 seconds, before retry
 				try {
 					TimeUnit.SECONDS.sleep(trys ^ 2);

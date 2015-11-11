@@ -41,6 +41,8 @@ import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
+import com.perforce.p4java.option.client.ResolveFilesAutoOptions;
+import com.perforce.p4java.option.client.ResolvedFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
@@ -214,10 +216,10 @@ public class ClientHelper extends ConnectionHelper {
 
 		// sync options
 		SyncOptions syncOpts = new SyncOptions();
-		
+
 		// setServerBypass (-p no have list)
 		syncOpts.setServerBypass(!populate.isHave());
-		
+
 		// setForceUpdate (-f only if no -p is set)
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
@@ -255,7 +257,7 @@ public class ClientHelper extends ConnectionHelper {
 		// remove all versioned files (clean have list)
 		String revisions = iclient.getRoot() + "/...#0";
 		files = FileSpecBuilder.makeFileSpecList(revisions);
-		
+
 		// Only use quiet populate option to insure a clean sync
 		boolean quiet = populate.isQuiet();
 		Populate clean = new AutoCleanImpl(false, false, false, quiet, null);
@@ -633,6 +635,35 @@ public class ClientHelper extends ConnectionHelper {
 		rOpts.setNoClientRefresh(true);
 		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
 		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
+		log("... duration: " + timer.toString());
+	}
+
+	/**
+	 * Resolve files in workspace with the specified option.
+	 * 
+	 * @param mode
+	 * @throws Exception
+	 */
+	public void resolveFiles(String mode) throws Exception {
+
+		if ("none".equals(mode)) {
+			return;
+		}
+
+		TimeTask timer = new TimeTask();
+		log("P4 Task: resolve: " + mode);
+
+		// build file revision spec
+		List<IFileSpec> files;
+		String path = iclient.getRoot() + "/...";
+		files = FileSpecBuilder.makeFileSpecList(path);
+
+		// Unshelve change for review
+		ResolveFilesAutoOptions rsvOpts = new ResolveFilesAutoOptions();
+		rsvOpts.setOptions("-" + mode);
+		List<IFileSpec> rsvMsg = iclient.resolveFilesAuto(files, rsvOpts);
+		validateFileSpecs(rsvMsg, "no file(s) to resolve");
+
 		log("... duration: " + timer.toString());
 	}
 

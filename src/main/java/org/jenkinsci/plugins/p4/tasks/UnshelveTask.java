@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
@@ -14,20 +13,21 @@ import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 
-public class PublishTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
+public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(PublishTask.class.getName());
+	private static Logger logger = Logger.getLogger(UnshelveTask.class.getName());
 
-	private final Publish publish;
+	private final String resolve;
+	private int shelf;
 
-	public PublishTask(Publish publish) {
-		this.publish = publish;
+	public UnshelveTask(String resolve) {
+		this.resolve = resolve;
 	}
 
-	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
-		return (Boolean) tryTask();
+	public void setShelf(int shelf) {
+		this.shelf = shelf;
 	}
 
 	@Override
@@ -38,11 +38,10 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 				return false;
 			}
 
-			// Look for changes and add to change-list, then publish
-			boolean open = p4.buildChange();
-			if (open) {
-				p4.publishChange(publish);
-			}
+			p4.unshelveFiles(shelf);
+
+			p4.resolveFiles(resolve);
+
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");
 			String msg = "Unable to publish workspace: " + e;
@@ -54,7 +53,14 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 		return true;
 	}
 
+	@Override
+	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
+		return (Boolean) tryTask();
+	}
+
+	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
+
 }

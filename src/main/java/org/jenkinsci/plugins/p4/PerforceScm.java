@@ -256,51 +256,9 @@ public class PerforceScm extends SCM {
 		task.setListener(listener);
 		task.setCredential(credential);
 
-		// Clone workspace (this SCM object seems to get reused)
-		Workspace ws = (Workspace) workspace.clone();
-
-		// Set environment
-		EnvVars envVars = run.getEnvironment(listener);
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
-		ws.setExpand(envVars);
-
-		// Set workspace root (check for parallel execution)
-		String root = buildWorkspace.getRemote();
-		if (root.contains("@")) {
-			root = root.replace("@", "%40");
-			String client = ws.getFullName();
-			String name = buildWorkspace.getName();
-			String[] parts = name.split("@");
-			String exec = parts[1];
-
-			// Update Workspace before cloning
-			task.setWorkspace(ws);
-
-			// Template workspace to .cloneN (where N is the @ number)
-			String charset = ws.getCharset();
-			boolean pin = ws.isPinHost();
-			String template = client + ".clone" + exec;
-			ws = new TemplateWorkspaceImpl(charset, pin, client, template);
-			ws.setExpand(envVars);
-		}
-		ws.setRootPath(root);
-
-		if (ws.isPinHost()) {
-			String hostname = getHostName(buildWorkspace);
-			ws.setHostName(hostname);
-		} else {
-			ws.setHostName("");
-		}
-
-		// Set label for changes to build
-		if (changes != null) {
-			if (!changes.isEmpty()) {
-				String label = Integer.toString(changes.get(0));
-				ws.getExpand().set(ReviewProp.LABEL.toString(), label);
-			}
-		}
-
 		// Set workspace used for the Task
+		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+		ws = task.setNextChange(ws, changes);
 		task.setWorkspace(ws);
 		task.initialise();
 
@@ -692,19 +650,5 @@ public class PerforceScm extends SCM {
 		return jenkins;
 	}
 
-	/**
-	 * Remote execute to find hostname.
-	 * 
-	 * @param buildWorkspace
-	 * @return
-	 */
-	private static String getHostName(FilePath buildWorkspace) {
-		try {
-			HostnameTask task = new HostnameTask();
-			String hostname = buildWorkspace.act(task);
-			return hostname;
-		} catch (Exception e) {
-			return "";
-		}
-	}
+
 }
