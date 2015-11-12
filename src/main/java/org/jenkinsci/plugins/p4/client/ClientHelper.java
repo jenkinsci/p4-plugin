@@ -604,6 +604,12 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public void unshelveFiles(int review) throws Exception {
+		// skip if review is 0 or less
+		if(review < 1) {
+			log("P4 Task: skipping review: " + review);
+			return;
+		}
+		
 		TimeTask timer = new TimeTask();
 		log("P4 Task: unshelve review: " + review);
 
