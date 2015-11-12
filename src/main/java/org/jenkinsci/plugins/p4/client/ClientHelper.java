@@ -651,7 +651,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		TimeTask timer = new TimeTask();
-		log("P4 Task: resolve: " + mode);
+		log("P4 Task: resolve: -" + mode);
 
 		// build file revision spec
 		List<IFileSpec> files;
@@ -660,7 +660,11 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Unshelve change for review
 		ResolveFilesAutoOptions rsvOpts = new ResolveFilesAutoOptions();
-		rsvOpts.setOptions("-" + mode);
+		rsvOpts.setAcceptTheirs("at".equals(mode));
+		rsvOpts.setAcceptYours("ay".equals(mode));
+		rsvOpts.setSafeMerge("as".equals(mode));
+		rsvOpts.setForceResolve("af".equals(mode));
+		
 		List<IFileSpec> rsvMsg = iclient.resolveFilesAuto(files, rsvOpts);
 		validateFileSpecs(rsvMsg, "no file(s) to resolve");
 
