@@ -1,3 +1,4 @@
+.git/
 *.class
 
 # Mobile Tools for Java (J2ME)
@@ -26,3 +27,7 @@ vagrant/
 .pydevproject
 .idea
 *.iml
+
+.p4config
+
+.p4ignore

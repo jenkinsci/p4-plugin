@@ -201,13 +201,21 @@ The Build Review Action support the following parameters:
 * pass (URL to call after a build succeeded)
 * fail (URL to call after a build failed)
 
-*Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. ${label}; for this reason please avoid these names for slaves and matrix axis.*
+*Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. `${label}`; for this reason please avoid these names for slaves and matrix axis.*
 
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 
 ![Build review](docs/images/review.png)
 
 ![Build manual](docs/images/manual.png)
+
+## Unshelve Build step
+
+The plugin supports unshelving one or more shelved changes into your Jenkins workspace as a build step. Select the 'Perforce: Unshelve' from the 'Add build step' dropdown and provide a change-list number or custom environment variable `${VAR}` in the 'Unshelve Changelist` box.
+
+![Unshelve step](docs/images/unshelve.png)
+
+There is an optional 'Resolve Option' select box to choose the type of resolve to use on the unshelved files. This might be needed if the shelved revisions are at a different revision to the files sync'ed in the workspace.
 
 ## Changes Summary
 
@@ -269,7 +277,7 @@ Link to change in Swarm
 
 ## Workflow support
 
-The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce `p4sync`, `p4tag` and `p4publish`.
+The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce `p4sync`, `p4unshelve`, `p4tag` and `p4publish`.
 
 To use the Workflow install the plugin(s) as needed.  Create a new Workflow Job by selecting 'New Item' from the left hand menu, provide an 'Item name' and choose a 'Workflow' project.
 

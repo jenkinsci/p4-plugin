@@ -2,8 +2,8 @@
 
 ## Contents
 
-* [Release notes](RELEASE.md)
-* [Setup guide](SETUP.md)
+* [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
+* [Setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md)
 * [Jenkins page](https://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin)
 
 ## Requirements
