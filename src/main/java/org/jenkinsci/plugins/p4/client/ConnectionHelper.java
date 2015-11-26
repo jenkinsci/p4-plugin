@@ -30,6 +30,7 @@ import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
+import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
 import com.perforce.p4java.server.CmdSpec;
@@ -287,7 +288,9 @@ public class ConnectionHelper {
 
 	public IChangelistSummary getChangeSummary(int id) throws P4JavaException {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@=" + id);
-		List<IChangelistSummary> summary = connection.getChangelists(spec, null);
+		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
+		cngOpts.setLongDesc(true);
+		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
 		return summary.get(0);
 	}
 
