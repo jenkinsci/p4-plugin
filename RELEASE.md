@@ -1,5 +1,9 @@
 ## Release notes
 
+### Release 1.3.4 (major features/fixes)
+
+[@16585](https://swarm.workshop.perforce.com/changes/16585) - Fetch full change description.  The 'p4 changes' optimisation only fetched the first 32 characters.  Added the '-l' flag to fetch the full description. JENKINS-31748
+
 ### Release 1.3.3 (major features/fixes)
 
 [@16530](https://swarm.workshop.perforce.com/changes/16530) - Skip unshelve task if change is 0 or less.
