@@ -69,11 +69,10 @@ public class TemplateWorkspaceImpl extends Workspace {
 			logger.info("P4: Creating template client: " + clientName);
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
+			implClient.setOwnerName(user);
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
-		// Set owner (not set during create)
-		iclient.setOwnerName(user);
 
 		// set line endings explicitly (JENKINS-28760)
 		iclient.setLineEnd(itemplate.getLineEnd());

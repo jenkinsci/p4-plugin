@@ -62,12 +62,11 @@ public class SpecWorkspaceImpl extends Workspace {
 			logger.info("P4: Creating client from spec: " + clientName);
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
+			implClient.setOwnerName(user);
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
 
-		// Set owner (not set during create)
-		iclient.setOwnerName(user);
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPath);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);

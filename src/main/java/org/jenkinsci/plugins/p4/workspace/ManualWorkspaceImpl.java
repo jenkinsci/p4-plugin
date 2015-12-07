@@ -64,11 +64,10 @@ public class ManualWorkspaceImpl extends Workspace {
 			logger.info("P4: Creating manual client: " + clientName);
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
+			implClient.setOwnerName(user);
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
-
-		iclient.setOwnerName(user);
 
 		ClientOptions options = new ClientOptions();
 		options.setAllWrite(getSpec().allwrite);

@@ -55,11 +55,10 @@ public class StreamWorkspaceImpl extends Workspace {
 			logger.info("P4: Creating stream client: " + clientName);
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
+			implClient.setOwnerName(user);
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
-		// Set owner (not set during create)
-		iclient.setOwnerName(user);
 
 		// Expand Stream name
 		String streamFullName = getExpand().format(getStreamName(), false);
