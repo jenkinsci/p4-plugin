@@ -59,6 +59,9 @@ public class StreamWorkspaceImpl extends Workspace {
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
+		
+		// Owner set for use with p4maven
+		iclient.setOwnerName(user);
 
 		// Expand Stream name
 		String streamFullName = getExpand().format(getStreamName(), false);

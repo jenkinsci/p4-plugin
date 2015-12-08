@@ -1,9 +1,5 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.util.FormValidation;
-
 import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
@@ -21,13 +17,16 @@ import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
 
+import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
+
 public class SpecWorkspaceImpl extends Workspace {
 
 	private final String name;
 	private final String specPath;
 
-	private static Logger logger = Logger.getLogger(SpecWorkspaceImpl.class
-			.getName());
+	private static Logger logger = Logger.getLogger(SpecWorkspaceImpl.class.getName());
 
 	@Override
 	public String getName() {
@@ -44,16 +43,14 @@ public class SpecWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public SpecWorkspaceImpl(String charset, boolean pinHost, String name,
-			String specPath) {
+	public SpecWorkspaceImpl(String charset, boolean pinHost, String name, String specPath) {
 		super(charset, pinHost);
 		this.name = name;
 		this.specPath = specPath;
 	}
 
 	@Override
-	public IClient setClient(IOptionsServer connection, String user)
-			throws Exception {
+	public IClient setClient(IOptionsServer connection, String user) throws Exception {
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
 
@@ -66,6 +63,9 @@ public class SpecWorkspaceImpl extends Workspace {
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
+
+		// Owner set for use with p4maven
+		iclient.setOwnerName(user);
 
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPath);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
@@ -94,8 +94,7 @@ public class SpecWorkspaceImpl extends Workspace {
 		 * @param value
 		 *            The text that the user entered.
 		 */
-		public AutoCompletionCandidates doAutoCompleteName(
-				@QueryParameter String value) {
+		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
 		}
 
@@ -110,8 +109,7 @@ public class SpecWorkspaceImpl extends Workspace {
 		 * @param value
 		 *            The text that the user entered.
 		 */
-		public AutoCompletionCandidates doAutoCompleteSpecPath(
-				@QueryParameter String value) {
+		public AutoCompletionCandidates doAutoCompleteSpecPath(@QueryParameter String value) {
 			return NavigateHelper.getPath(value);
 		}
 

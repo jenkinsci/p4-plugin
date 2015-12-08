@@ -1,13 +1,6 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.AbortException;
-import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.util.FormValidation;
-
 import java.util.logging.Logger;
-
-import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -23,13 +16,18 @@ import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
+import net.sf.json.JSONObject;
+
 public class ManualWorkspaceImpl extends Workspace {
 
 	private final String name;
 	public WorkspaceSpec spec;
 
-	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
 	@Override
 	public String getName() {
@@ -46,16 +44,14 @@ public class ManualWorkspaceImpl extends Workspace {
 	}
 
 	@DataBoundConstructor
-	public ManualWorkspaceImpl(String charset, boolean pinHost, String name,
-			WorkspaceSpec spec) {
+	public ManualWorkspaceImpl(String charset, boolean pinHost, String name, WorkspaceSpec spec) {
 		super(charset, pinHost);
 		this.name = name;
 		this.spec = spec;
 	}
 
 	@Override
-	public IClient setClient(IOptionsServer connection, String user)
-			throws Exception {
+	public IClient setClient(IOptionsServer connection, String user) throws Exception {
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
 
@@ -68,6 +64,9 @@ public class ManualWorkspaceImpl extends Workspace {
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
+
+		// Owner set for use with p4maven
+		iclient.setOwnerName(user);
 
 		ClientOptions options = new ClientOptions();
 		options.setAllWrite(getSpec().allwrite);
@@ -127,8 +126,7 @@ public class ManualWorkspaceImpl extends Workspace {
 		 * @param value
 		 *            The text that the user entered.
 		 */
-		public AutoCompletionCandidates doAutoCompleteName(
-				@QueryParameter String value) {
+		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
 		}
 

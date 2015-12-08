@@ -74,6 +74,9 @@ public class TemplateWorkspaceImpl extends Workspace {
 			iclient = connection.getClient(clientName);
 		}
 
+		// Owner set for use with p4maven
+		iclient.setOwnerName(user);
+		
 		// set line endings explicitly (JENKINS-28760)
 		iclient.setLineEnd(itemplate.getLineEnd());
 
