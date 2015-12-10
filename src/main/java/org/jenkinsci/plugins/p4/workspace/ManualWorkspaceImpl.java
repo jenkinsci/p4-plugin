@@ -77,7 +77,13 @@ public class ManualWorkspaceImpl extends Workspace {
 		options.setRmdir(getSpec().rmdir);
 		iclient.setOptions(options);
 
-		iclient.setStream(getSpec().getStreamName());
+		// Expand Stream name
+		String streamFullName = getSpec().getStreamName();
+		if(streamFullName != null) {
+			streamFullName = getExpand().format(streamFullName, false);
+		}
+		iclient.setStream(streamFullName);
+
 		iclient.setLineEnd(parseLineEnd(getSpec().getLine()));
 
 		ClientView clientView = new ClientView();
