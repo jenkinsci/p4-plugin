@@ -103,6 +103,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		clientName = clientName.replaceAll(",", "-");
 		clientName = clientName.replaceAll("=", "-");
 		clientName = clientName.replaceAll("/", "-");
+		
+		// store full name in expand options for use in view
+		expand.set("P4_CLIENT", clientName);
+		
 		return clientName;
 	}
 
