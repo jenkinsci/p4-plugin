@@ -505,7 +505,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Remove have entries from client workspace
-		ClientHelper p4 = new ClientHelper(scmCredential, null, client);
+		ClientHelper p4 = new ClientHelper(scmCredential, null, client, "utf8");
 		try {
 			ForceCleanImpl forceClean = new ForceCleanImpl(false, false,
 					populate.isQuiet(), null);

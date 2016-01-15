@@ -42,7 +42,6 @@ import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.ResolveFilesAutoOptions;
-import com.perforce.p4java.option.client.ResolvedFilesOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
@@ -58,17 +57,17 @@ public class ClientHelper extends ConnectionHelper {
 
 	private IClient iclient;
 
-	public ClientHelper(String credential, TaskListener listener, String client) {
+	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
-		clientLogin(client);
+		clientLogin(client, charset);
 	}
 
-	public ClientHelper(P4BaseCredentials credential, TaskListener listener, String client) {
+	public ClientHelper(P4BaseCredentials credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
-		clientLogin(client);
+		clientLogin(client, charset);
 	}
 
-	private void clientLogin(String client) {
+	private void clientLogin(String client, String charset) {
 		// Exit early if no connection
 		if (connection == null) {
 			return;
@@ -84,14 +83,14 @@ public class ClientHelper extends ConnectionHelper {
 			log(err);
 			e.printStackTrace();
 		}
+
+		if (isUnicode()) {
+			connection.setCharsetName(charset);
+		}
+
 	}
 
 	public void setClient(Workspace workspace) throws Exception {
-
-		if (isUnicode()) {
-			String charset = workspace.getCharset();
-			connection.setCharsetName(charset);
-		}
 
 		// Setup/Create workspace based on type
 		iclient = workspace.setClient(connection, authorisationConfig.getUsername());
@@ -605,11 +604,11 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public void unshelveFiles(int review) throws Exception {
 		// skip if review is 0 or less
-		if(review < 1) {
+		if (review < 1) {
 			log("P4 Task: skipping review: " + review);
 			return;
 		}
-		
+
 		TimeTask timer = new TimeTask();
 		log("P4 Task: unshelve review: " + review);
 
@@ -670,7 +669,7 @@ public class ClientHelper extends ConnectionHelper {
 		rsvOpts.setAcceptYours("ay".equals(mode));
 		rsvOpts.setSafeMerge("as".equals(mode));
 		rsvOpts.setForceResolve("af".equals(mode));
-		
+
 		List<IFileSpec> rsvMsg = iclient.resolveFilesAuto(files, rsvOpts);
 		validateFileSpecs(rsvMsg, "no file(s) to resolve");
 

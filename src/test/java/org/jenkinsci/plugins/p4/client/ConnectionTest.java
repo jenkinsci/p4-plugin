@@ -218,7 +218,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in with client for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, "manual.ws");
+		ClientHelper p4 = new ClientHelper(auth, null, "manual.ws", "utf8");
 		IClient iclient = p4.getClient();
 		String clienthost = iclient.getHostName();
 		String hostname = InetAddress.getLocalHost().getHostName();
@@ -702,7 +702,7 @@ public class ConnectionTest {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, client);
+		ClientHelper p4 = new ClientHelper(auth, null, client, "utf8");
 		boolean mod = p4.getClient().getOptions().isModtime();
 		assertEquals(true, mod);
 

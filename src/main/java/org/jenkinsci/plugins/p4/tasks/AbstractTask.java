@@ -30,6 +30,7 @@ public abstract class AbstractTask implements Serializable {
 	private P4BaseCredentials credential;
 	private TaskListener listener;
 	private String client;
+	private String charset;
 
 	transient private Workspace workspace;
 
@@ -57,10 +58,11 @@ public abstract class AbstractTask implements Serializable {
 	public void setListener(TaskListener listener) {
 		this.listener = listener;
 	}
-
+	 
 	public void setWorkspace(Workspace workspace) throws AbortException {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.charset = workspace.getCharset();
 
 		// setup the client workspace to use for the build.
 		ClientHelper p4 = getConnection();
@@ -163,7 +165,7 @@ public abstract class AbstractTask implements Serializable {
 	}
 
 	protected ClientHelper getConnection() {
-		ClientHelper p4 = new ClientHelper(credential, listener, client);
+		ClientHelper p4 = new ClientHelper(credential, listener, client, charset);
 		return p4;
 	}
 

@@ -204,7 +204,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
+		ClientHelper p4 = getConnection();
 		try {
 			changes = p4.listChanges(last, buildChange);
 		} catch (Exception e) {
@@ -230,7 +230,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
+		ClientHelper p4 = getConnection();
 		try {
 			if (status == CheckoutStatus.SHELVED) {
 				P4ChangeEntry cl = new P4ChangeEntry();
@@ -263,9 +263,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	public P4ChangeEntry getCurrentChange() {
 		P4ChangeEntry cl = new P4ChangeEntry();
 		P4Revision current = getBuildChange();
-
-		ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getClient());
-
+		
+		ClientHelper p4 = getConnection();
 		try {
 			cl = current.getChangeEntry(p4);
 		} catch (Exception e) {

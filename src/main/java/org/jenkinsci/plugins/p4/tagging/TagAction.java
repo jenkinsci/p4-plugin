@@ -34,6 +34,7 @@ public class TagAction extends AbstractScmTagAction {
 	private Workspace workspace;
 	private String client;
 	private P4Revision buildChange;
+	private String charset;
 
 	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
 		super(run);
@@ -121,6 +122,7 @@ public class TagAction extends AbstractScmTagAction {
 	public void setWorkspace(Workspace workspace) {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.charset = workspace.getCharset();
 	}
 
 	public String getPort() {
@@ -161,7 +163,7 @@ public class TagAction extends AbstractScmTagAction {
 	 * @throws Exception
 	 */
 	public Label getLabel(String tag) throws Exception {
-		ClientHelper p4 = new ClientHelper(credential, null, client);
+		ClientHelper p4 = new ClientHelper(credential, null, client, charset);
 		Label label = p4.getLabel(tag);
 		return label;
 	}
