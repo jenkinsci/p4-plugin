@@ -256,9 +256,14 @@ public class PerforceScm extends SCM {
 		task.setListener(listener);
 		task.setCredential(credential);
 
-		// Set workspace used for the Task
+		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+
+		// Set changes to build (used by polling), MUST clear after use.
 		ws = task.setNextChange(ws, changes);
+		changes = new ArrayList<Integer>();
+		
+		// Set the Workspace and initialise
 		task.setWorkspace(ws);
 		task.initialise();
 
