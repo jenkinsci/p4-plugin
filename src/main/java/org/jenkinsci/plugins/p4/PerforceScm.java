@@ -1,29 +1,5 @@
 package org.jenkinsci.plugins.p4;
 
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.matrix.MatrixConfiguration;
-import hudson.matrix.MatrixExecutionStrategy;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixProject;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.Computer;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Run;
-import hudson.scm.ChangeLogParser;
-import hudson.scm.PollingResult;
-import hudson.scm.SCMDescriptor;
-import hudson.scm.SCMRevisionState;
-import hudson.scm.SCM;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -33,27 +9,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
-import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
-import org.jenkinsci.plugins.p4.tasks.HostnameTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -61,10 +30,34 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import com.perforce.p4java.impl.generic.core.Label;
 
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixExecutionStrategy;
+import hudson.matrix.MatrixProject;
+import hudson.model.AbstractBuild;
+import hudson.model.Computer;
+import hudson.model.Job;
+import hudson.model.Node;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.scm.ChangeLogParser;
+import hudson.scm.PollingResult;
+import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
+import hudson.scm.SCMRevisionState;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+
 public class PerforceScm extends SCM {
 
-	private static Logger logger = Logger
-			.getLogger(PerforceScm.class.getName());
+	private static Logger logger = Logger.getLogger(PerforceScm.class.getName());
 
 	private final String credential;
 	private final Workspace workspace;
@@ -107,8 +100,8 @@ public class PerforceScm extends SCM {
 	 * automatically copying values from a web form to a class.
 	 */
 	@DataBoundConstructor
-	public PerforceScm(String credential, Workspace workspace,
-			List<Filter> filter, Populate populate, P4Browser browser) {
+	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
+			P4Browser browser) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
@@ -131,9 +124,8 @@ public class PerforceScm extends SCM {
 	 * the build as an Action for later retrieval.
 	 */
 	@Override
-	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run,
-			FilePath buildWorkspace, Launcher launcher, TaskListener listener)
-			throws IOException, InterruptedException {
+	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
+			TaskListener listener) throws IOException, InterruptedException {
 		// Method not required by Perforce
 		return null;
 	}
@@ -144,9 +136,8 @@ public class PerforceScm extends SCM {
 	 * detected by this poll.
 	 */
 	@Override
-	public PollingResult compareRemoteRevisionWith(Job<?, ?> job,
-			Launcher launcher, FilePath buildWorkspace, TaskListener listener,
-			SCMRevisionState baseline) throws IOException, InterruptedException {
+	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
+			TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
@@ -166,8 +157,7 @@ public class PerforceScm extends SCM {
 				// Poll CHILDREN only
 				MatrixProject matrixProj = (MatrixProject) job;
 
-				Collection<MatrixConfiguration> configs = matrixProj
-						.getActiveConfigurations();
+				Collection<MatrixConfiguration> configs = matrixProj.getActiveConfigurations();
 
 				for (MatrixConfiguration config : configs) {
 					EnvVars envVars = config.getEnvironment(node, listener);
@@ -195,8 +185,8 @@ public class PerforceScm extends SCM {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener,
-			FilePath buildWorkspace) throws InterruptedException, IOException {
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace)
+			throws InterruptedException, IOException {
 		PrintStream log = listener.getLogger();
 
 		// set NODE_NAME to Node or default "master" if not set
@@ -244,9 +234,8 @@ public class PerforceScm extends SCM {
 	 * workspace. Authorisation
 	 */
 	@Override
-	public void checkout(Run<?, ?> run, Launcher launcher,
-			FilePath buildWorkspace, TaskListener listener, File changelogFile,
-			SCMRevisionState baseline) throws IOException, InterruptedException {
+	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
+			File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;
@@ -262,7 +251,7 @@ public class PerforceScm extends SCM {
 		// Set changes to build (used by polling), MUST clear after use.
 		ws = task.setNextChange(ws, changes);
 		changes = new ArrayList<Integer>();
-		
+
 		// Set the Workspace and initialise
 		task.setWorkspace(ws);
 		task.initialise();
@@ -309,9 +298,7 @@ public class PerforceScm extends SCM {
 				P4ChangeSet.store(changelogFile, changes);
 				listener.getLogger().println("... done\n");
 			} else {
-				listener.getLogger()
-						.println(
-								"P4 Task: changeLogFile not set. Not saving built changes.");
+				listener.getLogger().println("P4 Task: changeLogFile not set. Not saving built changes.");
 			}
 		} else {
 			String msg = "P4: Build failed";
@@ -340,8 +327,7 @@ public class PerforceScm extends SCM {
 		}
 	}
 
-	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run,
-			CheckoutTask task) {
+	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
 
 		// Look for all changes since the last build
@@ -381,8 +367,7 @@ public class PerforceScm extends SCM {
 	}
 
 	@Override
-	public void
-			buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
+	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = build.getAction(TagAction.class);
@@ -473,19 +458,26 @@ public class PerforceScm extends SCM {
 	 * opportunity to perform clean up.
 	 */
 	@Override
-	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job,
-			FilePath workspace, Node node) throws IOException,
-			InterruptedException {
+	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job, FilePath workspace, Node node)
+			throws IOException, InterruptedException {
 
-		// CASTING: is this safe?
-		AbstractProject<?, ?> project = (AbstractProject<?, ?>) job;
-		PerforceScm scm = (PerforceScm) project.getScm();
-		String scmCredential = scm.getCredential();
+		boolean deleteClient = ((DescriptorImpl) getDescriptor()).isDeleteClient();
+		boolean deleteFiles = ((DescriptorImpl) getDescriptor()).isDeleteFiles();
+
+		logger.info("processWorkspaceBeforeDeletion");
+
+		// Exit early if you want to keep the Client spec.
+		if (!deleteClient) {
+			// return deleteFiles; true continue, false stop delete.
+			return deleteFiles;
+		}
+
+		String scmCredential = getCredential();
 		Run<?, ?> run = job.getLastBuild();
 
 		if (run == null) {
 			logger.warning("P4: No previous builds found");
-			return true;
+			return deleteFiles;
 		}
 
 		// exit early if client workspace is undefined
@@ -495,34 +487,26 @@ public class PerforceScm extends SCM {
 			client = envVars.get("P4_CLIENT");
 		} catch (Exception e) {
 			logger.warning("P4: Unable to read P4_CLIENT");
-			return true;
+			return deleteFiles;
 		}
 
-		// exit early if client workspace does not exist
-		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+		// remove client workspace
+		ConnectionHelper p4 = new ConnectionHelper(scmCredential, null);
 		try {
-			if (!connection.isClient(client)) {
-				return true;
+			if (p4.isClient(client)) {
+				p4.deleteClient(client);
+			} else {
+				logger.warning("P4: Cannot find: " + client);
+				return deleteFiles;
 			}
 		} catch (Exception e) {
 			logger.warning("P4: Not able to get connection");
-			return true;
-		}
-
-		// Remove have entries from client workspace
-		ClientHelper p4 = new ClientHelper(scmCredential, null, client, "utf8");
-		try {
-			ForceCleanImpl forceClean = new ForceCleanImpl(false, false,
-					populate.isQuiet(), null);
-			logger.info("P4: unsyncing client: " + client);
-			p4.syncFiles(new P4Revision(0), forceClean);
-		} catch (Exception e) {
-			logger.warning("P4: Not able to unsync client: " + client);
-			return true;
+			return deleteFiles;
 		} finally {
 			p4.disconnect();
 		}
-		return true;
+
+		return deleteFiles;
 	}
 
 	/**
@@ -550,6 +534,17 @@ public class PerforceScm extends SCM {
 	@Extension
 	public static class DescriptorImpl extends SCMDescriptor<PerforceScm> {
 
+		private boolean deleteClient;
+		private boolean deleteFiles;
+
+		public boolean isDeleteClient() {
+			return deleteClient;
+		}
+
+		public boolean isDeleteFiles() {
+			return deleteFiles;
+		}
+
 		/**
 		 * public no-argument constructor
 		 */
@@ -559,8 +554,7 @@ public class PerforceScm extends SCM {
 		}
 
 		@Override
-		public SCM newInstance(StaplerRequest req, JSONObject formData)
-				throws FormException {
+		public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 			PerforceScm scm = (PerforceScm) super.newInstance(req, formData);
 			return scm;
 		}
@@ -583,8 +577,11 @@ public class PerforceScm extends SCM {
 		 * 
 		 */
 		@Override
-		public boolean configure(StaplerRequest req, JSONObject json)
-				throws FormException {
+		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+
+			deleteClient = json.getBoolean("deleteClient");
+			deleteFiles = json.getBoolean("deleteFiles");
+
 			save();
 			return true;
 		}
@@ -654,6 +651,5 @@ public class PerforceScm extends SCM {
 		Jenkins jenkins = Jenkins.getInstance();
 		return jenkins;
 	}
-
 
 }

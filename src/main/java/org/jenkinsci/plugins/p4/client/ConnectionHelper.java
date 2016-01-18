@@ -30,6 +30,7 @@ import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
+import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
@@ -333,6 +334,18 @@ public class ConnectionHelper {
 		} catch (RequestException e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Delete a client workspace
+	 * 
+	 * @param userName
+	 * @return
+	 * @throws Exception
+	 */
+	public void deleteClient(String name) throws Exception {
+		DeleteClientOptions opts = new DeleteClientOptions();
+		connection.deleteClient(name, opts);
 	}
 
 	public String getEmail(String userName) throws Exception {

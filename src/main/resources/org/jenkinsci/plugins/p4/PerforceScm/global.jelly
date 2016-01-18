@@ -1,8 +1,14 @@
-<j:jelly 	xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" 
-			xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-
-
-	<f:section title="Perforce Global settings">		
-
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
+			xmlns:c="/lib/credentials">
+		
+	<f:section title="Perforce: OnDelete Workspace Options">
+		<f:entry field="deleteClient">
+			<f:checkbox title="${%Delete Perforce client}" default="true"/>
+		</f:entry>
+		<f:entry field="deleteFiles">
+			<f:checkbox title="${%Delete Workspace files}" default="true"/>
+		</f:entry>
 	</f:section>
+	
 </j:jelly>
