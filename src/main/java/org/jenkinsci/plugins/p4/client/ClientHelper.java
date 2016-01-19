@@ -422,6 +422,23 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
+	public void versionFile(String file, String desc) throws Exception {
+		// build file revision spec
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
+		findChangeFiles(files);
+
+		// Exit early if no change
+		if (!isOpened(files)) {
+			return;
+		}
+
+		// create changelist with files
+		IChangelist change = createChangeList(files, desc);
+
+		// submit changelist
+		submitFiles(change, false);
+	}
+
 	public boolean buildChange() throws Exception {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: reconcile files to changelist.");
@@ -429,7 +446,16 @@ public class ClientHelper extends ConnectionHelper {
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+		findChangeFiles(files);
 
+		// Check if file is open
+		boolean open = isOpened(files);
+
+		log("duration: " + timer.toString() + "\n");
+		return open;
+	}
+
+	private void findChangeFiles(List<IFileSpec> files) throws Exception {
 		// cleanup pending changes (revert -k)
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
@@ -447,12 +473,6 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setUseWildcards(true);
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
-
-		// Check if file is open
-		boolean open = isOpened(files);
-
-		log("duration: " + timer.toString() + "\n");
-		return open;
 	}
 
 	public void publishChange(Publish publish) throws Exception {
@@ -462,17 +482,9 @@ public class ClientHelper extends ConnectionHelper {
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+		String desc = publish.getExpandedDesc();
 
-		// create new pending change and add description
-		IChangelist change = new Changelist();
-		change.setDescription(publish.getExpandedDesc());
-		change = iclient.createChangelist(change);
-		log("... pending change: " + change.getId());
-
-		// move files from default change
-		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
-		reopenOpts.setChangelistId(change.getId());
-		iclient.reopenFiles(files, reopenOpts);
+		IChangelist change = createChangeList(files, desc);
 
 		// logging
 		OpenedFilesOptions openOps = new OpenedFilesOptions();
@@ -486,36 +498,63 @@ public class ClientHelper extends ConnectionHelper {
 		// if SUBMIT
 		if (publish instanceof SubmitImpl) {
 			SubmitImpl submit = (SubmitImpl) publish;
-			SubmitOptions submitOpts = new SubmitOptions();
-			submitOpts.setReOpen(submit.isReopen());
-
-			log("... submitting files");
-			List<IFileSpec> submitted = change.submit(submitOpts);
-			validateFileSpecs(submitted, "Submitted as change");
-
-			long cngNumber = findSubmittedChange(submitted);
-			if (cngNumber > 0) {
-				log("... submitted in change: " + cngNumber);
-			}
+			boolean reopen = submit.isReopen();
+			submitFiles(change, reopen);
 		}
 
 		// if SHELVE
 		if (publish instanceof ShelveImpl) {
 			ShelveImpl shelve = (ShelveImpl) publish;
-
-			log("... shelving files");
-			List<IFileSpec> shelved = iclient.shelveChangelist(change);
-			validateFileSpecs(shelved, "");
-
-			// post shelf cleanup
-			RevertFilesOptions revertOpts = new RevertFilesOptions();
-			revertOpts.setChangelistId(change.getId());
-			revertOpts.setNoClientRefresh(!shelve.isRevert());
-			String r = (shelve.isRevert()) ? "(revert)" : "(revert -k)";
-			log("... reverting open files " + r);
-			iclient.revertFiles(files, revertOpts);
+			boolean revert = shelve.isRevert();
+			shelveFiles(change, files, revert);
 		}
+
 		log("duration: " + timer.toString() + "\n");
+	}
+
+	private IChangelist createChangeList(List<IFileSpec> files, String desc) throws Exception {
+		// create new pending change and add description
+		IChangelist change = new Changelist();
+		change.setDescription(desc);
+		change = iclient.createChangelist(change);
+		log("... pending change: " + change.getId());
+
+		// move files from default change
+		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
+		reopenOpts.setChangelistId(change.getId());
+		iclient.reopenFiles(files, reopenOpts);
+
+		return change;
+	}
+
+	private void submitFiles(IChangelist change, boolean reopen) throws Exception {
+		log("... submitting files");
+		
+		SubmitOptions submitOpts = new SubmitOptions();
+		submitOpts.setReOpen(reopen);
+
+		List<IFileSpec> submitted = change.submit(submitOpts);
+		validateFileSpecs(submitted, "Submitted as change");
+
+		long cngNumber = findSubmittedChange(submitted);
+		if (cngNumber > 0) {
+			log("... submitted in change: " + cngNumber);
+		}
+	}
+
+	private void shelveFiles(IChangelist change, List<IFileSpec> files, boolean revert) throws Exception {
+		log("... shelving files");
+		
+		List<IFileSpec> shelved = iclient.shelveChangelist(change);
+		validateFileSpecs(shelved, "");
+
+		// post shelf cleanup
+		RevertFilesOptions revertOpts = new RevertFilesOptions();
+		revertOpts.setChangelistId(change.getId());
+		revertOpts.setNoClientRefresh(!revert);
+		String r = (revert) ? "(revert)" : "(revert -k)";
+		log("... reverting open files " + r);
+		iclient.revertFiles(files, revertOpts);
 	}
 
 	private long findSubmittedChange(List<IFileSpec> submitted) {
