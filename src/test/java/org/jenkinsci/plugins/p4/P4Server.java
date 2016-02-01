@@ -65,8 +65,8 @@ public class P4Server {
 		executor.execute(cmdLine, resultHandler);
 		logger.info("start signal sent...");
 
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
-				"desc", p4port, null, "admin", "0", "0", "Password");
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id", "desc", p4port, null, "admin", "0", "0",
+				"Password");
 
 		int retry = 0;
 		while (retry < 20) {
@@ -80,8 +80,8 @@ public class P4Server {
 	}
 
 	public void stop() throws Exception {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id",
-				"desc", p4port, null, "admin", "0", "0", "Password");
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, "id", "desc", p4port, null, "admin", "0", "0",
+				"Password");
 
 		p4 = new ConnectionHelper(auth);
 		p4.login();
@@ -99,6 +99,7 @@ public class P4Server {
 			} catch (Exception e) {
 				break;
 			}
+			retry++;
 		}
 	}
 
@@ -112,8 +113,8 @@ public class P4Server {
 
 	public void extract(File archive) throws Exception {
 		TarArchiveInputStream tarIn = null;
-		tarIn = new TarArchiveInputStream(new GzipCompressorInputStream(
-				new BufferedInputStream(new FileInputStream(archive))));
+		tarIn = new TarArchiveInputStream(
+				new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(archive))));
 
 		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
 		while (tarEntry != null) {
@@ -124,8 +125,7 @@ public class P4Server {
 			} else {
 				node.createNewFile();
 				byte[] buf = new byte[1024];
-				BufferedOutputStream bout = new BufferedOutputStream(
-						new FileOutputStream(node));
+				BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(node));
 
 				int len = 0;
 				while ((len = tarIn.read(buf)) != -1) {
