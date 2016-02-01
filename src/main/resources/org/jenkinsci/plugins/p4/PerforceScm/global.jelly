@@ -4,6 +4,9 @@
 		
 	<f:section title="Perforce: Version Configuration (!BETA under development and subject to change BETA!)">
 	<f:advanced>
+		<f:entry field="autov">
+			<f:checkbox title="${%Enabled}" default="false"/>
+		</f:entry>
 		<f:entry title="Perforce Credentials" field="credential">
 			<c:select/>
 		</f:entry>

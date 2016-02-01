@@ -534,6 +534,7 @@ public class PerforceScm extends SCM {
 	@Extension
 	public static class DescriptorImpl extends SCMDescriptor<PerforceScm> {
 
+		private boolean autov;
 		private String credential;
 		private String clientName;
 		private String depotPath;
@@ -541,6 +542,10 @@ public class PerforceScm extends SCM {
 		private boolean deleteClient;
 		private boolean deleteFiles;
 
+		public boolean isEnabled() {
+			return autov;
+		}
+		
 		public String getCredential() {
 			return credential;
 		}
@@ -595,6 +600,7 @@ public class PerforceScm extends SCM {
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
 
+			autov = json.getBoolean("autov");
 			credential = json.getString("credential");
 			clientName = json.getString("clientName");
 			depotPath = json.getString("depotPath");

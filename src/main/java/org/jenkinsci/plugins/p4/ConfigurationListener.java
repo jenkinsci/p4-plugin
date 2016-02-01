@@ -24,12 +24,21 @@ public class ConfigurationListener extends SaveableListener {
 	private static Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
+		@SuppressWarnings("unchecked")
+		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+		DescriptorImpl p4scm = (DescriptorImpl) scm;
+
+		// Exit early if disabled
+		if (!p4scm.isEnabled()) {
+			return;
+		}
+
 		ClientHelper p4 = null;
 		try {
 			String file = xml.getFile().getCanonicalPath();
 			logger.info(">>> onUpdated: " + file);
 
-			p4 = getClientHelper();
+			p4 = getClientHelper(p4scm);
 			p4.versionFile(file, "Configuration change");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -39,13 +48,9 @@ public class ConfigurationListener extends SaveableListener {
 		}
 	}
 
-	private ClientHelper getClientHelper() throws Exception {
+	private ClientHelper getClientHelper(DescriptorImpl p4scm) throws Exception {
 
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
-
-		@SuppressWarnings("unchecked")
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
-		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
 		String credential = p4scm.getCredential();
 		String clientName = p4scm.getClientName();
