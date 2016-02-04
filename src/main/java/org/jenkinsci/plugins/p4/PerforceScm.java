@@ -14,10 +14,12 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
+import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
@@ -466,12 +468,6 @@ public class PerforceScm extends SCM {
 
 		logger.info("processWorkspaceBeforeDeletion");
 
-		// Exit early if you want to keep the Client spec.
-		if (!deleteClient) {
-			// return deleteFiles; true continue, false stop delete.
-			return deleteFiles;
-		}
-
 		String scmCredential = getCredential();
 		Run<?, ?> run = job.getLastBuild();
 
@@ -490,14 +486,35 @@ public class PerforceScm extends SCM {
 			return deleteFiles;
 		}
 
-		// remove client workspace
-		ConnectionHelper p4 = new ConnectionHelper(scmCredential, null);
+		// exit early if client workspace does not exist
+		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
 		try {
-			if (p4.isClient(client)) {
-				p4.deleteClient(client);
-			} else {
-				logger.warning("P4: Cannot find: " + client);
+			if (!connection.isClient(client)) {
 				return deleteFiles;
+			}
+		} catch (Exception e) {
+			logger.warning("P4: Not able to get connection");
+			return deleteFiles;
+		}
+
+		// clean up Perforce Workspace
+		ClientHelper p4 = new ClientHelper(scmCredential, null, client, "utf8");
+		try {
+			// remove files if required
+			if (deleteFiles) {
+				ForceCleanImpl forceClean = new ForceCleanImpl(false, false, populate.isQuiet(), null);
+				logger.info("P4: unsyncing client: " + client);
+				p4.syncFiles(new P4Revision(0), forceClean);
+			}
+
+			// remove client if required
+			if (deleteClient) {
+				if (p4.isClient(client)) {
+					p4.deleteClient(client);
+				} else {
+					logger.warning("P4: Cannot find: " + client);
+					return deleteFiles;
+				}
 			}
 		} catch (Exception e) {
 			logger.warning("P4: Not able to get connection");
@@ -545,7 +562,7 @@ public class PerforceScm extends SCM {
 		public boolean isEnabled() {
 			return autov;
 		}
-		
+
 		public String getCredential() {
 			return credential;
 		}
