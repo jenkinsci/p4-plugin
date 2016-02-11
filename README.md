@@ -1,4 +1,5 @@
-# Perforce plugin for Jenkins (p4-plugin)
+# P4 Plugin
+Jenkins plugin for a Perforce Helix Versioning Engine (P4D).
 
 ## Contents
 
@@ -9,7 +10,7 @@
 ## Requirements
 
 * Jenkins 1.509 or greater.
-* P4D 2012.1 or greater.
+* Helix Versioning Engine 2012.1 or greater.
 * Minimum Perforce Protection of `open` for the Jenkins user.
 * Review Build feature requires Swarm 2014.2 or greater.
 

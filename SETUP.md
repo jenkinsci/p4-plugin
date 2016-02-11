@@ -2,11 +2,11 @@
 
 ## Credentials
 
-The plugin makes use of the Jenkins Credential store making it easier to manage the Perforce Server connection for multiple Jenkins jobs.  Perforce Server credentials must be added to the Global or a user defined domain, using one of the two supported Perforce Credentials: 'Perforce Password Credential' or 'Perforce Ticket Credential'.
+The plugin makes use of the Jenkins Credential store, making it easier to manage the Helix Versioning Engine connection for multiple Jenkins jobs.  P4 Plugin credentials must be added to the 'Global' or a User defined domain, using one of the two supported plugin Credentials: 'Perforce Password Credential' or 'Perforce Ticket Credential'.
 
 ![Global credentials](docs/images/1.png)
 
-To add a Perforce Credential:
+To add a Credential:
 
 1. Navigate to the Jenkins Credentials page (select 'Credentials' on the left hand side)
 2. Select 'Global credentials' (or add domain if needed)
@@ -20,43 +20,43 @@ To add a Perforce Credential:
  
 ![Perforce Credential](docs/images/2.png)
 
-The Perforce Ticket Credential supports using a ticket file (such as the default P4TICKETS file) or a ticket value (returned by the command p4 login -p).  If Ticket authentication is used for remote builds the Ticket must be valid for the remote host (either login on the remote host or use p4 login -a). 
+The 'Perforce Ticket Credential' supports using a ticket file (such as the default P4TICKETS file) or a ticket value (returned by the command p4 login -p).  If Ticket authentication is used for remote builds the Ticket must be valid for the remote host (either login on the remote host or use p4 login -a). 
 
-All Perforce Credential types support SSL for use on Secured Perforce Servers; to use just check the SSL box and provide the Trust fingerprint.
+All P4 plugin Credential types support SSL for use on a Secured Helix Versioning Engine (P4D); to use just check the SSL box and provide the Trust fingerprint.
 
 ![P4Trust Credential](docs/images/3.png)
 
 ## Workspaces
 
-Perforce workspaces are configured on the Jenkin Job configuration page and support the following behaviours:
+Perforce Helix Workspaces are configured on the Jenkin Job configuration page and support the following behaviours:
 
 * Static
 
-The workspace specified must have been previously defined.  The Perforce Jenkins user must either own the workspace or the spec should be unlocked allowing it to make edits.  The workspace View remains static, but Jenkins will update other fields such as the workspace root and clobber option. 
+The Workspace specified must have been previously defined.  The plugin user must either own the workspace or the spec should be unlocked allowing it to make edits.  The Workspace View remains static, but Jenkins will update other fields such as the Workspace root and clobber option.
 
 ![Static config](docs/images/4.png)
 
 * Spec File
 
-The workspace configuration is loaded from a depot file containing a Client workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format).  The name of the workspace must match the name of the Client workspace Spec.
+The Workspace configuration is loaded from a depot file containing a Client Workspace Spec (same output as p4 client -o and the Spec depot '.p4s' format). The name of the Workspace must match the name of the Client Workspace Spec.
 
 ![Spec config](docs/images/spec.png)
 
 * Manual
 
-This allows the specified workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the workspace root and may override the clobber option.
+Allows the specified Workspace to be created (if it does not exist) or update the spec by setting the various options.  Jenkins will fill out the Workspace root and may override the clobber option.
 
 ![Manual config](docs/images/5.png)
 
 * Template & Stream
 
-In this mode the workspace View is generated using the specified template workspace or stream.  The name of the workspace is generated using the Workspace Name Format field and makes it an ideal choice for matrix builds.
+In this mode the Workspace View is generated using the specified template workspace or stream.  The name of the Workspace is generated using the Workspace Name Format field and makes it an ideal choice for Matrix builds.
 
 ![Stream config](docs/images/6.png)
 
 ## Variable expansion
 
-Many of the workspace fields can include environment variables to help define their  value.  Take the 'Worksapce name' often I use:
+Many of the Workspace fields can include environment variables to help define their value.  Take the 'Worksapce name' often I use:
 
     jenkins-${NODE_NAME}-${JOB_NAME}
     
@@ -80,7 +80,7 @@ Jenkins provides a set of environment variable and you can also define your own.
 `BUILD_URL` - Full URL of this build, like http://server:port/jenkins/job/foo/15/  
 `JOB_URL` - Full URL of this job, like http://server:port/jenkins/job/foo/  
 
-The p4 plugin allows the use of environemnt vaiables in fields like the Workspace view and Stream path.  For example:
+The plugin allows the use of environemnt vaiables in fields like the Workspace view and Stream path.  For example:
 
     //depot/main/proj/... //jenkins-${NODE_NAME}-${JOB_NAME}/...
     
@@ -91,17 +91,17 @@ or with a Matrix build you might have defined your own variables like `${OS}`.  
 
 ## Populating
 
-Perforce will populate the workspace with the file revisions needed for the build, the way the workspace is populated is configured on the Jenkin Job configuration page and support the following behaviours:
+The plugin will populate the Jenkins workspace with the file revisions needed for the build. The way the workspace is populated is configured on the Jenkins Job configuration page and support the following behaviours:
 
 * Automatic cleanup and sync
 
-Perforce will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change.  Depending on the two check options boxes Perforce will then clean up any extra files or restore any modified or missing files.  Finally, Perforce will sync the required file revisions to the workspace populating the 'have' table.
+The plugin will revert any shelved or pending files from the workspace; this includes the removal of files that were added by the shelved or pending change. Depending on the two check options boxes the plugin will then clean up any extra files or restore any modified or missing files. Finally, the plugin will sync the required file revisions to the workspace populating the 'have' table.
 
 ![Automatic populate](docs/images/auto_pop.png)
 
 * Forced clean and sync
 
-Perfore will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.  
+The plugin will remove all files from under the workspace root, then force sync the required file revisions to the workspace.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
 ![Force populate](docs/images/force_pop.png)
 
@@ -109,7 +109,7 @@ This method is not recommended as the cost of IO resources on server and client 
 
 * Sync only
 
-Perforce will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
+The plugin will not attempt to cleanup the workspace; the sync operation will update all files (as CLOBBER is set) to the required set of revisions.  If the populating the 'have' table options is enabled then the 'have' list will be updated.
 
 ![Sync populate](docs/images/sync_pop.png)
 
@@ -131,9 +131,9 @@ Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobI
 
 ### Building at a change
 
-A Jenkins job can build at any point in the codes history, identified by a Perforce change or label.
+A Jenkins job can build at any point in the codes history, identified by a Perforce Helix change or label.
 
-The Jenkins job can be _pinned_ to a Perforce change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
+The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
 
 Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
 
@@ -159,7 +159,7 @@ When polling is used, changes can be filtered to not trigger a build; the filter
 
 * Exclude changes from user
 
-Changes owned by the Perforce user specified in the filter will be excluded.
+Changes owned by the Perforce Helix user specified in the filter will be excluded.
 
 ![User Filter](docs/images/userF.png)
 
@@ -187,11 +187,11 @@ Case B (change will not be filtered, as build.xml is outside of the filter):
  
 ## Review
 
-The plugin supports a Build Review Action with a review/build/ URL endpoint.  Parameters can be passed informing Jenkins of Perforce shelf to unshelve and changelist to sync to.  There are also Pass/Fail callback URLs for use with Swarm.
+The plugin supports a Build Review Action with a `review/build/` URL endpoint.  Parameters can be passed informing Jenkins of Perforce Helix shelf to unshelve and changelist to sync to.  There are also Pass/Fail callback URLs for use with Swarm.
 
 An example URL that would build the review in the shelved change 23980:
 
-http://jenkins_host:8080/job/myJobID/review/build?status=shelved&review=23980
+`http://jenkins_host:8080/job/myJobID/review/build?status=shelved&review=23980`
 
 The Build Review Action support the following parameters:
 * status (shelved or submitted)
@@ -229,7 +229,7 @@ Detailed view...
 
 ## Tagging Builds
 
-Jenkins can tag builds automatically as a Post Build Action or allow manual tagging of a build.  The Tags are stored in Perforce as Automatic Labels with the label view based on the workspace at the time of tagging.
+Jenkins can tag builds automatically as a Post Build Action or allow manual tagging of a build.  The Tags are stored in Perforce Helix as Automatic Labels with the label view based on the workspace at the time of tagging.
 
 Tagging with Post Build Action
 
@@ -245,7 +245,7 @@ Manual Tagging
 
 ![Label tag](docs/images/labelT.png)
 
-* Update the label name and description as required and click 'Label Build' to add the label to Perforce.
+* Update the label name and description as required and click 'Label Build' to add the label to Perforce Helix.
 
 ![Update tag](docs/images/updateT.png)
 
@@ -253,7 +253,7 @@ Manual Tagging
 
 ## Publishing Build assets
 
-Jenkins can automatically shelve or submit build assets to Perforce.  Select the 'Add post-build action' and select the 'Perforce: Publish assets' from the list.  Select the Credentials and Workspace options, you can connect to a different Perforce server if required.  Update the description if required, ${variables} are expanded.
+Jenkins can automatically shelve or submit build assets to Perforce.  Select the 'Add post-build action' and select the 'Perforce: Publish assets' from the list.  Select the Credentials and Workspace options, you can connect to a different Perforce server if required.  Update the description if required, `${variables}` are expanded.
 
 Shelving with Post Build Action
 
@@ -277,7 +277,7 @@ Link to change in Swarm
 
 ## Workflow support
 
-The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce `p4sync`, `p4unshelve`, `p4tag` and `p4publish`.
+The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce Helix `p4sync`, `p4unshelve`, `p4tag` and `p4publish`.
 
 To use the Workflow install the plugin(s) as needed.  Create a new Workflow Job by selecting 'New Item' from the left hand menu, provide an 'Item name' and choose a 'Workflow' project.
 
@@ -288,7 +288,7 @@ You can use the snippet genertor to create each step and use the code to compose
 For example, a basic sync script:
 
 1. Check the 'Snippet Generator' box and from the 'Sample Step' drop down choose `P4 Sync`.
-2. Select a valid Perforce Credential
+2. Select a valid P4 plugin Credential
 3. Fill out *ONLY ONE* of the three boxes for the code source.
 
 e.g.
@@ -329,7 +329,7 @@ There are several limitations as the Workflow plugin is relativly new, these inc
 ### Connection issues
 
 
-**Error**: Setting up a SSL Credentials connection to Perforce.
+**Error**: Setting up a SSL Credentials connection to a Helix Versioning Engine (P4D).
 
 ```
 Unable to connect: com.perforce.p4java.exception.ConnectionException:
@@ -337,7 +337,7 @@ Error occurred during the SSL handshake:
 invalid SSL session
 ```
 
-**Solution**: Due to current US export control restrictions for some countries, the standard JDK package only comes with 128 bit encryption level cyphers. In order to use P4Java to connect to an SSL-enabled Perforce server, those living in eligible countries may download the unlimited strength JCE (Java Cryptography Extension) package and replace the current default cryptography jar files on the build server with the unlimited strength files. 
+**Solution**: Due to current US export control restrictions for some countries, the standard JDK package only comes with 128 bit encryption level cyphers. In order to use P4Java to connect to an SSL-enabled Helix Versioning Engine (P4D), those living in eligible countries may download the unlimited strength JCE (Java Cryptography Extension) package and replace the current default cryptography jar files on the build server with the unlimited strength files. 
 
 The libraries can be downloaded from:
 
