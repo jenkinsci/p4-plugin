@@ -65,6 +65,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
@@ -324,7 +325,8 @@ public class ConnectionTest {
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
 		HtmlForm label = page.getFormByName("label");
-		label.submit();
+		HtmlButton button = label.getButtonByName("labelSubmit");
+		button.click();
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
 		text = page.asText();
