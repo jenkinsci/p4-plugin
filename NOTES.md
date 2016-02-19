@@ -85,15 +85,14 @@ job("auto-created-project") {
 					view '//sandbox/users/poje/... //poje_jenkins_master_test/...'
 				}
 				
-				populate(class:'org.jenkinsci.plugins.p4.populate.AutoCleanImpl') {
-					have 'true'
-					force 'false'
-					modtime 'false'
-					quiet 'true'
-					pin ''
-					replace 'true'
-					delete 'true'
-				}
+			populate(class:'org.jenkinsci.plugins.p4.populate.AutoCleanImpl') {
+				have 'true'
+				force 'false'
+				modtime 'false'
+				quiet 'true'
+				pin ''
+				replace 'true'
+				delete 'true'
 			}
 		}
 	}
