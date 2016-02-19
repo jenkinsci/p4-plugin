@@ -1,10 +1,22 @@
 ## Release notes
 
+### Release 1.3.7 (major features/fixes)
+
+[@18211](https://swarm.workshop.perforce.com/changes/18211) - Fix to DSL example in doc Note.  Populate should not be a child of Workspace.
+
+[@18160](https://swarm.workshop.perforce.com/changes/18160) - Update test case testFreeStyleProject_buildLabel for Jenkins 1.625.3.  Find the form submit button and call a click() instead of the internal submit() method.
+
+[@17835](https://swarm.workshop.perforce.com/changes/17835) - Draft: documentation notes page.  Hints and Tips from Jenkins Users.
+
+[@17834](https://swarm.workshop.perforce.com/changes/17834) - Helix branding update.
+
+[@17303](https://swarm.workshop.perforce.com/changes/17303) - Unsync Perforce versioned files on cleanup.  Don’t rely on Jenkins to Delete Perforce versioned files as some OS ACLs can’t delete them.  JENKINS-24003
+
 ### Release 1.3.6 (major features/fixes)
 
 [@17264](https://swarm.workshop.perforce.com/changes/17264) - Missing retry increment for tests.
 
-[@17263](https://swarm.workshop.perforce.com/changes/17263) - 	Added enable/disable option for auto versioning. Global option to activate Perforce versioning of Jenkins Configurations.
+[@17263](https://swarm.workshop.perforce.com/changes/17263) - Added enable/disable option for auto versioning. Global option to activate Perforce versioning of Jenkins Configurations.
 
 [@16836](https://swarm.workshop.perforce.com/changes/16836) - Versioning for Jenkins configuration pages. Add credential, depot path location and client workspace name, everything else should be automatic.	JENKINS-25145
 
