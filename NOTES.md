@@ -84,6 +84,7 @@ job("auto-created-project") {
 					line 'LOCAL'
 					view '//sandbox/users/poje/... //poje_jenkins_master_test/...'
 				}
+			}
 				
 			populate(class:'org.jenkinsci.plugins.p4.populate.AutoCleanImpl') {
 				have 'true'
