@@ -362,7 +362,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// still empty! No previous build, so add current
-		if (list.isEmpty()) {
+		if ((lastBuild == null) && list.isEmpty()) {
 			list.add(task.getCurrentChange());
 		}
 		return list;
