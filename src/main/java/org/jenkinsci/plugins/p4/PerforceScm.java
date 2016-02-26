@@ -127,8 +127,8 @@ public class PerforceScm extends SCM {
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
 			TaskListener listener) throws IOException, InterruptedException {
-		// Method not required by Perforce
-		return null;
+    // A baseline is not required... but a baseline object is, so we'll return the NONE object.
+    return SCMRevisionState.NONE;
 	}
 
 	/**
@@ -179,7 +179,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Construct workspace from environment and then look for changes.
-	 * 
+	 *
 	 * @param envVars
 	 * @param listener
 	 * @return
@@ -361,7 +361,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// still empty! No previous build, so add current
-		if (list.isEmpty()) {
+		if ((lastBuild == null) && list.isEmpty()) {
 			list.add(task.getCurrentChange());
 		}
 		return list;
@@ -520,9 +520,9 @@ public class PerforceScm extends SCM {
 	 * in the SCM class named DescriptorImpl. The Descriptor should also contain
 	 * the global configuration options as fields, just like the SCM class
 	 * contains the configurations options for a job.
-	 * 
+	 *
 	 * @author pallen
-	 * 
+	 *
 	 */
 	@Extension
 	public static class DescriptorImpl extends SCMDescriptor<PerforceScm> {
@@ -588,7 +588,7 @@ public class PerforceScm extends SCM {
 		 * the Descriptor's fields. To persist the fields to the global
 		 * configuration XML file, the save() method must be called. Data is
 		 * defined in the global.jelly page.
-		 * 
+		 *
 		 */
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
@@ -607,7 +607,7 @@ public class PerforceScm extends SCM {
 
 		/**
 		 * Credentials list, a Jelly config method for a build job.
-		 * 
+		 *
 		 * @return A list of Perforce credential items to populate the jelly
 		 *         Select list.
 		 */
@@ -640,7 +640,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Helper: find the Remote/Local Computer used for build
-	 * 
+	 *
 	 * @param workspace
 	 * @return
 	 */
@@ -658,7 +658,7 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Helper: find the Node for slave build or return current instance.
-	 * 
+	 *
 	 * @param workspace
 	 * @return
 	 */
