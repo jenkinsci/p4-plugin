@@ -14,17 +14,16 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
-import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
+import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -463,9 +462,6 @@ public class PerforceScm extends SCM {
 	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job, FilePath workspace, Node node)
 			throws IOException, InterruptedException {
 
-		boolean deleteClient = ((DescriptorImpl) getDescriptor()).isDeleteClient();
-		boolean deleteFiles = ((DescriptorImpl) getDescriptor()).isDeleteFiles();
-
 		logger.info("processWorkspaceBeforeDeletion");
 
 		String scmCredential = getCredential();
@@ -473,7 +469,7 @@ public class PerforceScm extends SCM {
 
 		if (run == null) {
 			logger.warning("P4: No previous builds found");
-			return deleteFiles;
+			return false;
 		}
 
 		// exit early if client workspace is undefined
@@ -483,47 +479,27 @@ public class PerforceScm extends SCM {
 			client = envVars.get("P4_CLIENT");
 		} catch (Exception e) {
 			logger.warning("P4: Unable to read P4_CLIENT");
-			return deleteFiles;
+			return false;
 		}
 
 		// exit early if client workspace does not exist
 		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
 		try {
 			if (!connection.isClient(client)) {
-				return deleteFiles;
+				logger.warning("P4: client not found:" + client);
+				return false;
 			}
 		} catch (Exception e) {
 			logger.warning("P4: Not able to get connection");
-			return deleteFiles;
+			return false;
 		}
 
-		// clean up Perforce Workspace
-		ClientHelper p4 = new ClientHelper(scmCredential, null, client, "utf8");
-		try {
-			// remove files if required
-			if (deleteFiles) {
-				ForceCleanImpl forceClean = new ForceCleanImpl(false, false, populate.isQuiet(), null);
-				logger.info("P4: unsyncing client: " + client);
-				p4.syncFiles(new P4Revision(0), forceClean);
-			}
+		// Create task
+		RemoveClientTask task = new RemoveClientTask(scmCredential, client, populate);
+		boolean clean = workspace.act(task);
 
-			// remove client if required
-			if (deleteClient) {
-				if (p4.isClient(client)) {
-					p4.deleteClient(client);
-				} else {
-					logger.warning("P4: Cannot find: " + client);
-					return deleteFiles;
-				}
-			}
-		} catch (Exception e) {
-			logger.warning("P4: Not able to get connection");
-			return deleteFiles;
-		} finally {
-			p4.disconnect();
-		}
-
-		return deleteFiles;
+		logger.info("clean: " + clean);
+		return clean;
 	}
 
 	/**
