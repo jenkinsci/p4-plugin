@@ -471,6 +471,9 @@ public class ClientHelper extends ConnectionHelper {
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
 		statusOpts.setUseWildcards(true);
+		statusOpts.setOutsideAdd(true);
+		statusOpts.setOutsideEdit(true);
+		
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}

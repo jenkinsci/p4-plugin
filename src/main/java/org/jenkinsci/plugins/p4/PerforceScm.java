@@ -127,8 +127,9 @@ public class PerforceScm extends SCM {
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
 			TaskListener listener) throws IOException, InterruptedException {
-    // A baseline is not required... but a baseline object is, so we'll return the NONE object.
-    return SCMRevisionState.NONE;
+		// A baseline is not required... but a baseline object is, so we'll
+		// return the NONE object.
+		return SCMRevisionState.NONE;
 	}
 
 	/**
