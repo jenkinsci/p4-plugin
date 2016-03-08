@@ -21,6 +21,7 @@ import com.perforce.p4java.impl.generic.core.Label;
 
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.tasks.Mailer.UserProperty;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
@@ -70,6 +71,14 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			P4UserProperty p4prop = new P4UserProperty(email);
 			author.addProperty(p4prop);
 			logger.fine("Setting email for user: " + user + ":" + email);
+			
+			// Set default email for Jenkins user if not defined
+			UserProperty prop = author.getProperty(UserProperty.class);
+			if( prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
+				prop = new UserProperty(email);
+				author.addProperty(prop);
+				logger.fine("Setting default user: " + user + ":" + email);
+			}
 		}
 
 		// set date of change
