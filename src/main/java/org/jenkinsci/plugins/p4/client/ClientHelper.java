@@ -223,7 +223,7 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
-		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
+		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);                
 		validateFileSpecs(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 	}
 
@@ -727,6 +727,7 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public int getClientHead() throws Exception {
 		// get last change in server
+                // This will returned the also shelved CLs
 		String latestChange = connection.getCounter("change");
 		int change = Integer.parseInt(latestChange);
 
@@ -735,6 +736,8 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
+                // Question do we only want the last submmited change ? (not a shelved one?)
+                opts.setType(IChangelist.Type.SUBMITTED);
 		opts.setMaxMostRecent(1);
 		List<IChangelistSummary> list = connection.getChangelists(files, opts);
 

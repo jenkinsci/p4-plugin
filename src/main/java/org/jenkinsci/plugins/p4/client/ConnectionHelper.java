@@ -288,11 +288,12 @@ public class ConnectionHelper {
 	}
 
 	public IChangelistSummary getChangeSummary(int id) throws P4JavaException {
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@=" + id);
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@" + id);
 		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
 		cngOpts.setLongDesc(true);
+                cngOpts.setMaxMostRecent(1);
 		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
-		return summary.get(0);
+		return summary.get(0);                
 	}
 
 	public List<IFix> getJobs(int id) throws P4JavaException {
