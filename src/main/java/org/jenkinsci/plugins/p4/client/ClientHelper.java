@@ -19,6 +19,7 @@ import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
@@ -223,7 +224,7 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
-		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);                
+		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validateFileSpecs(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 	}
 
@@ -246,6 +247,19 @@ public class ClientHelper extends ConnectionHelper {
 
 		if (populate instanceof ForceCleanImpl) {
 			tidyForceSyncImpl(populate, files);
+		}
+
+		if (populate instanceof SyncOnlyImpl) {
+			tidySyncOnlyImpl(populate, files);
+		}
+
+	}
+
+	private void tidySyncOnlyImpl(Populate populate, List<IFileSpec> files) throws Exception {
+		SyncOnlyImpl syncOnly = (SyncOnlyImpl) populate;
+
+		if (syncOnly.isRevert()) {
+			tidyPending(files);
 		}
 	}
 
@@ -473,7 +487,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setUseWildcards(true);
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setOutsideEdit(true);
-		
+
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validateFileSpecs(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
@@ -532,7 +546,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	private void submitFiles(IChangelist change, boolean reopen) throws Exception {
 		log("... submitting files");
-		
+
 		SubmitOptions submitOpts = new SubmitOptions();
 		submitOpts.setReOpen(reopen);
 
@@ -547,7 +561,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	private void shelveFiles(IChangelist change, List<IFileSpec> files, boolean revert) throws Exception {
 		log("... shelving files");
-		
+
 		List<IFileSpec> shelved = iclient.shelveChangelist(change);
 		validateFileSpecs(shelved, "");
 
@@ -654,11 +668,6 @@ public class ClientHelper extends ConnectionHelper {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: unshelve review: " + review);
 
-		// build file revision spec
-		List<IFileSpec> files;
-		String path = iclient.getRoot() + "/...";
-		files = FileSpecBuilder.makeFileSpecList(path);
-
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
@@ -677,11 +686,6 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 
-		// Remove opened files from have list.
-		RevertFilesOptions rOpts = new RevertFilesOptions();
-		rOpts.setNoClientRefresh(true);
-		List<IFileSpec> rvtMsg = iclient.revertFiles(files, rOpts);
-		validateFileSpecs(rvtMsg, "file(s) not opened on this client");
 		log("... duration: " + timer.toString());
 	}
 
@@ -727,7 +731,7 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public int getClientHead() throws Exception {
 		// get last change in server
-                // This will returned the also shelved CLs
+		// This will returned the also shelved CLs
 		String latestChange = connection.getCounter("change");
 		int change = Integer.parseInt(latestChange);
 
@@ -736,8 +740,9 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
-                // Question do we only want the last submmited change ? (not a shelved one?)
-                opts.setType(IChangelist.Type.SUBMITTED);
+		// Question do we only want the last submmited change ? (not a shelved
+		// one?)
+		opts.setType(IChangelist.Type.SUBMITTED);
 		opts.setMaxMostRecent(1);
 		List<IChangelistSummary> list = connection.getChangelists(files, opts);
 

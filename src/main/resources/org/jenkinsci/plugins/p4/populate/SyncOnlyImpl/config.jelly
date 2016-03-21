@@ -11,6 +11,10 @@
 	<f:entry field="quiet">
 		<f:checkbox title="${%QUIET Perforce messages}" default="true"/>
 	</f:entry>
+	
+	<f:entry field="revert">
+		<f:checkbox title="${%Revert any open or unshelved files}" default="false"/>
+	</f:entry>
 		 
 	<f:entry field="pin">
 		<table border="0" width="100%">
