@@ -291,9 +291,9 @@ public class ConnectionHelper {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@" + id);
 		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
 		cngOpts.setLongDesc(true);
-                cngOpts.setMaxMostRecent(1);
+		cngOpts.setMaxMostRecent(1);
 		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
-		return summary.get(0);                
+		return summary.get(0);
 	}
 
 	public List<IFix> getJobs(int id) throws P4JavaException {
@@ -401,11 +401,10 @@ public class ConnectionHelper {
 		return tagged;
 	}
 
-	public List<IFileSpec> getChangeFiles(int id, int limit) throws Exception {
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@=" + id);
-		GetDepotFilesOptions opts = new GetDepotFilesOptions();
-		opts.setMaxResults(limit);
-		List<IFileSpec> files = connection.getDepotFiles(spec, opts);
+	// Use a describe for files to avoid MAXSCANROW limits.
+	// (backed-out part of change 16390)
+	public List<IFileSpec> getChangeFiles(int id) throws Exception {
+		List<IFileSpec> files = connection.getChangelistFiles(id);
 		return files;
 	}
 
