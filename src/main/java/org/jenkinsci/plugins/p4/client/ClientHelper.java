@@ -56,16 +56,20 @@ public class ClientHelper extends ConnectionHelper {
 
 	private static Logger logger = Logger.getLogger(ClientHelper.class.getName());
 
+	private final Validate validate;
+
 	private IClient iclient;
 
 	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
 		clientLogin(client, charset);
+		validate = new Validate(listener);
 	}
 
 	public ClientHelper(P4BaseCredentials credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
 		clientLogin(client, charset);
+		validate = new Validate(listener);
 	}
 
 	private void clientLogin(String client, String charset) {
@@ -189,7 +193,7 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		validateFileSpecs(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 
 		for (IFileSpec fileSpec : syncMsg) {
 			if (fileSpec.getOpStatus() != FileSpecOpStatus.VALID) {
@@ -224,8 +228,14 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
-		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		validateFileSpecs(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+		// asynchronous callback
+		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), listener);
+		synchronized (callback) {
+			iclient.sync(files, syncOpts, callback, 0);
+			while (!callback.isDone()) {
+				callback.wait();
+			}
+		}
 	}
 
 	/**
@@ -305,7 +315,7 @@ public class ClientHelper extends ConnectionHelper {
 		// revert all pending and shelved revisions
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		validateFileSpecs(list, "not opened on this client");
+		validate.check(list, "not opened on this client");
 
 		// check for added files and remove...
 		log("... rm [abandoned files]");
@@ -369,7 +379,7 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, cleanOpts);
-		validateFileSpecs(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
+		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
 
 		log("duration: " + timer.toString() + "\n");
@@ -391,7 +401,7 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		validateFileSpecs(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
+		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
 
 		// Add missing, modified or locked files to a list, and delete the
@@ -431,7 +441,7 @@ public class ClientHelper extends ConnectionHelper {
 			syncOpts.setQuiet(populate.isQuiet());
 
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
-			validateFileSpecs(syncMsg, "file(s) up-to-date.", "file does not exist");
+			validate.check(syncMsg, "file(s) up-to-date.", "file does not exist");
 		}
 		log("duration: " + timer.toString() + "\n");
 	}
@@ -474,13 +484,13 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
 		List<IFileSpec> revertStat = iclient.revertFiles(files, revertOpts);
-		validateFileSpecs(revertStat, "");
+		validate.check(revertStat, "");
 
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
-		validateFileSpecs(syncStat, "file(s) up-to-date.");
+		validate.check(syncStat, "file(s) up-to-date.");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
@@ -489,7 +499,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideEdit(true);
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		validateFileSpecs(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
+		validate.check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
 
 	public void publishChange(Publish publish) throws Exception {
@@ -551,7 +561,7 @@ public class ClientHelper extends ConnectionHelper {
 		submitOpts.setReOpen(reopen);
 
 		List<IFileSpec> submitted = change.submit(submitOpts);
-		validateFileSpecs(submitted, "Submitted as change");
+		validate.check(submitted, "Submitted as change");
 
 		long cngNumber = findSubmittedChange(submitted);
 		if (cngNumber > 0) {
@@ -563,7 +573,7 @@ public class ClientHelper extends ConnectionHelper {
 		log("... shelving files");
 
 		List<IFileSpec> shelved = iclient.shelveChangelist(change);
-		validateFileSpecs(shelved, "");
+		validate.check(shelved, "");
 
 		// post shelf cleanup
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
@@ -671,7 +681,7 @@ public class ClientHelper extends ConnectionHelper {
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
-		validateFileSpecs(shelveMsg, false, "also opened by", "no such file(s)", "exclusive file already opened");
+		validate.check(shelveMsg, false, "also opened by", "no such file(s)", "exclusive file already opened");
 
 		// force sync any files missed due to INFO messages e.g. exclusive files
 		for (IFileSpec spec : shelveMsg) {
@@ -717,7 +727,7 @@ public class ClientHelper extends ConnectionHelper {
 		rsvOpts.setForceResolve("af".equals(mode));
 
 		List<IFileSpec> rsvMsg = iclient.resolveFilesAuto(files, rsvOpts);
-		validateFileSpecs(rsvMsg, "no file(s) to resolve");
+		validate.check(rsvMsg, "no file(s) to resolve");
 
 		log("... duration: " + timer.toString());
 	}

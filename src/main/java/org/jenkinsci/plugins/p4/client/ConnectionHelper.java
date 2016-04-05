@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +20,6 @@ import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
-import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
@@ -39,7 +37,6 @@ import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
 
-import hudson.AbortException;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
@@ -452,62 +449,6 @@ public class ConnectionHelper {
 			logger.severe(err);
 			log(err);
 		}
-	}
-
-	/**
-	 * Look for a message in the returned FileSpec from operation.
-	 * 
-	 * @param fileSpecs
-	 * @param ignore
-	 * @return
-	 * @throws ConverterException
-	 */
-	public void validateFileSpecs(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
-		validateFileSpecs(fileSpecs, true, ignore);
-	}
-
-	public boolean validateFileSpecs(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
-		boolean success = true;
-		boolean abort = false;
-
-		ArrayList<String> ignoreList = new ArrayList<String>();
-		ignoreList.addAll(Arrays.asList(ignore));
-
-		for (IFileSpec fileSpec : fileSpecs) {
-			FileSpecOpStatus status = fileSpec.getOpStatus();
-			if (status != FileSpecOpStatus.VALID) {
-				String msg = fileSpec.getStatusMessage();
-
-				// superfluous p4java message
-				boolean unknownMsg = true;
-				for (String istring : ignoreList) {
-					if (msg.contains(istring)) {
-						// its a known message
-						unknownMsg = false;
-						break;
-					}
-				}
-
-				// check and report unknown message
-				if (unknownMsg) {
-					if (!quiet) {
-						msg = "P4JAVA: " + msg;
-						log(msg);
-						logger.warning(msg);
-						if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
-							abort = true;
-						}
-					}
-					success = false;
-				}
-			}
-		}
-
-		if (abort) {
-			String msg = "P4JAVA: Error(s)";
-			throw new AbortException(msg);
-		}
-		return success;
 	}
 
 	/**
