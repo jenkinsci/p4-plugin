@@ -446,6 +446,16 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
+	public void revertAllFiles() throws Exception {
+		String path = iclient.getRoot() + "/...";
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
+
+		// revert all pending and shelved revisions
+		RevertFilesOptions rOpts = new RevertFilesOptions();
+		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
+		validate.check(list, "not opened on this client");
+	}
+
 	public void versionFile(String file, String desc) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);

@@ -71,6 +71,8 @@ public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
 			// remove client if required
 			if (deleteClient) {
 				if (p4.isClient(client)) {
+					// revert any pending files, before deleting client
+					p4.revertAllFiles();
 					logger.info("P4: remove client: " + client);
 					p4.deleteClient(client);
 				} else {
