@@ -50,7 +50,7 @@ public class ConnectionFactory {
 		if (config.isSsl()) {
 			String serverTrust = iserver.getTrust();
 			if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
-				logger.warning("Trust missmatch! Server fingerprint: "
+				logger.warning("Trust mismatch! Server fingerprint: "
 						+ serverTrust);
 			} else {
 				iserver.addTrust(config.getTrust());
@@ -72,7 +72,7 @@ public class ConnectionFactory {
 				String serverTrust = iserver.getTrust();
 				if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
 					return FormValidation
-							.error("Trust missmatch! Server fingerprint: "
+							.error("Trust mismatch! Server fingerprint: "
 									+ serverTrust);
 				} else {
 					iserver.addTrust(config.getTrust());
