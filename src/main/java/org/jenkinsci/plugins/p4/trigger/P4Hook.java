@@ -9,12 +9,15 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletException;
+
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 @Extension
 public class P4Hook implements UnprotectedRootAction {
@@ -51,6 +54,22 @@ public class P4Hook implements UnprotectedRootAction {
 
 			LOGGER.info("Received trigger event: " + body);
 			probeJobs(port, change);
+		}
+	}
+	
+	public void doChangeSubmit(StaplerRequest req, StaplerResponse rsp)
+			throws IOException, ServletException {
+
+		JSONObject formData = req.getSubmittedForm();
+		if (!formData.isEmpty()) {
+			String change = req.getParameter("_.change");
+			String port = req.getParameter("_.p4port");
+			
+			LOGGER.info("Manual trigger event: ");
+			probeJobs(port, change);
+			
+			// send the user back.
+			rsp.sendRedirect("../");
 		}
 	}
 

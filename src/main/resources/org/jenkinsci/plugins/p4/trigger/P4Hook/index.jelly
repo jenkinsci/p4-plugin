@@ -1,0 +1,37 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+
+    <l:layout title="${%Trigger Perforce Jobs}" norefresh="true" permission="${it.requiredPermission}">
+        <l:side-panel>
+            <l:tasks>
+                <l:task icon="images/24x24/up.gif" href="../" title="${%Back to Project}"/>
+            </l:tasks>
+        </l:side-panel>
+        <l:main-panel>
+            <h2>Manual Configuration for Trigger</h2>
+            <f:form method="post" action="changeSubmit" name="config">
+               
+				<f:entry title="${%P4Port}" field="p4port">
+					<f:textbox/>
+				</f:entry>
+                
+				<f:entry title="${%Change}" field="change">
+					<f:textbox/>
+				</f:entry>
+                
+                <f:block>
+                    <f:submit value="${%Trigger}"/>
+                </f:block>
+            </f:form>
+            
+            <div>
+            	<br/>
+				<b>Automating the Perforce Jenkins Trigger</b>
+				<p>Typically the '/p4/change' end-point is called by a Perforce 'change-commit' trigger.  A POST to '/p4/change' with a JSON payload of 'p4port' and 'change' e.g.</p>
+				<p><code>curl --header 'Content-Type: application/json' --request POST --data "payload={change:200,p4port:\"perforce.com:1666\"}" http://jenkins:8080/p4/change</code></p>
+				<p>Only jobs registered to trigger, with matching Perforce Credentials specifying the same P4Port, are triggered to look for updates.</p>
+			</div>
+
+        </l:main-panel>
+    </l:layout>
+
+</j:jelly>
