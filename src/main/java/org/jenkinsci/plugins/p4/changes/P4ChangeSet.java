@@ -90,11 +90,14 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 				stream.println("\t\t</files>");
 
 				stream.println("\t\t<jobs>");
-				for (IFix job : cl.getJobs()) {
-					String id = job.getJobId();
-					String status = job.getStatus();
+				List<IFix> jobs = cl.getJobs();
+				if (jobs != null) {
+					for (IFix job : jobs) {
+						String id = job.getJobId();
+						String status = job.getStatus();
 
-					stream.println("\t\t<job id=\"" + id + "\" status=\"" + status + "\" />");
+						stream.println("\t\t<job id=\"" + id + "\" status=\"" + status + "\" />");
+					}
 				}
 				stream.println("\t\t</jobs>");
 
