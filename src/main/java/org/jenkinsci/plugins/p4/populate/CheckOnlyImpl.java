@@ -16,7 +16,7 @@ public class CheckOnlyImpl extends Populate {
 	@DataBoundConstructor
 	public CheckOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet,
 			String pin) {
-		super(false, false, false, quiet, null);
+		super(false, false, false, quiet, null, null);
 	}
 
 	@Extension

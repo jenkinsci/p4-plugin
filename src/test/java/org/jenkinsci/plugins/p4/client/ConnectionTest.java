@@ -4,22 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import hudson.model.Action;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.FreeStyleBuild;
-import hudson.model.ParameterValue;
-import hudson.model.Result;
-import hudson.model.Cause;
-import hudson.model.Cause.UserIdCause;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleProject;
-import hudson.model.ParametersAction;
-import hudson.model.StringParameterValue;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.SCMDescriptor;
-import hudson.util.FormValidation;
-import hudson.util.LogTaskListener;
-import hudson.util.ListBoxModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import net.sf.json.JSONObject;
 
 import org.jenkinsci.plugins.p4.DummyServer;
 import org.jenkinsci.plugins.p4.P4Server;
@@ -71,10 +53,27 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
 
+import hudson.model.Action;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Cause;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Result;
+import hudson.model.StringParameterValue;
+import hudson.model.Cause.UserIdCause;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMDescriptor;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
+import net.sf.json.JSONObject;
+
 public class ConnectionTest {
 
-	private static Logger logger = Logger.getLogger(ConnectionTest.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
 
 	private final String credential = "id";
 	private static String PWD = System.getProperty("user.dir") + "/";
@@ -85,13 +84,11 @@ public class ConnectionTest {
 	private final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
 	private final int LOG_LIMIT = 1000;
 
-	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT,
-			P4PORT);
+	private final static P4Server p4d = new P4Server(PWD + P4BIN, P4ROOT, P4PORT);
 
 	private P4PasswordImpl auth;
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	@Rule public JenkinsRule jenkins = new JenkinsRule();
 
 	@BeforeClass
 	public static void setupServer() throws Exception {
@@ -131,8 +128,8 @@ public class ConnectionTest {
 	}
 
 	private P4PasswordImpl createCredentials() throws IOException {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM,
-				credential, "desc", P4PORT, null, "jenkins", "0", "0", "jenkins");
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, credential, "desc", P4PORT, null, "jenkins",
+				"0", "0", "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 		return auth;
@@ -147,10 +144,9 @@ public class ConnectionTest {
 	@Test
 	public void testCredentialsList() throws Exception {
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Head");
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Head");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -169,10 +165,9 @@ public class ConnectionTest {
 	@Test
 	public void testFreeStyleProject_buildHead() throws Exception {
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Head");
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Head");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -189,8 +184,7 @@ public class ConnectionTest {
 		assertNotNull(desc);
 		assertEquals("Perforce Password Credential", desc.getDisplayName());
 		P4PasswordImpl.DescriptorImpl impl = (P4PasswordImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doTestConnection(P4PORT, "false", null,
-				"jenkins", "0", "0", "jenkins");
+		FormValidation form = impl.doTestConnection(P4PORT, "false", null, "jenkins", "0", "0", "jenkins");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
@@ -201,14 +195,11 @@ public class ConnectionTest {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true,
-				client, spec);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -231,18 +222,15 @@ public class ConnectionTest {
 	@Test
 	public void testFreeStyleProject_buildChange() throws Exception {
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Change");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false,
-				"test.ws");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Change");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"committed"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
 		Action actions = new ParametersAction(list);
 
@@ -288,22 +276,17 @@ public class ConnectionTest {
 		URL url = new URL("http://localhost");
 		P4WebBrowser browser = new P4WebBrowser(url);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Change");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false,
-				"test.ws");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
-		PerforceScm scm = new PerforceScm(credential, workspace, null,
-				populate, browser);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Change");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
 		project.setScm(scm);
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"committed"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.LABEL.toString(), "auto15"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL
-				+ "/pass"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -350,21 +333,17 @@ public class ConnectionTest {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Static-Shelf");
-		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
-				false, client, format);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Shelf");
+		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none", false, client, format);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
-		
+
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"shelved"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL
-				+ "/pass"));
+		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new ParametersAction(list);
 
 		FreeStyleBuild build;
@@ -400,14 +379,11 @@ public class ConnectionTest {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
-				client, spec);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -457,11 +433,9 @@ public class ConnectionTest {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Template-Head");
-		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
-				false, client, format);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Template-Head");
+		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none", false, client, format);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -473,8 +447,7 @@ public class ConnectionTest {
 
 		WorkspaceDescriptor desc = workspace.getDescriptor();
 		assertNotNull(desc);
-		assertEquals("Template (view generated for each node)",
-				desc.getDisplayName());
+		assertEquals("Template (view generated for each node)", desc.getDisplayName());
 
 		// Log in for next set of tests...
 		ConnectionHelper p4 = new ConnectionHelper(auth);
@@ -497,11 +470,9 @@ public class ConnectionTest {
 		String stream = "//stream/main";
 		String format = "jenkins-${node}-${project}.ws";
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Stream-Head");
-		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false,
-				stream, format);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Stream-Head");
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, format);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -513,8 +484,7 @@ public class ConnectionTest {
 
 		WorkspaceDescriptor desc = workspace.getDescriptor();
 		assertNotNull(desc);
-		assertEquals("Streams (view generated by Perforce for each node)",
-				desc.getDisplayName());
+		assertEquals("Streams (view generated by Perforce for each node)", desc.getDisplayName());
 
 		// Log in for next set of tests...
 		ConnectionHelper p4 = new ConnectionHelper(auth);
@@ -535,7 +505,7 @@ public class ConnectionTest {
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("TPI83");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -561,18 +531,15 @@ public class ConnectionTest {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Template-Head");
-		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none",
-				false, client, format);
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Template-Head");
+		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none", false, client, format);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"shelved"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
 		Action actions = new ParametersAction(list);
 
@@ -596,25 +563,20 @@ public class ConnectionTest {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
-				client, spec);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false,
-				"auto15");
+		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"submitted"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
 		Action actions = new ParametersAction(list);
 
@@ -637,29 +599,23 @@ public class ConnectionTest {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
-				client, spec);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false,
-				"auto15");
+		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
 		List<Filter> filter = new ArrayList<Filter>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
-		PerforceScm scm = new PerforceScm(credential, workspace, filter,
-				populate, null);
+		PerforceScm scm = new PerforceScm(credential, workspace, filter, populate, null);
 		project.setScm(scm);
 		project.save();
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(),
-				"submitted"));
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
 		Action actions = new ParametersAction(list);
 
@@ -684,16 +640,12 @@ public class ConnectionTest {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 
-		FreeStyleProject project = jenkins
-				.createFreeStyleProject("Manual_Modtime");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false,
-				client, spec);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual_Modtime");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 		boolean isModtime = true;
-		Populate populate = new AutoCleanImpl(true, true, isModtime, false,
-				null);
+		Populate populate = new AutoCleanImpl(true, true, isModtime, false, null, null);
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -725,28 +677,18 @@ public class ConnectionTest {
 
 		String id = auth.getId();
 
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class,
-				"demo");
-		job.setDefinition(new CpsFlowDefinition(
-				"node {\n"
-						+ "   p4sync credential: '"
-						+ id
-						+ "', template: 'test.ws'"
-						+ "\n"
-						+ "   p4tag rawLabelDesc: 'TestLabel', rawLabelName: 'jenkins-label'"
-						+ "\n"
-						+ "   publisher = [$class: 'SubmitImpl', description: 'Submitted by Jenkins', onlyOnSuccess: false, reopen: false]"
-						+ "\n"
-						+ "   buildWorkspace = [$class: 'TemplateWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, templateName: 'test.ws']"
-						+ "\n" + "   p4publish credential: '" + id
-						+ "', publish: publisher, workspace: buildWorkspace"
-						+ " \n" + "}"));
-		WorkflowRun run = jenkins.assertBuildStatusSuccess(job
-				.scheduleBuild2(0));
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
+		job.setDefinition(new CpsFlowDefinition("node {\n" + "   p4sync credential: '" + id + "', template: 'test.ws'"
+				+ "\n" + "   p4tag rawLabelDesc: 'TestLabel', rawLabelName: 'jenkins-label'" + "\n"
+				+ "   publisher = [$class: 'SubmitImpl', description: 'Submitted by Jenkins', onlyOnSuccess: false, reopen: false]"
+				+ "\n"
+				+ "   buildWorkspace = [$class: 'TemplateWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, templateName: 'test.ws']"
+				+ "\n" + "   p4publish credential: '" + id + "', publish: publisher, workspace: buildWorkspace" + " \n"
+				+ "}"));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 		jenkins.assertLogContains("P4 Task: tagging build.", run);
-		jenkins.assertLogContains("P4 Task: reconcile files to changelist.",
-				run);
+		jenkins.assertLogContains("P4 Task: reconcile files to changelist.", run);
 	}
 
 	private static void startHttpServer(int port) throws Exception {

@@ -1,11 +1,5 @@
 package org.jenkinsci.plugins.p4.workflow;
 
-import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.scm.SCM;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -22,6 +16,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.scm.SCM;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+
 public class P4Step extends SCMStep {
 
 	private static final long serialVersionUID = 1L;
@@ -31,7 +31,7 @@ public class P4Step extends SCMStep {
 	private String stream = "";
 	private String depotPath = "";
 	private String template = "";
-	
+
 	private String charset = "";
 	private String format = DescriptorImpl.defaultFormat;
 
@@ -94,28 +94,27 @@ public class P4Step extends SCMStep {
 		P4WebBrowser browser = null;
 
 		Workspace workspace = null;
-		if ( notNull(stream) )
-			workspace = new StreamWorkspaceImpl(charset, false,	stream, format);
-		else if ( notNull(template) )
+		if (notNull(stream))
+			workspace = new StreamWorkspaceImpl(charset, false, stream, format);
+		else if (notNull(template))
 			workspace = new TemplateWorkspaceImpl(charset, false, template, format);
-		else if ( notNull(depotPath) ) {
+		else if (notNull(depotPath)) {
 			String view = depotPath + "/..." + " " + "//" + format + "/...";
 			WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
-			
+
 			workspace = new ManualWorkspaceImpl(charset, false, format, spec);
 		}
 
-		// TODO: add populate options?
-		Populate populate = new AutoCleanImpl(true, true, false, false, null);
+		// TODO: add populate options? and parallel sync?
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 
-		PerforceScm scm = new PerforceScm(credential, workspace, null,
-				populate, browser);
+		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
 
 		return scm;
 	}
 
 	static boolean notNull(String value) {
-		return ( value != null && !value.isEmpty());
+		return (value != null && !value.isEmpty());
 	}
 
 	@Extension(optional = true)
@@ -143,42 +142,39 @@ public class P4Step extends SCMStep {
 			return P4CredentialsImpl.doCheckCredential(value);
 		}
 
-		public AutoCompletionCandidates doAutoCompleteStream(
-				@QueryParameter String value) {
+		public AutoCompletionCandidates doAutoCompleteStream(@QueryParameter String value) {
 			return WorkspaceDescriptor.doAutoCompleteStreamName(value);
 		}
 
-		public AutoCompletionCandidates doAutoCompleteTemplate(
-				@QueryParameter String value) {
+		public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter String value) {
 			return WorkspaceDescriptor.doAutoCompleteTemplateName(value);
 		}
-		
+
 		// check there is only one source
 		private static boolean hasMultiple(String stream, String template, String path) {
-			if( P4Step.notNull(stream) ) {
-				if( P4Step.notNull(template) || P4Step.notNull(path) ) {
+			if (P4Step.notNull(stream)) {
+				if (P4Step.notNull(template) || P4Step.notNull(path)) {
 					return true;
 				}
 			}
-			if( P4Step.notNull(template) ) {
-				if( P4Step.notNull(stream) || P4Step.notNull(path) ) {
+			if (P4Step.notNull(template)) {
+				if (P4Step.notNull(stream) || P4Step.notNull(path)) {
 					return true;
 				}
 			}
-			if( P4Step.notNull(path) ) {
-				if( P4Step.notNull(template) || P4Step.notNull(stream) ) {
+			if (P4Step.notNull(path)) {
+				if (P4Step.notNull(template) || P4Step.notNull(stream)) {
 					return true;
 				}
 			}
 
 			return false;
 		}
-		
-		public FormValidation doCheckStream(@QueryParameter String value, 
-				                            @QueryParameter String template,
-				                            @QueryParameter String path) {
-			if( P4Step.notNull(value) ) {
-				if( hasMultiple(value, template, path) ) {
+
+		public FormValidation doCheckStream(@QueryParameter String value, @QueryParameter String template,
+				@QueryParameter String path) {
+			if (P4Step.notNull(value)) {
+				if (hasMultiple(value, template, path)) {
 					return FormValidation.error("Specify only one source.");
 				}
 				return WorkspaceDescriptor.doCheckStreamName(value);
@@ -186,11 +182,10 @@ public class P4Step extends SCMStep {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckTemplate(@QueryParameter String value,
-				                                  @QueryParameter String stream,
-				                                  @QueryParameter String path) {
-			if( P4Step.notNull(value) ) {
-				if( hasMultiple(stream, value, path) ) {
+		public FormValidation doCheckTemplate(@QueryParameter String value, @QueryParameter String stream,
+				@QueryParameter String path) {
+			if (P4Step.notNull(value)) {
+				if (hasMultiple(stream, value, path)) {
 					return FormValidation.error("Specify only one source.");
 				}
 				return WorkspaceDescriptor.checkClientName(value);
@@ -198,11 +193,10 @@ public class P4Step extends SCMStep {
 			return FormValidation.ok();
 		}
 
-		public FormValidation doCheckPath(@QueryParameter String value,
-                                          @QueryParameter String stream,
-                                          @QueryParameter String template) {
-			if( P4Step.notNull(value) ) {
-				if( hasMultiple(stream, template, value) ) {
+		public FormValidation doCheckPath(@QueryParameter String value, @QueryParameter String stream,
+				@QueryParameter String template) {
+			if (P4Step.notNull(value)) {
+				if (hasMultiple(stream, template, value)) {
 					return FormValidation.error("Specify only one source.");
 				}
 				return FormValidation.ok();

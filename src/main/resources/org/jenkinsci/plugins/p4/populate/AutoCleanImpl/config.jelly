@@ -24,5 +24,13 @@
 			</tr>
 		</table>
 	</f:entry>
+	
+	<f:section title="Use local 'p4' for parallel sync">
+		<f:advanced>
+			<f:entry>
+				<f:property field="parallel" />
+			</f:entry>
+		</f:advanced>
+	</f:section>
 		  
 </j:jelly>

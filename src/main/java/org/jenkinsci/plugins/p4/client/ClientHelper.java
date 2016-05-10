@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.client;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,11 +15,13 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
+import org.jenkinsci.plugins.p4.populate.ParallelSync;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
 import org.jenkinsci.plugins.p4.publish.Publish;
@@ -36,6 +40,9 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.ConnectionException;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
@@ -166,17 +173,16 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// build file revision spec
-		List<IFileSpec> files;
 		String path = iclient.getRoot() + "/...";
 		String revisions = path + "@" + buildChange;
 
 		// Sync files
-		files = FileSpecBuilder.makeFileSpecList(revisions);
+		// List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 
 		if (populate instanceof CheckOnlyImpl) {
-			syncHaveList(files, populate);
+			syncHaveList(revisions, populate);
 		} else {
-			syncFiles(files, populate);
+			syncFiles(revisions, populate);
 		}
 		log("duration: " + timer.toString() + "\n");
 	}
@@ -186,12 +192,13 @@ public class ClientHelper extends ConnectionHelper {
 	 *
 	 * @throws Exception
 	 */
-	private boolean syncHaveList(List<IFileSpec> files, Populate populate) throws Exception {
+	private boolean syncHaveList(String revisions, Populate populate) throws Exception {
 		// Preview (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 		syncOpts.setQuiet(populate.isQuiet());
 
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 
@@ -206,7 +213,7 @@ public class ClientHelper extends ConnectionHelper {
 		return false;
 	}
 
-	private void syncFiles(List<IFileSpec> files, Populate populate) throws Exception {
+	private void syncFiles(String revisions, Populate populate) throws Exception {
 
 		// set MODTIME if populate options is used only required before 15.1
 		if (populate.isModtime() && !checkVersion(20151)) {
@@ -228,13 +235,93 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
-		// asynchronous callback
+		// Check if we need to use the native p4 and not p4java
+		ParallelSync parallel = populate.getParallel();
+		if (parallel != null && parallel.isEnable()) {
+			int exitCode = CheckNativeUse(revisions, syncOpts, parallel);
+			if (exitCode == 0) {
+				return;
+			}
+		}
+
+		// fall back to asynchronous callback
 		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), listener);
 		synchronized (callback) {
+			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 			iclient.sync(files, syncOpts, callback, 0);
 			while (!callback.isDone()) {
 				callback.wait();
 			}
+		}
+	}
+
+	private int CheckNativeUse(String revisions, SyncOptions syncOpts, ParallelSync parallel)
+			throws AccessException, RequestException, ConnectionException, IOException {
+
+		try {
+			String p4 = parallel.getPath();
+
+			List<String> command = new ArrayList<String>();
+			command.add(p4);
+			command.add("-c" + iclient.getName());
+			command.add("-p" + p4credential.getP4port());
+			command.add("-u" + p4credential.getUsername());
+
+			command.add("sync");
+			if (syncOpts.isForceUpdate()) {
+				command.add("-f");
+			}
+			if (syncOpts.isQuiet()) {
+				command.add("-q");
+			}
+			if (syncOpts.isClientBypass()) {
+				command.add("-k");
+			}
+			if (syncOpts.isSafetyCheck()) {
+				command.add("-s");
+			}
+			if (syncOpts.isServerBypass()) {
+				command.add("-p");
+			}
+			if (syncOpts.isNoUpdate()) {
+				command.add("-n");
+			}
+
+			String threads = parallel.getThreads();
+			String minfiles = parallel.getMinfiles();
+			String minbytes = parallel.getMinbytes();
+			command.add("--parallel");
+			command.add("threads=" + threads + ",min=" + minfiles + ",minsize=" + minbytes);
+
+			command.add(revisions);
+
+			ProcessBuilder builder = new ProcessBuilder(command);
+			final Process process = builder.start();
+			InputStream inputStream = process.getInputStream();
+			InputStream errorStream = process.getErrorStream();
+
+			BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(inputStream));
+			BufferedReader errorStreamReader = new BufferedReader(new InputStreamReader(errorStream));
+
+			// Log commands
+			log("(p4):cmd:... " + StringUtils.join(command, " "));
+			log("");
+
+			String line;
+			while ((line = inputStreamReader.readLine()) != null) {
+				log(line);
+			}
+			while ((line = errorStreamReader.readLine()) != null) {
+				log(line);
+			}
+			int exitCode = process.waitFor();
+
+			log("exitCode=" + Integer.toString(exitCode));
+			log("(p4):stop:0");
+			return exitCode;
+		} catch (Exception e) {
+			log(e.getMessage());
+			return 1;
 		}
 	}
 
@@ -247,48 +334,46 @@ public class ClientHelper extends ConnectionHelper {
 	public void tidyWorkspace(Populate populate) throws Exception {
 		// relies on workspace view for scope.
 		log("");
-		List<IFileSpec> files;
 		String path = iclient.getRoot() + "/...";
-		files = FileSpecBuilder.makeFileSpecList(path);
 
 		if (populate instanceof AutoCleanImpl) {
-			tidyAutoCleanImpl(populate, files);
+			tidyAutoCleanImpl(path, populate);
 		}
 
 		if (populate instanceof ForceCleanImpl) {
-			tidyForceSyncImpl(populate, files);
+			tidyForceSyncImpl(path, populate);
 		}
 
 		if (populate instanceof SyncOnlyImpl) {
-			tidySyncOnlyImpl(populate, files);
+			tidySyncOnlyImpl(path, populate);
 		}
 
 	}
 
-	private void tidySyncOnlyImpl(Populate populate, List<IFileSpec> files) throws Exception {
+	private void tidySyncOnlyImpl(String path, Populate populate) throws Exception {
 		SyncOnlyImpl syncOnly = (SyncOnlyImpl) populate;
 
 		if (syncOnly.isRevert()) {
-			tidyPending(files);
+			tidyPending(path);
 		}
 	}
 
-	private void tidyForceSyncImpl(Populate populate, List<IFileSpec> files) throws Exception {
+	private void tidyForceSyncImpl(String path, Populate populate) throws Exception {
 		// remove all pending files within workspace
-		tidyPending(files);
+		tidyPending(path);
 
 		// remove all versioned files (clean have list)
 		String revisions = iclient.getRoot() + "/...#0";
-		files = FileSpecBuilder.makeFileSpecList(revisions);
 
 		// Only use quiet populate option to insure a clean sync
 		boolean quiet = populate.isQuiet();
-		Populate clean = new AutoCleanImpl(false, false, false, quiet, null);
-		syncFiles(files, clean);
+		Populate clean = new AutoCleanImpl(false, false, false, quiet, null, null);
+		syncFiles(revisions, clean);
 
 		// remove all files from workspace
 		String root = iclient.getRoot();
 		log("... rm -rf " + root);
+		log("");
 		silentlyForceDelete(root);
 	}
 
@@ -300,20 +385,21 @@ public class ClientHelper extends ConnectionHelper {
 		}
 	}
 
-	private void tidyAutoCleanImpl(Populate populate, List<IFileSpec> files) throws Exception {
+	private void tidyAutoCleanImpl(String path, Populate populate) throws Exception {
 		// remove all pending files within workspace
-		tidyPending(files);
+		tidyPending(path);
 
 		// clean files within workspace
-		tidyClean(files, populate);
+		tidyClean(populate, path);
 	}
 
-	private void tidyPending(List<IFileSpec> files) throws Exception {
+	private void tidyPending(String path) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: reverting all pending and shelved revisions.");
 
 		// revert all pending and shelved revisions
 		RevertFilesOptions rOpts = new RevertFilesOptions();
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
 		validate.check(list, "not opened on this client");
 
@@ -322,12 +408,12 @@ public class ClientHelper extends ConnectionHelper {
 		for (IFileSpec file : list) {
 			if (file.getAction() == FileAction.ABANDONED) {
 				// first check if we have the local path
-				String path = file.getLocalPathString();
-				if (path == null) {
-					path = depotToLocal(file);
+				String local = file.getLocalPathString();
+				if (local == null) {
+					local = depotToLocal(file);
 				}
-				if (path != null) {
-					File unlink = new File(path);
+				if (local != null) {
+					File unlink = new File(local);
 					unlink.delete();
 				}
 			}
@@ -335,11 +421,11 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
-	private void tidyClean(List<IFileSpec> files, Populate populate) throws Exception {
+	private void tidyClean(Populate populate, String path) throws Exception {
 
 		// Use old method if 'p4 clean' is not supported
 		if (!checkVersion(20141)) {
-			tidyRevisions(files, populate);
+			tidyRevisions(path, populate);
 			return;
 		}
 
@@ -378,6 +464,7 @@ public class ClientHelper extends ConnectionHelper {
 		String[] args = list.toArray(new String[list.size()]);
 		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
 
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> status = iclient.reconcileFiles(files, cleanOpts);
 		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
@@ -385,7 +472,7 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
-	private void tidyRevisions(List<IFileSpec> files, Populate populate) throws Exception {
+	private void tidyRevisions(String path, Populate populate) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: tidying workspace to match have list.");
 
@@ -400,6 +487,7 @@ public class ClientHelper extends ConnectionHelper {
 		String[] args = list.toArray(new String[list.size()]);
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions(args);
 
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
@@ -409,14 +497,14 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> update = new ArrayList<IFileSpec>();
 		for (IFileSpec s : status) {
 			if (s.getOpStatus() == FileSpecOpStatus.VALID) {
-				String path = s.getLocalPathString();
-				if (path == null) {
-					path = depotToLocal(s);
+				String local = s.getLocalPathString();
+				if (local == null) {
+					local = depotToLocal(s);
 				}
 				switch (s.getAction()) {
 				case ADD:
-					if (path != null && delete) {
-						File unlink = new File(path);
+					if (local != null && delete) {
+						File unlink = new File(local);
 						unlink.delete();
 					}
 					break;

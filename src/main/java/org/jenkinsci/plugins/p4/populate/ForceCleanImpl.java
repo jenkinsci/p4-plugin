@@ -1,22 +1,21 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import hudson.Extension;
-
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import hudson.Extension;
 
 public class ForceCleanImpl extends Populate {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * Force sync of workspace (optional have update)
 	 * 
 	 * @param have
 	 */
 	@DataBoundConstructor
-	public ForceCleanImpl(boolean have, boolean modtime, boolean quiet,
-			String pin) {
-		super(have, true, modtime, quiet, pin);
+	public ForceCleanImpl(boolean have, boolean modtime, boolean quiet, String pin, ParallelSync parallel) {
+		super(have, true, modtime, quiet, pin, parallel);
 	}
 
 	@Extension
