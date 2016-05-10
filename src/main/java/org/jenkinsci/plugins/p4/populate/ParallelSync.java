@@ -1,12 +1,16 @@
 package org.jenkinsci.plugins.p4.populate;
 
+import java.io.Serializable;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
-public class ParallelSync extends AbstractDescribableImpl<ParallelSync> {
+public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
 	private final boolean enable;
 	private final String path;
