@@ -25,4 +25,8 @@
 		<f:textbox default="${descriptor.defaultFormat}"/>
 	</f:entry>
 	
+	<f:entry title="Populate options">
+		<f:dropdownDescriptorSelector field="populate"/>
+	</f:entry>
+	
 </j:jelly>

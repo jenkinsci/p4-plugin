@@ -34,6 +34,8 @@ public class P4Step extends SCMStep {
 
 	private String charset = "";
 	private String format = DescriptorImpl.defaultFormat;
+	
+	private Populate populate;
 
 	@DataBoundConstructor
 	public P4Step(String credential) {
@@ -89,6 +91,17 @@ public class P4Step extends SCMStep {
 		return credential;
 	}
 
+	@DataBoundSetter
+	public void setPopulate(Populate populate) {
+		this.populate = populate;
+	}
+	
+	public Populate getPopulate() {
+		return populate;
+	}
+
+
+
 	@Override
 	protected SCM createSCM() {
 		P4WebBrowser browser = null;
@@ -105,8 +118,10 @@ public class P4Step extends SCMStep {
 			workspace = new ManualWorkspaceImpl(charset, false, format, spec);
 		}
 
-		// TODO: add populate options? and parallel sync?
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		// use basic populate options if no class provided
+		if(populate == null) {
+			populate = new AutoCleanImpl(true, true, false, false, null, null);
+		}
 
 		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
 

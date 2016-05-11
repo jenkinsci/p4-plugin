@@ -62,6 +62,13 @@
 
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-aggregator</artifactId>
+      <version>1.6</version>
+      <optional>true</optional>
+    </dependency>
+      
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
       <version>1.6</version>
       <optional>true</optional>
