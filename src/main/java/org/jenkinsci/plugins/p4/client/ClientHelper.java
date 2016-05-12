@@ -177,13 +177,15 @@ public class ClientHelper extends ConnectionHelper {
 		String revisions = path + "@" + buildChange;
 
 		// Sync files
-		// List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
-
 		if (populate instanceof CheckOnlyImpl) {
 			syncHaveList(revisions, populate);
 		} else {
 			syncFiles(revisions, populate);
 		}
+
+		// Save buildChange in client Description.
+		buildChange.save(iclient);
+
 		log("duration: " + timer.toString() + "\n");
 	}
 
@@ -944,6 +946,12 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges() throws Exception {
+		P4Revision from = new P4Revision(iclient);
+		if (from.getChange() > 0) {
+			log("P4: Polling with range: " + from + ",now");
+			return listChanges(from);
+		}
+
 		String path = "//" + iclient.getName() + "/...";
 		return listHaveChanges(path);
 	}
@@ -957,12 +965,20 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges(P4Revision changeLimit) throws Exception {
+		P4Revision from = new P4Revision(iclient);
+		if (from.getChange() > 0) {
+			log("P4: Polling with range: " + from + "," + changeLimit);
+			return listChanges(from, changeLimit);
+		}
+
 		String path = "//" + iclient.getName() + "/...";
 		String fileSpec = path + "@" + changeLimit;
 		return listHaveChanges(fileSpec);
 	}
 
 	private List<Integer> listHaveChanges(String fileSpec) throws Exception {
+		log("P4: Polling with cstat: " + fileSpec);
+		
 		List<Integer> haveChanges = new ArrayList<Integer>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);

@@ -62,21 +62,9 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			List<Integer> have = p4.listHaveChanges(new P4Revision(pin));
-			int last = 0;
-			if (!have.isEmpty()) {
-				last = have.get(have.size() - 1);
-			}
-			p4.log("P4: Polling with label/change: " + last + "," + pin);
-			changes = p4.listChanges(new P4Revision(last), new P4Revision(pin));
+			changes = p4.listHaveChanges(new P4Revision(pin));
 		} else {
-			List<Integer> have = p4.listHaveChanges();
-			int last = 0;
-			if (!have.isEmpty()) {
-				last = have.get(have.size() - 1);
-			}
-			p4.log("P4: Polling with label/change: " + last + ",now");
-			changes = p4.listChanges(new P4Revision(last));
+			changes = p4.listHaveChanges();
 		}
 
 		// filter changes...
