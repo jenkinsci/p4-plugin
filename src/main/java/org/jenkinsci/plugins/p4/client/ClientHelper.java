@@ -945,8 +945,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listHaveChanges() throws Exception {
-		P4Revision from = new P4Revision(iclient);
+	public List<Integer> listHaveChanges(P4Revision from) throws Exception {
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + ",now");
 			return listChanges(from);
@@ -964,8 +963,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<Integer> listHaveChanges(P4Revision changeLimit) throws Exception {
-		P4Revision from = new P4Revision(iclient);
+	public List<Integer> listHaveChanges(P4Revision from, P4Revision changeLimit) throws Exception {
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + "," + changeLimit);
 			return listChanges(from, changeLimit);

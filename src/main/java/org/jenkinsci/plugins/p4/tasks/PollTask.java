@@ -12,6 +12,7 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
+import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
@@ -60,11 +61,21 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 	public Object task(ClientHelper p4) throws Exception {
 		List<Integer> changes = new ArrayList<Integer>();
 
+		// When polling from master use last build, otherwise fetch the change
+		// from client spec.
+		P4Revision from;
+		if (FilterPollMasterImpl.isMasterPolling(filter)) {
+			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
+			from = pollM.getLastChange();
+		} else {
+			from = new P4Revision(p4.getClient());
+		}
+
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			changes = p4.listHaveChanges(new P4Revision(pin));
+			changes = p4.listHaveChanges(from, new P4Revision(pin));
 		} else {
-			changes = p4.listHaveChanges();
+			changes = p4.listHaveChanges(from);
 		}
 
 		// filter changes...

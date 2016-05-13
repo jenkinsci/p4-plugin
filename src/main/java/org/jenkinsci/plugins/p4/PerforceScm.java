@@ -17,6 +17,7 @@ import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -143,6 +144,15 @@ public class PerforceScm extends SCM {
 
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
+
+		// Use Master for polling if required and set last build
+		if (buildWorkspace == null || FilterPollMasterImpl.isMasterPolling(filter)) {
+			buildWorkspace = Jenkins.getInstance().getRootPath();
+			TagAction action = job.getLastBuild().getAction(TagAction.class);
+			P4Revision last = action.getBuildChange();
+			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
+			pollM.setLastChange(last);
+		}
 
 		// Delay polling if build is in progress
 		if (job.isBuilding()) {
@@ -636,6 +646,9 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public boolean requiresWorkspaceForPolling() {
+		if (FilterPollMasterImpl.isMasterPolling(filter)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -647,7 +660,7 @@ public class PerforceScm extends SCM {
 	 */
 	private static Computer workspaceToComputer(FilePath workspace) {
 		Jenkins jenkins = Jenkins.getInstance();
-		if (workspace.isRemote()) {
+		if (workspace != null && workspace.isRemote()) {
 			for (Computer computer : jenkins.getComputers()) {
 				if (computer.getChannel() == workspace.getChannel()) {
 					return computer;
