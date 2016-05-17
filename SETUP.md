@@ -115,12 +115,6 @@ The plugin will not attempt to cleanup the workspace; the sync operation will up
 
 ## Building
 
-Building a Jenkins Job can be triggered using the SCM polling option, Build Now button or calling the build/ URL endpoint.
-
-To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using the Cron format.  For example every 10 minutes Monday to Friday, the 'H' is a time offset (calculated using a Hash of the Job name).
-
-![Build trigger](docs/images/trigger.png)
-
 To build immediately select the Build now button...
 
 ![Build now](docs/images/now.png)
@@ -153,17 +147,70 @@ For example:
     
 The plugin will then correctly template the workspaces as needed.
 
+## Triggering
+
+Perforce can trigger Jenkins to Build based on an event, such as a submitted change.  A triggered build requires an administrator to add a Perforce trigger (Perforce documents [here](https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.scripting.html)).  
+
+The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential.
+
+For example, a simple `change-commit` trigger might use curl:
+
+    #!/bin/bash
+    CHANGE=$1
+    curl --header 'Content-Type: application/json' \
+         --request POST \
+         --data payload="{change:$CHANGE,p4port:\"localhost:1666\"}" \
+         http://localhost:8080/jenkins/p4/change
+
+and have an entry in `p4 triggers` for changes on `//depot/...`:
+
+	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
+
+On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
+
+![Perforce trigger](docs/images/p4trigger.png)
+
+### Manual triggers
+
+Jobs can be manually triggered by using the 'P4 Trigger' button on the top level Jenkins page:
+
+![Perforce trigger](docs/images/p4t.png)
+
+and compleating the trigger form:
+
+![Perforce trigger](docs/images/p4Tconfig.png)
+
+## Polling
+
+Building a Jenkins Job can be triggered using the SCM polling option, Build Now button or calling the build/ URL endpoint.
+
+To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using the Cron format.  For example every 10 minutes Monday to Friday, the 'H' is a time offset (calculated using a Hash of the Job name).
+
+![Build trigger](docs/images/trigger.png)
+
 ## Filtering
 
 When polling is used, changes can be filtered to not trigger a build; the filters are configured on the Jenkin Job configuration page and support the following types:
 
-* Exclude changes from user
+### Limit polling to Master
+
+The Polling event is calculated from the Master node (even if the build would normally occur on the Slave).  When enable, polling does not require a Perforce Workspace and the last built change is determined from the previous Jenkins build log.  
+
+![Poll on Master](docs/images/masterF.png)
+
+### Polling per change
+
+The polling event will only return the oldest unbuilt change, resulting in incremental builds.
+
+![Incremental](docs/images/incF.png)
+
+### Exclude changes from user
 
 Changes owned by the Perforce Helix user specified in the filter will be excluded.
 
 ![User Filter](docs/images/userF.png)
 
-* Exclude changes from Depot path
+### Exclude changes from Depot path
 
 Changes where all the file revision's path starting with the String specified in the filter will be excluded.
 
