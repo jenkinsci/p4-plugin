@@ -46,8 +46,9 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");
 			String msg = "Unable to publish workspace: " + e;
+			p4.log(msg);
 			logger.warning(msg);
-			throw e;
+			return false;
 		} finally {
 			p4.disconnect();
 		}

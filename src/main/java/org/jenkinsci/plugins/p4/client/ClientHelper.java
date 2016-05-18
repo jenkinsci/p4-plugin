@@ -42,6 +42,7 @@ import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.ConnectionException;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
@@ -666,6 +667,8 @@ public class ClientHelper extends ConnectionHelper {
 		long cngNumber = findSubmittedChange(submitted);
 		if (cngNumber > 0) {
 			log("... submitted in change: " + cngNumber);
+		} else {
+			throw new P4JavaException("Unable to submit change.");
 		}
 	}
 
