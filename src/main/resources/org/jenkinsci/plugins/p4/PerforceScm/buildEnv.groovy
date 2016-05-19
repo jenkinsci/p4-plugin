@@ -1,4 +1,4 @@
-package hudson.scm.SubversionSCM;
+package org.jenkinsci.plugins.p4.PerforceScm;
 
 def l = namespace(lib.JenkinsTagLib)
 
