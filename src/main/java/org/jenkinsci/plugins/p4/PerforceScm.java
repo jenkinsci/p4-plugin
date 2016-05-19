@@ -43,6 +43,7 @@ import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.Computer;
+import hudson.model.Descriptor;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
@@ -55,6 +56,7 @@ import hudson.scm.SCMRevisionState;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 
 public class PerforceScm extends SCM {
@@ -409,7 +411,11 @@ public class PerforceScm extends SCM {
 			}
 
 			// Set P4_TICKET connection
-			if (tagAction.getTicket() != null) {
+			@SuppressWarnings("unchecked")
+			Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+			DescriptorImpl p4scm = (DescriptorImpl) scm;
+
+			if (tagAction.getTicket() != null && !p4scm.isHideTicket()) {
 				String ticket = tagAction.getTicket();
 				env.put("P4_TICKET", ticket);
 			}
@@ -538,7 +544,7 @@ public class PerforceScm extends SCM {
 	@Extension
 	public static class DescriptorImpl extends SCMDescriptor<PerforceScm> {
 
-		private boolean autov;
+		private boolean autoSave;
 		private String credential;
 		private String clientName;
 		private String depotPath;
@@ -546,8 +552,10 @@ public class PerforceScm extends SCM {
 		private boolean deleteClient;
 		private boolean deleteFiles;
 
-		public boolean isEnabled() {
-			return autov;
+		private boolean hideTicket;
+
+		public boolean isAutoSave() {
+			return autoSave;
 		}
 
 		public String getCredential() {
@@ -568,6 +576,10 @@ public class PerforceScm extends SCM {
 
 		public boolean isDeleteFiles() {
 			return deleteFiles;
+		}
+
+		public boolean isHideTicket() {
+			return hideTicket;
 		}
 
 		/**
@@ -604,13 +616,31 @@ public class PerforceScm extends SCM {
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
 
-			autov = json.getBoolean("autov");
-			credential = json.getString("credential");
-			clientName = json.getString("clientName");
-			depotPath = json.getString("depotPath");
+			try {
+				autoSave = json.getBoolean("autoSave");
+				credential = json.getString("credential");
+				clientName = json.getString("clientName");
+				depotPath = json.getString("depotPath");
+			} catch (JSONException e) {
+				logger.info("Unable to read Auto Version configuration.");
+				autoSave = false;
+			}
 
-			deleteClient = json.getBoolean("deleteClient");
-			deleteFiles = json.getBoolean("deleteFiles");
+			try {
+				deleteClient = json.getBoolean("deleteClient");
+				deleteFiles = json.getBoolean("deleteFiles");
+			} catch (JSONException e) {
+				logger.info("Unable to read client cleanup configuration.");
+				deleteClient = false;
+				deleteFiles = false;
+			}
+
+			try {
+				hideTicket = json.getBoolean("hideTicket");
+			} catch (JSONException e) {
+				logger.info("Unable to read TICKET security configuration.");
+				hideTicket = false;
+			}
 
 			save();
 			return true;

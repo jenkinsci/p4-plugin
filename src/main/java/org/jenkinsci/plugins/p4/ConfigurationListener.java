@@ -29,7 +29,7 @@ public class ConfigurationListener extends SaveableListener {
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
 		// Exit early if disabled
-		if (!p4scm.isEnabled()) {
+		if (!p4scm.isAutoSave()) {
 			return;
 		}
 

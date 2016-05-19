@@ -2,9 +2,8 @@
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
 			xmlns:c="/lib/credentials">
 		
-	<f:section title="Perforce: Version Configuration (!BETA under development and subject to change BETA!)">
-	<f:advanced>
-		<f:entry field="autov">
+	<f:section title="Perforce: Save Configuration (!BETA under development and subject to change BETA!)">
+		<f:entry field="autoSave">
 			<f:checkbox title="${%Enabled}" default="false"/>
 		</f:entry>
 		<f:entry title="Perforce Credentials" field="credential">
@@ -16,7 +15,6 @@
 		<f:entry title="${%Depot location }" field="depotPath">
 			<f:textbox />
 		</f:entry>
-	</f:advanced>
 	</f:section>
 	
 	<f:section title="Perforce: OnDelete Workspace Options">
@@ -25,6 +23,12 @@
 		</f:entry>
 		<f:entry field="deleteFiles">
 			<f:checkbox title="${%Delete Workspace files}" default="true"/>
+		</f:entry>
+	</f:section>
+	
+	<f:section title="Perforce: Secure P4_TICKET">
+		<f:entry field="hideTicket">
+			<f:checkbox title="${%Hide TICKET}" default="false"/>
 		</f:entry>
 	</f:section>
 	
