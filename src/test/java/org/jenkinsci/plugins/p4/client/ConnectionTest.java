@@ -11,9 +11,11 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import hudson.model.*;
 import org.jenkinsci.plugins.p4.DummyServer;
 import org.jenkinsci.plugins.p4.P4Server;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -26,6 +28,8 @@ import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
@@ -53,16 +57,6 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
 
-import hudson.model.Action;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Cause;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
-import hudson.model.Result;
-import hudson.model.StringParameterValue;
 import hudson.model.Cause.UserIdCause;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
@@ -689,6 +683,132 @@ public class ConnectionTest {
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 		jenkins.assertLogContains("P4 Task: tagging build.", run);
 		jenkins.assertLogContains("P4 Task: reconcile files to changelist.", run);
+	}
+
+	@Test
+	public void shouldNotTriggerJobIfNoChange() throws Exception {
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Change");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
+		project.setScm(scm);
+		P4Trigger trigger = new P4Trigger();
+		trigger.start(project, false);
+		project.addTrigger(trigger);
+		project.save();
+
+		//Run once
+		jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause()));
+
+		//Test trigger
+		trigger.poke(project, auth.getP4port());
+
+		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Shouldn't have triggered a build if no change", 1, project.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void shouldTriggerJobIfChanges() throws Exception {
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		// Pin at label auto15
+		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
+		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
+		project.setScm(scm);
+		P4Trigger trigger = new P4Trigger();
+		trigger.start(project, false);
+		project.addTrigger(trigger);
+		project.save();
+
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
+		Action actions = new ParametersAction(list);
+
+		//Run once
+		Run lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
+		jenkins.waitUntilNoActivity();
+		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
+
+		//Hack to make polling believe there are remote changes
+        TagAction lastAction = lastRun.getActions(TagAction.class).get(0);
+        lastAction.setBuildChange(null);
+
+		//Test trigger
+		trigger.poke(project, auth.getP4port());
+
+		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Should have triggered a build on change", 2, project.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void testShouldTriggerPipelineJobIfChanges() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n"
+				+ "}"));
+
+		//Add a trigger
+		P4Trigger trigger = new P4Trigger();
+		trigger.start(job, false);
+		job.addTrigger(trigger);
+		job.save();
+
+		WorkflowRun lastRun = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.waitUntilNoActivity();
+		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
+
+		//Hack to make polling believe there are remote changes
+		TagAction buildData = lastRun.getActions(TagAction.class).get(0);
+		buildData.setBuildChange(null);
+
+		//Test trigger
+		trigger.poke(job, auth.getP4port());
+
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Should have triggered a build on changes", 2, job.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void testShouldNotTriggerPipelineIfNoChanges() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n"
+				+ "}"));
+
+		//Add a trigger
+		P4Trigger trigger = new P4Trigger();
+		trigger.start(job, false);
+		job.addTrigger(trigger);
+		job.save();
+
+		WorkflowRun lastRun = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		jenkins.waitUntilNoActivity();
+		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
+
+		//Test trigger
+		trigger.poke(job, auth.getP4port());
+
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Shouldn't have triggered a build as no changes", 1, job.getLastBuild().getNumber());
 	}
 
 	private static void startHttpServer(int port) throws Exception {

@@ -17,7 +17,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -110,15 +109,15 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	}
 
 	private boolean matchServer(Job<?, ?> job, String port) {
-		if (job instanceof AbstractProject) {
-			AbstractProject<?, ?> project = (AbstractProject<?, ?>) job;
-			SCM scm = project.getScm();
-
-			if (scm instanceof PerforceScm) {
-				PerforceScm p4scm = (PerforceScm) scm;
+		//Get all the trigger for this Job
+		SCMTriggerItem item = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(job);
+		//As soon as we find a match, return
+		for (SCM scmTrigger : item.getSCMs()) {
+			if (scmTrigger instanceof PerforceScm) {
+				PerforceScm p4scm = (PerforceScm) scmTrigger;
 				String id = p4scm.getCredential();
 				P4BaseCredentials credential = ConnectionHelper.findCredential(id);
-				if (port.equals(credential.getP4port())) {
+				if (credential.getP4port().equals(port)) {
 					return true;
 				}
 			}
