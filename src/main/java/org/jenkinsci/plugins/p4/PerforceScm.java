@@ -582,6 +582,11 @@ public class PerforceScm extends SCM {
 			return hideTicket;
 		}
 
+		@Override
+		public boolean isApplicable(Job project) {
+			return true;
+		}
+
 		/**
 		 * public no-argument constructor
 		 */
