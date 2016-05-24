@@ -32,6 +32,7 @@ import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
+import com.perforce.p4java.option.server.LoginOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
@@ -217,7 +218,7 @@ public class ConnectionHelper {
 		case PASSWORD:
 			if (!isLogin()) {
 				String pass = authorisationConfig.getPassword();
-				connection.login(pass);
+				connection.login(pass, new LoginOptions(/* allHosts = */ true));
 			}
 			break;
 
