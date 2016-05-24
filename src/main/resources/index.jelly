@@ -1,6 +1,4 @@
-<!--
-  This view is used to render the installed plugins page.
--->
+<?jelly escape-by-default='true'?>
 <div>
 	Perforce Client plugin for the Jenkins SCM provider.  The plugin includes extension points for:
 	
