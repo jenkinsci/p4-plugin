@@ -5,13 +5,17 @@ import hudson.FilePath;
 import hudson.model.TaskListener;
 import hudson.model.Run;
 import hudson.scm.AbstractScmTagAction;
+import hudson.util.LogTaskListener;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
+import org.jenkinsci.plugins.p4.ConfigurationListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -27,6 +31,8 @@ import com.perforce.p4java.impl.generic.core.Label;
 
 public class TagAction extends AbstractScmTagAction {
 
+	private static Logger logger = Logger.getLogger(TagAction.class.getName());
+	
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
 
@@ -65,7 +71,10 @@ public class TagAction extends AbstractScmTagAction {
 
 		String description = req.getParameter("desc");
 		String name = req.getParameter("name");
-		labelBuild(null, name, description, null);
+		
+		TaskListener listener = new LogTaskListener(logger, Level.INFO);
+		
+		labelBuild(listener, name, description, null);
 
 		rsp.sendRedirect(".");
 	}

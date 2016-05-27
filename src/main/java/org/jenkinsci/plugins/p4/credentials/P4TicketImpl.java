@@ -23,8 +23,7 @@ public class P4TicketImpl extends P4BaseCredentials {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@CheckForNull
-	private final TicketModeImpl ticket;
+	@CheckForNull private final TicketModeImpl ticket;
 
 	@DataBoundConstructor
 	public P4TicketImpl(CredentialsScope scope, String id, String description, @CheckForNull String p4port,
@@ -37,20 +36,20 @@ public class P4TicketImpl extends P4BaseCredentials {
 
 	@CheckForNull
 	public String getTicketValue() {
-		return ticket.getTicketValue();
+		return (ticket == null) ? "" : ticket.getTicketValue();
 	}
 
 	public boolean isTicketValueSet() {
-		return ticket.isTicketValueSet();
+		return (ticket == null) ? false : ticket.isTicketValueSet();
 	}
 
 	@CheckForNull
 	public String getTicketPath() {
-		return ticket.getTicketPath();
+		return (ticket == null) ? "" : ticket.getTicketPath();
 	}
 
 	public boolean isTicketPathSet() {
-		return ticket.isTicketPathSet();
+		return (ticket == null) ? false : ticket.isTicketPathSet();
 	}
 
 	@Extension
@@ -73,7 +72,7 @@ public class P4TicketImpl extends P4BaseCredentials {
 				@QueryParameter("username") String username, @QueryParameter("retry") String retry,
 				@QueryParameter("timeout") String timeout, @QueryParameter("ticket") String value,
 				@QueryParameter("ticketValue") String ticketValue, @QueryParameter("ticketPath") String ticketPath)
-						throws IOException, ServletException {
+				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				ConnectionConfig config = new ConnectionConfig(p4port, "true".equals(ssl), trust);

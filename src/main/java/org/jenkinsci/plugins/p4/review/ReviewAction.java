@@ -1,16 +1,5 @@
 package org.jenkinsci.plugins.p4.review;
 
-import hudson.model.Action;
-import hudson.model.ParameterValue;
-import hudson.model.AbstractProject;
-import hudson.model.Cause;
-import hudson.model.CauseAction;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParametersAction;
-import hudson.model.Queue;
-import hudson.model.StringParameterDefinition;
-import hudson.model.StringParameterValue;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -19,12 +8,22 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+
+import hudson.model.AbstractProject;
+import hudson.model.Action;
+import hudson.model.Cause;
+import hudson.model.CauseAction;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Queue;
+import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
 import jenkins.model.Jenkins;
 import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
 public class ReviewAction implements Action {
 
@@ -59,8 +58,7 @@ public class ReviewAction implements Action {
 		List<StringParameterValue> stringParameters = new ArrayList<StringParameterValue>();
 
 		for (ParameterDefinition parameterDefinition : getParameterDefinitions()) {
-			StringParameterValue stringParameter = new StringParameterValue(
-					parameterDefinition.getName(),
+			StringParameterValue stringParameter = new StringParameterValue(parameterDefinition.getName(),
 					parameterDefinition.getDescription());
 			stringParameters.add(stringParameter);
 		}
@@ -68,8 +66,7 @@ public class ReviewAction implements Action {
 		return stringParameters;
 	}
 
-	public void doBuildSubmit(StaplerRequest req, StaplerResponse rsp)
-			throws IOException, ServletException {
+	public void doBuildSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
 
 		JSONObject formData = req.getSubmittedForm();
 		if (!formData.isEmpty()) {
@@ -77,8 +74,7 @@ public class ReviewAction implements Action {
 		}
 	}
 
-	public void doBuild(StaplerRequest req, StaplerResponse rsp)
-			throws IOException, ServletException {
+	public void doBuild(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
 
 		project.checkPermission(AbstractProject.BUILD);
 
@@ -92,9 +88,8 @@ public class ReviewAction implements Action {
 		}
 
 		for (ParameterDefinition d : defs) {
-			StringParameterValue value = (StringParameterValue) d
-					.createValue(req);
-			if (value.value != null && !value.value.isEmpty()) {
+			StringParameterValue value = (StringParameterValue) d.createValue(req);
+			if (value != null && value.value != null && !value.value.isEmpty()) {
 				values.add(value);
 			}
 		}
@@ -103,26 +98,30 @@ public class ReviewAction implements Action {
 		TimeDuration delay = new TimeDuration(project.getQuietPeriod());
 		CauseAction cause = new CauseAction(new Cause.UserIdCause());
 		ParametersAction params = new ParametersAction(values);
-		Queue queue = Jenkins.getInstance().getQueue();
-		queue.schedule(project, delay.getTime(), params, cause);
 
-		// send the user back to the job top page.
-		rsp.sendRedirect("../");
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Queue queue = j.getQueue();
+			queue.schedule(project, delay.getTime(), params, cause);
+
+			// send the user back to the job top page.
+			rsp.sendRedirect("../");
+		}
 	}
 
 	private List<ParameterDefinition> getParameterDefinitions() {
 		List<ParameterDefinition> swarm = new ArrayList<ParameterDefinition>();
-		
+
 		// Swarm parameters
 		swarm.add(new StringParameterDefinition(ReviewProp.REVIEW.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.CHANGE.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.STATUS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.PASS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.FAIL.getProp(), null));
-		
+
 		// Custom parameters
 		swarm.add(new StringParameterDefinition(ReviewProp.LABEL.toString(), null));
-		
+
 		return swarm;
 	}
 

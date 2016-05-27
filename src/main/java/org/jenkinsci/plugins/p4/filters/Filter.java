@@ -1,25 +1,29 @@
 package org.jenkinsci.plugins.p4.filters;
 
+import java.io.Serializable;
+
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
-
-import java.io.Serializable;
-
 import jenkins.model.Jenkins;
 
-public abstract class Filter implements ExtensionPoint, Describable<Filter>,
-		Serializable {
+public abstract class Filter implements ExtensionPoint, Describable<Filter>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	public FilterDescriptor getDescriptor() {
-		return (FilterDescriptor) Jenkins.getInstance().getDescriptor(
-				getClass());
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return (FilterDescriptor) j.getDescriptor(getClass());
+		}
+		return null;
 	}
 
 	public static DescriptorExtensionList<Filter, FilterDescriptor> all() {
-		return Jenkins.getInstance()
-				.<Filter, FilterDescriptor> getDescriptorList(Filter.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.<Filter, FilterDescriptor> getDescriptorList(Filter.class);
+		}
+		return null;
 	}
 }

@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.changes;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,7 +113,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						temp.setAction(FileAction.fromString(action));
 
 						String strRev = attributes.getValue("endRevision");
-						int endRevision = new Integer(strRev);
+						int endRevision = Integer.parseInt(strRev);
 						temp.setEndRevision(endRevision);
 
 						entry.files.add(temp);
@@ -134,7 +135,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						return;
 					}
 
-				} catch (Exception e) {
+				} catch (UnsupportedEncodingException e) {
 					entry = null;
 				}
 			}
@@ -176,7 +177,7 @@ public class P4ChangeParser extends ChangeLogParser {
 
 						// Add changelist to entry
 						if (qName.equalsIgnoreCase("changenumber")) {
-							int id = new Integer(text.toString());
+							int id = Integer.parseInt(text.toString());
 							IChangelistSummary summary = p4.getChangeSummary(id);
 							entry.setChange(p4, summary);
 						}
@@ -195,7 +196,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						String elementText = text.toString().trim();
 
 						if (qName.equalsIgnoreCase("changeInfo")) {
-							int id = new Integer(elementText);
+							int id = Integer.parseInt(elementText);
 							entry.setId(new P4Revision(id));
 							text.setLength(0);
 							return;

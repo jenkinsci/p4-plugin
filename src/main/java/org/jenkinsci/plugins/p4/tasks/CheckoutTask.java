@@ -227,7 +227,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	public List<P4ChangeEntry> getChangesFull(P4Revision last) {
 
 		List<P4ChangeEntry> changesFull = new ArrayList<P4ChangeEntry>();
-		List<Integer> changes = new ArrayList<Integer>();
 
 		// Add changes to this build.
 		ClientHelper p4 = getConnection();
@@ -240,7 +239,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			}
 
 			// add all changes to list
-			changes = p4.listChanges(last, buildChange);
+			List<Integer> changes = p4.listChanges(last, buildChange);
 			for (Integer change : changes) {
 				P4ChangeEntry cl = new P4ChangeEntry();
 				IChangelistSummary summary = p4.getChangeSummary(change);

@@ -10,6 +10,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.client.IClientViewMapping;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
@@ -79,7 +80,7 @@ public class ManualWorkspaceImpl extends Workspace {
 
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
-		if(streamFullName != null) {
+		if (streamFullName != null) {
 			streamFullName = getExpand().format(streamFullName, false);
 		}
 		iclient.setStream(streamFullName);
@@ -168,7 +169,7 @@ public class ManualWorkspaceImpl extends Workspace {
 			spec.put("options", option);
 			return spec;
 
-		} catch (Exception e) {
+		} catch (P4JavaException e) {
 			JSONObject option = new JSONObject();
 			option.put("allwrite", false);
 			option.put("clobber", true);

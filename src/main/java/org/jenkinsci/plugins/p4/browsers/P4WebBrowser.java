@@ -55,7 +55,7 @@ public class P4WebBrowser extends P4Browser {
 				&& file.getAction() != FileAction.INTEGRATE) {
 			return null;
 		}
-		int r = new Integer(file.getEndRevision());
+		int r = file.getEndRevision();
 		if (r <= 1) {
 			return null;
 		}

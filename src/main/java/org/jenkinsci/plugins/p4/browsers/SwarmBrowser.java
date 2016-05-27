@@ -47,7 +47,7 @@ public class SwarmBrowser extends P4Browser {
 
 	@Override
 	public URL getFileLink(IFileSpec file) throws Exception {
-		int r = new Integer(file.getEndRevision());
+		int r = file.getEndRevision();
 		String path = file.getDepotPathString();
 		path = path.replace("//", "files/");
 		String rev = "?v=" + r;

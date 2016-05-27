@@ -180,7 +180,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public Date getDate() {
-		return date;
+		return (Date) date.clone();
 	}
 
 	public void setDate(String value) {

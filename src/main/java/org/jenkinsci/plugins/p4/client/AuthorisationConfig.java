@@ -51,23 +51,6 @@ public class AuthorisationConfig implements Serializable {
 		return sb.toString();
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof ConnectionConfig) {
-			ConnectionConfig comp = (ConnectionConfig) obj;
-			return this.toString().equals(comp.toString());
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		int hash = 7;
-		hash = (int) (1777 * hash + this.toString().hashCode());
-		return hash;
-	}
-
 	public String getClient() {
 		return client;
 	}

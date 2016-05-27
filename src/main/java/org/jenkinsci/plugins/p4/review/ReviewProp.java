@@ -9,7 +9,7 @@ public enum ReviewProp {
 	PASS("pass", true),
 	FAIL("fail", true);
 
-	public static String NAMESPACE = "p4.";
+	public static final String NAMESPACE = "p4.";
 	final private String prop;
 	final private boolean load;
 

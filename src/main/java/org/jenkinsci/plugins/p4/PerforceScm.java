@@ -178,7 +178,13 @@ public class PerforceScm extends SCM {
 
 		// Use Master for polling if required and set last build
 		if (buildWorkspace == null || FilterPollMasterImpl.isMasterPolling(filter)) {
-			buildWorkspace = Jenkins.getInstance().getRootPath();
+
+			Jenkins j = Jenkins.getInstance();
+			if (j == null) {
+				return PollingResult.NO_CHANGES;
+			}
+
+			buildWorkspace = j.getRootPath();
 			TagAction action = job.getLastBuild().getAction(TagAction.class);
 			P4Revision last = action.getBuildChange();
 			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
@@ -440,13 +446,16 @@ public class PerforceScm extends SCM {
 			}
 
 			// Set P4_TICKET connection
-			@SuppressWarnings("unchecked")
-			Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
-			DescriptorImpl p4scm = (DescriptorImpl) scm;
+			Jenkins j = Jenkins.getInstance();
+			if (j != null) {
+				@SuppressWarnings("unchecked")
+				Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
+				DescriptorImpl p4scm = (DescriptorImpl) scm;
 
-			if (tagAction.getTicket() != null && !p4scm.isHideTicket()) {
-				String ticket = tagAction.getTicket();
-				env.put("P4_TICKET", ticket);
+				if (tagAction.getTicket() != null && !p4scm.isHideTicket()) {
+					String ticket = tagAction.getTicket();
+					env.put("P4_TICKET", ticket);
+				}
 			}
 		}
 	}
@@ -547,11 +556,11 @@ public class PerforceScm extends SCM {
 		logger.info("clean: " + clean);
 		return clean;
 	}
-	
+
 	@Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
-    }
+	public DescriptorImpl getDescriptor() {
+		return (DescriptorImpl) super.getDescriptor();
+	}
 
 	/**
 	 * The relationship of Descriptor and SCM (the describable) is akin to class

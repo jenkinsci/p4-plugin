@@ -24,8 +24,13 @@ public class ConfigurationListener extends SaveableListener {
 	private static Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			return;
+		}
+
 		@SuppressWarnings("unchecked")
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
 		// Exit early if disabled
@@ -33,18 +38,16 @@ public class ConfigurationListener extends SaveableListener {
 			return;
 		}
 
-		ClientHelper p4 = null;
 		try {
 			String file = xml.getFile().getCanonicalPath();
 			logger.info(">>> onUpdated: " + file);
 
-			p4 = getClientHelper(p4scm);
+			ClientHelper p4 = getClientHelper(p4scm);
 			p4.versionFile(file, "Configuration change");
+			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-			p4.disconnect();
 		}
 	}
 
@@ -57,7 +60,12 @@ public class ConfigurationListener extends SaveableListener {
 		String depotPath = p4scm.getDepotPath();
 		depotPath = depotPath.endsWith("/") ? depotPath : depotPath + "/";
 
-		String rootPath = Jenkins.getInstance().getRootDir().getCanonicalPath();
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			return null;
+		}
+		
+		String rootPath = j.getRootDir().getCanonicalPath();
 
 		StringBuffer view = new StringBuffer();
 		view.append(depotPath + "...");

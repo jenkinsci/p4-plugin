@@ -5,6 +5,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jenkins.model.Jenkins;
 
@@ -24,8 +25,9 @@ public class Expand {
 			}
 		}
 
-		for (String key : map.keySet()) {
-			String value = map.get(key);
+		for (Entry<String, String> entry : map.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
 			if (ReviewProp.isProp(key)) {
 				// Known Perforce Review property; prefix with namespace
 				key = ReviewProp.NAMESPACE + key;
@@ -36,10 +38,11 @@ public class Expand {
 
 	public String format(String format, boolean wildcard) {
 		if (formatTags != null) {
-			for (String tag : formatTags.keySet()) {
-				String value = formatTags.get(tag);
+			for (Entry<String, String> entry : formatTags.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
 				if (value != null) {
-					format = format.replace("${" + tag + "}", value);
+					format = format.replace("${" + key + "}", value);
 				}
 			}
 		}

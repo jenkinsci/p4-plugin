@@ -58,7 +58,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 			Charset c = Charset.forName("UTF-8");
 			OutputStreamWriter w = new OutputStreamWriter(b, c);
 			WriterOutputStream s = new WriterOutputStream(w);
-			PrintStream stream = new PrintStream(s);
+			PrintStream stream = new PrintStream(s, true, "UTF-8");
 
 			stream.println("<?xml version='1.0' encoding='UTF-8'?>");
 			stream.println("<changelog>");

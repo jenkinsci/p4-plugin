@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,10 +41,7 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
-import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
@@ -258,8 +256,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 	}
 
-	private int CheckNativeUse(String revisions, SyncOptions syncOpts, ParallelSync parallel)
-			throws AccessException, RequestException, ConnectionException, IOException {
+	private int CheckNativeUse(String revisions, SyncOptions syncOpts, ParallelSync parallel) {
 
 		try {
 			String p4 = parallel.getPath();
@@ -303,8 +300,8 @@ public class ClientHelper extends ConnectionHelper {
 			InputStream inputStream = process.getInputStream();
 			InputStream errorStream = process.getErrorStream();
 
-			BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(inputStream));
-			BufferedReader errorStreamReader = new BufferedReader(new InputStreamReader(errorStream));
+			BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+			BufferedReader errorStreamReader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
 
 			// Log commands
 			log("(p4):cmd:... " + StringUtils.join(command, " "));
@@ -319,13 +316,20 @@ public class ClientHelper extends ConnectionHelper {
 			}
 			int exitCode = process.waitFor();
 
+			inputStreamReader.close();
+			errorStreamReader.close();
+
 			log("exitCode=" + Integer.toString(exitCode));
 			log("(p4):stop:0");
 			return exitCode;
-		} catch (Exception e) {
+		} catch (UnsupportedEncodingException e) {
 			log(e.getMessage());
-			return 1;
+		} catch (IOException e) {
+			log(e.getMessage());
+		} catch (InterruptedException e) {
+			log(e.getMessage());
 		}
+		return 1;
 	}
 
 	/**
@@ -417,7 +421,10 @@ public class ClientHelper extends ConnectionHelper {
 				}
 				if (local != null) {
 					File unlink = new File(local);
-					unlink.delete();
+					boolean ok = unlink.delete();
+					if (!ok) {
+						log("Not able to delete: " + local);
+					}
 				}
 			}
 		}
@@ -508,7 +515,10 @@ public class ClientHelper extends ConnectionHelper {
 				case ADD:
 					if (local != null && delete) {
 						File unlink = new File(local);
-						unlink.delete();
+						boolean ok = unlink.delete();
+						if (!ok) {
+							log("Not able to delete: " + local);
+						}
 					}
 					break;
 				default:
@@ -979,7 +989,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	private List<Integer> listHaveChanges(String fileSpec) throws Exception {
 		log("P4: Polling with cstat: " + fileSpec);
-		
+
 		List<Integer> haveChanges = new ArrayList<Integer>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
