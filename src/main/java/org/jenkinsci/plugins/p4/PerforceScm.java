@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.p4;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
@@ -30,6 +33,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
 
 import hudson.AbortException;
@@ -50,6 +54,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
+import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
@@ -119,6 +124,30 @@ public class PerforceScm extends SCM {
 		this.filter = null;
 		this.populate = populate;
 		this.browser = null;
+	}
+
+	@Override
+	public String getKey() {
+		EnvVars env = new EnvVars();
+		String cng = env.expand("P4_CHANGELIST");
+		return "p4 " + workspace.getName() + cng;
+	}
+
+	@Override
+	public RepositoryBrowser<?> guessBrowser() {
+		try {
+			String scmCredential = getCredential();
+			ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+			String swarm = connection.getSwarm();
+			URL url = new URL(swarm);
+			return new SwarmBrowser(url);
+		} catch (MalformedURLException e) {
+			logger.info("Unable to guess repository browser.");
+			return null;
+		} catch (P4JavaException e) {
+			logger.info("Unable to access Perforce Property.");
+			return null;
+		}
 	}
 
 	/**
@@ -518,17 +547,11 @@ public class PerforceScm extends SCM {
 		logger.info("clean: " + clean);
 		return clean;
 	}
-
-	/**
-	 * Returns the ScmDescriptor<?> for the SCM object. The ScmDescriptor is
-	 * used to create new instances of the SCM.
-	 */
+	
 	@Override
-	public SCMDescriptor<PerforceScm> getDescriptor() {
-		return (DescriptorImpl) super.getDescriptor();
-	}
-
-	public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
 
 	/**
 	 * The relationship of Descriptor and SCM (the describable) is akin to class
@@ -582,23 +605,12 @@ public class PerforceScm extends SCM {
 			return hideTicket;
 		}
 
-		@Override
-		public boolean isApplicable(Job project) {
-			return true;
-		}
-
 		/**
 		 * public no-argument constructor
 		 */
 		public DescriptorImpl() {
 			super(PerforceScm.class, P4Browser.class);
 			load();
-		}
-
-		@Override
-		public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			PerforceScm scm = (PerforceScm) super.newInstance(req, formData);
-			return scm;
 		}
 
 		/**
@@ -608,6 +620,17 @@ public class PerforceScm extends SCM {
 		@Override
 		public String getDisplayName() {
 			return "Perforce Software";
+		}
+
+		@Override
+		public boolean isApplicable(Job project) {
+			return true;
+		}
+
+		@Override
+		public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+			PerforceScm scm = (PerforceScm) super.newInstance(req, formData);
+			return scm;
 		}
 
 		/**

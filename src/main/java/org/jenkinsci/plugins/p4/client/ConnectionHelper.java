@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.perforce.p4java.admin.IProperty;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
@@ -32,6 +33,7 @@ import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
+import com.perforce.p4java.option.server.GetPropertyOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
@@ -435,6 +437,19 @@ public class ConnectionHelper {
 		return list;
 	}
 
+	public String getSwarm() throws P4JavaException {
+		GetPropertyOptions propOpts = new GetPropertyOptions();
+		String key = "P4.Swarm.URL";
+		propOpts.setName(key);
+		List<IProperty> values = connection.getProperty(propOpts);
+		for(IProperty prop : values) {
+			if(key.equals(prop.getName())) {
+				return prop.getValue();
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Disconnect from the Perforce Server.
 	 * 
