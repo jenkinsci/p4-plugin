@@ -1,5 +1,19 @@
 ## Release notes
 
+### Release 1.3.10 (major features/fixes)
+
+[@19574](https://swarm.workshop.perforce.com/changes/19574) - Support for guessBrowser and getKey.
+
+[@19519](https://swarm.workshop.perforce.com/changes/19519) - Jelly header update.  <?jelly escape-by-default='true'?>
+
+[@19516](https://swarm.workshop.perforce.com/changes/19516) - Merge pull request #23 from Dohbedoh/JENKINS-29979
+
+[@19455](https://swarm.workshop.perforce.com/changes/19455) - Minor package fix.
+
+[@19454](https://swarm.workshop.perforce.com/changes/19454) - Hide `P4_TICKET` for secure systems.  An option in the global configuration to hide the `P4_TICKET` variable (not set by default).  JENKINS-24591
+
+[@19431](https://swarm.workshop.perforce.com/changes/19431) - Raise failed submit as Exception and mark build as failed.  JENKINS-34770
+
 ### Release 1.3.9 (major features/fixes)
 
 [@19374](https://swarm.workshop.perforce.com/changes/19374) - Poll on Master (without workspace).  New Polling Filter ‘Poll on Master using Last Build’.  Only polls on the master and fetches it change from the last Build. Note that 0 is assumed if no previous build is found.  JENKINS-32814
