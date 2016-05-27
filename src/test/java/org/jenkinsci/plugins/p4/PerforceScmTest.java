@@ -44,7 +44,7 @@ public class PerforceScmTest {
 
 	@Test
 	public void testIsBuildParent() throws IOException {
-		MatrixProject project = jenkins.createMatrixProject();
+		MatrixProject project = new MatrixProject("MatrixTest");
 
 		String credential = "123";
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
