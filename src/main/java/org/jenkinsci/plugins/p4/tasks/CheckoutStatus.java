@@ -11,7 +11,6 @@ public enum CheckoutStatus {
 	 * no matches.
 	 * 
 	 * @param status
-	 * @return
 	 */
 	public static CheckoutStatus parse(String status) {
 		for (CheckoutStatus s : CheckoutStatus.values()) {

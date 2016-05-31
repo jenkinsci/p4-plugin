@@ -1,30 +1,28 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.BuildListener;
-import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Notifier;
-import hudson.tasks.Publisher;
-
 import java.util.logging.Logger;
-
-import jenkins.model.Jenkins;
 
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Notifier;
+import hudson.tasks.Publisher;
+import jenkins.model.Jenkins;
+
 public class TagNotifier extends Notifier {
 
-	protected static final Logger LOGGER = Logger.getLogger(TagNotifier.class
-			.getName());
+	protected static final Logger LOGGER = Logger.getLogger(TagNotifier.class.getName());
 
 	public final String rawLabelName;
 	public final String rawLabelDesc;
@@ -33,8 +31,7 @@ public class TagNotifier extends Notifier {
 	private transient TaskListener listener;
 
 	@DataBoundConstructor
-	public TagNotifier(String rawLabelName, String rawLabelDesc,
-			boolean onlyOnSuccess) {
+	public TagNotifier(String rawLabelName, String rawLabelDesc, boolean onlyOnSuccess) {
 		this.rawLabelName = rawLabelName;
 		this.rawLabelDesc = rawLabelDesc;
 		this.onlyOnSuccess = onlyOnSuccess;
@@ -45,8 +42,8 @@ public class TagNotifier extends Notifier {
 	}
 
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) throws InterruptedException {
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+			throws InterruptedException {
 
 		// Enable logging
 		this.listener = listener;
@@ -93,12 +90,25 @@ public class TagNotifier extends Notifier {
 
 			AbstractProject<?, ?> project;
 			Jenkins j = Jenkins.getInstance();
+			if (j == null) {
+				log("Jenkins instance is null!");
+				return tagAction;
+			}
+
 			project = j.getItemByFullName(jobName, AbstractProject.class);
+			if (project == null) {
+				log("No project; is it a valid Perforce job?");
+				return tagAction;
+			}
 
 			int buildNum = Integer.parseInt(buildNumber);
 			build = (AbstractBuild<?, ?>) project.getBuildByNumber(buildNum);
-			tagAction = (TagAction) build.getAction(TagAction.class);
+			if (build == null) {
+				log("No build number; is it a valid Perforce job?");
+				return tagAction;
+			}
 
+			tagAction = (TagAction) build.getAction(TagAction.class);
 			if (tagAction == null) {
 				log("No tag information; is it a valid Perforce job?");
 				return tagAction;
@@ -115,13 +125,15 @@ public class TagNotifier extends Notifier {
 	}
 
 	public static DescriptorImpl descriptor() {
-		return Jenkins.getInstance().getDescriptorByType(
-				TagNotifier.DescriptorImpl.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.getDescriptorByType(TagNotifier.DescriptorImpl.class);
+		}
+		return null;
 	}
 
 	@Extension
-	public static final class DescriptorImpl extends
-			BuildStepDescriptor<Publisher> {
+	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override
 		public boolean isApplicable(Class<? extends AbstractProject> jobType) {

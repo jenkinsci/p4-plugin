@@ -1,33 +1,29 @@
 package org.jenkinsci.plugins.p4.tagging;
 
+import java.io.IOException;
+
+import org.jenkinsci.plugins.p4.workspace.Expand;
+
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Job;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.model.Run;
-
-import java.io.IOException;
-
+import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 
-import org.jenkinsci.plugins.p4.tagging.TagAction;
-import org.jenkinsci.plugins.p4.tagging.TagNotifier;
-import org.jenkinsci.plugins.p4.workspace.Expand;
-
 public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 
-	public TagNotifierStep(String rawLabelName, String rawLabelDesc,
-			boolean onlyOnSuccess) {
+	public TagNotifierStep(String rawLabelName, String rawLabelDesc, boolean onlyOnSuccess) {
 		super(rawLabelName, rawLabelDesc, onlyOnSuccess);
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
-			TaskListener listener) throws InterruptedException, IOException {
+	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+			throws InterruptedException, IOException {
 
 		// return early if label not required
 		if (onlyOnSuccess && run.getResult() != Result.SUCCESS) {
@@ -51,7 +47,7 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 			throw new AbortException(err);
 		}
 	}
-	
+
 	private TagAction getTagAction(EnvVars env, Run<?, ?> run) {
 		TagAction tagAction = (TagAction) run.getAction(TagAction.class);
 
@@ -70,10 +66,24 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 			}
 
 			Jenkins j = Jenkins.getInstance();
+			if (j == null) {
+				log("Jenkins instance is null!");
+				return tagAction;
+			}
+			
 			Job<?, ?> job = j.getItemByFullName(jobName, Job.class);
+			if (job == null) {
+				log("No job information; is it a valid Perforce job?");
+				return tagAction;
+			}
 
 			int buildNum = Integer.parseInt(buildNumber);
 			run = job.getBuildByNumber(buildNum);
+			if (run == null) {
+				log("No build number; is it a valid Perforce job?");
+				return tagAction;
+			}
+			
 			tagAction = run.getAction(TagAction.class);
 
 			if (tagAction == null) {

@@ -733,7 +733,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * the client view.
 	 *
 	 * @param fileSpec
-	 * @return
+	 * @return Local syntax
 	 * @throws Exception
 	 */
 	private String depotToLocal(IFileSpec fileSpec) throws Exception {
@@ -849,7 +849,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Get the change number for the last change within the scope of the
 	 * workspace view.
 	 *
-	 * @return
+	 * @return Perforce change
 	 * @throws Exception
 	 */
 	public int getClientHead() throws Exception {
@@ -882,7 +882,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * 'to' change limits.
 	 *
 	 * @param from
-	 * @return
+	 * @return List of changes
 	 * @throws Exception
 	 */
 	public List<Integer> listChanges(P4Revision from, P4Revision to) throws Exception {
@@ -906,7 +906,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * limits.
 	 *
 	 * @param from
-	 * @return
+	 * @return List of changes
 	 * @throws Exception
 	 */
 	public List<Integer> listChanges(P4Revision from) throws Exception {
@@ -922,7 +922,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Show all changes within the scope of the client.
 	 *
-	 * @return
+	 * @return List of changes
 	 * @throws Exception
 	 */
 	public List<Integer> listChanges() throws Exception {
@@ -955,7 +955,7 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Fetches a list of changes needed to update the workspace to head.
 	 *
-	 * @return
+	 * @return List of changes
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges(P4Revision from) throws Exception {
@@ -973,7 +973,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * limit. The limit could be a Perforce change number or label.
 	 *
 	 * @param changeLimit
-	 * @return
+	 * @return List of changes
 	 * @throws Exception
 	 */
 	public List<Integer> listHaveChanges(P4Revision from, P4Revision changeLimit) throws Exception {

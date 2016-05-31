@@ -74,7 +74,13 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	private void probeJobs(String port, String change) throws IOException {
-		for (Job<?, ?> job : Jenkins.getInstance().getAllItems(Job.class)) {
+		Jenkins j = Jenkins.getInstance();
+		if(j == null) {
+			LOGGER.warning("Jenkins instance is null.");
+			return;
+		}
+		
+		for (Job<?, ?> job : j.getAllItems(Job.class)) {
 			P4Trigger trigger = null;
 			LOGGER.fine("P4: trying: " + job.getName());
 

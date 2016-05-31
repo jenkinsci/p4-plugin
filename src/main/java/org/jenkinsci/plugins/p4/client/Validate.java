@@ -26,7 +26,6 @@ public class Validate {
 	 * 
 	 * @param fileSpecs
 	 * @param ignore
-	 * @return
 	 * @throws ConverterException
 	 */
 	public void check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {

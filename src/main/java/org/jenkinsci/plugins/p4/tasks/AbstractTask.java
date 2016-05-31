@@ -38,7 +38,6 @@ public abstract class AbstractTask implements Serializable {
 	 * Implements the Perforce task to retry if necessary
 	 * 
 	 * @param p4
-	 * @return
 	 * @throws Exception
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
@@ -144,7 +143,6 @@ public abstract class AbstractTask implements Serializable {
 	 * Remote execute to find hostname.
 	 * 
 	 * @param buildWorkspace
-	 * @return
 	 */
 	private static String getHostName(FilePath buildWorkspace) {
 		try {

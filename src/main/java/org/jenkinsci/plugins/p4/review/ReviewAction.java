@@ -51,8 +51,6 @@ public class ReviewAction implements Action {
 
 	/**
 	 * Jelly Method
-	 * 
-	 * @return
 	 */
 	public List<StringParameterValue> getAvailableParameters() {
 		List<StringParameterValue> stringParameters = new ArrayList<StringParameterValue>();

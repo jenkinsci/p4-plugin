@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
@@ -60,6 +61,7 @@ import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -230,7 +232,6 @@ public class PerforceScm extends SCM {
 	 *
 	 * @param envVars
 	 * @param listener
-	 * @return
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
@@ -528,11 +529,10 @@ public class PerforceScm extends SCM {
 		}
 
 		// exit early if client workspace is undefined
-		String client = "unset";
-		try {
-			EnvVars envVars = run.getEnvironment(null);
-			client = envVars.get("P4_CLIENT");
-		} catch (Exception e) {
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		EnvVars envVars = run.getEnvironment(listener);
+		String client = envVars.get("P4_CLIENT");
+		if (client == null || client.isEmpty()) {
 			logger.warning("P4: Unable to read P4_CLIENT");
 			return false;
 		}
@@ -723,7 +723,6 @@ public class PerforceScm extends SCM {
 	 * Helper: find the Remote/Local Computer used for build
 	 *
 	 * @param workspace
-	 * @return
 	 */
 	private static Computer workspaceToComputer(FilePath workspace) {
 		Jenkins jenkins = Jenkins.getInstance();
@@ -741,7 +740,6 @@ public class PerforceScm extends SCM {
 	 * Helper: find the Node for slave build or return current instance.
 	 *
 	 * @param workspace
-	 * @return
 	 */
 	private static Node workspaceToNode(FilePath workspace) {
 		Computer computer = workspaceToComputer(workspace);

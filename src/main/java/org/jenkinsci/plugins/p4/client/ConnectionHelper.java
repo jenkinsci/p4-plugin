@@ -130,8 +130,6 @@ public class ConnectionHelper {
 
 	/**
 	 * Retry Connection with back off for each failed attempt.
-	 * 
-	 * @param attempt
 	 */
 	private void connectionRetry() {
 		int trys = 0;
@@ -200,7 +198,7 @@ public class ConnectionHelper {
 	 * 20092 or 20073 (corresponding to 2009.2 and 2007.3 respectively).
 	 * 
 	 * @param min
-	 * @return
+	 * @return true if version supported.
 	 */
 	public boolean checkVersion(int min) {
 		int ver = connection.getServerVersionNumber();
@@ -273,7 +271,7 @@ public class ConnectionHelper {
 	 * p4-java throws an exception if one is not set.
 	 * 
 	 * @param id
-	 * @return
+	 * @return Perforce Changelist
 	 * @throws Exception
 	 */
 	public Changelist getChange(int id) throws Exception {
@@ -339,8 +337,7 @@ public class ConnectionHelper {
 	/**
 	 * Delete a client workspace
 	 * 
-	 * @param userName
-	 * @return
+	 * @param name
 	 * @throws Exception
 	 */
 	public void deleteClient(String name) throws Exception {
@@ -361,7 +358,7 @@ public class ConnectionHelper {
 	 * Get Perforce Label
 	 * 
 	 * @param id
-	 * @return
+	 * @return Perforce Label
 	 * @throws Exception
 	 */
 	public Label getLabel(String id) throws Exception {
@@ -371,8 +368,7 @@ public class ConnectionHelper {
 	/**
 	 * Create/Update a Perforce Label
 	 * 
-	 * @param id
-	 * @return
+	 * @param label
 	 * @throws Exception
 	 */
 	public void setLabel(Label label) throws Exception {
@@ -385,9 +381,9 @@ public class ConnectionHelper {
 	/**
 	 * Find all files within a label or change. (Max results limited by limit)
 	 * 
-	 * @param label
+	 * @param id
 	 * @param limit
-	 * @return
+	 * @return List of file specs
 	 * @throws Exception
 	 */
 	public List<IFileSpec> getLabelFiles(String id, int limit) throws Exception {
@@ -411,7 +407,7 @@ public class ConnectionHelper {
 	 * Find all files within a shelf.
 	 * 
 	 * @param id
-	 * @return
+	 * @return List of file specs
 	 * @throws Exception
 	 */
 	public List<IFileSpec> getShelvedFiles(int id) throws Exception {

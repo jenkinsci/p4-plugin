@@ -1,12 +1,5 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.TaskListener;
-import hudson.model.Run;
-import hudson.scm.AbstractScmTagAction;
-import hudson.util.LogTaskListener;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +8,6 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
-import org.jenkinsci.plugins.p4.ConfigurationListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -29,10 +21,17 @@ import org.kohsuke.stapler.StaplerResponse;
 
 import com.perforce.p4java.impl.generic.core.Label;
 
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.scm.AbstractScmTagAction;
+import hudson.util.LogTaskListener;
+
 public class TagAction extends AbstractScmTagAction {
 
 	private static Logger logger = Logger.getLogger(TagAction.class.getName());
-	
+
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
 
@@ -64,23 +63,22 @@ public class TagAction extends AbstractScmTagAction {
 		return tags != null && !tags.isEmpty();
 	}
 
-	public void doSubmit(StaplerRequest req, StaplerResponse rsp)
-			throws Exception, ServletException {
+	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
 
 		getACL().checkPermission(PerforceScm.TAG);
 
 		String description = req.getParameter("desc");
 		String name = req.getParameter("name");
-		
+
 		TaskListener listener = new LogTaskListener(logger, Level.INFO);
-		
+
 		labelBuild(listener, name, description, null);
 
 		rsp.sendRedirect(".");
 	}
 
-	public void labelBuild(TaskListener listener, String name,
-			String description, final FilePath nodeWorkspace) throws Exception {
+	public void labelBuild(TaskListener listener, String name, String description, final FilePath nodeWorkspace)
+			throws Exception {
 		// Expand label name and description
 		EnvVars env = getRun().getEnvironment(listener);
 		Expand expand = new Expand(env);
@@ -97,12 +95,16 @@ public class TagAction extends AbstractScmTagAction {
 		if (nodeWorkspace == null) {
 			buildWorkspace = build.getWorkspace();
 		}
+		if (buildWorkspace == null) {
+			logger.warning("FilePath is null!");
+			return;
+		}
 
 		// Invoke the Label Task
-		buildWorkspace.act(task);
+		Boolean ok = buildWorkspace.act(task);
 
 		// save label
-		if (!tags.contains(name)) {
+		if (ok && !tags.contains(name)) {
 			tags.add(name);
 			getRun().save();
 		}
@@ -168,7 +170,6 @@ public class TagAction extends AbstractScmTagAction {
 	 * Method used by Jelly code to show Label information (do not remove)
 	 * 
 	 * @param tag
-	 * @return
 	 * @throws Exception
 	 */
 	public Label getLabel(String tag) throws Exception {

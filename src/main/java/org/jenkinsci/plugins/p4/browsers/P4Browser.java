@@ -13,8 +13,7 @@ public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * Determines the link to the diff between the version. in the
-	 * {@link PerforceChangeLogEntry.Change.File} to its previous version.
+	 * Determines the link to the diff between the version.
 	 * 
 	 * @return null if the browser doesn't have any URL for diff.
 	 */

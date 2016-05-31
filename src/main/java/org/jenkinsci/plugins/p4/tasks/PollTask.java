@@ -107,7 +107,6 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 	 * Returns true if change should be filtered
 	 * 
 	 * @param changelist
-	 * @return
 	 * @throws AccessException
 	 * @throws RequestException
 	 * @throws Exception

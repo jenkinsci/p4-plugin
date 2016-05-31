@@ -42,12 +42,19 @@ public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
 		this.client = client;
 		this.populate = populate;
 
-		@SuppressWarnings("unchecked")
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
-		DescriptorImpl p4scm = (DescriptorImpl) scm;
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			@SuppressWarnings("unchecked")
+			Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
+			DescriptorImpl p4scm = (DescriptorImpl) scm;
 
-		deleteClient = p4scm.isDeleteClient();
-		deleteFiles = p4scm.isDeleteFiles();
+			deleteClient = p4scm.isDeleteClient();
+			deleteFiles = p4scm.isDeleteFiles();
+		} else {
+			logger.warning("Unable to read PerforceScm global descriptor.");
+			deleteClient = false;
+			deleteFiles = false;
+		}
 	}
 
 	@Override

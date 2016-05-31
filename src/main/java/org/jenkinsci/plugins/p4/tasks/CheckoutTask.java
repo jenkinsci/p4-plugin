@@ -110,7 +110,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 * Get the build status for the parameter map.
 	 * 
 	 * @param map
-	 * @return
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
@@ -126,7 +125,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 * found in the map.
 	 * 
 	 * @param map
-	 * @return
 	 */
 	private P4Revision getBuildChange(Workspace workspace) {
 		// Use head as the default
@@ -184,7 +182,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 * Get the unshelve point from the parameter map.
 	 * 
 	 * @param map
-	 * @return
 	 */
 	private int getReview(Workspace workspace) {
 		int review = 0;

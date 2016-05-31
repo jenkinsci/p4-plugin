@@ -63,10 +63,13 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 			PrintStream log = listener.getLogger();
 
 			SCMTriggerItem item = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(job);
+			if (item == null) {
+				LOGGER.severe("Trigger item not found.");
+				return;
+			}
 
 			PollingResult pollResult = item.poll(listener);
-
-			if (pollResult.hasChanges()) {
+			if (pollResult != null && pollResult.hasChanges()) {
 				log.println("Changes found");
 				build(job);
 			} else {

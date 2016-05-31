@@ -59,6 +59,9 @@ public class UnshelveBuilder extends Builder {
 			Workspace workspace = p4.getWorkspace();
 			FilePath buildWorkspace = build.getWorkspace();
 			try {
+				if (buildWorkspace == null) {
+					return false;
+				}
 				return unshelve(build, credential, workspace, buildWorkspace, listener);
 			} catch (IOException e) {
 				logger.warning("Unable to Unshelve");
@@ -93,7 +96,11 @@ public class UnshelveBuilder extends Builder {
 	}
 
 	public static DescriptorImpl descriptor() {
-		return Jenkins.getInstance().getDescriptorByType(UnshelveBuilder.DescriptorImpl.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.getDescriptorByType(UnshelveBuilder.DescriptorImpl.class);
+		}
+		return null;
 	}
 
 	@Extension

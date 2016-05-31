@@ -27,8 +27,6 @@ public class ConnectionFactory {
 
 	/**
 	 * Returns existing connection
-	 * 
-	 * @return
 	 */
 	public static IOptionsServer getConnection() {
 		return currentP4;
@@ -38,7 +36,6 @@ public class ConnectionFactory {
 	 * Creates a server connection; provides a connection to the Perforce
 	 * Server, initially client is undefined.
 	 * 
-	 * @return
 	 * @throws Exception
 	 */
 	public static IOptionsServer getConnection(ConnectionConfig config)

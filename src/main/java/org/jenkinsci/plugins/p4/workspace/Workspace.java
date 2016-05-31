@@ -1,18 +1,16 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.DescriptorExtensionList;
-import hudson.ExtensionPoint;
-import hudson.model.Describable;
-
 import java.util.Map;
-
-import jenkins.model.Jenkins;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
 
-public abstract class Workspace implements Cloneable, ExtensionPoint,
-		Describable<Workspace> {
+import hudson.DescriptorExtensionList;
+import hudson.ExtensionPoint;
+import hudson.model.Describable;
+import jenkins.model.Jenkins;
+
+public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace> {
 
 	private String charset;
 	private boolean pinHost;
@@ -30,8 +28,6 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	/**
 	 * Returns the client workspace name as defined in the configuration. This
 	 * may include ${tag} that have not been expanded.
-	 * 
-	 * @return
 	 */
 	public abstract String getName();
 
@@ -51,18 +47,22 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	 * @return Perforce client
 	 * @throws Exception
 	 */
-	public abstract IClient setClient(IOptionsServer connection, String user)
-			throws Exception;
+	public abstract IClient setClient(IOptionsServer connection, String user) throws Exception;
 
 	public WorkspaceDescriptor getDescriptor() {
-		return (WorkspaceDescriptor) Jenkins.getInstance().getDescriptor(
-				getClass());
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return (WorkspaceDescriptor) j.getDescriptor(getClass());
+		}
+		return null;
 	}
 
 	public static DescriptorExtensionList<Workspace, WorkspaceDescriptor> all() {
-		return Jenkins.getInstance()
-				.<Workspace, WorkspaceDescriptor> getDescriptorList(
-						Workspace.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.<Workspace, WorkspaceDescriptor> getDescriptorList(Workspace.class);
+		}
+		return null;
 	}
 
 	public String getRootPath() {
@@ -91,8 +91,6 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 
 	/**
 	 * Returns the fully expanded client workspace name.
-	 * 
-	 * @return
 	 */
 	public String getFullName() {
 		// expands Workspace name if formatters are used.
@@ -103,10 +101,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 		clientName = clientName.replaceAll(",", "-");
 		clientName = clientName.replaceAll("=", "-");
 		clientName = clientName.replaceAll("/", "-");
-		
+
 		// store full name in expand options for use in view
 		expand.set("P4_CLIENT", clientName);
-		
+
 		return clientName;
 	}
 
