@@ -1,5 +1,13 @@
 ## Release notes
 
+### Release 1.4.0 (major features/fixes)
+
+[@19593](https://swarm.workshop.perforce.com/changes/19593) - More minor fixes to satisfy FindBugs Analysis.
+
+[@19581](https://swarm.workshop.perforce.com/changes/19581) - Minor fixes to satisfy FindBugs Analysis.
+
+[@19578](https://swarm.workshop.perforce.com/changes/19578) - Upgrade plugin to 2.9
+
 ### Release 1.3.10 (major features/fixes)
 
 [@19574](https://swarm.workshop.perforce.com/changes/19574) - Support for guessBrowser and getKey.
