@@ -178,25 +178,38 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
 
-		// Use Master for polling if required and set last build
-		if (buildWorkspace == null || FilterPollMasterImpl.isMasterPolling(filter)) {
-
-			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				return PollingResult.NO_CHANGES;
-			}
-
-			buildWorkspace = j.getRootPath();
-			TagAction action = job.getLastBuild().getAction(TagAction.class);
-			P4Revision last = action.getBuildChange();
-			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
-			pollM.setLastChange(last);
-		}
-
 		// Delay polling if build is in progress
 		if (job.isBuilding()) {
 			listener.getLogger().println("Build in progress, polling delayed.");
 			return PollingResult.NO_CHANGES;
+		}
+
+		// Use Master for polling if required and set last build
+		if (buildWorkspace == null || FilterPollMasterImpl.isMasterPolling(filter)) {
+			Jenkins j = Jenkins.getInstance();
+			if (j == null) {
+				listener.getLogger().println("Warning Jenkins instance is null.");
+				return PollingResult.NO_CHANGES;
+			}
+			buildWorkspace = j.getRootPath();
+			
+			// get last run, if none then build now.
+			Run<?, ?> lastRun = job.getLastBuild();
+			if (lastRun == null) {
+				listener.getLogger().println("No previous run found; building...");
+				return PollingResult.BUILD_NOW;
+			}
+			
+			// get last action, if no previous action then build now.
+			TagAction action = lastRun.getAction(TagAction.class);
+			if (action == null) {
+				listener.getLogger().println("No previous build found; building...");
+				return PollingResult.BUILD_NOW;
+			}
+
+			P4Revision last = action.getBuildChange();
+			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
+			pollM.setLastChange(last);
 		}
 
 		if (job instanceof MatrixProject) {

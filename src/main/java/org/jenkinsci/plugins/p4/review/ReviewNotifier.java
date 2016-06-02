@@ -42,7 +42,8 @@ public class ReviewNotifier extends RunListener<Run> {
 				logger.warning("Jenkins instance is null!");
 				return;
 			}
-
+			
+			// only process valid URLs (this gets triggered for non Reviews too)
 			String url = (result.equals(Result.SUCCESS)) ? pass : fail;
 			if (url != null && !url.isEmpty()) {
 				String rootUrl = j.getRootUrl();
@@ -52,9 +53,8 @@ public class ReviewNotifier extends RunListener<Run> {
 					String path = run.getUrl();
 					postURL(url, rootUrl + path);
 				}
-			} else {
-				logger.warning("Url is null or empty!");
-			}
+			} 
+			
 		} catch (Exception e) {
 			logger.warning("Unable to Notify Review");
 			e.printStackTrace();
