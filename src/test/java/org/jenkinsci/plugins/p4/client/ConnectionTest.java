@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +27,7 @@ import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
@@ -60,7 +62,6 @@ import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
 import hudson.model.Cause.UserIdCause;
@@ -232,7 +233,7 @@ public class ConnectionTest {
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();
@@ -287,7 +288,7 @@ public class ConnectionTest {
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.LABEL.toString(), "auto15"));
 		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();
@@ -344,7 +345,7 @@ public class ConnectionTest {
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
 		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();
@@ -541,7 +542,7 @@ public class ConnectionTest {
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();
@@ -578,7 +579,7 @@ public class ConnectionTest {
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();
@@ -617,7 +618,7 @@ public class ConnectionTest {
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
-		Action actions = new ParametersAction(list);
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
 		UserIdCause cause = new Cause.UserIdCause();

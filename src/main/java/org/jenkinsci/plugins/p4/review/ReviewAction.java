@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.review;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -95,7 +96,9 @@ public class ReviewAction implements Action {
 		// Schedule build
 		TimeDuration delay = new TimeDuration(project.getQuietPeriod());
 		CauseAction cause = new CauseAction(new Cause.UserIdCause());
-		ParametersAction params = new ParametersAction(values);
+
+		List<ParameterValue> internalParams = extractAndRemoveInternalParameters(values);
+		ParametersAction params = new SafeParametersAction(values, internalParams);
 
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
@@ -105,6 +108,30 @@ public class ReviewAction implements Action {
 			// send the user back to the job top page.
 			rsp.sendRedirect("../");
 		}
+	}
+
+	/**
+	 * It extracts and removes internal parameters from the full list of parameters as they need to be managed
+	 * in a special way for security reasons (related to SECURITY-170).
+	 *
+	 * @param values internal parameters values (internal parameters are defined in {@link #getParameterDefinitions()}
+	 * @return internal parameters values
+	 */
+	private List<ParameterValue> extractAndRemoveInternalParameters(List<ParameterValue> values) {
+		List<ParameterValue> internal = new ArrayList<ParameterValue>();
+		List<ParameterDefinition> parameterDefinitions = getParameterDefinitions();
+		Iterator<ParameterValue> it = values.iterator();
+		while(it.hasNext()) {
+			ParameterValue next = it.next();
+			for (ParameterDefinition pd : parameterDefinitions) {
+				if (next.getName().equals(pd.getName())) {
+					internal.add(next);
+					it.remove();
+					break;
+				}
+			}
+		}
+		return internal;
 	}
 
 	private List<ParameterDefinition> getParameterDefinitions() {
