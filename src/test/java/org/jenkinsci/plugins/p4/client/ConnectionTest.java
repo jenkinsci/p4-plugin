@@ -22,13 +22,13 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -719,7 +719,7 @@ public class ConnectionTest {
 		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
 		project.setScm(scm);
 		P4Trigger trigger = new P4Trigger();
@@ -727,6 +727,7 @@ public class ConnectionTest {
 		project.addTrigger(trigger);
 		project.save();
 
+		//Checkout at commit 9
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
@@ -736,10 +737,6 @@ public class ConnectionTest {
 		Run lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
-
-		//Hack to make polling believe there are remote changes
-        TagAction lastAction = lastRun.getActions(TagAction.class).get(0);
-        lastAction.setBuildChange(null);
 
 		//Test trigger
 		trigger.poke(project, auth.getP4port());
@@ -756,7 +753,7 @@ public class ConnectionTest {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
-				+ "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n"
+				+ "   p4sync credential: '" + auth.getId() + "', depotPath: '//depot', format: 'test.ws'\n"
 				+ "}"));
 
 		//Add a trigger
@@ -769,9 +766,10 @@ public class ConnectionTest {
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
-		//Hack to make polling believe there are remote changes
-		TagAction buildData = lastRun.getActions(TagAction.class).get(0);
-		buildData.setBuildChange(null);
+		//Hack to make polling believe there are remote changes: sync the client 'test.ws' at an anterior revision to test the trigger
+		ClientHelper p4 = new ClientHelper(auth, null, "test.ws", "utf8");
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		p4.syncFiles(new P4Revision("9"), populate);
 
 		//Test trigger
 		trigger.poke(job, auth.getP4port());
