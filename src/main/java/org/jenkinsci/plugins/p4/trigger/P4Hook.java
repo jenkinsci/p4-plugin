@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.trigger;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.UnprotectedRootAction;
 import hudson.model.Job;
@@ -53,7 +54,11 @@ public class P4Hook implements UnprotectedRootAction {
 			String change = payload.getString("change");
 
 			LOGGER.info("Received trigger event: " + body);
-			probeJobs(port, change);
+			if(port != null) {
+				probeJobs(port, change);
+			} else {
+				LOGGER.fine("p4port must be specified");
+			}
 		}
 	}
 	
@@ -66,14 +71,18 @@ public class P4Hook implements UnprotectedRootAction {
 			String port = req.getParameter("_.p4port");
 			
 			LOGGER.info("Manual trigger event: ");
-			probeJobs(port, change);
-			
+			if(port != null) {
+				probeJobs(port, change);
+			} else {
+				LOGGER.fine("p4port must be specified");
+			}
+
 			// send the user back.
 			rsp.sendRedirect("../");
 		}
 	}
 
-	private void probeJobs(String port, String change) throws IOException {
+	private void probeJobs(@CheckForNull String port, String change) throws IOException {
 		Jenkins j = Jenkins.getInstance();
 		if(j == null) {
 			LOGGER.warning("Jenkins instance is null.");
