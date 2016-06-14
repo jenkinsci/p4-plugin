@@ -24,8 +24,7 @@ public class P4PasswordImpl extends P4BaseCredentials {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@CheckForNull
-	private final Secret password;
+	@CheckForNull private final Secret password;
 
 	@DataBoundConstructor
 	public P4PasswordImpl(CredentialsScope scope, String id, String description, @CheckForNull String p4port,
@@ -60,7 +59,7 @@ public class P4PasswordImpl extends P4BaseCredentials {
 				@QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
 				@QueryParameter("username") String username, @QueryParameter("retry") String retry,
 				@QueryParameter("timeout") String timeout, @QueryParameter("password") String password)
-						throws IOException, ServletException {
+				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				ConnectionConfig config = new ConnectionConfig(p4port, "true".equals(ssl), trust);
@@ -85,8 +84,12 @@ public class P4PasswordImpl extends P4BaseCredentials {
 
 				// Test authentication
 				p4.logout(); // invalidate any earlier ticket before test.
-				if (!p4.login()) {
-					return FormValidation.error("Authentication Error: Unable to login.");
+				try {
+					if (!p4.login()) {
+						return FormValidation.error("Authentication Error: Unable to login.");
+					}
+				} catch (Exception e) {
+					return FormValidation.error("Authentication Error: " + e.getMessage());
 				}
 
 				// Test minimum server version

@@ -100,8 +100,12 @@ public class P4TicketImpl extends P4BaseCredentials {
 
 				// Test authentication
 				// Do not logout, before test (preserve tickets)
-				if (!p4.login()) {
-					return FormValidation.error("Authentication Error: Unable to login.");
+				try {
+					if (!p4.login()) {
+						return FormValidation.error("Authentication Error: Unable to login.");
+					}
+				} catch (Exception e) {
+					return FormValidation.error("Authentication Error: " + e.getMessage());
 				}
 
 				// Test minimum server version
