@@ -1,5 +1,17 @@
 ## Release notes
 
+### Release 1.4.1 (major features/fixes)
+
+[@19712](https://swarm.workshop.perforce.com/changes/19712) - NPE fix when code line has no changes.
+
+[@19641](https://swarm.workshop.perforce.com/changes/19641) - Merge pull request #26 from Dohbedoh/hotfix/JENKINS-25249. Fixed Null Pointer dereference
+
+[@19633](https://swarm.workshop.perforce.com/changes/19633) - Merge pull request #25 from amuniz/JENKINS-35210. Fix for SECURITY-170
+
+[@19630](https://swarm.workshop.perforce.com/changes/19630) - Merge pull request #24 from Dohbedoh/JENKINS-25249. Changes to make the P4 Trigger pipeline compatible. Added some tests of the P4 trigger for both Pipeline/Non Pipeline jobs.
+
+[@19612](https://swarm.workshop.perforce.com/changes/19612) - Polling fix, if no previous build.
+
 ### Release 1.4.0 (major features/fixes)
 
 [@19593](https://swarm.workshop.perforce.com/changes/19593) - More minor fixes to satisfy FindBugs Analysis.
