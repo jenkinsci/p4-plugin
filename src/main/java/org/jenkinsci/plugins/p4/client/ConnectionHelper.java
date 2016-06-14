@@ -290,6 +290,9 @@ public class ConnectionHelper {
 		cngOpts.setLongDesc(true);
 		cngOpts.setMaxMostRecent(1);
 		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
+		if(summary.isEmpty()) {
+			return null;
+		}
 		return summary.get(0);
 	}
 

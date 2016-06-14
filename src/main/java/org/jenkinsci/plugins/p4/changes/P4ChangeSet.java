@@ -76,16 +76,19 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 				stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 
 				stream.println("\t\t<files>");
-				for (IFileSpec filespec : cl.getFiles()) {
-					FileAction action = filespec.getAction();
-					int revision = filespec.getEndRevision();
+				List<IFileSpec> files = cl.getFiles();
+				if (files != null) {
+					for (IFileSpec filespec : files) {
+						FileAction action = filespec.getAction();
+						int revision = filespec.getEndRevision();
 
-					// URL encode depot path
-					String depotPath = filespec.getDepotPathString();
-					String safePath = URLEncoder.encode(depotPath, "UTF-8");
+						// URL encode depot path
+						String depotPath = filespec.getDepotPathString();
+						String safePath = URLEncoder.encode(depotPath, "UTF-8");
 
-					stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action.name()
-							+ "\" depot=\"" + safePath + "\" />");
+						stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action.name()
+								+ "\" depot=\"" + safePath + "\" />");
+					}
 				}
 				stream.println("\t\t</files>");
 
