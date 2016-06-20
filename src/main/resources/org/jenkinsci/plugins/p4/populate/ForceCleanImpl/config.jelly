@@ -5,10 +5,6 @@
 		<f:checkbox title="${%Populate have list}" field="have" default="false"/>
 	</f:entry>
 	
-	<f:entry field="modtime">
-		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
-	</f:entry>
-
 	<f:entry field="quiet">
 		<f:checkbox title="${%QUIET Perforce messages}" default="true"/>
 	</f:entry>

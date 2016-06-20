@@ -66,7 +66,7 @@ public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
 		try {
 			// remove files if required
 			if (deleteFiles) {
-				ForceCleanImpl forceClean = new ForceCleanImpl(true, false, populate.isQuiet(), null, null);
+				ForceCleanImpl forceClean = new ForceCleanImpl(true, populate.isQuiet(), null, null);
 				logger.info("P4: unsyncing client: " + client);
 				p4.syncFiles(new P4Revision(0), forceClean);
 
