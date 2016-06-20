@@ -8,7 +8,7 @@
 	
 	<f:entry title="${%Workspace name }" field="name">
 		<!--f:textbox id="id.name" onfocus="updateWorkspaceSpec()" onkeyup="updateWorkspaceSpec()" /-->
-		<f:textbox />
+		<f:textbox default="${descriptor.defaultFormat}"/>
 	</f:entry>
 	
 	<f:entry field="pinHost">
