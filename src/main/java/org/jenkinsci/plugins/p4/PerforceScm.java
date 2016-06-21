@@ -192,14 +192,14 @@ public class PerforceScm extends SCM {
 				return PollingResult.NO_CHANGES;
 			}
 			buildWorkspace = j.getRootPath();
-			
+
 			// get last run, if none then build now.
 			Run<?, ?> lastRun = job.getLastBuild();
 			if (lastRun == null) {
 				listener.getLogger().println("No previous run found; building...");
 				return PollingResult.BUILD_NOW;
 			}
-			
+
 			// get last action, if no previous action then build now.
 			TagAction action = lastRun.getAction(TagAction.class);
 			if (action == null) {
@@ -563,9 +563,12 @@ public class PerforceScm extends SCM {
 		}
 
 		// Create task
-		RemoveClientTask task = new RemoveClientTask(scmCredential, client, populate);
+		RemoveClientTask task = new RemoveClientTask(client);
+		task.setListener(listener);
+		task.setCredential(credential);
+		
 		boolean clean = workspace.act(task);
-
+		
 		logger.info("clean: " + clean);
 		return clean;
 	}

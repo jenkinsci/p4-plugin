@@ -9,10 +9,7 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
-import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
@@ -23,24 +20,18 @@ import hudson.scm.SCM;
 import jenkins.model.Jenkins;
 import jenkins.security.Roles;
 
-public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
+public class RemoveClientTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
 
-	private final P4BaseCredentials credential;
 	private final String client;
-	private final Populate populate;
-
 	private final boolean deleteClient;
 	private final boolean deleteFiles;
 
-	public RemoveClientTask(String credential, String client, Populate populate) {
-
-		this.credential = ConnectionHelper.findCredential(credential);
+	public RemoveClientTask(String client) {
 		this.client = client;
-		this.populate = populate;
 
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
@@ -58,15 +49,13 @@ public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
 	}
 
 	@Override
-	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException, InterruptedException {
-
+	public Object task(ClientHelper p4) throws Exception {
 		logger.info("Task: remove client.");
 
-		ClientHelper p4 = new ClientHelper(credential, null, client, "utf8");
 		try {
 			// remove files if required
 			if (deleteFiles) {
-				ForceCleanImpl forceClean = new ForceCleanImpl(true, populate.isQuiet(), null, null);
+				ForceCleanImpl forceClean = new ForceCleanImpl(true, true, null, null);
 				logger.info("P4: unsyncing client: " + client);
 				p4.syncFiles(new P4Revision(0), forceClean);
 
@@ -97,8 +86,12 @@ public class RemoveClientTask implements FileCallable<Boolean>, Serializable {
 	}
 
 	@Override
+	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException, InterruptedException {
+		return (Boolean) tryTask();
+	}
+
+	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
-
 }
