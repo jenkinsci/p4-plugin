@@ -25,6 +25,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 		super(credential, workspace, publish);
 	}
 
+	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
 	}

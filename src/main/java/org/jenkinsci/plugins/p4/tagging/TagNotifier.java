@@ -37,6 +37,7 @@ public class TagNotifier extends Notifier {
 		this.onlyOnSuccess = onlyOnSuccess;
 	}
 
+	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
 	}
