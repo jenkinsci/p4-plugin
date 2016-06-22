@@ -1,10 +1,10 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import hudson.Extension;
-
 import java.io.Serializable;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import hudson.Extension;
 
 public class SubmitImpl extends Publish implements Serializable {
 
@@ -17,8 +17,8 @@ public class SubmitImpl extends Publish implements Serializable {
 	}
 
 	@DataBoundConstructor
-	public SubmitImpl(String description, boolean onlyOnSuccess, boolean reopen) {
-		super(description, onlyOnSuccess);
+	public SubmitImpl(String description, boolean onlyOnSuccess, boolean delete, boolean reopen) {
+		super(description, onlyOnSuccess, delete);
 		this.reopen = reopen;
 	}
 

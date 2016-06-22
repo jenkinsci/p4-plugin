@@ -13,6 +13,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 
 	private final String description;
 	private final boolean onlyOnSuccess;
+	private final boolean delete;
 
 	private String expandedDesc;
 
@@ -24,9 +25,14 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 		return onlyOnSuccess;
 	}
 
-	public Publish(String description, boolean onlyOnSuccess) {
+	public boolean isDelete() {
+		return delete;
+	}
+
+	public Publish(String description, boolean onlyOnSuccess, boolean delete) {
 		this.description = description;
 		this.onlyOnSuccess = onlyOnSuccess;
+		this.delete = delete;
 	}
 
 	public PublishDescriptor getDescriptor() {

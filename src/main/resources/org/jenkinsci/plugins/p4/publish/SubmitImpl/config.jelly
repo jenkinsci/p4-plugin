@@ -10,6 +10,10 @@
 		<f:checkbox title="${%Only publish on build success}" default="false"/>
 	</f:entry>
 	
+	<f:entry field="delete">
+		<f:checkbox title="${%Propagate deletes}" default="false"/>
+	</f:entry>
+	
 	<f:entry field="reopen">
 		<f:checkbox title="${%Reopened files}" default="false"/>
 	</f:entry>

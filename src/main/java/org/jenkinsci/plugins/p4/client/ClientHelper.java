@@ -560,7 +560,7 @@ public class ClientHelper extends ConnectionHelper {
 	public void versionFile(String file, String desc) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
-		findChangeFiles(files);
+		findChangeFiles(files, true);
 
 		// Exit early if no change
 		if (!isOpened(files)) {
@@ -574,14 +574,14 @@ public class ClientHelper extends ConnectionHelper {
 		submitFiles(change, false);
 	}
 
-	public boolean buildChange() throws Exception {
+	public boolean buildChange(Publish publish) throws Exception {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: reconcile files to changelist.");
 
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
-		findChangeFiles(files);
+		findChangeFiles(files, publish.isDelete());
 
 		// Check if file is open
 		boolean open = isOpened(files);
@@ -590,7 +590,7 @@ public class ClientHelper extends ConnectionHelper {
 		return open;
 	}
 
-	private void findChangeFiles(List<IFileSpec> files) throws Exception {
+	private void findChangeFiles(List<IFileSpec> files, boolean delete) throws Exception {
 		// cleanup pending changes (revert -k)
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
@@ -608,6 +608,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setUseWildcards(true);
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setOutsideEdit(true);
+		statusOpts.setRemoved(delete);
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
 		validate.check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");

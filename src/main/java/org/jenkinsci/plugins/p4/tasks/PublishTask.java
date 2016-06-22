@@ -39,7 +39,7 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 			}
 
 			// Look for changes and add to change-list, then publish
-			boolean open = p4.buildChange();
+			boolean open = p4.buildChange(publish);
 			if (open) {
 				p4.publishChange(publish);
 			}
