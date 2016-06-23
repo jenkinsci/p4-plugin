@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4.cleanup;
+package org.jenkinsci.plugins.p4.client;
 
 import java.io.IOException;
 import java.util.logging.Logger;

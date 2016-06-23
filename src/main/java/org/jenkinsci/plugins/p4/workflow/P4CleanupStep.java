@@ -2,7 +2,7 @@ package org.jenkinsci.plugins.p4.workflow;
 
 import javax.inject.Inject;
 
-import org.jenkinsci.plugins.p4.cleanup.CleanupNotifier;
+import org.jenkinsci.plugins.p4.client.CleanupNotifier;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
