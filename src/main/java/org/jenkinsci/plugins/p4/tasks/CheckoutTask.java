@@ -65,7 +65,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					if (revSpec != null && !revSpec.isEmpty() && revSpec.startsWith("@")) {
 						try {
 							int change = Integer.parseInt(revSpec.substring(1));
-							// if we have a number to sync to and this is bigger than head , just use head
+							// if change is bigger than head, use head
 							if (change > head) {
 								buildChange = new P4Revision(head);
 							} else {
@@ -76,8 +76,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						}
 					}
 				}
-			} else // if we have a number to sync to and this is bigger than head , just use head
-			{
+			} else {
+				// if change is bigger than head, use head
 				if (buildChange.getChange() > head) {
 					buildChange = new P4Revision(head);
 				}
