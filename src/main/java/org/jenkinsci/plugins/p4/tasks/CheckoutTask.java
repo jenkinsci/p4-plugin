@@ -40,7 +40,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param populate
 	 */
 	public CheckoutTask(Populate populate) {
@@ -65,11 +65,21 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					if (revSpec != null && !revSpec.isEmpty() && revSpec.startsWith("@")) {
 						try {
 							int change = Integer.parseInt(revSpec.substring(1));
-							buildChange = new P4Revision(change);
+							// if we have a number to sync to and this is bigger than head , just use head
+							if (change > head) {
+								buildChange = new P4Revision(head);
+							} else {
+								buildChange = new P4Revision(change);
+							}
 						} catch (NumberFormatException e) {
 							// leave buildChange as is
 						}
 					}
+				}
+			} else // if we have a number to sync to and this is bigger than head , just use head
+			{
+				if (buildChange.getChange() > head) {
+					buildChange = new P4Revision(head);
 				}
 			}
 		} catch (Exception e) {
@@ -84,7 +94,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	/**
 	 * Invoke sync on build node (master or remote node).
-	 * 
+	 *
 	 * @return true if updated, false if no change.
 	 */
 	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
@@ -108,7 +118,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	/**
 	 * Get the build status for the parameter map.
-	 * 
+	 *
 	 * @param map
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
@@ -123,7 +133,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	/**
 	 * Get the sync point from the parameter map. Returns the head if no change
 	 * found in the map.
-	 * 
+	 *
 	 * @param map
 	 */
 	private P4Revision getBuildChange(Workspace workspace) {
@@ -180,7 +190,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	/**
 	 * Get the unshelve point from the parameter map.
-	 * 
+	 *
 	 * @param map
 	 */
 	private int getReview(Workspace workspace) {
@@ -259,7 +269,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	public P4ChangeEntry getCurrentChange() {
 		P4ChangeEntry cl = new P4ChangeEntry();
 		P4Revision current = getBuildChange();
-		
+
 		ClientHelper p4 = getConnection();
 		try {
 			cl = current.getChangeEntry(p4);
