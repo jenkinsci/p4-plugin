@@ -1,5 +1,21 @@
 ## Release notes
 
+### Release 1.4.2 (major features/fixes)
+
+[@19830](https://swarm.workshop.perforce.com/changes/19830) - @mjoubert Add checks for sync CL and head CL
+
+[@19790](https://swarm.workshop.perforce.com/changes/19790) - Add a propagate delete option to Publish.  Originally only add/edits were permitted to prevent users deleting files with incorrect View maps, but this option allows deletes if enabled.  JENKINS-27885
+
+[@19765](https://swarm.workshop.perforce.com/changes/19765) - A Post Build 'P4 Cleanup' with DSL support.  Can be added as a PostBuild action to remove the client workspace spec.  It uses the options set in the Global configuration to delete the Client Spec and/or Local Files.
+
+[@19764](https://swarm.workshop.perforce.com/changes/19764) - Simplify RemoveClientTask by using AbstractTask.
+
+[@19752](https://swarm.workshop.perforce.com/changes/19752) - Remove 'modtime' option from ForceClean
+
+[@19750](https://swarm.workshop.perforce.com/changes/19750) - Add default workspace name to Manual Client.
+
+[@19716](https://swarm.workshop.perforce.com/changes/19716) - Login error to include exception message.
+
 ### Release 1.4.1 (major features/fixes)
 
 [@19712](https://swarm.workshop.perforce.com/changes/19712) - NPE fix when code line has no changes.
