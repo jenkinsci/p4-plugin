@@ -13,7 +13,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -22,13 +21,11 @@ import jenkins.model.Jenkins;
 
 public class TagNotifier extends Notifier {
 
-	protected static final Logger LOGGER = Logger.getLogger(TagNotifier.class.getName());
+	private static final Logger logger = Logger.getLogger(TagNotifier.class.getName());
 
 	public final String rawLabelName;
 	public final String rawLabelDesc;
 	public final boolean onlyOnSuccess;
-
-	private transient TaskListener listener;
 
 	@DataBoundConstructor
 	public TagNotifier(String rawLabelName, String rawLabelDesc, boolean onlyOnSuccess) {
@@ -45,9 +42,6 @@ public class TagNotifier extends Notifier {
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
 			throws InterruptedException {
-
-		// Enable logging
-		this.listener = listener;
 
 		// return early if label not required
 		if (onlyOnSuccess && build.getResult() != Result.SUCCESS) {
@@ -79,50 +73,43 @@ public class TagNotifier extends Notifier {
 		if (tagAction == null) {
 			String jobName = env.get("PROMOTED_JOB_NAME");
 			if (jobName == null || jobName.isEmpty()) {
-				log("No tag information; not a promotion job.");
+				logger.warning("No tag information; not a promotion job.");
 				return tagAction;
 			}
 
 			String buildNumber = env.get("PROMOTED_NUMBER");
 			if (buildNumber == null || buildNumber.isEmpty()) {
-				log("No tag information; not a promotion job.");
+				logger.warning("No tag information; not a promotion job.");
 				return tagAction;
 			}
 
 			AbstractProject<?, ?> project;
 			Jenkins j = Jenkins.getInstance();
 			if (j == null) {
-				log("Jenkins instance is null!");
+				logger.warning("Jenkins instance is null!");
 				return tagAction;
 			}
 
 			project = j.getItemByFullName(jobName, AbstractProject.class);
 			if (project == null) {
-				log("No project; is it a valid Perforce job?");
+				logger.warning("No project; is it a valid Perforce job?");
 				return tagAction;
 			}
 
 			int buildNum = Integer.parseInt(buildNumber);
 			build = (AbstractBuild<?, ?>) project.getBuildByNumber(buildNum);
 			if (build == null) {
-				log("No build number; is it a valid Perforce job?");
+				logger.warning("No build number; is it a valid Perforce job?");
 				return tagAction;
 			}
 
 			tagAction = (TagAction) build.getAction(TagAction.class);
 			if (tagAction == null) {
-				log("No tag information; is it a valid Perforce job?");
+				logger.warning("No tag information; is it a valid Perforce job?");
 				return tagAction;
 			}
 		}
 		return tagAction;
-	}
-
-	protected void log(String msg) {
-		if (listener == null) {
-			return;
-		}
-		listener.getLogger().println(msg);
 	}
 
 	public static DescriptorImpl descriptor() {
