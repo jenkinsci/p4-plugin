@@ -71,10 +71,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			P4UserProperty p4prop = new P4UserProperty(email);
 			author.addProperty(p4prop);
 			logger.fine("Setting email for user: " + user + ":" + email);
-			
+
 			// Set default email for Jenkins user if not defined
 			UserProperty prop = author.getProperty(UserProperty.class);
-			if( prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
+			if (prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
 				prop = new UserProperty(email);
 				author.addProperty(prop);
 				logger.fine("Setting default user: " + user + ":" + email);
@@ -260,5 +260,17 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	public int getMaxLimit() {
 		return FILE_COUNT_LIMIT;
+	}
+
+	// For email-ext
+	@Exported
+	public long getTimestamp() {
+		return getDate().getTime();
+	}
+
+	// For email-ext
+	@Exported
+	public String getCommitId() {
+		return getChangeNumber();
 	}
 }
