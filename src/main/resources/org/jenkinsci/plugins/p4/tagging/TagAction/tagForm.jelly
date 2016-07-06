@@ -60,7 +60,7 @@
 						<td colspan="2"> </td>
 					</tr>
 					<tr>
-						<td colspan="2" align="right"><button name="labelSubmit" type="submit" value="Label Build"/></td>
+						<td colspan="2" align="right"><input name="labelSubmit" type="submit" value="Label Build"/></td>
 					</tr>
 				</table>
 			</form>

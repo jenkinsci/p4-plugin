@@ -53,6 +53,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.gargoylesoftware.htmlunit.html.HtmlButton;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
@@ -312,8 +313,8 @@ public class ConnectionTest {
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
 		HtmlForm label = page.getFormByName("label");
-		HtmlButton button = label.getButtonByName("labelSubmit");
-		button.click();
+		HtmlInput input = label.getInputByName("labelSubmit");
+		input.click();
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
 		text = page.asText();
