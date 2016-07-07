@@ -528,7 +528,7 @@ public class PerforceScm extends SCM {
 	 * opportunity to perform clean up.
 	 */
 	@Override
-	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job, FilePath workspace, Node node)
+	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job, FilePath buildWorkspace, Node node)
 			throws IOException, InterruptedException {
 
 		logger.info("processWorkspaceBeforeDeletion");
@@ -562,12 +562,16 @@ public class PerforceScm extends SCM {
 			return false;
 		}
 
-		// Create task
+		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(client);
 		task.setListener(listener);
 		task.setCredential(credential);
+
+		// Set workspace used for the Task
+		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+		task.setWorkspace(ws);
 		
-		boolean clean = workspace.act(task);
+		boolean clean = buildWorkspace.act(task);
 		
 		logger.info("clean: " + clean);
 		return clean;

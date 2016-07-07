@@ -503,6 +503,9 @@ public class ConnectionTest {
 
 		form = WorkspaceDescriptor.doCheckFormat(format);
 		assertEquals(FormValidation.Kind.OK, form.kind);
+		
+		// delete worksapce
+		project.doDoWipeOutWorkspace();
 	}
 
 	@Test
