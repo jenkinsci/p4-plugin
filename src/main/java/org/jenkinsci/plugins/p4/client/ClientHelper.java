@@ -45,6 +45,7 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
+import com.perforce.p4java.impl.mapbased.server.Parameters;
 import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
@@ -54,6 +55,7 @@ import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
+import com.perforce.p4java.server.CmdSpec;
 
 import hudson.AbortException;
 import hudson.model.TaskListener;
@@ -474,10 +476,16 @@ public class ClientHelper extends ConnectionHelper {
 		String[] args = list.toArray(new String[list.size()]);
 		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
 
-		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
-		List<IFileSpec> status = iclient.reconcileFiles(files, cleanOpts);
-		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
-				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
+		// Reconcile with asynchronous callback
+		ReconcileStreamingCallback callback = new ReconcileStreamingCallback(iclient.getServer(), listener);
+		synchronized (callback) {
+			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
+			String[] params = Parameters.processParameters(cleanOpts, files, connection);
+			connection.execStreamingMapCommand(CmdSpec.RECONCILE.toString(), params, null, callback, 0);
+			while (!callback.isDone()) {
+				callback.wait();
+			}
+		}
 
 		log("duration: " + timer.toString() + "\n");
 	}
