@@ -1,5 +1,15 @@
 ## Release notes
 
+### Release 1.4.3 (major features/fixes)
+
+[@19890](https://swarm.workshop.perforce.com/changes/19890) - Set environment before removing workspace.  Verify NPE with test case.  JENKINS-36422
+
+[@19881](https://swarm.workshop.perforce.com/changes/19881) - Change label form submit button to input.
+
+[@19880](https://swarm.workshop.perforce.com/changes/19880) - Use system logger to avoid serialisation of listener.
+
+[@19878](https://swarm.workshop.perforce.com/changes/19878) - Export getTimestamp() and getCommitId() for email-ext.  JENKINS-36409
+
 ### Release 1.4.2 (major features/fixes)
 
 [@19830](https://swarm.workshop.perforce.com/changes/19830) - @mjoubert Add checks for sync CL and head CL
