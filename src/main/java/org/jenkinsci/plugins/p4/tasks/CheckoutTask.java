@@ -153,9 +153,11 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					// if build is a change-number passed as a label
 					int change = Integer.parseInt(expandedPopulateLabel);
 					build = new P4Revision(change);
+					logger.info("getBuildChange:pinned:change:" + change);
 				} catch (NumberFormatException e) {
 					if (!"now".equals(expandedPopulateLabel)) {
 						build = new P4Revision(expandedPopulateLabel);
+						logger.info("getBuildChange:pinned:label:" + expandedPopulateLabel);
 					}
 				}
 			}
@@ -167,6 +169,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			try {
 				int change = Integer.parseInt(cngStr);
 				build = new P4Revision(change);
+				logger.info("getBuildChange:ReviewProp:CHANGE:" + change);
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -178,13 +181,16 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				// if build is a change-number passed as a label
 				int change = Integer.parseInt(lblStr);
 				build = new P4Revision(change);
+				logger.info("getBuildChange:ReviewProp:LABEL:" + change);
 			} catch (NumberFormatException e) {
 				if (!"now".equals(lblStr)) {
 					build = new P4Revision(lblStr);
+					logger.info("getBuildChange:ReviewProp:LABEL:" + lblStr);
 				}
 			}
 		}
 
+		logger.info("getBuildChange:return:" + build);
 		return build;
 	}
 
