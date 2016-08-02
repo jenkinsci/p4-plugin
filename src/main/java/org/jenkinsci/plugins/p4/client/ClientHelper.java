@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -958,6 +959,8 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 
+		Collections.sort(list);
+		Collections.reverse(list);
 		return list;
 	}
 
@@ -1013,6 +1016,8 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		}
+		Collections.sort(haveChanges);
+		Collections.reverse(haveChanges);
 		return haveChanges;
 	}
 
