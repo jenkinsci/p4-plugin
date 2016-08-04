@@ -1,5 +1,17 @@
 ## Release notes
 
+### Release 1.4.4 (major features/fixes)
+
+[@20038](https://swarm.workshop.perforce.com/changes/20038) - Add Help buttons to ReviewBuild page.  JENKINS-35437
+
+[@20015](https://swarm.workshop.perforce.com/changes/20015) - Force sort order for 'p4 cstat' and 'p4 changes'.  Resolve issue for Polling.  JENKINS-37124
+
+[@20012](https://swarm.workshop.perforce.com/changes/20012) - Logging for changelist calculation at checkout.
+
+[@20011](https://swarm.workshop.perforce.com/changes/20011) - @mjoubert Add parallel sync options to Sync Only
+
+[@19918](https://swarm.workshop.perforce.com/changes/19918) - Use StreamingCallback for Reconcile.  Reduce memory for servers 14.1 and above.
+
 ### Release 1.4.3 (major features/fixes)
 
 [@19890](https://swarm.workshop.perforce.com/changes/19890) - Set environment before removing workspace.  Verify NPE with test case.  JENKINS-36422
