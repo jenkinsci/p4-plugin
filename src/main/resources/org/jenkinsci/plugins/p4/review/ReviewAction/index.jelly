@@ -11,7 +11,7 @@
             <h2>Manual Configuration for Build</h2>
             <f:form method="post" action="buildSubmit" name="config">
                 <j:forEach var="parameter" items="${it.availableParameters}">
-                    <f:entry title="${parameter.name}" description="${parameter.description}">
+                    <f:entry title="${parameter.name}" description="${parameter.description}" help="/plugin/p4/help-${parameter.name}.html">
                         <div>
                               <f:textbox name="${parameter.name}" value="${parameter.value}"/>
                         </div>
