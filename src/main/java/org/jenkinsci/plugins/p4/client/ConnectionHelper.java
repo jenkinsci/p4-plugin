@@ -1,17 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.acegisecurity.Authentication;
-import org.jenkinsci.plugins.p4.console.P4Logging;
-import org.jenkinsci.plugins.p4.console.P4Progress;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
@@ -38,11 +26,21 @@ import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
-
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
+import org.acegisecurity.Authentication;
+import org.jenkinsci.plugins.p4.console.P4Logging;
+import org.jenkinsci.plugins.p4.console.P4Progress;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConnectionHelper {
 
@@ -196,8 +194,8 @@ public class ConnectionHelper {
 	 * Checks the Perforce server version number and returns true if greater
 	 * than or equal to the min version. The value of min must be of the form
 	 * 20092 or 20073 (corresponding to 2009.2 and 2007.3 respectively).
-	 * 
-	 * @param min
+	 *
+	 * @param min Minimum server version
 	 * @return true if version supported.
 	 */
 	public boolean checkVersion(int min) {
@@ -214,25 +212,25 @@ public class ConnectionHelper {
 		}
 
 		switch (authorisationConfig.getType()) {
-		case PASSWORD:
-			if (!isLogin()) {
-				String pass = authorisationConfig.getPassword();
-				connection.login(pass);
-			}
-			break;
+			case PASSWORD:
+				if (!isLogin()) {
+					String pass = authorisationConfig.getPassword();
+					connection.login(pass);
+				}
+				break;
 
-		case TICKET:
-			String ticket = authorisationConfig.getTicketValue();
-			connection.setAuthTicket(ticket);
-			break;
+			case TICKET:
+				String ticket = authorisationConfig.getTicketValue();
+				connection.setAuthTicket(ticket);
+				break;
 
-		case TICKETPATH:
-			String path = authorisationConfig.getTicketPath();
-			connection.setTicketsFilePath(path);
-			break;
+			case TICKETPATH:
+				String path = authorisationConfig.getTicketPath();
+				connection.setTicketsFilePath(path);
+				break;
 
-		default:
-			throw new Exception("Unknown Authorisation type: " + authorisationConfig.getType());
+			default:
+				throw new Exception("Unknown Authorisation type: " + authorisationConfig.getType());
 		}
 
 		// return login status...
@@ -269,10 +267,10 @@ public class ConnectionHelper {
 	/**
 	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
 	 * p4-java throws an exception if one is not set.
-	 * 
-	 * @param id
+	 *
+	 * @param id Change number (long perhaps)
 	 * @return Perforce Changelist
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public Changelist getChange(int id) throws Exception {
 		try {
@@ -290,7 +288,7 @@ public class ConnectionHelper {
 		cngOpts.setLongDesc(true);
 		cngOpts.setMaxMostRecent(1);
 		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
-		if(summary.isEmpty()) {
+		if (summary.isEmpty()) {
 			return null;
 		}
 		return summary.get(0);
@@ -305,8 +303,10 @@ public class ConnectionHelper {
 
 	/**
 	 * Test if given name is a label
-	 * 
-	 * @throws Exception
+	 *
+	 * @param name Label name
+	 * @return true if label.
+	 * @throws Exception push up stack
 	 */
 	public boolean isLabel(String name) throws Exception {
 		if (name.equals("now")) {
@@ -322,8 +322,10 @@ public class ConnectionHelper {
 
 	/**
 	 * Test if given name is a client
-	 * 
-	 * @throws Exception
+	 *
+	 * @param name Client name
+	 * @return true if client exists.
+	 * @throws Exception push up stack
 	 */
 	public boolean isClient(String name) throws Exception {
 		try {
@@ -339,9 +341,9 @@ public class ConnectionHelper {
 
 	/**
 	 * Delete a client workspace
-	 * 
-	 * @param name
-	 * @throws Exception
+	 *
+	 * @param name Client name
+	 * @throws Exception push up stack
 	 */
 	public void deleteClient(String name) throws Exception {
 		DeleteClientOptions opts = new DeleteClientOptions();
@@ -359,10 +361,10 @@ public class ConnectionHelper {
 
 	/**
 	 * Get Perforce Label
-	 * 
-	 * @param id
+	 *
+	 * @param id Label name
 	 * @return Perforce Label
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public Label getLabel(String id) throws Exception {
 		return (Label) connection.getLabel(id);
@@ -370,9 +372,9 @@ public class ConnectionHelper {
 
 	/**
 	 * Create/Update a Perforce Label
-	 * 
-	 * @param label
-	 * @throws Exception
+	 *
+	 * @param label Label name
+	 * @throws Exception push up stack
 	 */
 	public void setLabel(Label label) throws Exception {
 		// connection.createLabel(label);
@@ -383,11 +385,11 @@ public class ConnectionHelper {
 
 	/**
 	 * Find all files within a label or change. (Max results limited by limit)
-	 * 
-	 * @param id
-	 * @param limit
+	 *
+	 * @param id    Label name or change number (as string)
+	 * @param limit Max results (-m value)
 	 * @return List of file specs
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<IFileSpec> getLabelFiles(String id, int limit) throws Exception {
 		String path = "//...@" + id;
@@ -408,14 +410,14 @@ public class ConnectionHelper {
 
 	/**
 	 * Find all files within a shelf.
-	 * 
-	 * @param id
+	 *
+	 * @param id Shelf ID
 	 * @return List of file specs
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<IFileSpec> getShelvedFiles(int id) throws Exception {
 		String cmd = CmdSpec.DESCRIBE.name();
-		String[] args = new String[] { "-s", "-S", "" + id };
+		String[] args = new String[]{"-s", "-S", "" + id};
 		List<Map<String, Object>> resultMaps;
 		resultMaps = connection.execMapCmdList(cmd, args, null);
 
@@ -441,18 +443,16 @@ public class ConnectionHelper {
 		String key = "P4.Swarm.URL";
 		propOpts.setName(key);
 		List<IProperty> values = connection.getProperty(propOpts);
-		for(IProperty prop : values) {
-			if(key.equals(prop.getName())) {
+		for (IProperty prop : values) {
+			if (key.equals(prop.getName())) {
 				return prop.getValue();
 			}
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Disconnect from the Perforce Server.
-	 * 
-	 * @throws Exception
 	 */
 	public void disconnect() {
 		try {
@@ -467,7 +467,8 @@ public class ConnectionHelper {
 
 	/**
 	 * Finds a Perforce Credential based on the String id.
-	 * 
+	 *
+	 * @param id Credential ID
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
 	public static P4BaseCredentials findCredential(String id) {
@@ -495,7 +496,7 @@ public class ConnectionHelper {
 	}
 
 	public void stop() throws Exception {
-		connection.execMapCmd("admin", new String[] { "stop" }, null);
+		connection.execMapCmd("admin", new String[]{"stop"}, null);
 	}
 
 	public boolean hasAborted() {

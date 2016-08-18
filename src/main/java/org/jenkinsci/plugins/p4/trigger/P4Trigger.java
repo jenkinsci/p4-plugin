@@ -1,19 +1,5 @@
 package org.jenkinsci.plugins.p4.trigger;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.logging.Logger;
-
-import org.apache.commons.jelly.XMLOutput;
-import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
@@ -22,12 +8,25 @@ import hudson.model.Item;
 import hudson.model.Job;
 import hudson.scm.PollingResult;
 import hudson.scm.SCM;
+import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
-import hudson.triggers.SCMTrigger.SCMTriggerCause;
 import hudson.util.StreamTaskListener;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.triggers.SCMTriggerItem;
+import org.apache.commons.jelly.XMLOutput;
+import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.logging.Logger;
 
 public class P4Trigger extends Trigger<Job<?, ?>> {
 
@@ -85,9 +84,9 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 	/**
 	 * Schedule build
-	 * 
-	 * @param job
-	 * @throws IOException
+	 *
+	 * @param job Jenkins Job
+	 * @throws IOException push up stack
 	 */
 	private void build(final Job<?, ?> job) throws IOException {
 
@@ -112,7 +111,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		//Get all the trigger for this Job
 		SCMTriggerItem item = SCMTriggerItem.SCMTriggerItems.asSCMTriggerItem(job);
 
-		if(item != null) {
+		if (item != null) {
 			//As soon as we find a match, return
 			for (SCM scmTrigger : item.getSCMs()) {
 				if (scmTrigger instanceof PerforceScm) {
@@ -134,11 +133,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 	/**
 	 * Perforce Trigger Log Action
-	 * 
-	 * @author pallen
-	 *
 	 */
-
 	public final class P4TriggerAction implements Action {
 		public Job<?, ?> getOwner() {
 			return job;
@@ -162,6 +157,9 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 		/**
 		 * Writes the annotated log to the given output.
+		 *
+		 * @param out XML output
+		 * @throws IOException pudh up stack
 		 */
 		public void writeLogTo(XMLOutput out) throws IOException {
 			new AnnotatedLargeText<P4TriggerAction>(getLogFile(), Charset.defaultCharset(), true, this).writeHtmlTo(0,

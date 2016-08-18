@@ -1,14 +1,13 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.util.Map;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
-
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
+
+import java.util.Map;
 
 public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace> {
 
@@ -28,6 +27,8 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	/**
 	 * Returns the client workspace name as defined in the configuration. This
 	 * may include ${tag} that have not been expanded.
+	 *
+	 * @return Client name
 	 */
 	public abstract String getName();
 
@@ -41,11 +42,11 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 
 	/**
 	 * Setup/Create a Perforce workspace for this mode.
-	 * 
-	 * @param connection
-	 * @param user
+	 *
+	 * @param connection Server connection
+	 * @param user       Perforce user
 	 * @return Perforce client
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public abstract IClient setClient(IOptionsServer connection, String user) throws Exception;
 
@@ -60,7 +61,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	public static DescriptorExtensionList<Workspace, WorkspaceDescriptor> all() {
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
-			return j.<Workspace, WorkspaceDescriptor> getDescriptorList(Workspace.class);
+			return j.<Workspace, WorkspaceDescriptor>getDescriptorList(Workspace.class);
 		}
 		return null;
 	}
@@ -91,6 +92,8 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 
 	/**
 	 * Returns the fully expanded client workspace name.
+	 *
+	 * @return Client name
 	 */
 	public String getFullName() {
 		// expands Workspace name if formatters are used.

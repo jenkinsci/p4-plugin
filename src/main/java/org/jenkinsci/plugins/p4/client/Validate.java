@@ -1,15 +1,14 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.core.file.FileSpecOpStatus;
+import com.perforce.p4java.core.file.IFileSpec;
+import hudson.AbortException;
+import hudson.model.TaskListener;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-
-import com.perforce.p4java.core.file.FileSpecOpStatus;
-import com.perforce.p4java.core.file.IFileSpec;
-
-import hudson.AbortException;
-import hudson.model.TaskListener;
 
 public class Validate {
 
@@ -23,10 +22,10 @@ public class Validate {
 
 	/**
 	 * Look for a message in the returned FileSpec from operation.
-	 * 
-	 * @param fileSpecs
-	 * @param ignore
-	 * @throws ConverterException
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param ignore    Parameter list of messages to ignore
+	 * @throws Exception push up stack
 	 */
 	public void check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
 		check(fileSpecs, true, ignore);

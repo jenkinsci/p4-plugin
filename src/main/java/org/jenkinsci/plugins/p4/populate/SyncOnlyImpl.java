@@ -12,11 +12,16 @@ public class SyncOnlyImpl extends Populate {
 
 	/**
 	 * Sync only (optional have update)
-	 * 
-	 * @param have
+	 *
+	 * @param revert   revert before sync option
+	 * @param have     populate have list
+	 * @param modtime  use MODTIME for reconcile
+	 * @param quiet    Perforce quiet option
+	 * @param pin      Change or label to pin the sync
+	 * @param parallel Parallel sync option
 	 */
 	@DataBoundConstructor
-	public SyncOnlyImpl(boolean revert, boolean have, boolean modtime, boolean quiet, String pin,ParallelSync parallel) {
+	public SyncOnlyImpl(boolean revert, boolean have, boolean modtime, boolean quiet, String pin, ParallelSync parallel) {
 		super(have, false, modtime, quiet, pin, parallel);
 		this.revert = revert;
 	}

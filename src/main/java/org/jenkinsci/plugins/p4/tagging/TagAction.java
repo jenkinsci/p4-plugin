@@ -1,13 +1,12 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-
+import com.perforce.p4java.impl.generic.core.Label;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.scm.AbstractScmTagAction;
+import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -19,14 +18,12 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.perforce.p4java.impl.generic.core.Label;
-
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.scm.AbstractScmTagAction;
-import hudson.util.LogTaskListener;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TagAction extends AbstractScmTagAction {
 
@@ -168,9 +165,10 @@ public class TagAction extends AbstractScmTagAction {
 
 	/**
 	 * Method used by Jelly code to show Label information (do not remove)
-	 * 
-	 * @param tag
-	 * @throws Exception
+	 *
+	 * @param tag Label name
+	 * @return Perforce Label object
+	 * @throws Exception push up stack
 	 */
 	public Label getLabel(String tag) throws Exception {
 		ClientHelper p4 = new ClientHelper(credential, null, client, charset);

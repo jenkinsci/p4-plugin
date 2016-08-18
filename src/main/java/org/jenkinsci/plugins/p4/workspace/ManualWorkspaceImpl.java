@@ -1,12 +1,5 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.client.IClientViewMapping;
@@ -16,12 +9,17 @@ import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
-
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
+
+import java.util.logging.Logger;
 
 public class ManualWorkspaceImpl extends Workspace {
 
@@ -122,7 +120,7 @@ public class ManualWorkspaceImpl extends Workspace {
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		
+
 		@Override
 		public String getDisplayName() {
 			return "Manual (custom view)";
@@ -131,9 +129,9 @@ public class ManualWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
@@ -170,7 +168,6 @@ public class ManualWorkspaceImpl extends Workspace {
 			spec.put("view", sb.toString());
 			spec.put("options", option);
 			return spec;
-
 		} catch (P4JavaException e) {
 			JSONObject option = new JSONObject();
 			option.put("allwrite", false);

@@ -1,17 +1,5 @@
 package org.jenkinsci.plugins.p4.review;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletException;
-
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Cause;
@@ -25,6 +13,16 @@ import hudson.model.StringParameterValue;
 import jenkins.model.Jenkins;
 import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class ReviewAction implements Action {
 
@@ -52,6 +50,8 @@ public class ReviewAction implements Action {
 
 	/**
 	 * Jelly Method
+	 *
+	 * @return List of Parameters
 	 */
 	public List<StringParameterValue> getAvailableParameters() {
 		List<StringParameterValue> stringParameters = new ArrayList<StringParameterValue>();
@@ -121,7 +121,7 @@ public class ReviewAction implements Action {
 		List<ParameterValue> internal = new ArrayList<ParameterValue>();
 		List<ParameterDefinition> parameterDefinitions = getParameterDefinitions();
 		Iterator<ParameterValue> it = values.iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			ParameterValue next = it.next();
 			for (ParameterDefinition pd : parameterDefinitions) {
 				if (next.getName().equals(pd.getName())) {

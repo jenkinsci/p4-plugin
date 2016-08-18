@@ -9,8 +9,9 @@ public enum CheckoutStatus {
 	/**
 	 * Parse a string (case insensitive) for matching enum. Will return HEAD if
 	 * no matches.
-	 * 
-	 * @param status
+	 *
+	 * @param status Status from request
+	 * @return Enum status
 	 */
 	public static CheckoutStatus parse(String status) {
 		for (CheckoutStatus s : CheckoutStatus.values()) {

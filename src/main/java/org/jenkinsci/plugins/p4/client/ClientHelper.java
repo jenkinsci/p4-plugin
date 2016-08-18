@@ -1,39 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
-import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
-import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
-import org.jenkinsci.plugins.p4.populate.ParallelSync;
-import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
-import org.jenkinsci.plugins.p4.publish.Publish;
-import org.jenkinsci.plugins.p4.publish.ShelveImpl;
-import org.jenkinsci.plugins.p4.publish.SubmitImpl;
-import org.jenkinsci.plugins.p4.tasks.TimeTask;
-import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.core.IChangelist;
@@ -57,9 +23,41 @@ import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
-
 import hudson.AbortException;
 import hudson.model.TaskListener;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
+import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
+import org.jenkinsci.plugins.p4.populate.ParallelSync;
+import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
+import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.plugins.p4.publish.ShelveImpl;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
+import org.jenkinsci.plugins.p4.tasks.TimeTask;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -101,7 +99,6 @@ public class ClientHelper extends ConnectionHelper {
 		if (isUnicode()) {
 			connection.setCharsetName(charset);
 		}
-
 	}
 
 	public void setClient(Workspace workspace) throws Exception {
@@ -145,11 +142,9 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Sync files to workspace at the specified change/label.
 	 *
-	 * @param buildChange
-	 *            Change to sync from
-	 * @param populate
-	 *            Populate strategy
-	 * @throws Exception
+	 * @param buildChange Change to sync from
+	 * @param populate    Populate strategy
+	 * @throws Exception push up stack
 	 */
 	public void syncFiles(P4Revision buildChange, Populate populate) throws Exception {
 		TimeTask timer = new TimeTask();
@@ -339,7 +334,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * Cleans up the Perforce workspace after a previous build. Removes all
 	 * pending and abandoned files (equivalent to 'p4 revert -w').
 	 *
-	 * @throws Exception
+	 * @param populate Jelly populate options
+	 * @throws Exception push up stack
 	 */
 	public void tidyWorkspace(Populate populate) throws Exception {
 		// relies on workspace view for scope.
@@ -357,7 +353,6 @@ public class ClientHelper extends ConnectionHelper {
 		if (populate instanceof SyncOnlyImpl) {
 			tidySyncOnlyImpl(path, populate);
 		}
-
 	}
 
 	private void tidySyncOnlyImpl(String path, Populate populate) throws Exception {
@@ -446,7 +441,7 @@ public class ClientHelper extends ConnectionHelper {
 		boolean delete = ((AutoCleanImpl) populate).isDelete();
 		boolean replace = ((AutoCleanImpl) populate).isReplace();
 
-		String[] base = { "-w", "-f" };
+		String[] base = {"-w", "-f"};
 		List<String> list = new ArrayList<String>();
 		list.addAll(Arrays.asList(base));
 
@@ -499,7 +494,7 @@ public class ClientHelper extends ConnectionHelper {
 		boolean replace = ((AutoCleanImpl) populate).isReplace();
 
 		// check status - find all missing, changed or added files
-		String[] base = { "-n", "-a", "-e", "-d", "-l", "-f" };
+		String[] base = {"-n", "-a", "-e", "-d", "-l", "-f"};
 		List<String> list = new ArrayList<String>();
 		list.addAll(Arrays.asList(base));
 
@@ -521,18 +516,18 @@ public class ClientHelper extends ConnectionHelper {
 					local = depotToLocal(s);
 				}
 				switch (s.getAction()) {
-				case ADD:
-					if (local != null && delete) {
-						File unlink = new File(local);
-						boolean ok = unlink.delete();
-						if (!ok) {
-							log("Not able to delete: " + local);
+					case ADD:
+						if (local != null && delete) {
+							File unlink = new File(local);
+							boolean ok = unlink.delete();
+							if (!ok) {
+								log("Not able to delete: " + local);
+							}
 						}
-					}
-					break;
-				default:
-					update.add(s);
-					break;
+						break;
+					default:
+						update.add(s);
+						break;
 				}
 			} else {
 				String msg = s.getStatusMessage();
@@ -742,9 +737,9 @@ public class ClientHelper extends ConnectionHelper {
 	 * provide local syntax, so I have to use 'p4 where' to translate through
 	 * the client view.
 	 *
-	 * @param fileSpec
+	 * @param fileSpec Perforce file spec
 	 * @return Local syntax
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	private String depotToLocal(IFileSpec fileSpec) throws Exception {
 		String depotPath = fileSpec.getDepotPathString();
@@ -788,8 +783,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * Unshelve review into workspace. Workspace is sync'ed to head first then
 	 * review unshelved.
 	 *
-	 * @param review
-	 * @throws Exception
+	 * @param review Review number (perhaps long?)
+	 * @throws Exception push up stack
 	 */
 	public void unshelveFiles(int review) throws Exception {
 		// skip if review is 0 or less
@@ -824,9 +819,9 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Resolve files in workspace with the specified option.
-	 * 
-	 * @param mode
-	 * @throws Exception
+	 *
+	 * @param mode Resolve mode
+	 * @throws Exception push up stack
 	 */
 	public void resolveFiles(String mode) throws Exception {
 
@@ -860,7 +855,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * workspace view.
 	 *
 	 * @return Perforce change
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public int getClientHead() throws Exception {
 		// get last change in server
@@ -891,9 +886,10 @@ public class ClientHelper extends ConnectionHelper {
 	 * Show all changes within the scope of the client, between the 'from' and
 	 * 'to' change limits.
 	 *
-	 * @param from
+	 * @param from From revision (change or label)
+	 * @param to   To revision (change or label)
 	 * @return List of changes
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<Integer> listChanges(P4Revision from, P4Revision to) throws Exception {
 		// return empty array, if from and to are equal, or Perforce will report
@@ -915,9 +911,9 @@ public class ClientHelper extends ConnectionHelper {
 	 * Show all changes within the scope of the client, from the 'from' change
 	 * limits.
 	 *
-	 * @param from
+	 * @param from From revision (change or label)
 	 * @return List of changes
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<Integer> listChanges(P4Revision from) throws Exception {
 		String ws = "//" + iclient.getName() + "/...@" + from + ",now";
@@ -933,7 +929,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Show all changes within the scope of the client.
 	 *
 	 * @return List of changes
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<Integer> listChanges() throws Exception {
 		String ws = "//" + iclient.getName() + "/...";
@@ -967,8 +963,9 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Fetches a list of changes needed to update the workspace to head.
 	 *
+	 * @param from From revision
 	 * @return List of changes
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<Integer> listHaveChanges(P4Revision from) throws Exception {
 		if (from.getChange() > 0) {
@@ -984,9 +981,10 @@ public class ClientHelper extends ConnectionHelper {
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number or label.
 	 *
-	 * @param changeLimit
+	 * @param from        From revision
+	 * @param changeLimit To Revision
 	 * @return List of changes
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
 	public List<Integer> listHaveChanges(P4Revision from, P4Revision changeLimit) throws Exception {
 		if (from.getChange() > 0) {
@@ -1004,7 +1002,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<Integer> haveChanges = new ArrayList<Integer>();
 		Map<String, Object>[] map;
-		map = connection.execMapCmd("cstat", new String[] { fileSpec }, null);
+		map = connection.execMapCmd("cstat", new String[]{fileSpec}, null);
 
 		for (Map<String, Object> entry : map) {
 			String status = (String) entry.get("status");

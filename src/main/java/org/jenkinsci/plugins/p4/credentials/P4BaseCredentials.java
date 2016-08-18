@@ -22,24 +22,26 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 
 	@CheckForNull
 	private final String retry;
-	
+
 	@CheckForNull
 	private final String timeout;
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param scope
-	 *            the scope.
-	 * @param id
-	 *            the id.
-	 * @param description
-	 *            the description.
+	 *
+	 * @param scope       the scope.
+	 * @param id          the id.
+	 * @param description the description.
+	 * @param p4port      Perforce port
+	 * @param ssl         Perforce SSL options
+	 * @param username    Perforce username
+	 * @param retry       Perforce connection retry option
+	 * @param timeout     Perforce connection timeout option
 	 */
 	public P4BaseCredentials(CredentialsScope scope, String id,
-			String description, @CheckForNull String p4port,
-			@CheckForNull TrustImpl ssl, @CheckForNull String username,
-			@CheckForNull String retry, @CheckForNull String timeout) {
+	                         String description, @CheckForNull String p4port,
+	                         @CheckForNull TrustImpl ssl, @CheckForNull String username,
+	                         @CheckForNull String retry, @CheckForNull String timeout) {
 		super(scope, id, description);
 		this.p4port = Util.fixNull(p4port);
 		this.ssl = ssl;
@@ -74,7 +76,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 			return 0;
 		}
 	}
-	
+
 	public int getTimeout() {
 		if (timeout != null && !timeout.isEmpty()) {
 			return Integer.parseInt(timeout);

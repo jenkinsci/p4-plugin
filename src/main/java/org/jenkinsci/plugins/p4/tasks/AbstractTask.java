@@ -1,13 +1,10 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -15,11 +12,13 @@ import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public abstract class AbstractTask implements Serializable {
 
@@ -36,9 +35,10 @@ public abstract class AbstractTask implements Serializable {
 
 	/**
 	 * Implements the Perforce task to retry if necessary
-	 * 
-	 * @param p4
-	 * @throws Exception
+	 *
+	 * @param p4 Perforce connection helper
+	 * @return Task object
+	 * @throws Exception push up stack
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
 
@@ -57,7 +57,7 @@ public abstract class AbstractTask implements Serializable {
 	public void setListener(TaskListener listener) {
 		this.listener = listener;
 	}
-	 
+
 	public void setWorkspace(Workspace workspace) throws AbortException {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
@@ -118,7 +118,7 @@ public abstract class AbstractTask implements Serializable {
 			ws.setExpand(envVars);
 		}
 		ws.setRootPath(root);
-		
+
 		if (ws.isPinHost()) {
 			String hostname = getHostName(buildWorkspace);
 			ws.setHostName(hostname);
@@ -127,7 +127,7 @@ public abstract class AbstractTask implements Serializable {
 		}
 		return ws;
 	}
-	
+
 	public Workspace setNextChange(Workspace ws, List<Integer> changes) {
 		// Set label for changes to build
 		if (changes != null) {
@@ -141,8 +141,9 @@ public abstract class AbstractTask implements Serializable {
 
 	/**
 	 * Remote execute to find hostname.
-	 * 
-	 * @param buildWorkspace
+	 *
+	 * @param buildWorkspace Jenkins remote path
+	 * @return Hostname
 	 */
 	private static String getHostName(FilePath buildWorkspace) {
 		try {

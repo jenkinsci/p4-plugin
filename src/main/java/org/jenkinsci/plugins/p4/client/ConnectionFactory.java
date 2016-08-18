@@ -1,22 +1,20 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.PropertyDefs;
+import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
+import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.ServerFactory;
 import hudson.util.FormValidation;
 
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import com.perforce.p4java.PropertyDefs;
-import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
-import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.ServerFactory;
-
 /**
  * Connection Factory
- * 
+ * <p>
  * Provides concurrent connections to the Perforce Server
- * 
+ *
  * @author pallen
- * 
  */
 public class ConnectionFactory {
 
@@ -27,6 +25,8 @@ public class ConnectionFactory {
 
 	/**
 	 * Returns existing connection
+	 *
+	 * @return Server connection object
 	 */
 	public static IOptionsServer getConnection() {
 		return currentP4;
@@ -35,8 +35,10 @@ public class ConnectionFactory {
 	/**
 	 * Creates a server connection; provides a connection to the Perforce
 	 * Server, initially client is undefined.
-	 * 
-	 * @throws Exception
+	 *
+	 * @param config Connection configuration
+	 * @return Server connection object
+	 * @throws Exception push up stack
 	 */
 	public static IOptionsServer getConnection(ConnectionConfig config)
 			throws Exception {

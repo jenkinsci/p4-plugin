@@ -41,7 +41,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	/**
 	 * Constructor
 	 *
-	 * @param populate
+	 * @param populate Populate options
 	 */
 	public CheckoutTask(Populate populate) {
 		this.populate = populate;
@@ -259,7 +259,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				cl.setChange(p4, summary);
 				changesFull.add(cl);
 			}
-
 		} catch (Exception e) {
 			String err = "Unable to get full changes: " + e;
 			logger.severe(err);

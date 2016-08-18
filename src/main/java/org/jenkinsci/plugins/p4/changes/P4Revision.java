@@ -33,7 +33,7 @@ public class P4Revision implements Serializable {
 	 * 
 	 * If not found change=0, or if a label then change=-1
 	 * 
-	 * @param iclient
+	 * @param iclient Perforce client
 	 */
 	public P4Revision(IClient iclient) {
 		this.change = 0;

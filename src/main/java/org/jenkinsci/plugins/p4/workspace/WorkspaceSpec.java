@@ -46,8 +46,8 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 
 	@DataBoundConstructor
 	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
-			boolean locked, boolean modtime, boolean rmdir, String streamName,
-			String line, String view) {
+	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
+	                     String line, String view) {
 		this.allwrite = allwrite;
 		this.clobber = clobber;
 		this.compress = compress;
@@ -78,9 +78,9 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteStreamName(
 				@QueryParameter String value) {

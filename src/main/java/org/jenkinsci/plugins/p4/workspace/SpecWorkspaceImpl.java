@@ -1,25 +1,23 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.logging.Logger;
-
-import org.apache.commons.io.IOUtils;
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.jenkinsci.plugins.p4.client.NavigateHelper;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
-
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
+import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.jenkinsci.plugins.p4.client.NavigateHelper;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class SpecWorkspaceImpl extends Workspace {
 
@@ -73,7 +71,7 @@ public class SpecWorkspaceImpl extends Workspace {
 		InputStream ins = connection.getFileContents(file, printOpts);
 
 		String spec = IOUtils.toString(ins, "UTF-8");
-		connection.execInputStringMapCmd("client", new String[] { "-i" }, spec);
+		connection.execInputStringMapCmd("client", new String[]{"-i"}, spec);
 		iclient.refresh();
 
 		return iclient;
@@ -90,9 +88,9 @@ public class SpecWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
@@ -105,9 +103,9 @@ public class SpecWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteSpecPath(@QueryParameter String value) {
 			return NavigateHelper.getPath(value);
