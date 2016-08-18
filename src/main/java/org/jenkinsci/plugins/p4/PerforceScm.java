@@ -1,42 +1,7 @@
 package org.jenkinsci.plugins.p4;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.browsers.P4Browser;
-import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
-import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
-import org.jenkinsci.plugins.p4.filters.Filter;
-import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
-import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
-import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.tagging.TagAction;
-import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
-import org.jenkinsci.plugins.p4.tasks.PollTask;
-import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
-
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -65,6 +30,39 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
+import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
+import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
+import org.jenkinsci.plugins.p4.tasks.PollTask;
+import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PerforceScm extends SCM {
 
@@ -78,12 +76,7 @@ public class PerforceScm extends SCM {
 
 	private transient List<Integer> changes;
 	private transient P4Revision parentChange;
-
-	/** JENKINS-37442:
-	* We need to store the changelog file name for the build so that we can expose
-	* it to the build environment
-	*/
-	private transient String changelogFilename = null;
+	private transient String changelogFilename;
 
 	public String getCredential() {
 		return credential;
@@ -315,7 +308,11 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
-		// JENKINS-37442: Make the log file name available
+		/**
+		 * JENKINS-37442:
+		 * We need to store the changelog file name for the build so that we can expose
+		 * it to the build environment
+		 */
 		changelogFilename = changelogFile.getAbsolutePath();
 
 		// Create task
@@ -488,15 +485,7 @@ public class PerforceScm extends SCM {
 			}
 
 			// JENKINS-37442: Make the log file name available
-			if(changelogFilename != null)
-			{
-				env.put("HUDSON_CHANGELOG_FILE", changelogFilename);
-			}
-			else
-			{
-				env.put("HUDSON_CHANGELOG_FILE", "Not-set");
-			}
-
+			env.put("HUDSON_CHANGELOG_FILE", changelogFilename);
 		}
 	}
 
