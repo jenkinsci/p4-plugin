@@ -308,11 +308,6 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
-		/**
-		 * JENKINS-37442:
-		 * We need to store the changelog file name for the build so that we can expose
-		 * it to the build environment
-		 */
 		changelogFilename = changelogFile.getAbsolutePath();
 
 		// Create task
@@ -366,11 +361,6 @@ public class PerforceScm extends SCM {
 		// Only write change log if build succeeded and changeLogFile has been
 		// set.
 		if (success) {
-			// Calculate changes prior to build (based on last build)
-			listener.getLogger().println("P4 Task: saving built changes.");
-			List<P4ChangeEntry> changes = calculateChanges(run, task);
-			P4ChangeSet.store(changelogFile, changes);
-			listener.getLogger().println("... done\n");
 		} else {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
@@ -481,7 +471,6 @@ public class PerforceScm extends SCM {
 			}
 
 			// JENKINS-37442: Make the log file name available
-			env.put("HUDSON_CHANGELOG_FILE", changelogFilename);
 		}
 	}
 
