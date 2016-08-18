@@ -371,6 +371,18 @@ There are several limitations as the Workflow plugin is relativly new, these inc
 * SCM Polling (not functional)
 * No access to Environment ${VAR} varables
 
+### Exposed Variables
+
+The plugin exposes the following additional variables:
+
+* *P4_CHANGELIST* - current changelist (valid for this to be blank when there are no changes).
+* *P4_CLIENT* - Client currently in use.
+* *P4_PORT* - Perforce server port currently in use.
+* *P4_USER* - Perforce user in use.
+* *P4_TICKET* - Perforce ticket used (can be hidden using global configuration option 'Perforce: Secure P4_TICKET').
+* *HUDSON_CHANGELOG_FILE* - Location on disk of 'changelog.xml' containing list of changes in this build.
+
+
 ## Troubleshooting
 
 ### Connection issues

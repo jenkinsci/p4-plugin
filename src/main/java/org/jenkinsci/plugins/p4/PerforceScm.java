@@ -79,6 +79,12 @@ public class PerforceScm extends SCM {
 	private transient List<Integer> changes;
 	private transient P4Revision parentChange;
 
+	/** JENKINS-37442:
+	* We need to store the changelog file name for the build so that we can expose
+	* it to the build environment
+	*/
+	private transient String changelogFilename = null;
+
 	public String getCredential() {
 		return credential;
 	}
@@ -309,6 +315,9 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
+		// JENKINS-37442: Make the log file name available
+		changelogFilename = changelogFile.getAbsolutePath();
+
 		// Create task
 		CheckoutTask task = new CheckoutTask(populate);
 		task.setListener(listener);
@@ -477,6 +486,17 @@ public class PerforceScm extends SCM {
 					env.put("P4_TICKET", ticket);
 				}
 			}
+
+			// JENKINS-37442: Make the log file name available
+			if(changelogFilename != null)
+			{
+				env.put("HUDSON_CHANGELOG_FILE", changelogFilename);
+			}
+			else
+			{
+				env.put("HUDSON_CHANGELOG_FILE", "Not-set");
+			}
+
 		}
 	}
 
