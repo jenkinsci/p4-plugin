@@ -23,6 +23,7 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import java.util.logging.Level;
 
 public class P4Server {
 
@@ -140,9 +141,25 @@ public class P4Server {
 		tarIn.close();
 	}
 
-	public void clean() throws IOException {
+	public void clean() throws IOException, InterruptedException {
 		if (p4root.exists()) {
-			FileUtils.cleanDirectory(p4root);
+			logger.log(Level.INFO, "Attempting to clean directory: {0}", p4root);
+			int retry = 0;
+			while (true) {
+				retry++;
+				try {
+					FileUtils.cleanDirectory(p4root);
+					break;
+				} catch (IOException e) {
+					if (retry < 5) {
+						logger.log(Level.WARNING, "Failed to clean directory, sleeping and retrying: {0}", e.getMessage());
+						Thread.sleep(1000);
+					} else {
+						logger.log(Level.SEVERE, "Failed to clean directory: {0}", e.getMessage());
+						throw e;
+					}
+				}
+			}
 		} else {
 			p4root.mkdir();
 		}
