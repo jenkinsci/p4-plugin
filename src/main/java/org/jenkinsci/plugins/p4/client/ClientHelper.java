@@ -260,9 +260,11 @@ public class ClientHelper extends ConnectionHelper {
 			String p4 = parallel.getPath();
 
 			List<String> command = new ArrayList<String>();
+			String p4port = p4credential.getP4port();
+			p4port = (p4credential.isSsl()) ? "ssl:" + p4port : p4port;
 			command.add(p4);
 			command.add("-c" + iclient.getName());
-			command.add("-p" + p4credential.getP4port());
+			command.add("-p" + p4port);
 			command.add("-u" + p4credential.getUsername());
 
 			command.add("sync");
