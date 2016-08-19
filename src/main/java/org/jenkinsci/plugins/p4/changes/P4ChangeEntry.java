@@ -21,6 +21,7 @@ import com.perforce.p4java.impl.generic.core.Label;
 
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.tasks.Mailer.UserProperty;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
@@ -36,6 +37,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	private String clientId = "";
 	private String msg = "";
 	private Collection<String> affectedPaths;
+	private Collection<P4AffectedFile> affectedFiles;
 	private boolean shelved;
 
 	private boolean fileLimit = false;
@@ -49,6 +51,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		files = new ArrayList<IFileSpec>();
 		jobs = new ArrayList<IFix>();
 		affectedPaths = new ArrayList<String>();
+		affectedFiles = new ArrayList<P4AffectedFile>();
 	}
 
 	public P4ChangeEntry() {
@@ -103,10 +106,12 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			files = files.subList(0, FILE_COUNT_LIMIT);
 		}
 
-		// set list of affected paths
+		// set list of affected paths/files
 		affectedPaths = new ArrayList<String>();
+		affectedFiles = new ArrayList<P4AffectedFile>();
 		for (IFileSpec item : files) {
 			affectedPaths.add(item.getDepotPathString());
+			affectedFiles.add(new P4AffectedFile(item));
 		}
 
 		// set list of jobs in change
@@ -222,7 +227,17 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 		return affectedPaths;
 	}
-
+	
+	@Override
+	public Collection<P4AffectedFile> getAffectedFiles() {
+		if (affectedFiles.size() < 1 && files != null && files.size() > 0) {
+			for (IFileSpec item : files) {
+				affectedFiles.add(new P4AffectedFile(item));
+			}
+		}
+		return affectedFiles;
+	}
+		
 	public boolean isFileLimit() {
 		return fileLimit;
 	}
