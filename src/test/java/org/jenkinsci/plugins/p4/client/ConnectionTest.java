@@ -1,20 +1,30 @@
 package org.jenkinsci.plugins.p4.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.cloudbees.plugins.credentials.CredentialsDescriptor;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.perforce.p4java.Metadata;
+import com.perforce.p4java.client.IClient;
+import hudson.model.Action;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Cause;
+import hudson.model.Cause.UserIdCause;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.StringParameterValue;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCMDescriptor;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DummyServer;
 import org.jenkinsci.plugins.p4.P4Server;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -25,6 +35,7 @@ import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
+import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -48,33 +59,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import com.cloudbees.plugins.credentials.CredentialsDescriptor;
-import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.gargoylesoftware.htmlunit.html.HtmlButton;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.perforce.p4java.Metadata;
-import com.perforce.p4java.client.IClient;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import hudson.model.Action;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Cause;
-import hudson.model.Descriptor;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.ParameterValue;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.StringParameterValue;
-import hudson.model.Cause.UserIdCause;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.SCMDescriptor;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import hudson.util.LogTaskListener;
-import net.sf.json.JSONObject;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ConnectionTest {
 
@@ -639,6 +637,96 @@ public class ConnectionTest {
 		assertEquals(1, buildList.size());
 		int change = buildList.get(0);
 		assertEquals(4, change);
+	}
+
+	@Test
+	public void testPolling_Mask() throws Exception {
+
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		List<Filter> filter = new ArrayList<Filter>();
+		
+		// Filter changes outside of //depot/Data path
+		FilterViewMaskImpl mask = new FilterViewMaskImpl("//depot/Data");
+		filter.add(mask);
+		PerforceScm scm = new PerforceScm(credential, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		List<Integer> buildList = scm.getChanges();
+		assertEquals(2, buildList.size());
+		int change = buildList.get(0);
+		assertEquals(18, change);
+	}
+
+	@Test
+	public void testPolling_Mask_Excl() throws Exception {
+
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		List<Filter> filter = new ArrayList<Filter>();
+		
+		// Filter changes outside of //depot/Main and also under //depot/Main/TPI-83
+		StringBuilder sb = new StringBuilder();
+		sb.append("//depot/Main");
+		sb.append("\n");
+		sb.append("-//depot/Main/TPI-83");
+
+		FilterViewMaskImpl mask = new FilterViewMaskImpl(sb.toString());
+		filter.add(mask);
+		PerforceScm scm = new PerforceScm(credential, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// TODO: determine the CL our mask should poll us at
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		List<Integer> buildList = scm.getChanges();
+		assertEquals(13, buildList.size());
+		int change = buildList.get(0);
+		assertEquals(16, change);
 	}
 
 	@Test

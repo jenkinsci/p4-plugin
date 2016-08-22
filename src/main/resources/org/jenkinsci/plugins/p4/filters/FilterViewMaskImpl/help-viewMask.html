@@ -1,0 +1,55 @@
+<div>
+	<b>View Mask filter</b>
+	<p>Changes can be filtered to not trigger a build; if none of the files
+		within a change are contained in the view mask, the build is filtered.</p>
+	<p style="margin-left: 30.0px;">
+		For example, with a View Mask Filter of:
+		<br/>
+		<code style="margin-left: 60.0px;">//depot/main/tests</code>
+		<br/>
+		<code style="margin-left: 60.0px;">-//depot/main/tests/001</code>
+		<br/>
+	</p>
+	<p style="margin-left: 60.0px;">
+		<strong>Case A</strong> (change will not be filtered, as index.xml is 
+		in the view mask):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/index.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/test.xml</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case B</strong> (change will not be filtered, as index.xml is 
+		in the view mask):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/test/index.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/build.xml</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case C</strong> (change will be filtered, as no file is 
+		in the view mask):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/build.xml</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case D</strong> (change will be filtered, as no file is 
+		in the view mask):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/build.xml</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/test.xml</code>
+		</li>
+	</ul>
+</div>

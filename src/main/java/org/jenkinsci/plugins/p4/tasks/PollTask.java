@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.RequestException;
+import com.perforce.p4java.impl.generic.core.Changelist;
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
@@ -14,17 +14,16 @@ import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
+import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.RequestException;
-import com.perforce.p4java.impl.generic.core.Changelist;
-
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-import jenkins.security.Roles;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class PollTask extends AbstractTask implements FileCallable<List<Integer>>, Serializable {
 
@@ -147,6 +146,38 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 
 				// add if all files are removed then remove change
 				if (files.isEmpty()) {
+					return true;
+				}
+			}
+
+			// Scan through View Mask filters
+			if (f instanceof FilterViewMaskImpl) {
+				// at least one file in the change must be contained in the view mask
+				List<IFileSpec> included = new ArrayList<IFileSpec>();
+
+				String viewMask = ((FilterViewMaskImpl) f).getViewMask();
+				for (IFileSpec s : files) {
+					boolean isFileInViewMask = false;
+					String p = s.getDepotPathString();
+					for(String maskPath : viewMask.split("\n")) {
+						if (p.startsWith(maskPath)) {
+							isFileInViewMask = true;
+						}
+
+						if (maskPath.startsWith("-")) {
+							String excludedMaskPath = maskPath.substring(maskPath.indexOf("-") + 1);
+							if (p.startsWith(excludedMaskPath)) {
+								isFileInViewMask = false;
+							}
+						}
+					}
+
+					if(isFileInViewMask) {
+						included.add(s);
+					}
+				}
+
+				if (included.isEmpty()) {
 					return true;
 				}
 			}
