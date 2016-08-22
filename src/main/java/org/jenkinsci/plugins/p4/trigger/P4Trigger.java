@@ -114,8 +114,8 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		if (item != null) {
 			//As soon as we find a match, return
 			for (SCM scmTrigger : item.getSCMs()) {
-				if (scmTrigger instanceof PerforceScm) {
-					PerforceScm p4scm = (PerforceScm) scmTrigger;
+				PerforceScm p4scm = PerforceScm.convertToPerforceScm(scmTrigger);
+				if (p4scm != null) {
 					String id = p4scm.getCredential();
 					P4BaseCredentials credential = ConnectionHelper.findCredential(id);
 					if (credential != null

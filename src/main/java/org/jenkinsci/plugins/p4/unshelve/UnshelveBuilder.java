@@ -51,12 +51,10 @@ public class UnshelveBuilder extends Builder {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
 
 		AbstractProject<?, ?> project = build.getParent();
-		SCM scm = project.getScm();
-
-		if (scm instanceof PerforceScm) {
-			PerforceScm p4 = (PerforceScm) scm;
-			String credential = p4.getCredential();
-			Workspace workspace = p4.getWorkspace();
+		PerforceScm p4scm = PerforceScm.convertToPerforceScm(project.getScm());
+		if (p4scm != null) {
+			String credential = p4scm.getCredential();
+			Workspace workspace = p4scm.getWorkspace();
 			FilePath buildWorkspace = build.getWorkspace();
 			try {
 				if (buildWorkspace == null) {

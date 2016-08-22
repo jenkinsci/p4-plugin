@@ -1,48 +1,13 @@
 package org.jenkinsci.plugins.p4;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.p4.browsers.P4Browser;
-import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
-import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
-import org.jenkinsci.plugins.p4.filters.Filter;
-import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
-import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
-import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.tagging.TagAction;
-import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
-import org.jenkinsci.plugins.p4.tasks.PollTask;
-import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
-
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Plugin;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
@@ -66,6 +31,41 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.multiplescms.MultiSCM;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
+import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
+import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
+import org.jenkinsci.plugins.p4.tasks.PollTask;
+import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PerforceScm extends SCM {
 
@@ -112,25 +112,51 @@ public class PerforceScm extends SCM {
 	}
 
 	/**
+	 * Helper function for converting an SCM object into a
+	 * PerforceScm object when appropriate.
+	 *
+	 * @param scm the SCM object
+	 * @return a PerforceScm instance or null
+	 */
+	public static PerforceScm convertToPerforceScm(SCM scm) {
+		PerforceScm perforceScm = null;
+		if (scm instanceof PerforceScm) {
+			perforceScm = (PerforceScm) scm;
+		} else {
+			Jenkins jenkins = Jenkins.getInstance();
+			if (jenkins != null) {
+				Plugin multiSCMPlugin = jenkins.getPlugin("multiple-scms");
+				if (multiSCMPlugin != null) {
+					if (scm instanceof MultiSCM) {
+						MultiSCM multiSCM = (MultiSCM) scm;
+						for (SCM configuredSCM : multiSCM.getConfiguredSCMs()) {
+							if (configuredSCM instanceof PerforceScm) {
+								perforceScm = (PerforceScm) configuredSCM;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		return perforceScm;
+	}
+
+	/**
 	 * Create a constructor that takes non-transient fields, and add the
 	 * annotation @DataBoundConstructor to it. Using the annotation helps the
 	 * Stapler class to find which constructor that should be used when
 	 * automatically copying values from a web form to a class.
 	 *
-	 * @param credential
-	 *            Credential ID
-	 * @param workspace
-	 *            Workspace connection details
-	 * @param filter
-	 *            Polling filters
-	 * @param populate
-	 *            Populate options
-	 * @param browser
-	 *            Browser options
+	 * @param credential Credential ID
+	 * @param workspace  Workspace connection details
+	 * @param filter     Polling filters
+	 * @param populate   Populate options
+	 * @param browser    Browser options
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
-			P4Browser browser) {
+	                   P4Browser browser) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
@@ -178,7 +204,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
-			TaskListener listener) throws IOException, InterruptedException {
+	                                               TaskListener listener) throws IOException, InterruptedException {
 		// A baseline is not required... but a baseline object is, so we'll
 		// return the NONE object.
 		return SCMRevisionState.NONE;
@@ -191,7 +217,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
-			TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = workspaceToNode(buildWorkspace);
@@ -316,7 +342,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
-			File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;
@@ -728,7 +754,7 @@ public class PerforceScm extends SCM {
 		 * Credentials list, a Jelly config method for a build job.
 		 *
 		 * @return A list of Perforce credential items to populate the jelly
-		 *         Select list.
+		 * Select list.
 		 */
 		public ListBoxModel doFillCredentialItems() {
 			return P4CredentialsImpl.doFillCredentialItems();
