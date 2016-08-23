@@ -505,6 +505,5 @@ public class ConnectionHelper {
 
 	public void abort() {
 		this.abort = true;
-		disconnect();
 	}
 }

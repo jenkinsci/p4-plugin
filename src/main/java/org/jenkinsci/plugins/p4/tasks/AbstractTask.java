@@ -226,6 +226,7 @@ public abstract class AbstractTask implements Serializable {
 
 				return result;
 			} catch (AbortException e) {
+				p4.disconnect();
 				throw e;
 			} catch (Exception e) {
 				last = e;
