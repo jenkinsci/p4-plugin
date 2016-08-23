@@ -37,7 +37,7 @@
                             </j:choose>
 					
                             <a href="changes#detail${loop.index}">${c.id}</a>
-                            by <a href="${rootURL}/${entry.author.url}/">${c.author}@${c.clientId}</a>
+                            by <a href="${rootURL}/${c.author.url}/">${c.author}@${c.clientId}</a>
                             on <i:formatDate value="${c.date}" type="both" dateStyle="medium" timeStyle="medium"/>
                             <hr/>
                             ${c.msgAnnotated}
