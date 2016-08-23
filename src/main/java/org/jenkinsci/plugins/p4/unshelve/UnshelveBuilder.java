@@ -20,6 +20,8 @@ import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
+import hudson.util.ListBoxModel;
+import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 
 public class UnshelveBuilder extends Builder {
@@ -100,6 +102,7 @@ public class UnshelveBuilder extends Builder {
 		}
 		return null;
 	}
+        
 
 	@Extension
 	public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
@@ -114,5 +117,14 @@ public class UnshelveBuilder extends Builder {
 		public String getDisplayName() {
 			return "Perforce: Unshelve";
 		}
+                
+                public ListBoxModel doFillResolveItems() {
+                    return new ListBoxModel(new Option("Resolve: None", "none"),
+                                            new Option("Resolve: Safe (-as)", "as"),
+                                            new Option("Resolve: Merge (-am)", "am"),
+                                            new Option("Resolve: Force Merge (-af)", "af"),
+                                            new Option("Resolve: Yours (-ay) -- keep your edits", "ay"),
+                                            new Option("Resolve: Merge (Resolve: Theirs (-at) -- keep shelf content)", "at"));       
+                }
 	}
 }
