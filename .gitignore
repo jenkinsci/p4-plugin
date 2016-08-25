@@ -31,3 +31,5 @@ vagrant/
 .p4config
 
 .p4ignore
+
+docs/ppt/
