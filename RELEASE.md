@@ -1,5 +1,33 @@
 ## Release notes
 
+### Release 1.4.6 (major features/fixes)
+
+[@20247](https://swarm.workshop.perforce.com/changes/20247) - Access 'author' User and User url through the current P4ChangeEntry
+
+[@20246](https://swarm.workshop.perforce.com/changes/20246) - Convert merge options for unshelve to ListBoxModel Option (from basic jelly) @atiniir
+
+[@20245](https://swarm.workshop.perforce.com/changes/20245) - Don't disconnect after an abort.  Don't disconnect from the P4 server immediately after an abort is detected.  JENKINS-37487 @stuartr
+
+[@20226](https://swarm.workshop.perforce.com/changes/20226) - Support for Multiple SCMs Plugin.  Optional dependency on multiple-scms and helper method for safely casting SCM object to PerforceSCM instance, especially in the scenario where the SCM object is a MultiSCM instance.  JENKINS-32064
+
+[@20224](https://swarm.workshop.perforce.com/changes/20224) - Implementing View Mask Filter.  JENKINS-30622  JENKINS-28225 @stuartr
+
+[@20208](https://swarm.workshop.perforce.com/changes/20208) - Parallel sync for SSL connections.  JENKINS-37476
+
+[@20207](https://swarm.workshop.perforce.com/changes/20207) - Added implementation for getAffectedFiles()
+
+[@20201](https://swarm.workshop.perforce.com/changes/20201) - Moved set to null checked block.
+
+[@20190](https://swarm.workshop.perforce.com/changes/20190) - Expose HUDSON_CHANGELOG_FILE environment variable.  JENKINS-37442 @p4karl
+
+[@20179](https://swarm.workshop.perforce.com/changes/20179) - Javadoc fixes for java 8 builds.
+
+[@20174](https://swarm.workshop.perforce.com/changes/20174) - Adding retries (5) to P4Server.clean @stuartr.  JENKINS-26764
+
+### Release 1.4.5 (major features/fixes)
+
+Not a release.
+
 ### Release 1.4.4 (major features/fixes)
 
 [@20038](https://swarm.workshop.perforce.com/changes/20038) - Add Help buttons to ReviewBuild page.  JENKINS-35437
