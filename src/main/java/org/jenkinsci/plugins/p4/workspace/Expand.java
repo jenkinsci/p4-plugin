@@ -1,19 +1,21 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.review.ReviewProp;
-
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.DescribableList;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 
-public class Expand {
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Logger;
+
+public class Expand implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(Expand.class.getName());
 

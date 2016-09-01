@@ -78,6 +78,10 @@ public class ConnectionHelper {
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
 	}
+	
+	public IOptionsServer getConnection() {
+		return connection;
+	}
 
 	/**
 	 * Convenience wrapper to connect and report errors

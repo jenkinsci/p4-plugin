@@ -67,12 +67,12 @@ public abstract class AbstractTask implements Serializable {
 		ClientHelper p4 = getConnection();
 
 		// Check connection (might be on remote slave)
-		if (!checkConnection(p4)) {
-			String err = "P4: Abort, no server connection.\n";
-			logger.severe(err);
-			p4.log(err);
-			throw new AbortException(err);
-		}
+//		if (!checkConnection(p4)) {
+//			String err = "P4: Abort, no server connection.\n";
+//			logger.severe(err);
+//			p4.log(err);
+//			throw new AbortException(err);
+//		}
 
 		// Set the client
 		try {

@@ -1,25 +1,26 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Descriptor;
-import hudson.util.ListBoxModel;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
-public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public final boolean allwrite;
 	public final boolean clobber;

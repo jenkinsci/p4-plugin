@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.workspace;
 import hudson.Extension;
 import hudson.util.FormValidation;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -13,7 +14,9 @@ import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.SwitchClientViewOptions;
 import com.perforce.p4java.server.IOptionsServer;
 
-public class TemplateWorkspaceImpl extends Workspace {
+public class TemplateWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String templateName;
 	private final String format;

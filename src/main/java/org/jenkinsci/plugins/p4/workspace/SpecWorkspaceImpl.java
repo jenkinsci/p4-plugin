@@ -16,10 +16,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class SpecWorkspaceImpl extends Workspace {
+public class SpecWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	private final String specPath;

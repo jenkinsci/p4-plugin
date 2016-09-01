@@ -7,10 +7,13 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace> {
+public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace>, Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	private String charset;
 	private boolean pinHost;
 	private String rootPath;

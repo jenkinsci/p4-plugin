@@ -19,9 +19,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
-public class ManualWorkspaceImpl extends Workspace {
+public class ManualWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	public WorkspaceSpec spec;

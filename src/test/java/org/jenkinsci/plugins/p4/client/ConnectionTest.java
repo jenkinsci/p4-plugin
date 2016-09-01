@@ -91,7 +91,8 @@ public class ConnectionTest {
 
 	private P4PasswordImpl auth;
 
-	@Rule public JenkinsRule jenkins = new JenkinsRule();
+	@Rule
+	public JenkinsRule jenkins = new JenkinsRule();
 
 	@BeforeClass
 	public static void setupServer() throws Exception {
@@ -501,7 +502,7 @@ public class ConnectionTest {
 
 		form = WorkspaceDescriptor.doCheckFormat(format);
 		assertEquals(FormValidation.Kind.OK, form.kind);
-		
+
 		// delete worksapce
 		project.doDoWipeOutWorkspace();
 	}
@@ -653,7 +654,7 @@ public class ConnectionTest {
 
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		List<Filter> filter = new ArrayList<Filter>();
-		
+
 		// Filter changes outside of //depot/Data path
 		FilterViewMaskImpl mask = new FilterViewMaskImpl("//depot/Data");
 		filter.add(mask);
@@ -695,7 +696,7 @@ public class ConnectionTest {
 
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		List<Filter> filter = new ArrayList<Filter>();
-		
+
 		// Filter changes outside of //depot/Main and also under //depot/Main/TPI-83
 		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Main");
@@ -799,10 +800,10 @@ public class ConnectionTest {
 		project.addTrigger(trigger);
 		project.save();
 
-		//Run once
+		// Run once
 		jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause()));
 
-		//Test trigger
+		// Test trigger
 		trigger.poke(project, auth.getP4port());
 
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
@@ -829,18 +830,18 @@ public class ConnectionTest {
 		project.addTrigger(trigger);
 		project.save();
 
-		//Checkout at commit 9
+		// Checkout at commit 9
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
-		//Run once
+		// Run once
 		Run lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
-		//Test trigger
+		// Test trigger
 		trigger.poke(project, auth.getP4port());
 
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
@@ -853,12 +854,10 @@ public class ConnectionTest {
 	public void testShouldTriggerPipelineJobIfChanges() throws Exception {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: '" + auth.getId() + "', depotPath: '//depot', format: 'test.ws'\n"
-				+ "}"));
+		job.setDefinition(new CpsFlowDefinition("" + "node {\n" + "   p4sync credential: '" + auth.getId()
+				+ "', depotPath: '//depot', format: 'test.ws'\n" + "}"));
 
-		//Add a trigger
+		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
 		trigger.start(job, false);
 		job.addTrigger(trigger);
@@ -868,12 +867,13 @@ public class ConnectionTest {
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
-		//Hack to make polling believe there are remote changes: sync the client 'test.ws' at an anterior revision to test the trigger
+		// Hack to make polling believe there are remote changes: sync the
+		// client 'test.ws' at an anterior revision to test the trigger
 		ClientHelper p4 = new ClientHelper(auth, null, "test.ws", "utf8");
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		p4.syncFiles(new P4Revision("9"), populate);
 
-		//Test trigger
+		// Test trigger
 		trigger.poke(job, auth.getP4port());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
@@ -886,12 +886,10 @@ public class ConnectionTest {
 	public void testShouldNotTriggerPipelineIfNoChanges() throws Exception {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n"
-				+ "}"));
+		job.setDefinition(new CpsFlowDefinition(
+				"" + "node {\n" + "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n" + "}"));
 
-		//Add a trigger
+		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
 		trigger.start(job, false);
 		job.addTrigger(trigger);
@@ -902,13 +900,48 @@ public class ConnectionTest {
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
-		//Test trigger
+		// Test trigger
 		trigger.poke(job, auth.getP4port());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
 		assertEquals("Shouldn't have triggered a build as no changes", 1, job.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void testP4GroovyConnectAndSync() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
+				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
+				+ "   p4.run('sync', '//...')\n"
+				+ "}"));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("p4 sync //...", run);
+		jenkins.assertLogContains("totalFileCount 10", run);
+	}
+
+	@Test
+	public void testP4GroovySpecEdit() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
+				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
+				+ "   clientName = p4.getClientName();\n"
+				+ "   client = p4.fetch('client', clientName)\n"
+				+ "   echo \"Client: ${client}\""
+				+ "   client.put('Description', 'foo')"
+				+ "   p4.save('client', client)"
+				+ "}"));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
 	}
 
 	private static void startHttpServer(int port) throws Exception {
