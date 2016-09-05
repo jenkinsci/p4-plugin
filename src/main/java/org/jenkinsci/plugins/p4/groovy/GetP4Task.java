@@ -1,18 +1,12 @@
 package org.jenkinsci.plugins.p4.groovy;
 
-import hudson.FilePath.FileCallable;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
-import jenkins.security.Roles;
+import jenkins.security.MasterToSlaveCallable;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 
-public class GetP4Task implements FileCallable<P4Groovy>, Serializable {
+public class GetP4Task extends MasterToSlaveCallable<P4Groovy, InterruptedException> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -28,13 +22,8 @@ public class GetP4Task implements FileCallable<P4Groovy>, Serializable {
 	}
 
 	@Override
-	public P4Groovy invoke(File buildWorkspace, VirtualChannel channel) throws IOException, InterruptedException {
+	public P4Groovy call() throws InterruptedException {
 		P4Groovy p4Groovy = new P4Groovy(credential, listener, workspace);
 		return p4Groovy;
-	}
-
-	@Override
-	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
 	}
 }
