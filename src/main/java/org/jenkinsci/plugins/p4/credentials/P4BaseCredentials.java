@@ -1,23 +1,22 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-import hudson.Util;
-
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
 
-public abstract class P4BaseCredentials extends BaseStandardCredentials {
+public abstract class P4BaseCredentials extends BaseStandardCredentials implements P4Credentials {
 
 	private static final long serialVersionUID = 1L;
 
-	@CheckForNull
+	@NonNull
 	private final String p4port;
 
 	@CheckForNull
 	private final TrustImpl ssl;
 
-	@CheckForNull
+	@NonNull
 	private final String username;
 
 	@CheckForNull
@@ -39,8 +38,8 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 	 * @param timeout     Perforce connection timeout option
 	 */
 	public P4BaseCredentials(CredentialsScope scope, String id,
-	                         String description, @CheckForNull String p4port,
-	                         @CheckForNull TrustImpl ssl, @CheckForNull String username,
+	                         String description, @NonNull String p4port,
+	                         @CheckForNull TrustImpl ssl, @NonNull String username,
 	                         @CheckForNull String retry, @CheckForNull String timeout) {
 		super(scope, id, description);
 		this.p4port = Util.fixNull(p4port);
@@ -50,7 +49,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 		this.timeout = timeout;
 	}
 
-	@CheckForNull
+	@NonNull
 	public String getP4port() {
 		return p4port;
 	}
@@ -64,7 +63,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials {
 		return (ssl == null) ? null : ssl.getTrust();
 	}
 
-	@CheckForNull
+	@NonNull
 	public String getUsername() {
 		return username;
 	}

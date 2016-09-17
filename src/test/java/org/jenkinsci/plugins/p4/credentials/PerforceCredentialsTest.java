@@ -1,15 +1,12 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.security.ACL;
-
-import java.io.IOException;
-import java.util.List;
-
 import jenkins.model.Jenkins;
-
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
@@ -17,11 +14,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import com.cloudbees.plugins.credentials.CredentialsNameProvider;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import java.io.IOException;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PerforceCredentialsTest {
 
@@ -52,7 +50,7 @@ public class PerforceCredentialsTest {
 		assertFalse(list.get(0).isSsl());
 
 		String name = CredentialsNameProvider.name(credential);
-		assertEquals("id (desc:passwd)", name);
+		assertEquals("user/****** (desc:passwd)", name);
 	}
 
 	@Test
@@ -129,7 +127,7 @@ public class PerforceCredentialsTest {
 		assertEquals("12345", auth.getTicketValue());
 
 		String name = CredentialsNameProvider.name(credential);
-		assertEquals("id (desc:ticket)", name);
+		assertEquals("user (desc:ticket)", name);
 	}
 
 	@Test
