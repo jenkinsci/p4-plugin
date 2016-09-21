@@ -1,12 +1,11 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
-
+import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.impl.generic.core.Label;
+import hudson.AbortException;
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -17,13 +16,12 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
-import com.perforce.p4java.core.IChangelistSummary;
-import com.perforce.p4java.impl.generic.core.Label;
-
-import hudson.AbortException;
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-import jenkins.security.Roles;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
@@ -119,7 +117,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	/**
 	 * Get the build status for the parameter map.
 	 *
-	 * @param map
+	 * @param workspace
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
@@ -134,7 +132,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 * Get the sync point from the parameter map. Returns the head if no change
 	 * found in the map.
 	 *
-	 * @param map
+	 * @param workspace
 	 */
 	private P4Revision getBuildChange(Workspace workspace) {
 		// Use head as the default
@@ -155,10 +153,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					build = new P4Revision(change);
 					logger.info("getBuildChange:pinned:change:" + change);
 				} catch (NumberFormatException e) {
-					if (!"now".equals(expandedPopulateLabel)) {
-						build = new P4Revision(expandedPopulateLabel);
-						logger.info("getBuildChange:pinned:label:" + expandedPopulateLabel);
-					}
+					build = new P4Revision(expandedPopulateLabel);
+					logger.info("getBuildChange:pinned:label:" + expandedPopulateLabel);
 				}
 			}
 		}
@@ -183,10 +179,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				build = new P4Revision(change);
 				logger.info("getBuildChange:ReviewProp:LABEL:" + change);
 			} catch (NumberFormatException e) {
-				if (!"now".equals(lblStr)) {
-					build = new P4Revision(lblStr);
-					logger.info("getBuildChange:ReviewProp:LABEL:" + lblStr);
-				}
+				build = new P4Revision(lblStr);
+				logger.info("getBuildChange:ReviewProp:LABEL:" + lblStr);
 			}
 		}
 
@@ -197,7 +191,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	/**
 	 * Get the unshelve point from the parameter map.
 	 *
-	 * @param map
+	 * @param workspace
 	 */
 	private int getReview(Workspace workspace) {
 		int review = 0;
