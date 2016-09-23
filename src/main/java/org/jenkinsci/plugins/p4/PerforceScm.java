@@ -303,6 +303,11 @@ public class PerforceScm extends SCM {
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
 
 		Workspace ws = (Workspace) workspace.clone();
+		String root = buildWorkspace.getRemote();
+		if (root.contains("@")) {
+			root = root.replace("@", "%40");
+		}
+		ws.setRootPath(root);
 		ws.setExpand(envVars);
 
 		// don't call setRootPath() here, polling is often on the master
