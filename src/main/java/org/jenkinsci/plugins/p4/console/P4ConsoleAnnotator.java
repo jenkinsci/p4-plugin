@@ -34,6 +34,22 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 		text.addMarkup(COMMAND.length(), head);
 
 		StringBuffer sb = new StringBuffer();
+
+		sb.append("<script>\n");
+		sb.append("function toggle(showHideDiv, switchTextDiv) {\n");
+		sb.append("\tvar tog = document.getElementById(showHideDiv);\n");
+		sb.append("\tvar text = document.getElementById(switchTextDiv);\n");
+		sb.append("\tif(tog.style.display == \"block\") {\n");
+		sb.append("    \ttog.style.display = \"none\";\n");
+		sb.append("\t\ttext.innerHTML = \"+\";\n");
+		sb.append("  \t}\n");
+		sb.append("\telse {\n");
+		sb.append("\t\ttog.style.display = \"block\";\n");
+		sb.append("\t\ttext.innerHTML = \"-\";\n");
+		sb.append("\t}\n");
+		sb.append("}\n");
+		sb.append("</script>");
+
 		sb.append(" <a class=\"linkDiv\" id=\"");
 		sb.append("p4title" + id);
 		sb.append("\" href=\"javascript:toggle('");
