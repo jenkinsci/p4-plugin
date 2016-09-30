@@ -38,8 +38,6 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] run(String cmd, String args) throws P4JavaException {
-		// TODO p4.log("Task: run command: " + cmd);
-
 		List<String> argList = new ArrayList<String>();
 		for (String arg : args.split(",")) {
 			arg = arg.trim();
