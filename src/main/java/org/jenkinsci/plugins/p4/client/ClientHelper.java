@@ -947,9 +947,10 @@ public class ClientHelper extends ConnectionHelper {
 			for (IChangelistSummary c : cngs) {
 				// don't try to add null or -1 changes
 				if (c != null && c.getId() != -1) {
+					P4Revision rev = new P4Revision(c.getId());
 					// don't add change entries already in the list
-					if (!(list.contains(c.getId()))) {
-						list.add(new P4Revision(c.getId()));
+					if (!(list.contains(rev))) {
+						list.add(rev);
 					}
 				}
 			}
