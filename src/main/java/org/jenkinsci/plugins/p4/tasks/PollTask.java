@@ -11,7 +11,6 @@ import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
@@ -22,43 +21,28 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class PollTask extends AbstractTask implements FileCallable<List<Integer>>, Serializable {
+public class PollTask extends AbstractTask implements FileCallable<List<P4Revision>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
-	private final boolean perChange;
 
 	private String pin;
 
 	public PollTask(List<Filter> filter) {
 		this.filter = filter;
-
-		// look for incremental filter option
-		boolean incremental = false;
-		if (filter != null) {
-			for (Filter f : filter) {
-				if (f instanceof FilterPerChangeImpl) {
-					if (((FilterPerChangeImpl) f).isPerChange()) {
-						incremental = true;
-					}
-				}
-			}
-		}
-		this.perChange = incremental;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Integer> invoke(File workspace, VirtualChannel channel) throws IOException {
-		return (List<Integer>) tryTask();
+	public List<P4Revision> invoke(File workspace, VirtualChannel channel) throws IOException {
+		return (List<P4Revision>) tryTask();
 	}
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
-		List<Integer> changes = new ArrayList<Integer>();
+		List<P4Revision> changes = new ArrayList<P4Revision>();
 
 		// When polling from master use last build, otherwise fetch the change
 		// from client spec.
@@ -78,23 +62,17 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 		}
 
 		// filter changes...
-		List<Integer> remainder = new ArrayList<Integer>();
-		for (int c : changes) {
-			Changelist changelist = p4.getChange(c);
+		List<P4Revision> remainder = new ArrayList<P4Revision>();
+		for (P4Revision c : changes) {
+			Changelist changelist = p4.getChange(c.getChange());
 			// add unfiltered changes to remainder list
 			if (!filterChange(changelist, filter)) {
-				remainder.add(changelist.getId());
+				remainder.add(new P4Revision(changelist.getId()));
 				p4.log("... found change: " + changelist.getId());
 			}
 		}
 		changes = remainder;
 
-		// if build per change...
-		if (!changes.isEmpty() && perChange) {
-			int lowest = changes.get(changes.size() - 1);
-			changes = Arrays.asList(lowest);
-			p4.log("next change: " + lowest);
-		}
 		return changes;
 	}
 

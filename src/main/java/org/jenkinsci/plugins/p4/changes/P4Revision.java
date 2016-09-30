@@ -1,14 +1,13 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import java.io.Serializable;
-
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.exception.P4JavaException;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 
-public class P4Revision implements Serializable {
+import java.io.Serializable;
+
+public class P4Revision implements Serializable, Comparable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -125,5 +124,27 @@ public class P4Revision implements Serializable {
 		int hash = 3;
 		hash = 89 * hash + (toString().hashCode());
 		return hash;
+	}
+
+	@Override
+	public int compareTo(Object obj) {
+		if(equals(obj)) {
+			return 0;
+		}
+		if (obj instanceof P4Revision) {
+			P4Revision rev = (P4Revision) obj;
+
+
+			if(rev.isLabel && rev.toString().equals("now"))
+				return -1;
+			if(isLabel && label.equals("now"))
+				return 1;
+			if(isLabel || rev.isLabel) {
+				return 0;
+			} else {
+				return change - rev.getChange();
+			}
+		}
+		throw new ClassCastException();
 	}
 }

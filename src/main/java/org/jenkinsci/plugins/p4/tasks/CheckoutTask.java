@@ -206,9 +206,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		return review;
 	}
 
-	public List<Integer> getChanges(P4Revision last) {
+	public List<P4Revision> getChanges(P4Revision last) {
 
-		List<Integer> changes = new ArrayList<Integer>();
+		List<P4Revision> changes = new ArrayList<P4Revision>();
 
 		// Add changes to this build.
 		ClientHelper p4 = getConnection();
@@ -225,7 +225,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 		// Include shelf if a review
 		if (status == CheckoutStatus.SHELVED) {
-			changes.add(review);
+			changes.add(new P4Revision(review));
 		}
 
 		return changes;
@@ -246,10 +246,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			}
 
 			// add all changes to list
-			List<Integer> changes = p4.listChanges(last, buildChange);
-			for (Integer change : changes) {
+			List<P4Revision> changes = p4.listChanges(last, buildChange);
+			for (P4Revision change : changes) {
 				P4ChangeEntry cl = new P4ChangeEntry();
-				IChangelistSummary summary = p4.getChangeSummary(change);
+				IChangelistSummary summary = p4.getChangeSummary(change.getChange());
 				cl.setChange(p4, summary);
 				changesFull.add(cl);
 			}
@@ -302,6 +302,13 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public void setBuildChange(P4Revision parentChange) {
 		buildChange = parentChange;
+	}
+
+	public void setIncrementalChanges(List<P4Revision> changes) {
+		if (changes != null && !changes.isEmpty()) {
+			P4Revision lowest = changes.get(changes.size() - 1);
+			buildChange = lowest;
+		}
 	}
 
 	public int getReview() {

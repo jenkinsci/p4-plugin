@@ -8,7 +8,6 @@ import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -124,17 +122,6 @@ public abstract class AbstractTask implements Serializable {
 			ws.setHostName(hostname);
 		} else {
 			ws.setHostName("");
-		}
-		return ws;
-	}
-
-	public Workspace setNextChange(Workspace ws, List<Integer> changes) {
-		// Set label for changes to build
-		if (changes != null) {
-			if (!changes.isEmpty()) {
-				String label = Integer.toString(changes.get(0));
-				ws.getExpand().set(ReviewProp.LABEL.toString(), label);
-			}
 		}
 		return ws;
 	}

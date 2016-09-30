@@ -19,6 +19,7 @@ import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
+import hudson.scm.PollingResult;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
 import hudson.util.FormValidation;
@@ -595,7 +596,7 @@ public class ConnectionTest {
 		// Poll for changes
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<Integer> buildList = scm.getChanges();
+		List<P4Revision> buildList = scm.getIncrementalChanges();
 		assertEquals(12, buildList.size());
 	}
 
@@ -633,11 +634,13 @@ public class ConnectionTest {
 
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
-		project.poll(listener);
-		List<Integer> buildList = scm.getChanges();
-		assertEquals(1, buildList.size());
-		int change = buildList.get(0);
-		assertEquals(4, change);
+		PollingResult found = project.poll(listener);
+		assertEquals(PollingResult.BUILD_NOW, found);
+
+		// Build now
+		build = project.scheduleBuild2(0, cause).get();
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 4"));
 	}
 
 	@Test
@@ -676,9 +679,9 @@ public class ConnectionTest {
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<Integer> buildList = scm.getChanges();
+		List<P4Revision> buildList = scm.getIncrementalChanges();
 		assertEquals(2, buildList.size());
-		int change = buildList.get(0);
+		int change = buildList.get(0).getChange();
 		assertEquals(18, change);
 	}
 
@@ -724,9 +727,9 @@ public class ConnectionTest {
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<Integer> buildList = scm.getChanges();
+		List<P4Revision> buildList = scm.getIncrementalChanges();
 		assertEquals(13, buildList.size());
-		int change = buildList.get(0);
+		int change = buildList.get(0).getChange();
 		assertEquals(16, change);
 	}
 
