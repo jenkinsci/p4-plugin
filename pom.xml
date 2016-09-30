@@ -129,7 +129,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2015.2.1312871</version>
+      <version>2015.2.1365273</version>
     </dependency>
 
     <dependency>
