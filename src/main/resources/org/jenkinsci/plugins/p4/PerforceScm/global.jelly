@@ -32,5 +32,14 @@
 			<f:checkbox title="${%Hide TICKET}" default="false"/>
 		</f:entry>
 	</f:section>
+
+	<f:section title="Perforce: Query limits">
+    	<f:entry title="${%Maximum number of files shown in a changelist}" field="maxFiles">
+    		<f:textbox default="50"/>
+    	</f:entry>
+    	<f:entry title="${%Maximum number of changes shown in a build}" field="maxChanges">
+            <f:textbox default="10"/>
+        </f:entry>
+    </f:section>
 	
 </j:jelly>

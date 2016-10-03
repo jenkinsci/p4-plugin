@@ -662,6 +662,9 @@ public class PerforceScm extends SCM {
 
 		private boolean hideTicket;
 
+		private int maxFiles;
+		private int maxChanges;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -688,6 +691,14 @@ public class PerforceScm extends SCM {
 
 		public boolean isHideTicket() {
 			return hideTicket;
+		}
+
+		public int getMaxFiles() {
+			return maxFiles;
+		}
+
+		public int getMaxChanges() {
+			return maxChanges;
 		}
 
 		/**
@@ -752,6 +763,15 @@ public class PerforceScm extends SCM {
 			} catch (JSONException e) {
 				logger.info("Unable to read TICKET security configuration.");
 				hideTicket = false;
+			}
+
+			try {
+				maxFiles = json.getInt("maxFiles");
+				maxChanges = json.getInt("maxChanges");
+			} catch (JSONException e) {
+				logger.info("Unable to read Max limits in configuration.");
+				maxFiles = 50;
+				maxChanges = 10;
 			}
 
 			save();

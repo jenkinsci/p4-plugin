@@ -24,9 +24,13 @@ import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
 import hudson.AbortException;
+import hudson.model.Descriptor;
 import hudson.model.TaskListener;
+import hudson.scm.SCM;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -938,10 +942,15 @@ public class ClientHelper extends ConnectionHelper {
 
 	private List<P4Revision> listChanges(String ws) throws Exception {
 		List<P4Revision> list = new ArrayList<P4Revision>();
+		
+		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
+		int CHANGE_COUNT_LIMIT = p4scm.getMaxChanges();
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(CHANGE_COUNT_LIMIT);
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
-		GetChangelistsOptions opts = new GetChangelistsOptions();
-		opts.setMaxMostRecent(100);
 		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
 		if (cngs != null) {
 			for (IChangelistSummary c : cngs) {

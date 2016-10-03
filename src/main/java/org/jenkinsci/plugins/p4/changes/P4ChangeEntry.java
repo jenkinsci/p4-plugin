@@ -1,5 +1,22 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.ChangelistStatus;
+import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IFix;
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.core.Label;
+import hudson.model.Descriptor;
+import hudson.model.User;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.SCM;
+import hudson.tasks.Mailer.UserProperty;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.email.P4UserProperty;
+import org.kohsuke.stapler.export.Exported;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -7,22 +24,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.email.P4UserProperty;
-import org.kohsuke.stapler.export.Exported;
-
-import com.perforce.p4java.core.ChangelistStatus;
-import com.perforce.p4java.core.IChangelistSummary;
-import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.generic.core.Label;
-
-import hudson.model.User;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.AffectedFile;
-import hudson.tasks.Mailer.UserProperty;
 
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
@@ -52,6 +53,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		jobs = new ArrayList<IFix>();
 		affectedPaths = new ArrayList<String>();
 		affectedFiles = new ArrayList<P4AffectedFile>();
+
+		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
+		FILE_COUNT_LIMIT = p4scm.getMaxFiles();
 	}
 
 	public P4ChangeEntry() {
