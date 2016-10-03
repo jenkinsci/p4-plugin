@@ -26,7 +26,6 @@ import com.perforce.p4java.server.CmdSpec;
 import hudson.AbortException;
 import hudson.model.Descriptor;
 import hudson.model.TaskListener;
-import hudson.scm.SCM;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -942,13 +941,17 @@ public class ClientHelper extends ConnectionHelper {
 
 	private List<P4Revision> listChanges(String ws) throws Exception {
 		List<P4Revision> list = new ArrayList<P4Revision>();
-		
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
-		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
-		int CHANGE_COUNT_LIMIT = p4scm.getMaxChanges();
-
 		GetChangelistsOptions opts = new GetChangelistsOptions();
-		opts.setMaxMostRecent(CHANGE_COUNT_LIMIT);
+
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Descriptor dsc = j.getDescriptor(PerforceScm.class);
+			if (dsc instanceof PerforceScm.DescriptorImpl) {
+				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+				int CHANGE_COUNT_LIMIT = p4scm.getMaxChanges();
+				opts.setMaxMostRecent(CHANGE_COUNT_LIMIT);
+			}
+		}
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
 		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);

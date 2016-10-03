@@ -9,7 +9,6 @@ import com.perforce.p4java.impl.generic.core.Label;
 import hudson.model.Descriptor;
 import hudson.model.User;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.SCM;
 import hudson.tasks.Mailer.UserProperty;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -54,9 +53,14 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		affectedPaths = new ArrayList<String>();
 		affectedFiles = new ArrayList<P4AffectedFile>();
 
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
-		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
-		FILE_COUNT_LIMIT = p4scm.getMaxFiles();
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Descriptor dsc = j.getDescriptor(PerforceScm.class);
+			if (dsc instanceof PerforceScm.DescriptorImpl) {
+				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+				FILE_COUNT_LIMIT = p4scm.getMaxFiles();
+			}
+		}
 	}
 
 	public P4ChangeEntry() {
@@ -232,7 +236,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 		return affectedPaths;
 	}
-	
+
 	@Override
 	public Collection<P4AffectedFile> getAffectedFiles() {
 		if (affectedFiles.size() < 1 && files != null && files.size() > 0) {
@@ -242,7 +246,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 		return affectedFiles;
 	}
-		
+
 	public boolean isFileLimit() {
 		return fileLimit;
 	}
