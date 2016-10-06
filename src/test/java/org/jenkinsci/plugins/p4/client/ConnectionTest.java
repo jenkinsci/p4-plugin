@@ -8,6 +8,8 @@ import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.option.server.CounterOptions;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Cause;
@@ -119,7 +121,7 @@ public class ConnectionTest {
 	@Before
 	public void startServer() throws Exception {
 		p4d.start();
-		auth = createCredentials();
+		auth = createCredentials("jenkins", "jenkins");
 	}
 
 	@After
@@ -132,9 +134,9 @@ public class ConnectionTest {
 		p4d.clean();
 	}
 
-	private P4PasswordImpl createCredentials() throws IOException {
-		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, credential, "desc", P4PORT, null, "jenkins",
-				"0", "0", "jenkins");
+	private P4PasswordImpl createCredentials(String user, String password) throws IOException {
+		P4PasswordImpl auth = new P4PasswordImpl(CredentialsScope.SYSTEM, credential, "desc", P4PORT, null, user,
+				"0", "0", password);
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 		return auth;
@@ -327,6 +329,32 @@ public class ConnectionTest {
 		P4WebBrowser.DescriptorImpl impl = (P4WebBrowser.DescriptorImpl) desc;
 		FormValidation form = impl.doCheck(url.toString());
 		assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testFreeStyleProject_buildCounter() throws Exception {
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Counter");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		String pin = "testCounter";
+		Populate populate = new AutoCleanImpl(false, false, false, true, pin, null);
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		// Log in and create counter for test
+		P4PasswordImpl admin = createCredentials("admin", "Password");
+		ClientHelper p4 = new ClientHelper(admin, null, "manual.ws", "utf8");
+		IOptionsServer iserver = p4.getConnection();
+		CounterOptions opts = new CounterOptions();
+		iserver.setCounter("testCounter", "9", opts);
+
+		UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 9"));
 	}
 
 	@Test

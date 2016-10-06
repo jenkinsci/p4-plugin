@@ -159,8 +159,8 @@ public class ClientHelper extends ConnectionHelper {
 				int change = Integer.parseInt(label);
 				log("P4 Task: label is a number! syncing files at change: " + change);
 			} catch (NumberFormatException e) {
-				if (!label.equals("now") && !isLabel(label) && !isClient(label)) {
-					String msg = "P4: Unable to find client/label: " + label;
+				if (!label.equals("now") && !isLabel(label) && !isClient(label) && !isCounter(label)) {
+					String msg = "P4: Unable to find client/label/counter: " + label;
 					log(msg);
 					logger.warning(msg);
 					throw new AbortException(msg);

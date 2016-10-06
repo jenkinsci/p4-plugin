@@ -74,6 +74,21 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						}
 					}
 				}
+				if (p4.isCounter(label)) {
+					try {
+						String counter = p4.getCounter(label);
+						// if a change number, add change...
+						int change = Integer.parseInt(counter);
+						// if change is bigger than head, use head
+						if (change > head) {
+							buildChange = new P4Revision(head);
+						} else {
+							buildChange = new P4Revision(change);
+						}
+					} catch (NumberFormatException n) {
+						// no change number in counter
+					}
+				}
 			} else {
 				// if change is bigger than head, use head
 				if (buildChange.getChange() > head) {

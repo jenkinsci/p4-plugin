@@ -17,6 +17,7 @@ import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.option.server.ChangelistOptions;
+import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
@@ -303,6 +304,39 @@ public class ConnectionHelper {
 		opts.setChangelistId(id);
 		List<IFix> fixes = connection.getFixes(null, opts);
 		return fixes;
+	}
+
+	/**
+	 * Test if given name is a counter
+	 *
+	 * @param name Couner name
+	 * @return true if counter
+	 * @throws Exception push up stack
+	 */
+	public boolean isCounter(String name) throws Exception {
+		if (name.equals("now")) {
+			return false;
+		}
+		try {
+			CounterOptions opts = new CounterOptions();
+			String counter = connection.getCounter(name, opts);
+			return (!"0".equals(counter));
+		} catch (RequestException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Get Perforce Counter
+	 *
+	 * @param id Counter name
+	 * @return Perforce Counter
+	 * @throws Exception push up stack
+	 */
+	public String getCounter(String id) throws Exception {
+		CounterOptions opts = new CounterOptions();
+		String counter = connection.getCounter(id, opts);
+		return counter;
 	}
 
 	/**

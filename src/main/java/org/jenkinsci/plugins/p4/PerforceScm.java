@@ -544,6 +544,7 @@ public class PerforceScm extends SCM {
 			int change = Integer.parseInt(buildChange.toString());
 			return String.valueOf(change);
 		} catch (NumberFormatException n) {
+			// not a change number
 		}
 
 		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
@@ -562,10 +563,25 @@ public class PerforceScm extends SCM {
 			}
 		} catch (Exception e) {
 			// not a label
-			return name;
-		} finally {
-			p4.disconnect();
 		}
+
+		try {
+			String counter = p4.getCounter(name);
+			if(!"0".equals(counter)) {
+				try {
+					// if a change number, add change...
+					int change = Integer.parseInt(counter);
+					return String.valueOf(change);
+				} catch (NumberFormatException n) {
+					// no change number in counter
+				}
+			}
+		} catch (Exception e) {
+			// not a counter
+		}
+
+		p4.disconnect();
+		return name;
 	}
 
 	/**
