@@ -1,5 +1,21 @@
 ## Release notes
 
+### Release 1.4.8 (major features/fixes)
+
+[@20873](https://swarm.workshop.perforce.com/changes/20873) - Support Pin to a change in a counter.
+
+[@20820](https://swarm.workshop.perforce.com/changes/20820) - Find bug fix for null checking on Jenkins.getInstance()
+
+[@20818](https://swarm.workshop.perforce.com/changes/20818) - Global limits for changes and files.  Max number of change lists to show for a build (default 10.  Max number of files to list in a change (default 50)
+
+[@20814](https://swarm.workshop.perforce.com/changes/20814) - Merge pull request #31 from psytale/discoverable_mails.  Make P4AddressResolver discoverable
+
+[@20788](https://swarm.workshop.perforce.com/changes/20788) - Fix for findbugs
+
+[@20787](https://swarm.workshop.perforce.com/changes/20787) - Polling Fix for use with quiet period.  Switched all uses of change/label to P4Revision object and implemented Comparable.  The changes to build are now calculated at build time (after the quiet period) not during the polling phase.  JENKINS-36883
+
+[@20786](https://swarm.workshop.perforce.com/changes/20786) - Upgrade p4java 2015.2.1365273
+
 ### Release 1.4.7 (major features/fixes)
 
 [@20667](https://swarm.workshop.perforce.com/changes/20667) - Merge pull request #28 from tangkun75/master.  Workspace's root path overwritten to "null" when enabling polling in Pipeline job
