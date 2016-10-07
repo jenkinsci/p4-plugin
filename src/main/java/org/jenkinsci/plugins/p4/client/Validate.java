@@ -59,9 +59,9 @@ public class Validate {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
-						if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
-							abort = true;
-						}
+					}
+					if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
+						abort = true;
 					}
 					success = false;
 				}
