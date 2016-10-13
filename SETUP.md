@@ -127,11 +127,13 @@ Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobI
 
 A Jenkins job can build at any point in the codes history, identified by a Perforce Helix change or label.
 
-The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
+The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point. 
 
-Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
+If you are using downstream jobs (for example) you can use the [Parameterized Trigger Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin) to pass '${P4_CHANGELIST}' as the parameter to the downstream job. The downstream job can then pin the build at the passed in changelist so both upstream and downstream jobs run against the same point in the history of the code.
 
-Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296)
+Alternativly, a change or label can be passed using the `Build Review` parameters or URL end point (see the _Build Review_ chapter for details) 
+
+Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296), [JENKINS-33163](https://issues.jenkins-ci.org/browse/JENKINS-33163)
 
 ### Parallel builds
 
