@@ -168,6 +168,22 @@ and have an entry in `p4 triggers` for changes on `//depot/...`:
 
 	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
 
+
+Note: If your Jenkins server needs authentication you will also need to provide a security 'CRUMB'. The following is an example of how you can get this and use to trigger a job:
+
+    #!/bin/bash
+    CHANGE=$1
+    USER=triggeruser
+    PASSWORD=Password
+    P4PORT=localhost:1666
+    SERVER=http://localhost:8080
+
+    # Get CRUMB
+    CRUMB=$(curl -s --user $USER:$PASSWORD $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+
+    # Trigger builds across all triggered jobs (where relevant)
+    curl -s --user $USER:$PASSWORD -H "$CRUMB" --request POST --data "payload={change:$CHANGE,p4port:\"$P4PORT\"}" $SERVER/p4/change
+
 On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
 
 ![Perforce trigger](docs/images/p4trigger.png)
