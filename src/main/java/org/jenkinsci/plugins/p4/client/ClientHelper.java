@@ -610,7 +610,7 @@ public class ClientHelper extends ConnectionHelper {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
-		validate.check(syncStat, "file(s) up-to-date.");
+		validate.check(syncStat, "file(s) up-to-date.", "no such file(s).");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();

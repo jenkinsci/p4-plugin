@@ -34,6 +34,7 @@ public class Validate {
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
+		StringBuffer errorLog = new StringBuffer();
 
 		ArrayList<String> ignoreList = new ArrayList<String>();
 		ignoreList.addAll(Arrays.asList(ignore));
@@ -61,6 +62,8 @@ public class Validate {
 						logger.warning(msg);
 					}
 					if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
+						errorLog.append(msg);
+						errorLog.append("\n");
 						abort = true;
 					}
 					success = false;
@@ -69,7 +72,7 @@ public class Validate {
 		}
 
 		if (abort) {
-			String msg = "P4JAVA: Error(s)";
+			String msg = "P4JAVA: Error(s):\n" + errorLog.toString();
 			throw new AbortException(msg);
 		}
 		return success;
