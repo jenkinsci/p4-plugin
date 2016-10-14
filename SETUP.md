@@ -268,6 +268,18 @@ The Build Review Action support the following parameters:
 
 *Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. `${label}`; for this reason please avoid these names for slaves and matrix axis.*
 
+### Review Authorisation
+
+If Jenkins requires users to login, then your Perforce trigger will need to use a Jenkins authorised account.  Find the `API Token` for the trigger user under:
+
+Jenkins --> People --> (user) --> Configure --> API Token --> Show API Token
+
+Use the API Token with BasicAuth in the URL, for example:
+
+`https://user:0923840952a90898cf90fe0989@jenkins_host:8080/job/myJobID/review/build?status=shelved&review=23980`
+
+### Manual Review
+
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 
 ![Build review](docs/images/review.png)
