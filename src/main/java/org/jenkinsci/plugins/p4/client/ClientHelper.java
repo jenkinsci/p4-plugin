@@ -566,10 +566,10 @@ public class ClientHelper extends ConnectionHelper {
 		validate.check(list, "not opened on this client");
 	}
 
-	public void versionFile(String file, String desc) throws Exception {
+	public void versionFile(String file, Publish publish) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
-		findChangeFiles(files, true);
+		findChangeFiles(files, publish.isDelete());
 
 		// Exit early if no change
 		if (!isOpened(files)) {
@@ -577,7 +577,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// create changelist with files
-		IChangelist change = createChangeList(files, desc);
+		IChangelist change = createChangeList(files, publish);
 
 		// submit changelist
 		submitFiles(change, false);
@@ -630,9 +630,9 @@ public class ClientHelper extends ConnectionHelper {
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
-		String desc = publish.getExpandedDesc();
 
-		IChangelist change = createChangeList(files, desc);
+		// create changelist and open files
+		IChangelist change = createChangeList(files, publish);
 
 		// logging
 		OpenedFilesOptions openOps = new OpenedFilesOptions();
@@ -660,7 +660,10 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
-	private IChangelist createChangeList(List<IFileSpec> files, String desc) throws Exception {
+	private IChangelist createChangeList(List<IFileSpec> files, Publish publish) throws Exception {
+
+		String desc = publish.getExpandedDesc();
+
 		// create new pending change and add description
 		IChangelist change = new Changelist();
 		change.setDescription(desc);
@@ -670,6 +673,15 @@ public class ClientHelper extends ConnectionHelper {
 		// move files from default change
 		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
 		reopenOpts.setChangelistId(change.getId());
+
+		// set purge if required
+		if (publish instanceof SubmitImpl) {
+			SubmitImpl submit = (SubmitImpl) publish;
+			int purge = submit.getPurgeValue();
+			if (purge > 0) {
+				reopenOpts.setFileType("+S" + purge);
+			}
+		}
 		iclient.reopenFiles(files, reopenOpts);
 
 		return change;

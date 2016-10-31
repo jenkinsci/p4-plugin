@@ -1,14 +1,5 @@
 package org.jenkinsci.plugins.p4;
 
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-
 import hudson.Extension;
 import hudson.XmlFile;
 import hudson.model.Descriptor;
@@ -17,6 +8,15 @@ import hudson.model.listeners.SaveableListener;
 import hudson.scm.SCM;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class ConfigurationListener extends SaveableListener {
@@ -42,8 +42,16 @@ public class ConfigurationListener extends SaveableListener {
 			String file = xml.getFile().getCanonicalPath();
 			logger.info(">>> onUpdated: " + file);
 
+			// create Publish object
+			String desc = "Configuration change";
+			boolean success = false;
+			boolean delete = true;
+			boolean reopen = false;
+			String purge = "";
+			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
+
 			ClientHelper p4 = getClientHelper(p4scm);
-			p4.versionFile(file, "Configuration change");
+			p4.versionFile(file, publish);
 			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

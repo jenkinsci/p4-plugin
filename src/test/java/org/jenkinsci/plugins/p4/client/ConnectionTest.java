@@ -10,8 +10,11 @@ import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
+import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.Cause.UserIdCause;
 import hudson.model.Descriptor;
@@ -24,6 +27,7 @@ import hudson.model.StringParameterValue;
 import hudson.scm.PollingResult;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCMDescriptor;
+import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.LogTaskListener;
@@ -41,6 +45,8 @@ import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.publish.PublishNotifier;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
@@ -973,6 +979,61 @@ public class ConnectionTest {
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
+	}
+
+	@Test
+	public void testPublishWithPurge() throws Exception {
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-purge");
+
+		// Create workspace
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// Populate with P4 scm
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(credential, workspace, populate);
+		project.setScm(scm);
+
+		// Create artifact files
+		project.getBuildersList().add(new CreateArtifact("artifact.1", "content"));
+		project.getBuildersList().add(new CreateArtifact("artifact.2", "content"));
+
+		// Submit artifacts
+		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
+		PublishNotifier publish = new PublishNotifier(credential, workspace, submit);
+		project.getPublishersList().add(publish);
+		project.save();
+
+		// Start build
+		UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 18"));
+		assertTrue(log.contains("p4 reopen -c41 -t+S3 //manual.ws/..."));
+		assertTrue(log.contains("... submitting files"));
+		assertTrue(log.contains("p4 describe -s 41"));
+	}
+
+	private static final class CreateArtifact extends Builder {
+		private final String filename;
+		private final String content;
+
+		public CreateArtifact(String filename, String content) {
+			this.filename = filename;
+			this.content = content;
+		}
+
+		@Override
+		public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+			build.getWorkspace().child(filename).write(content, "UTF-8");
+			return true;
+		}
 	}
 
 	private static void startHttpServer(int port) throws Exception {
