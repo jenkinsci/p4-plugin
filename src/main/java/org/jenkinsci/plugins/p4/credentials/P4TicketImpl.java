@@ -21,7 +21,8 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@CheckForNull private final TicketModeImpl ticket;
+	@CheckForNull
+	private final TicketModeImpl ticket;
 
 	@DataBoundConstructor
 	public P4TicketImpl(CredentialsScope scope, String id, String description, @NonNull String p4port,
@@ -66,30 +67,24 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 		}
 
 		public FormValidation doTestConnection(@QueryParameter("p4port") String p4port,
-				@QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
-				@QueryParameter("username") String username, @QueryParameter("retry") String retry,
-				@QueryParameter("timeout") String timeout, @QueryParameter("ticket") String value,
-				@QueryParameter("ticketValue") String ticketValue, @QueryParameter("ticketPath") String ticketPath)
+		                                       @QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
+		                                       @QueryParameter("username") String username, @QueryParameter("retry") String retry,
+		                                       @QueryParameter("timeout") String timeout, @QueryParameter("ticket") String value,
+		                                       @QueryParameter("ticketValue") String ticketValue, @QueryParameter("ticketPath") String ticketPath)
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
-				ConnectionConfig config = new ConnectionConfig(p4port, "true".equals(ssl), trust);
-				FormValidation validation;
-				validation = ConnectionFactory.testConnection(config);
+				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
+				TicketModeImpl ticket = new TicketModeImpl(value, ticketValue, ticketPath);
+				P4TicketImpl test = new P4TicketImpl(null, null, null, p4port, sslTrust, username, retry, timeout, ticket);
+
+				ConnectionConfig config = new ConnectionConfig(test);
+				FormValidation validation = ConnectionFactory.testConnection(config);
 				if (!FormValidation.ok().equals(validation)) {
 					return validation;
 				}
 
 				// Test an open connection
-				TrustImpl sslTrust;
-				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-
-				TicketModeImpl ticket;
-				ticket = new TicketModeImpl(value, ticketValue, ticketPath);
-
-				P4TicketImpl test = new P4TicketImpl(null, null, null, p4port, sslTrust, username, retry, timeout,
-						ticket);
-
 				ConnectionHelper p4 = new ConnectionHelper(test);
 
 				if (!p4.isConnected()) {
