@@ -26,9 +26,10 @@ public class Validate {
 	 * @param fileSpecs List of Perforce file specs
 	 * @param ignore    Parameter list of messages to ignore
 	 * @throws Exception push up stack
+	 * @return true if no errors.
 	 */
-	public void check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
-		check(fileSpecs, true, ignore);
+	public boolean check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
+		return check(fileSpecs, true, ignore);
 	}
 
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
@@ -47,7 +48,7 @@ public class Validate {
 				// superfluous p4java message
 				boolean unknownMsg = true;
 				for (String istring : ignoreList) {
-					if (msg.contains(istring)) {
+					if (!istring.isEmpty() && msg.contains(istring)) {
 						// its a known message
 						unknownMsg = false;
 						break;

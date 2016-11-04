@@ -51,6 +51,11 @@ import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.SpecWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -175,9 +180,38 @@ public class PerforceScm extends SCM {
 
 	@Override
 	public String getKey() {
-		EnvVars env = new EnvVars();
-		String cng = env.expand("P4_CHANGELIST");
-		return "p4 " + workspace.getName() + cng;
+		String delim = "-";
+		StringBuffer key = new StringBuffer("p4");
+
+		// add Credential
+		key.append(delim);
+		key.append(credential);
+
+		// add Mapping/Stream
+		key.append(delim);
+		if(workspace instanceof ManualWorkspaceImpl) {
+			ManualWorkspaceImpl ws = (ManualWorkspaceImpl) workspace;
+			key.append(ws.getSpec().getView());
+			key.append(ws.getSpec().getStreamName());
+		}
+		if(workspace instanceof StreamWorkspaceImpl) {
+			StreamWorkspaceImpl ws = (StreamWorkspaceImpl) workspace;
+			key.append(ws.getStreamName());
+		}
+		if(workspace instanceof SpecWorkspaceImpl) {
+			SpecWorkspaceImpl ws = (SpecWorkspaceImpl) workspace;
+			key.append(ws.getSpecPath());
+		}
+		if(workspace instanceof StaticWorkspaceImpl) {
+			StaticWorkspaceImpl ws = (StaticWorkspaceImpl) workspace;
+			key.append(ws.getName());
+		}
+		if(workspace instanceof TemplateWorkspaceImpl) {
+			TemplateWorkspaceImpl ws = (TemplateWorkspaceImpl) workspace;
+			key.append(ws.getTemplateName());
+		}
+
+		return key.toString();
 	}
 
 	@Override
