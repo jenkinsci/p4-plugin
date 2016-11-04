@@ -66,7 +66,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	@Test
 	public void testCredentialsList() throws Exception {
 
-		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Head");
+		FreeStyleProject project = jenkins.createFreeStyleProject("CredentialsList");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -87,7 +87,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	@Test
 	public void testFreeStyleProject_buildHead() throws Exception {
 
-		FreeStyleProject project = jenkins.createFreeStyleProject("Static-Head");
+		FreeStyleProject project = jenkins.createFreeStyleProject("BuildHead");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
