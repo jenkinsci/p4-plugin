@@ -189,24 +189,24 @@ public class PerforceScm extends SCM {
 
 		// add Mapping/Stream
 		key.append(delim);
-		if(workspace instanceof ManualWorkspaceImpl) {
+		if (workspace instanceof ManualWorkspaceImpl) {
 			ManualWorkspaceImpl ws = (ManualWorkspaceImpl) workspace;
 			key.append(ws.getSpec().getView());
 			key.append(ws.getSpec().getStreamName());
 		}
-		if(workspace instanceof StreamWorkspaceImpl) {
+		if (workspace instanceof StreamWorkspaceImpl) {
 			StreamWorkspaceImpl ws = (StreamWorkspaceImpl) workspace;
 			key.append(ws.getStreamName());
 		}
-		if(workspace instanceof SpecWorkspaceImpl) {
+		if (workspace instanceof SpecWorkspaceImpl) {
 			SpecWorkspaceImpl ws = (SpecWorkspaceImpl) workspace;
 			key.append(ws.getSpecPath());
 		}
-		if(workspace instanceof StaticWorkspaceImpl) {
+		if (workspace instanceof StaticWorkspaceImpl) {
 			StaticWorkspaceImpl ws = (StaticWorkspaceImpl) workspace;
 			key.append(ws.getName());
 		}
-		if(workspace instanceof TemplateWorkspaceImpl) {
+		if (workspace instanceof TemplateWorkspaceImpl) {
 			TemplateWorkspaceImpl ws = (TemplateWorkspaceImpl) workspace;
 			key.append(ws.getTemplateName());
 		}
@@ -286,9 +286,12 @@ public class PerforceScm extends SCM {
 				return PollingResult.BUILD_NOW;
 			}
 
-			P4Revision last = action.getBuildChange();
+			// if using 'Poll on master' filter, set last change
 			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
-			pollM.setLastChange(last);
+			if (pollM != null) {
+				P4Revision last = action.getBuildChange();
+				pollM.setLastChange(last);
+			}
 		}
 
 		if (job instanceof MatrixProject) {
@@ -400,7 +403,7 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Override build change if polling per change, MUST clear after use.
-		if(isIncremental()) {
+		if (isIncremental()) {
 			task.setIncrementalChanges(incrementalChanges);
 		}
 		incrementalChanges = new ArrayList<P4Revision>();
@@ -601,7 +604,7 @@ public class PerforceScm extends SCM {
 
 		try {
 			String counter = p4.getCounter(name);
-			if(!"0".equals(counter)) {
+			if (!"0".equals(counter)) {
 				try {
 					// if a change number, add change...
 					int change = Integer.parseInt(counter);
@@ -858,10 +861,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public boolean requiresWorkspaceForPolling() {
-		if (FilterPollMasterImpl.isMasterPolling(filter)) {
-			return false;
-		}
-		return true;
+		return false;
 	}
 
 	/**
