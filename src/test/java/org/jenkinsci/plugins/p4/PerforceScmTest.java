@@ -1,12 +1,9 @@
 package org.jenkinsci.plugins.p4;
 
-import static org.junit.Assert.*;
-
 import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleProject;
 import hudson.scm.SCM;
-
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -17,6 +14,10 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PerforceScmTest {
 
@@ -37,7 +38,7 @@ public class PerforceScmTest {
 		assertEquals("org.jenkinsci.plugins.p4.PerforceScm", testScm.getType());
 
 		assertTrue(testScm.supportsPolling());
-		assertTrue(testScm.requiresWorkspaceForPolling());
+		assertFalse(testScm.requiresWorkspaceForPolling());
 
 		assertEquals(testScm, project.getScm());
 	}
