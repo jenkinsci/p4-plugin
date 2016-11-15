@@ -1,5 +1,33 @@
 ## Release notes
 
+### Release 1.4.9 (major features/fixes)
+
+[@21042](https://swarm.workshop.perforce.com/changes/21042) - Use `textarea` for change description (CSS: 10 rows max).  JENKINS-39257
+
+[@21024](https://swarm.workshop.perforce.com/changes/21024) - Allow concurrent use a Client during polling.  Prevents Jenkins from blocking trigger events when polling and a build is in progress.  JENKINS-38425
+
+[@20986](https://swarm.workshop.perforce.com/changes/20986) - Ground work for MultiJob support.  Pushed validate up to ConnectionHelper and added new Perforce functions.
+
+[@20980](https://swarm.workshop.perforce.com/changes/20980) - Functional test upgrade.  Switched to RSH pipe for Perforce connection and upgraded to 15.1 P4D binaries.  Made use of ClassRule for Jenkins (faster startup) and a Rule for Perforce with separate roots (to allow for parallel test runs).
+
+[@20954](https://swarm.workshop.perforce.com/changes/20954) - Add purge -S<n> option for the Submit stage of Publish.  If a value is provided it will set the purge option on all files found as part of the reconcile (ADD/EDIT).  It will not remove the purge option once set.  JENKINS-36112
+
+[@20950](https://swarm.workshop.perforce.com/changes/20950) - Add variable expansion to SpecFile based workspaces.
+
+[@20908](https://swarm.workshop.perforce.com/changes/20908) - Filter for WorkFlowJob.  Avoids duplicate Review buttons in FreeStyle Jobs.
+
+[@20903](https://swarm.workshop.perforce.com/changes/20903) - Document BasicAuth from Reviews.
+
+[@20902](https://swarm.workshop.perforce.com/changes/20902) - Enable Swarm builds on pipeline.  JENKINS-38233
+
+[@20897](https://swarm.workshop.perforce.com/changes/20897) - Report all P4Java errors on validate.  Ignore 'no such file' warning on populate, caused by empty file list on sync -k.
+
+[@20893](https://swarm.workshop.perforce.com/changes/20893) - Update trigger documentation to include using a CRUMB for security.
+
+[@20889](https://swarm.workshop.perforce.com/changes/20889) - Document downstream changelists. Workaround for JENKINS-33163.
+
+[@20877](https://swarm.workshop.perforce.com/changes/20877) - Merge pull request #29 from tangkun75/master.  Not throw AbortException when unknown errors (except for those ignoring ones ) occurred during P4 task post-validation
+
 ### Release 1.4.8 (major features/fixes)
 
 [@20873](https://swarm.workshop.perforce.com/changes/20873) - Support Pin to a change in a counter.
