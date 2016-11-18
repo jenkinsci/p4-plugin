@@ -296,8 +296,17 @@ public class PollingTest extends DefaultEnvironment {
 	public void testShouldTriggerPipelineJobIfChanges() throws Exception {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "TriggerPipelineJobIfChanges");
-		job.setDefinition(new CpsFlowDefinition("" + "node {\n" + "   p4sync credential: '" + auth.getId()
-				+ "', depotPath: '//depot', format: 'test.ws'\n" + "}"));
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + auth.getId() + "',"
+				+ "      depotPath: '//depot', format: 'test.ws'\n"
+				+ "}"));
+
+		// Set review to build change 9
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
@@ -305,16 +314,10 @@ public class PollingTest extends DefaultEnvironment {
 		job.addTrigger(trigger);
 		job.save();
 
-		WorkflowRun run = job.scheduleBuild2(0).get();
+		WorkflowRun run = job.scheduleBuild2(0, actions).get();
 		jenkins.assertBuildStatusSuccess(run);
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
-
-		// Hack to make polling believe there are remote changes: sync the
-		// client 'test.ws' at an anterior revision to test the trigger
-		ClientHelper p4 = new ClientHelper(auth, null, "test.ws", "utf8");
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
-		p4.syncFiles(new P4Revision("9"), populate);
 
 		// Test trigger
 		trigger.poke(job, auth.getP4port());

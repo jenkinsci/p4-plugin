@@ -11,7 +11,6 @@ import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.remoting.RoleChecker;
@@ -28,11 +27,13 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Revisi
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
+	private final P4Revision last;
 
 	private String pin;
 
-	public PollTask(List<Filter> filter) {
+	public PollTask(List<Filter> filter, P4Revision last) {
 		this.filter = filter;
+		this.last = last;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -44,21 +45,11 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Revisi
 	public Object task(ClientHelper p4) throws Exception {
 		List<P4Revision> changes = new ArrayList<P4Revision>();
 
-		// When polling from master use last build, otherwise fetch the change
-		// from client spec.
-		P4Revision from;
-		if (FilterPollMasterImpl.isMasterPolling(filter)) {
-			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
-			from = pollM.getLastChange();
-		} else {
-			from = new P4Revision(p4.getClient());
-		}
-
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			changes = p4.listHaveChanges(from, new P4Revision(pin));
+			changes = p4.listHaveChanges(last, new P4Revision(pin));
 		} else {
-			changes = p4.listHaveChanges(from);
+			changes = p4.listHaveChanges(last);
 		}
 
 		// filter changes...

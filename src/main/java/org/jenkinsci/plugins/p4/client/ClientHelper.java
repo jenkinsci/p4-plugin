@@ -182,9 +182,6 @@ public class ClientHelper extends ConnectionHelper {
 			syncFiles(revisions, populate);
 		}
 
-		// Save buildChange in client Description.
-		buildChange.save(iclient);
-
 		log("duration: " + timer.toString() + "\n");
 	}
 

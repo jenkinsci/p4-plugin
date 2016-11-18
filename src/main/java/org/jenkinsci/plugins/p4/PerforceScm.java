@@ -43,7 +43,6 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -263,42 +262,35 @@ public class PerforceScm extends SCM {
 			return PollingResult.NO_CHANGES;
 		}
 
-		// Use Master for polling if required and set last build
-		if (buildWorkspace == null || FilterPollMasterImpl.isMasterPolling(filter)) {
-			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				listener.getLogger().println("Warning Jenkins instance is null.");
-				return PollingResult.NO_CHANGES;
-			}
-			buildWorkspace = j.getRootPath();
-
-			// get last run, if none then build now.
-			Run<?, ?> lastRun = job.getLastBuild();
-			if (lastRun == null) {
-				listener.getLogger().println("No previous run found; building...");
-				return PollingResult.BUILD_NOW;
-			}
-
-			// get last action, if no previous action then build now.
-			TagAction action = lastRun.getAction(TagAction.class);
-			if (action == null) {
-				listener.getLogger().println("No previous build found; building...");
-				return PollingResult.BUILD_NOW;
-			}
-
-			// if using 'Poll on master' filter, set last change
-			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
-			if (pollM != null) {
-				P4Revision last = action.getBuildChange();
-				pollM.setLastChange(last);
-			}
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			listener.getLogger().println("Warning Jenkins instance is null.");
+			return PollingResult.NO_CHANGES;
 		}
+		buildWorkspace = j.getRootPath();
+
+		// get last run, if none then build now.
+		Run<?, ?> lastRun = job.getLastBuild();
+		if (lastRun == null) {
+			listener.getLogger().println("No previous run found; building...");
+			return PollingResult.BUILD_NOW;
+		}
+
+		// get last action, if no previous action then build now.
+		TagAction action = lastRun.getAction(TagAction.class);
+		if (action == null) {
+			listener.getLogger().println("No previous build found; building...");
+			return PollingResult.BUILD_NOW;
+		}
+
+		// found previous build, set last change.
+		P4Revision last = action.getBuildChange();
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
 				// Poll PARENT only
 				EnvVars envVars = job.getEnvironment(node, listener);
-				state = pollWorkspace(envVars, listener, buildWorkspace);
+				state = pollWorkspace(envVars, listener, buildWorkspace, last);
 			} else {
 				// Poll CHILDREN only
 				MatrixProject matrixProj = (MatrixProject) job;
@@ -307,7 +299,7 @@ public class PerforceScm extends SCM {
 
 				for (MatrixConfiguration config : configs) {
 					EnvVars envVars = config.getEnvironment(node, listener);
-					state = pollWorkspace(envVars, listener, buildWorkspace);
+					state = pollWorkspace(envVars, listener, buildWorkspace, last);
 					// exit early if changes found
 					if (state == PollingResult.BUILD_NOW) {
 						return PollingResult.BUILD_NOW;
@@ -316,7 +308,7 @@ public class PerforceScm extends SCM {
 			}
 		} else {
 			EnvVars envVars = job.getEnvironment(node, listener);
-			state = pollWorkspace(envVars, listener, buildWorkspace);
+			state = pollWorkspace(envVars, listener, buildWorkspace, last);
 		}
 
 		return state;
@@ -330,7 +322,7 @@ public class PerforceScm extends SCM {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace)
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, P4Revision last)
 			throws InterruptedException, IOException {
 		PrintStream log = listener.getLogger();
 
@@ -362,7 +354,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Create task
-		PollTask task = new PollTask(filter);
+		PollTask task = new PollTask(filter, last);
 		task.setCredential(credential);
 		task.setWorkspace(ws);
 		task.setListener(listener);
