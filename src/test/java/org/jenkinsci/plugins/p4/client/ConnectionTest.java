@@ -231,6 +231,22 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testWorkflowEnv() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowEnv");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + id + "', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}"));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run);
+		jenkins.assertLogContains("P4_CHANGELIST: 40", run);
+	}
+
+	@Test
 	public void testP4GroovyConnectAndSync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy");
 		job.setDefinition(new CpsFlowDefinition(""
