@@ -1,26 +1,21 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.net.URL;
-
-import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.perforce.p4java.core.IJob;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.net.URL;
 
 public class P4WebBrowser extends P4Browser {
 
@@ -98,7 +93,11 @@ public class P4WebBrowser extends P4Browser {
 		@Override
 		public P4WebBrowser newInstance(StaplerRequest req, JSONObject formData)
 				throws FormException {
-			return req.bindParameters(P4WebBrowser.class, "p4web.");
+			P4WebBrowser browser = null;
+			if (req != null) {
+				browser = req.bindParameters(P4WebBrowser.class, "p4web.");
+			}
+			return browser;
 		}
 	}
 }

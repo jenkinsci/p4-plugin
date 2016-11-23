@@ -1,28 +1,23 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.perforce.p4java.core.IJob;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.net.URL;
+import java.util.regex.Pattern;
 
 public class FishEyeBrowser extends P4Browser {
 
@@ -64,7 +59,7 @@ public class FishEyeBrowser extends P4Browser {
 		}
 		return new URL(url, getRelativeFilename(file)
 				+ new QueryBuilder(url.getQuery()).add("r1=").add(
-						"r2=" + change));
+				"r2=" + change));
 	}
 
 	@Override
@@ -134,9 +129,13 @@ public class FishEyeBrowser extends P4Browser {
 		}
 
 		@Override
-		public P4WebBrowser newInstance(StaplerRequest req, JSONObject formData)
+		public FishEyeBrowser newInstance(StaplerRequest req, JSONObject formData)
 				throws FormException {
-			return req.bindParameters(P4WebBrowser.class, "fisheye.");
+			FishEyeBrowser browser = null;
+			if (req != null) {
+				browser = req.bindParameters(FishEyeBrowser.class, "fisheye.");
+			}
+			return browser;
 		}
 	}
 }
