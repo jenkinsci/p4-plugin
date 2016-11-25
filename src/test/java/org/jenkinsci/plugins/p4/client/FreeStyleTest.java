@@ -73,7 +73,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	public void testFreeStyleProject_buildChange() throws Exception {
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildChange");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
@@ -129,7 +129,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		P4WebBrowser browser = new P4WebBrowser(url);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("buildLabel");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, browser);
 		project.setScm(scm);
@@ -180,7 +180,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	public void testFreeStyleProject_buildCounter() throws Exception {
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildCounter");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		String pin = "testCounter";
 		Populate populate = new AutoCleanImpl(false, false, false, true, pin, null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);

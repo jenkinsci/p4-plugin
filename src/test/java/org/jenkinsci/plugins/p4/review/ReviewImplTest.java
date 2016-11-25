@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.p4.review;
 
-import static org.junit.Assert.assertEquals;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleProject;
-
+import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -13,12 +16,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import static org.junit.Assert.assertEquals;
 
-public class ReviewImplTest {
+public class ReviewImplTest extends DefaultEnvironment {
 
 	private final String credential = "id";
 	private final static String P4PORT = "localhost:1999";
@@ -34,7 +34,7 @@ public class ReviewImplTest {
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 
-		String client = "test.ws";
+		String client = defaultClient();
 		FreeStyleProject project = jenkins
 				.createFreeStyleProject("StaticReview");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, client);

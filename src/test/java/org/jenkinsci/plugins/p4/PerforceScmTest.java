@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class PerforceScmTest {
+public class PerforceScmTest extends DefaultEnvironment {
 
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
@@ -29,7 +29,7 @@ public class PerforceScmTest {
 		FreeStyleProject project = jenkins.createFreeStyleProject();
 
 		String credential = "123";
-		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 
@@ -48,7 +48,7 @@ public class PerforceScmTest {
 		MatrixProject project = new MatrixProject("MatrixTest");
 
 		String credential = "123";
-		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);

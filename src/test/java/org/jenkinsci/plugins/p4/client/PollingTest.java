@@ -233,7 +233,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void shouldNotTriggerJobIfNoChange() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("NotTriggerJobIfNoChange");
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
 		project.setScm(scm);

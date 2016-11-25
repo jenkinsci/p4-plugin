@@ -28,4 +28,13 @@ abstract public class DefaultEnvironment {
 		DummyServer server = new DummyServer(port);
 		new Thread(server).start();
 	}
+
+	protected String defaultClient() {
+		String client = "test.ws";
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win")) {
+			client = "test.win";
+		}
+		return client;
+	}
 }
