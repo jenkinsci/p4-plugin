@@ -1,5 +1,15 @@
 ## Release notes
 
+### Release 1.4.10 (major features/fixes)
+
+[@21149](https://swarm.workshop.perforce.com/changes/21149) - Null protection for Ticket Value/Path.
+
+[@21133](https://swarm.workshop.perforce.com/changes/21133) - P4 Environment Variables for pipeline.  JENKINS-37584
+
+[@21077](https://swarm.workshop.perforce.com/changes/21077) - Switch polling back to build.xml - Change in Polling behaviour; use last build details in the build.xml file.  It gathers 'last' change details on the master thread and not a slave thread.  JENKINS-37462
+
+[@21062](https://swarm.workshop.perforce.com/changes/21062) - Avoid dependency errors on WorkflowJob.
+
 ### Release 1.4.9 (major features/fixes)
 
 [@21042](https://swarm.workshop.perforce.com/changes/21042) - Use `textarea` for change description (CSS: 10 rows max).  JENKINS-39257
