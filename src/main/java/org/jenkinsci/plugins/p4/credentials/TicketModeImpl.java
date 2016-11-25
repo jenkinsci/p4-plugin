@@ -23,8 +23,8 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 	@DataBoundConstructor
 	public TicketModeImpl(String value, String ticketValue, String ticketPath) {
 		this.value = value;
-		this.ticketValue = ticketValue;
-		this.ticketPath = ticketPath;
+		this.ticketValue = (ticketValue != null) ? ticketValue : "";
+		this.ticketPath = (ticketPath != null) ? ticketPath : "";
 	}
 
 	@NonNull
