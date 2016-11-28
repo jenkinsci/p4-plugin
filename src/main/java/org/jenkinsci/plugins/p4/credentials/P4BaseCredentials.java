@@ -25,6 +25,9 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	@CheckForNull
 	private final String timeout;
 
+	@CheckForNull
+	private final String p4host;
+
 	/**
 	 * Constructor.
 	 *
@@ -40,13 +43,15 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	public P4BaseCredentials(CredentialsScope scope, String id,
 	                         String description, @NonNull String p4port,
 	                         @CheckForNull TrustImpl ssl, @NonNull String username,
-	                         @CheckForNull String retry, @CheckForNull String timeout) {
+	                         @CheckForNull String retry, @CheckForNull String timeout,
+	                         @CheckForNull String p4host) {
 		super(scope, id, description);
 		this.p4port = Util.fixNull(p4port);
 		this.ssl = ssl;
 		this.username = Util.fixNull(username);
 		this.retry = retry;
 		this.timeout = timeout;
+		this.p4host = p4host;
 	}
 
 	@NonNull
@@ -94,5 +99,9 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		} else {
 			return 0;
 		}
+	}
+
+	public String getP4host() {
+		return (p4host == null) ? "" : p4host;
 	}
 }

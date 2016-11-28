@@ -27,10 +27,10 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 
 	@DataBoundConstructor
 	public P4PasswordImpl(CredentialsScope scope, String id, String description, @NonNull String p4port,
-	                      TrustImpl ssl, @NonNull String username, @CheckForNull String retry, @CheckForNull String timeout,
-	                      @NonNull String password) {
+	                      TrustImpl ssl, @NonNull String username, @CheckForNull String retry,
+	                      @CheckForNull String timeout, @CheckForNull String p4host, @NonNull String password) {
 
-		super(scope, id, description, p4port, ssl, username, retry, timeout);
+		super(scope, id, description, p4port, ssl, username, retry, timeout, p4host);
 		this.password = Secret.fromString(password);
 	}
 
@@ -55,14 +55,16 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		}
 
 		public FormValidation doTestConnection(@QueryParameter("p4port") String p4port,
-		                                       @QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
-		                                       @QueryParameter("username") String username, @QueryParameter("retry") String retry,
-		                                       @QueryParameter("timeout") String timeout, @QueryParameter("password") String password)
+		                                       @QueryParameter("ssl") String ssl,
+		                                       @QueryParameter("trust") String trust,
+		                                       @QueryParameter("p4host") String p4host,
+		                                       @QueryParameter("username") String username,
+		                                       @QueryParameter("password") String password)
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, retry, timeout, password);
+				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, null, null, p4host, password);
 
 				ConnectionConfig config = new ConnectionConfig(test);
 				FormValidation validation = ConnectionFactory.testConnection(config);

@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.PropertyDefs;
 import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
+import com.perforce.p4java.option.UsageOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.ServerFactory;
 import hudson.util.FormValidation;
@@ -105,10 +106,17 @@ public class ConnectionFactory {
 		String timeout = String.valueOf(config.getTimeout());
 		props.put(RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK, timeout);
 
+		// Set P4HOST if defined
+		UsageOptions opts = new UsageOptions(props);
+		String p4host = config.getP4Host();
+		if (p4host != null && !p4host.isEmpty()) {
+			opts.setHostName(p4host);
+		}
+
 		// Get a server connection
 		String serverUri = config.getServerUri();
 		IOptionsServer iserver;
-		iserver = ServerFactory.getOptionsServer(serverUri, props);
+		iserver = ServerFactory.getOptionsServer(serverUri, props, opts);
 		return iserver;
 	}
 }

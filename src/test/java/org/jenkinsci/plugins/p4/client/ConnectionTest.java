@@ -106,7 +106,7 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertNotNull(desc);
 		assertEquals("Perforce Password Credential", desc.getDisplayName());
 		P4PasswordImpl.DescriptorImpl impl = (P4PasswordImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doTestConnection(p4d.getRshPort(), "false", null, "jenkins", "0", "0", "jenkins");
+		FormValidation form = impl.doTestConnection(p4d.getRshPort(), "false", null, null, "jenkins", "jenkins");
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

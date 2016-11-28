@@ -26,10 +26,10 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 
 	@DataBoundConstructor
 	public P4TicketImpl(CredentialsScope scope, String id, String description, @NonNull String p4port,
-	                    TrustImpl ssl, @NonNull String username, @CheckForNull String retry, @CheckForNull String timeout,
-	                    TicketModeImpl ticket) {
+	                    TrustImpl ssl, @NonNull String username, @CheckForNull String retry,
+	                    @CheckForNull String timeout, @CheckForNull String p4host, TicketModeImpl ticket) {
 
-		super(scope, id, description, p4port, ssl, username, retry, timeout);
+		super(scope, id, description, p4port, ssl, username, retry, timeout, p4host);
 		this.ticket = ticket;
 	}
 
@@ -67,16 +67,19 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 		}
 
 		public FormValidation doTestConnection(@QueryParameter("p4port") String p4port,
-		                                       @QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
-		                                       @QueryParameter("username") String username, @QueryParameter("retry") String retry,
-		                                       @QueryParameter("timeout") String timeout, @QueryParameter("ticket") String value,
-		                                       @QueryParameter("ticketValue") String ticketValue, @QueryParameter("ticketPath") String ticketPath)
+		                                       @QueryParameter("ssl") String ssl,
+		                                       @QueryParameter("trust") String trust,
+		                                       @QueryParameter("username") String username,
+		                                       @QueryParameter("p4host") String p4host,
+		                                       @QueryParameter("ticket") String value,
+		                                       @QueryParameter("ticketValue") String ticketValue,
+		                                       @QueryParameter("ticketPath") String ticketPath)
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
 				TicketModeImpl ticket = new TicketModeImpl(value, ticketValue, ticketPath);
-				P4TicketImpl test = new P4TicketImpl(null, null, null, p4port, sslTrust, username, retry, timeout, ticket);
+				P4TicketImpl test = new P4TicketImpl(null, null, null, p4port, sslTrust, username, null, null, p4host, ticket);
 
 				ConnectionConfig config = new ConnectionConfig(test);
 				FormValidation validation = ConnectionFactory.testConnection(config);

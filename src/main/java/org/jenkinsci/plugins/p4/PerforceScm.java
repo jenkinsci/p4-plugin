@@ -286,18 +286,18 @@ public class PerforceScm extends SCM {
 		// found previous build, set last change to the first action found.
 		P4Revision last = actions.get(0).getBuildChange();
 
-                // Find the change with the highest change number, use this for the
-                // poll. This isn't accurate if multiple workspaces are polled
-                // and are disjoint, but is accurate if the workspaces are subsets
-                // of each other.
-                for (TagAction action : actions) {
-                        if (action.getBuildChange().compareTo(last) > 0) {
-                                last = action.getBuildChange();
-                        }
-                }
+		// Find the change with the highest change number, use this for the
+		// poll. This isn't accurate if multiple workspaces are polled
+		// and are disjoint, but is accurate if the workspaces are subsets
+		// of each other.
+		for (TagAction action : actions) {
+			if (action.getBuildChange().compareTo(last) > 0) {
+				last = action.getBuildChange();
+			}
+		}
 
-                listener.getLogger().println("Found last change " + last.toString() +
-                                             " in previous build");
+		listener.getLogger().println("Found last change " + last.toString() +
+				" in previous build");
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {

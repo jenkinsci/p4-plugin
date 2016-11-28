@@ -17,7 +17,7 @@ abstract public class DefaultEnvironment {
 	protected P4PasswordImpl createCredentials(String user, String password, SampleServerRule p4d) throws IOException {
 		String p4port = p4d.getRshPort();
 		CredentialsScope scope = CredentialsScope.SYSTEM;
-		P4PasswordImpl auth = new P4PasswordImpl(scope, CREDENTIAL, "desc", p4port, null, user, "0", "0", password);
+		P4PasswordImpl auth = new P4PasswordImpl(scope, CREDENTIAL, "desc", p4port, null, user, "0", "0", null, password);
 		SystemCredentialsProvider.getInstance().getCredentials().clear();
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
