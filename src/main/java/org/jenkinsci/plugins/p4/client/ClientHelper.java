@@ -266,6 +266,11 @@ public class ClientHelper extends ConnectionHelper {
 			command.add("-p" + p4port);
 			command.add("-u" + p4credential.getUsername());
 
+			String p4host = p4credential.getP4host();
+			if(p4host != null && !p4host.isEmpty()) {
+				command.add("-H" + p4host);
+			}
+
 			command.add("sync");
 			if (syncOpts.isForceUpdate()) {
 				command.add("-f");
