@@ -394,13 +394,6 @@ Use this snippet with your intended target e.g. a slave calles 'my_slave'
 
 For more examples and usage please refer to the [Workflow docs](https://github.com/jenkinsci/workflow-plugin/blob/master/README.md).
 
-### Workflow Limitations
-
-There are several limitations as the Workflow plugin is relativly new, these include:
-
-* SCM Polling (not functional)
-* No access to Environment ${VAR} varables
-
 ### Exposed Variables
 
 The plugin exposes the following additional variables:
@@ -411,6 +404,10 @@ The plugin exposes the following additional variables:
 * *P4_USER* - Perforce user in use.
 * *P4_TICKET* - Perforce ticket used (can be hidden using global configuration option 'Perforce: Secure P4_TICKET').
 * *HUDSON_CHANGELOG_FILE* - Location on disk of 'changelog.xml' containing list of changes in this build.
+
+For example in a Pipeline script you can use:
+
+    ${env.P4_CHANGELIST}
 
 
 ## Troubleshooting
