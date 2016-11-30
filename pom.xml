@@ -9,24 +9,24 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.4.8</version>
+  <version>1.4.9-kix</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
-  <description>Perforce Client plugin for the Jenkins SCM provider.</description>
+  <description>Perforce Client plugin for the Jenkins SCM provider. KIXEYE edits</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin</url>
 
   <properties>
     <jenkins.version>1.596.1</jenkins.version>
   </properties>
-    
+
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <tag>p4-1.4.8</tag>
   </scm>
-  
+
   <developers>
     <developer>
       <id>p4paul</id>
@@ -56,7 +56,7 @@
       <artifactId>matrix-project</artifactId>
       <version>1.2</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-auth</artifactId>
@@ -70,7 +70,7 @@
       <version>1.6</version>
       <optional>true</optional>
     </dependency>
-      
+
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
@@ -118,7 +118,7 @@
       <version>0.1</version>
       <optional>true</optional>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
