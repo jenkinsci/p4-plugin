@@ -4,6 +4,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
+import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
@@ -11,6 +12,7 @@ import hudson.model.Queue;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import jenkins.model.Jenkins;
+import jenkins.model.ParameterizedJobMixIn.ParameterizedJob;
 import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
@@ -24,16 +26,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class ReviewAction implements Action {
+public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Action {
 
-	private final AbstractProject<?, ?> project;
+	private final T project;
 
-	public AbstractProject<?, ?> getProject() {
-		return project;
+
+	public ReviewAction(T project) {
+		this.project = project;
 	}
 
-	public ReviewAction(AbstractProject<?, ?> project) {
-		this.project = project;
+	public T getProject() {
+		return project;
 	}
 
 	public String getIconFileName() {

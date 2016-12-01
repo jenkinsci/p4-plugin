@@ -26,14 +26,16 @@ public class Validate {
 	 * @param fileSpecs List of Perforce file specs
 	 * @param ignore    Parameter list of messages to ignore
 	 * @throws Exception push up stack
+	 * @return true if no errors.
 	 */
-	public void check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
-		check(fileSpecs, true, ignore);
+	public boolean check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
+		return check(fileSpecs, true, ignore);
 	}
 
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
+		StringBuffer errorLog = new StringBuffer();
 
 		ArrayList<String> ignoreList = new ArrayList<String>();
 		ignoreList.addAll(Arrays.asList(ignore));
@@ -46,7 +48,7 @@ public class Validate {
 				// superfluous p4java message
 				boolean unknownMsg = true;
 				for (String istring : ignoreList) {
-					if (msg.contains(istring)) {
+					if (!istring.isEmpty() && msg.contains(istring)) {
 						// its a known message
 						unknownMsg = false;
 						break;
@@ -59,9 +61,11 @@ public class Validate {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
-						if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
-							abort = true;
-						}
+					}
+					if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
+						errorLog.append(msg);
+						errorLog.append("\n");
+						abort = true;
 					}
 					success = false;
 				}
@@ -69,7 +73,7 @@ public class Validate {
 		}
 
 		if (abort) {
-			String msg = "P4JAVA: Error(s)";
+			String msg = "P4JAVA: Error(s):\n" + errorLog.toString();
 			throw new AbortException(msg);
 		}
 		return success;

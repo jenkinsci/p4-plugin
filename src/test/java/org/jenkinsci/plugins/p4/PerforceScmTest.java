@@ -1,12 +1,9 @@
 package org.jenkinsci.plugins.p4;
 
-import static org.junit.Assert.*;
-
 import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleProject;
 import hudson.scm.SCM;
-
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -18,7 +15,11 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
 
-public class PerforceScmTest {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class PerforceScmTest extends DefaultEnvironment {
 
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
@@ -28,7 +29,7 @@ public class PerforceScmTest {
 		FreeStyleProject project = jenkins.createFreeStyleProject();
 
 		String credential = "123";
-		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 
@@ -37,7 +38,7 @@ public class PerforceScmTest {
 		assertEquals("org.jenkinsci.plugins.p4.PerforceScm", testScm.getType());
 
 		assertTrue(testScm.supportsPolling());
-		assertTrue(testScm.requiresWorkspaceForPolling());
+		assertFalse(testScm.requiresWorkspaceForPolling());
 
 		assertEquals(testScm, project.getScm());
 	}
@@ -47,7 +48,7 @@ public class PerforceScmTest {
 		MatrixProject project = new MatrixProject("MatrixTest");
 
 		String credential = "123";
-		Workspace workspace = new StaticWorkspaceImpl("none", false, "test.ws");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(credential, workspace, populate);
 		project.setScm(scm);

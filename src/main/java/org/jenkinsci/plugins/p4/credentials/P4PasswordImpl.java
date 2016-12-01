@@ -61,20 +61,16 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
-				ConnectionConfig config = new ConnectionConfig(p4port, "true".equals(ssl), trust);
-				FormValidation validation;
-				validation = ConnectionFactory.testConnection(config);
+				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
+				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, retry, timeout, password);
+
+				ConnectionConfig config = new ConnectionConfig(test);
+				FormValidation validation = ConnectionFactory.testConnection(config);
 				if (!FormValidation.ok().equals(validation)) {
 					return validation;
 				}
 
 				// Test an open connection
-				TrustImpl sslTrust;
-				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-
-				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, retry, timeout,
-						password);
-
 				ConnectionHelper p4 = new ConnectionHelper(test);
 
 				if (!p4.isConnected()) {

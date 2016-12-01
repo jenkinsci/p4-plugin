@@ -104,6 +104,9 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	}
 
 	public File getLogFile() {
+		if (job == null) {
+			return null;
+		}
 		return new File(job.getRootDir(), "p4trigger.log");
 	}
 

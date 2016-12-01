@@ -1,8 +1,6 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
-import com.perforce.p4java.exception.P4JavaException;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 
 import java.io.Serializable;
@@ -25,35 +23,6 @@ public class P4Revision implements Serializable, Comparable {
 		this.change = change;
 		this.label = null;
 		this.isLabel = false;
-	}
-
-	/**
-	 * Look for Change identifier in Client spec.
-	 * 
-	 * If not found change=0, or if a label then change=-1
-	 * 
-	 * @param iclient Perforce client
-	 */
-	public P4Revision(IClient iclient) {
-		this.change = 0;
-
-		String desc = iclient.getDescription();
-		if (desc != null && !desc.isEmpty()) {
-			for (String line : desc.split("\\r?\\n")) {
-				if (line.startsWith("Change:")) {
-					String args[] = line.split(":", 2);
-					try {
-						change = Integer.parseInt(args[1].trim());
-						this.label = null;
-						this.isLabel = false;
-					} catch (NumberFormatException e) {
-						this.change = -1;
-						this.label = args[1];
-						this.isLabel = true;
-					}
-				}
-			}
-		}
 	}
 
 	public boolean isLabel() {
@@ -81,31 +50,6 @@ public class P4Revision implements Serializable, Comparable {
 			cl.setChange(p4, summary);
 		}
 		return cl;
-	}
-
-	public void save(IClient iclient) throws P4JavaException {
-		String desc = iclient.getDescription();
-		StringBuffer sb = new StringBuffer();
-		boolean saved = false;
-
-		// look for existing line and update
-		if (desc != null && !desc.isEmpty()) {
-			for (String line : desc.split("\\r?\\n")) {
-				if (line.startsWith("Change:")) {
-					line = "Change:" + this.toString();
-					saved = true;
-				}
-				sb.append(line + "\n");
-			}
-		}
-
-		// if no change line than append
-		if (!saved) {
-			sb.append("Change:" + this.toString() + "\n");
-		}
-
-		iclient.setDescription(sb.toString());
-		iclient.update();
 	}
 
 	@Override

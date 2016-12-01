@@ -9,6 +9,7 @@ import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
@@ -19,7 +20,9 @@ import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.ResolveFilesAutoOptions;
 import com.perforce.p4java.option.client.RevertFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
+import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
+import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
@@ -66,20 +69,16 @@ public class ClientHelper extends ConnectionHelper {
 
 	private static Logger logger = Logger.getLogger(ClientHelper.class.getName());
 
-	private final Validate validate;
-
 	private IClient iclient;
 
 	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
 		clientLogin(client, charset);
-		validate = new Validate(listener);
 	}
 
 	public ClientHelper(P4BaseCredentials credential, TaskListener listener, String client, String charset) {
 		super(credential, listener);
 		clientLogin(client, charset);
-		validate = new Validate(listener);
 	}
 
 	private void clientLogin(String client, String charset) {
@@ -182,9 +181,6 @@ public class ClientHelper extends ConnectionHelper {
 		} else {
 			syncFiles(revisions, populate);
 		}
-
-		// Save buildChange in client Description.
-		buildChange.save(iclient);
 
 		log("duration: " + timer.toString() + "\n");
 	}
@@ -566,10 +562,10 @@ public class ClientHelper extends ConnectionHelper {
 		validate.check(list, "not opened on this client");
 	}
 
-	public void versionFile(String file, String desc) throws Exception {
+	public void versionFile(String file, Publish publish) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
-		findChangeFiles(files, true);
+		findChangeFiles(files, publish.isDelete());
 
 		// Exit early if no change
 		if (!isOpened(files)) {
@@ -577,7 +573,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// create changelist with files
-		IChangelist change = createChangeList(files, desc);
+		IChangelist change = createChangeList(files, publish);
 
 		// submit changelist
 		submitFiles(change, false);
@@ -604,13 +600,13 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
 		List<IFileSpec> revertStat = iclient.revertFiles(files, revertOpts);
-		validate.check(revertStat, "");
+		validate.check(revertStat, "file(s) not opened on this client.");
 
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
-		validate.check(syncStat, "file(s) up-to-date.");
+		validate.check(syncStat, "file(s) up-to-date.", "no such file(s).");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
@@ -630,9 +626,9 @@ public class ClientHelper extends ConnectionHelper {
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
-		String desc = publish.getExpandedDesc();
 
-		IChangelist change = createChangeList(files, desc);
+		// create changelist and open files
+		IChangelist change = createChangeList(files, publish);
 
 		// logging
 		OpenedFilesOptions openOps = new OpenedFilesOptions();
@@ -660,7 +656,10 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
-	private IChangelist createChangeList(List<IFileSpec> files, String desc) throws Exception {
+	private IChangelist createChangeList(List<IFileSpec> files, Publish publish) throws Exception {
+
+		String desc = publish.getExpandedDesc();
+
 		// create new pending change and add description
 		IChangelist change = new Changelist();
 		change.setDescription(desc);
@@ -670,6 +669,15 @@ public class ClientHelper extends ConnectionHelper {
 		// move files from default change
 		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
 		reopenOpts.setChangelistId(change.getId());
+
+		// set purge if required
+		if (publish instanceof SubmitImpl) {
+			SubmitImpl submit = (SubmitImpl) publish;
+			int purge = submit.getPurgeValue();
+			if (purge > 0) {
+				reopenOpts.setFileType("+S" + purge);
+			}
+		}
 		iclient.reopenFiles(files, reopenOpts);
 
 		return change;
@@ -853,6 +861,43 @@ public class ClientHelper extends ConnectionHelper {
 		validate.check(rsvMsg, "no file(s) to resolve");
 
 		log("... duration: " + timer.toString());
+	}
+
+	/**
+	 * Get the latest change on the given path
+	 * @param path Perforce depot path //foo/...
+	 * @return change number
+	 * @throws Exception push up stack
+	 */
+	public long getHead(String path) throws Exception {
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(1);
+
+		List<IChangelistSummary> changes = connection.getChangelists(spec, opts);
+		if (!changes.isEmpty()) {
+			return changes.get(0).getId();
+		}
+		return -1;
+	}
+
+	/**
+	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
+	 * p4-java throws an exception if one is not set.
+	 *
+	 * @param id Change number (long perhaps)
+	 * @return Perforce Changelist
+	 * @throws Exception push up stack
+	 */
+	public Changelist getChange(int id) throws Exception {
+		try {
+			return (Changelist) connection.getChangelist(id);
+		} catch (RequestException e) {
+			ChangelistOptions opts = new ChangelistOptions();
+			opts.setOriginalChangelist(true);
+			return (Changelist) connection.getChangelist(id, opts);
+		}
 	}
 
 	/**
@@ -1058,5 +1103,12 @@ public class ClientHelper extends ConnectionHelper {
 
 	public IClient getClient() {
 		return iclient;
+	}
+
+	public boolean hasFile(String depotPath) throws Exception {
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
+		GetDepotFilesOptions opts = new GetDepotFilesOptions();
+		List<IFileSpec> specs = connection.getDepotFiles(files, opts);
+		return validate.check(specs, "");
 	}
 }

@@ -127,11 +127,13 @@ Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobI
 
 A Jenkins job can build at any point in the codes history, identified by a Perforce Helix change or label.
 
-The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
+The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point. 
 
-Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
+If you are using downstream jobs (for example) you can use the [Parameterized Trigger Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin) to pass '${P4_CHANGELIST}' as the parameter to the downstream job. The downstream job can then pin the build at the passed in changelist so both upstream and downstream jobs run against the same point in the history of the code.
 
-Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296)
+Alternativly, a change or label can be passed using the `Build Review` parameters or URL end point (see the _Build Review_ chapter for details) 
+
+Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296), [JENKINS-33163](https://issues.jenkins-ci.org/browse/JENKINS-33163)
 
 ### Parallel builds
 
@@ -165,6 +167,22 @@ For example, a simple `change-commit` trigger might use curl:
 and have an entry in `p4 triggers` for changes on `//depot/...`:
 
 	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
+
+
+Note: If your Jenkins server needs authentication you will also need to provide a security 'CRUMB'. The following is an example of how you can get this and use to trigger a job:
+
+    #!/bin/bash
+    CHANGE=$1
+    USER=triggeruser
+    PASSWORD=Password
+    P4PORT=localhost:1666
+    SERVER=http://localhost:8080
+
+    # Get CRUMB
+    CRUMB=$(curl -s --user $USER:$PASSWORD $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+
+    # Trigger builds across all triggered jobs (where relevant)
+    curl -s --user $USER:$PASSWORD -H "$CRUMB" --request POST --data "payload={change:$CHANGE,p4port:\"$P4PORT\"}" $SERVER/p4/change
 
 On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
 
@@ -249,6 +267,18 @@ The Build Review Action support the following parameters:
 * fail (URL to call after a build failed)
 
 *Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. `${label}`; for this reason please avoid these names for slaves and matrix axis.*
+
+### Review Authorisation
+
+If Jenkins requires users to login, then your Perforce trigger will need to use a Jenkins authorised account.  Find the `API Token` for the trigger user under:
+
+Jenkins --> People --> (user) --> Configure --> API Token --> Show API Token
+
+Use the API Token with BasicAuth in the URL, for example:
+
+`https://user:0923840952a90898cf90fe0989@jenkins_host:8080/job/myJobID/review/build?status=shelved&review=23980`
+
+### Manual Review
 
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 

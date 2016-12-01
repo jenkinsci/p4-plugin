@@ -222,6 +222,13 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return msg;
 	}
 
+	public int getRows() {
+		String[] lines = msg.split("\r\n|\r|\n");
+		int rows = lines.length;
+		rows = (rows>10) ? 10 : rows;
+		return rows;
+	}
+
 	public void setMsg(String value) {
 		msg = value;
 	}

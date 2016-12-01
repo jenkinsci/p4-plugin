@@ -7,22 +7,23 @@ import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.ILabel;
+import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
-import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
-import com.perforce.p4java.option.server.ChangelistOptions;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
+import com.perforce.p4java.option.server.GetDirectoriesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
 import com.perforce.p4java.option.server.GetPropertyOptions;
+import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
@@ -54,6 +55,7 @@ public class ConnectionHelper {
 	protected IOptionsServer connection;
 	protected final TaskListener listener;
 	protected final P4BaseCredentials p4credential;
+	protected final Validate validate;
 
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
@@ -62,6 +64,7 @@ public class ConnectionHelper {
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
+		validate = new Validate(listener);
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
@@ -70,6 +73,7 @@ public class ConnectionHelper {
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
+		validate = new Validate(listener);
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential) {
@@ -78,8 +82,9 @@ public class ConnectionHelper {
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
+		validate = new Validate(listener);
 	}
-	
+
 	public IOptionsServer getConnection() {
 		return connection;
 	}
@@ -270,21 +275,35 @@ public class ConnectionHelper {
 	}
 
 	/**
-	 * Gets the Changelist (p4 describe -s); shouldn't need a client, but
-	 * p4-java throws an exception if one is not set.
+	 * Gets a list of Dirs given a path (multi-branch?)
 	 *
-	 * @param id Change number (long perhaps)
-	 * @return Perforce Changelist
+	 * @param path path to look for dirs (only takes * as wildcard)
+	 * @return list of dirs or empty list
 	 * @throws Exception push up stack
 	 */
-	public Changelist getChange(int id) throws Exception {
-		try {
-			return (Changelist) connection.getChangelist(id);
-		} catch (RequestException e) {
-			ChangelistOptions opts = new ChangelistOptions();
-			opts.setOriginalChangelist(true);
-			return (Changelist) connection.getChangelist(id, opts);
+	public List<IFileSpec> getDirs(String path) throws Exception {
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+		GetDirectoriesOptions opts = new GetDirectoriesOptions();
+
+		List<IFileSpec> dirs = connection.getDirectories(spec, opts);
+		if (validate.check(dirs, "")) {
+			return dirs;
 		}
+		return new ArrayList<IFileSpec>();
+	}
+
+	/**
+	 * Gets a list of Dirs given a path (multi-stream?)
+	 *
+	 * @param paths list of path to look for streams (takes ... or * as wildcard)
+	 * @return list of streams or empty list
+	 * @throws Exception push up stack
+	 */
+	public List<IStreamSummary> getStreams(List<String> paths) throws Exception {
+		GetStreamsOptions opts = new GetStreamsOptions();
+
+		List<IStreamSummary> streams = connection.getStreams(paths, opts);
+		return streams;
 	}
 
 	public IChangelistSummary getChangeSummary(int id) throws P4JavaException {

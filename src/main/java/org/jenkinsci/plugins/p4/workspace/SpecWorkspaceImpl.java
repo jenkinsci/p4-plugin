@@ -68,7 +68,8 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
 
-		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPath);
+		String specPathFull = getExpand().format(getSpecPath(), false);
+		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
 		InputStream ins = connection.getFileContents(file, printOpts);
