@@ -22,9 +22,6 @@ import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -208,76 +205,5 @@ public class ConnectionTest extends DefaultEnvironment {
 
 		long epoch = file.lastModified();
 		assertEquals(1397049803000L, epoch);
-	}
-
-	@Test
-	public void testWorkflow() throws Exception {
-
-		String id = auth.getId();
-
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: '" + id + "', template: 'test.ws'\n"
-				+ "   p4tag rawLabelDesc: 'TestLabel', rawLabelName: 'jenkins-label'\n"
-				+ "   publisher = [$class: 'SubmitImpl', description: 'Submitted by Jenkins', onlyOnSuccess: false, reopen: false]\n"
-				+ "   buildWorkspace = [$class: 'TemplateWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, templateName: 'test.ws']\n"
-				+ "   p4publish credential: '" + id + "', publish: publisher, workspace: buildWorkspace" + " \n"
-				+ "}"));
-		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("P4 Task: syncing files at change", run);
-		jenkins.assertLogContains("P4 Task: tagging build.", run);
-		jenkins.assertLogContains("P4 Task: reconcile files to changelist.", run);
-	}
-
-	@Test
-	public void testWorkflowEnv() throws Exception {
-
-		String id = auth.getId();
-
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowEnv");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: '" + id + "', template: 'test.ws'\n"
-				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}"));
-		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("P4 Task: syncing files at change", run);
-		jenkins.assertLogContains("P4_CHANGELIST: 40", run);
-	}
-
-	@Test
-	public void testP4GroovyConnectAndSync() throws Exception {
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node() {\n"
-				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
-				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
-				+ "   p4.run('sync', '//...')\n"
-				+ "}"));
-		job.save();
-
-		WorkflowRun run = job.scheduleBuild2(0).get();
-		jenkins.assertLogContains("p4 sync //...", run);
-		jenkins.assertLogContains("totalFileCount 10", run);
-	}
-
-	@Test
-	public void testP4GroovySpecEdit() throws Exception {
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node() {\n"
-				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
-				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
-				+ "   clientName = p4.getClientName();\n"
-				+ "   client = p4.fetch('client', clientName)\n"
-				+ "   echo \"Client: ${client}\""
-				+ "   client.put('Description', 'foo')"
-				+ "   p4.save('client', client)"
-				+ "}"));
-		job.save();
-
-		WorkflowRun run = job.scheduleBuild2(0).get();
-		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
 	}
 }

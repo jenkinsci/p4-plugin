@@ -1,13 +1,9 @@
 package org.jenkinsci.plugins.p4.client;
 
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.tasks.Builder;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -23,16 +19,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by pallen on 01/11/2016.
- */
 public class PublishTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
@@ -86,21 +78,5 @@ public class PublishTest extends DefaultEnvironment {
 		assertTrue(log.contains("p4 reopen -c41 -t+S3 //manual.ws/..."));
 		assertTrue(log.contains("... submitting files"));
 		assertTrue(log.contains("p4 describe -s 41"));
-	}
-
-	private static final class CreateArtifact extends Builder {
-		private final String filename;
-		private final String content;
-
-		public CreateArtifact(String filename, String content) {
-			this.filename = filename;
-			this.content = content;
-		}
-
-		@Override
-		public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-			build.getWorkspace().child(filename).write(content, "UTF-8");
-			return true;
-		}
 	}
 }

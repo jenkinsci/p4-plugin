@@ -2,6 +2,10 @@ package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.tasks.Builder;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 
 import java.io.IOException;
@@ -36,5 +40,21 @@ abstract public class DefaultEnvironment {
 			client = "test.win";
 		}
 		return client;
+	}
+
+	protected static final class CreateArtifact extends Builder {
+		private final String filename;
+		private final String content;
+
+		public CreateArtifact(String filename, String content) {
+			this.filename = filename;
+			this.content = content;
+		}
+
+		@Override
+		public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+			build.getWorkspace().child(filename).write(content, "UTF-8");
+			return true;
+		}
 	}
 }
