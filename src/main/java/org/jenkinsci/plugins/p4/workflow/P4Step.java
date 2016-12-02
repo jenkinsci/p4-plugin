@@ -34,8 +34,9 @@ public class P4Step extends SCMStep {
 
 	private String charset = "";
 	private String format = DescriptorImpl.defaultFormat;
-	
+
 	private Populate populate;
+	private Workspace workspace;
 
 	@DataBoundConstructor
 	public P4Step(String credential) {
@@ -74,6 +75,15 @@ public class P4Step extends SCMStep {
 	}
 
 	@DataBoundSetter
+	public void setWorkspace(Workspace workspace) {
+		this.workspace = workspace;
+	}
+
+	public Workspace getWorkspace() {
+		return workspace;
+	}
+
+	@DataBoundSetter
 	public void setCharset(String charset) {
 		this.charset = charset;
 	}
@@ -95,7 +105,7 @@ public class P4Step extends SCMStep {
 	public void setPopulate(Populate populate) {
 		this.populate = populate;
 	}
-	
+
 	public Populate getPopulate() {
 		return populate;
 	}
@@ -106,16 +116,18 @@ public class P4Step extends SCMStep {
 	protected SCM createSCM() {
 		P4WebBrowser browser = null;
 
-		Workspace workspace = null;
-		if (notNull(stream))
-			workspace = new StreamWorkspaceImpl(charset, false, stream, format);
-		else if (notNull(template))
-			workspace = new TemplateWorkspaceImpl(charset, false, template, format);
-		else if (notNull(depotPath)) {
-			String view = depotPath + "/..." + " " + "//" + format + "/...";
-			WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
+		if ( workspace == null)
+		{
+			if (notNull(stream))
+				workspace = new StreamWorkspaceImpl(charset, false, stream, format);
+			else if (notNull(template))
+				workspace = new TemplateWorkspaceImpl(charset, false, template, format);
+			else if (notNull(depotPath)) {
+				String view = depotPath + "/..." + " " + "//" + format + "/...";
+				WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
 
-			workspace = new ManualWorkspaceImpl(charset, false, format, spec);
+				workspace = new ManualWorkspaceImpl(charset, false, format, spec);
+			}
 		}
 
 		// use basic populate options if no class provided
@@ -145,7 +157,7 @@ public class P4Step extends SCMStep {
 
 		/**
 		 * Credentials list, a Jelly config method for a build job.
-		 * 
+		 *
 		 * @return A list of Perforce credential items to populate the jelly
 		 *         Select list.
 		 */
