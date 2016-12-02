@@ -68,6 +68,25 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testManualP4Sync() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "manualP4Sync");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   def workspace = [$class: 'ManualWorkspaceImpl',\n"
+				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
+				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
+				+ "      revert:true, have:true, modtime:true]\n"
+				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
+				+ "}"));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run);
+	}
+
+	@Test
 	public void testP4GroovyConnectAndSync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy");
 		job.setDefinition(new CpsFlowDefinition(""
