@@ -18,9 +18,10 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 
 	@Override
 	public void buildEnvironmentFor(Run run, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
-		TagAction tagAction = run.getAction(TagAction.class);
 
-		if(tagAction == null) {
+		TagAction tagAction = TagAction.getLastAction(run, listener);
+
+		if (tagAction == null) {
 			return;
 		}
 
@@ -61,6 +62,4 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			}
 		}
 	}
-
-
 }

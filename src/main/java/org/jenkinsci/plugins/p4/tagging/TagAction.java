@@ -175,4 +175,91 @@ public class TagAction extends AbstractScmTagAction {
 		Label label = p4.getLabel(tag);
 		return label;
 	}
+
+	/**
+	 * Change reporting...
+	 *
+	 * @param run The current build
+	 * @param listener Listener for logging
+	 * @return Perforce change
+	 */
+	public static P4Revision getLastChange(Run<?, ?> run, TaskListener listener, String client) {
+		P4Revision last = null;
+
+		List<TagAction> actions = lastActions(run, listener);
+		if(actions == null || client == null || client.isEmpty()) {
+			return last;
+		}
+
+		// look for action matching view
+		for (TagAction action : actions) {
+			if(client.equals(action.getClient())) {
+				last = action.getBuildChange();
+			}
+		}
+
+		listener.getLogger().println("Found last change " + last.toString() + " on client " + client);
+		return last;
+	}
+
+	/**
+	 * Find the last action; use this for environment variable as the last action has the latest values.
+	 *
+	 * @param run The current build
+	 * @param listener Listener for logging
+	 * @return Action
+	 */
+	public static TagAction getLastAction(Run<?, ?> run, TaskListener listener) {
+		List<TagAction> actions = lastActions(run, listener);
+		if(actions == null) {
+			return null;
+		}
+
+		// #Review 21165
+		TagAction last = actions.get(actions.size() - 1);
+		return last;
+	}
+
+	/**
+	 * Find the change with the highest change number, use this for polling. This isn't accurate if multiple
+	 * workspaces are polled and are disjoint, but is accurate if the workspaces are subsets of each other.
+	 *
+	 * @param run The current build
+	 * @param listener Listener for logging
+	 * @return Perforce change
+	 */
+	public static P4Revision getHighestChange(Run<?, ?> run, TaskListener listener) {
+		List<TagAction> actions = lastActions(run, listener);
+		if(actions == null) {
+			return null;
+		}
+
+		// found previous build, set last change to the first action found.
+		TagAction last = actions.get(0);
+
+		// look for highest change number
+		for (TagAction action : actions) {
+			if (action.getBuildChange().compareTo(last.getBuildChange()) > 0) {
+				last = action;
+			}
+		}
+		return last.getBuildChange();
+	}
+
+	private static List<TagAction> lastActions(Run<?, ?> run, TaskListener listener) {
+		// get last run, if none then build now.
+		if (run == null) {
+			listener.getLogger().println("No previous run found...");
+			return null;
+		}
+
+		// get last action, if no previous action then build now.
+		List<TagAction> actions = run.getActions(TagAction.class);
+		if (actions.isEmpty()) {
+			listener.getLogger().println("No previous build found...");
+			return null;
+		}
+
+		return actions;
+	}
 }

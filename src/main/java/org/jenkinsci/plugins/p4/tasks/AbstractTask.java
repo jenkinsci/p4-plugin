@@ -142,7 +142,7 @@ public abstract class AbstractTask implements Serializable {
 		}
 	}
 
-	protected String getClient() {
+	public String getClient() {
 		return client;
 	}
 

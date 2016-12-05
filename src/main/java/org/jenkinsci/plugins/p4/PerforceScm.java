@@ -267,37 +267,17 @@ public class PerforceScm extends SCM {
 			listener.getLogger().println("Warning Jenkins instance is null.");
 			return PollingResult.NO_CHANGES;
 		}
-		buildWorkspace = j.getRootPath();
 
-		// get last run, if none then build now.
+		// Get change for last run
 		Run<?, ?> lastRun = job.getLastBuild();
-		if (lastRun == null) {
-			listener.getLogger().println("No previous run found; building...");
+		P4Revision last = TagAction.getHighestChange(lastRun, listener);
+
+		// if no previous run then build now.
+		if (last == null) {
 			return PollingResult.BUILD_NOW;
 		}
 
-		// get last action, if no previous action then build now.
-		List<TagAction> actions = lastRun.getActions(TagAction.class);
-		if (actions.isEmpty()) {
-			listener.getLogger().println("No previous build found; building...");
-			return PollingResult.BUILD_NOW;
-		}
-
-		// found previous build, set last change to the first action found.
-		P4Revision last = actions.get(0).getBuildChange();
-
-		// Find the change with the highest change number, use this for the
-		// poll. This isn't accurate if multiple workspaces are polled
-		// and are disjoint, but is accurate if the workspaces are subsets
-		// of each other.
-		for (TagAction action : actions) {
-			if (action.getBuildChange().compareTo(last) > 0) {
-				last = action.getBuildChange();
-			}
-		}
-
-		listener.getLogger().println("Found last change " + last.toString() +
-				" in previous build");
+		buildWorkspace = j.getRootPath();
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
@@ -491,17 +471,15 @@ public class PerforceScm extends SCM {
 
 		// Look for all changes since the last build
 		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
-		if (lastBuild != null) {
-			TagAction lastTag = lastBuild.getAction(TagAction.class);
-			if (lastTag != null) {
-				P4Revision lastChange = lastTag.getBuildChange();
-				if (lastChange != null) {
-					List<P4ChangeEntry> changes;
-					changes = task.getChangesFull(lastChange);
-					for (P4ChangeEntry c : changes) {
-						list.add(c);
-					}
-				}
+
+		String client = task.getClient();
+		P4Revision lastChange = TagAction.getLastChange(lastBuild, task.getListener(), client);
+
+		if (lastChange != null) {
+			List<P4ChangeEntry> changes;
+			changes = task.getChangesFull(lastChange);
+			for (P4ChangeEntry c : changes) {
+				list.add(c);
 			}
 		}
 

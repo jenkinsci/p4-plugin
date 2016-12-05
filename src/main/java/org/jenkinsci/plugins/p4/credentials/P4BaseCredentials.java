@@ -39,6 +39,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	 * @param username    Perforce username
 	 * @param retry       Perforce connection retry option
 	 * @param timeout     Perforce connection timeout option
+	 * @param p4host      Perforce HOST (optional)
 	 */
 	public P4BaseCredentials(CredentialsScope scope, String id,
 	                         String description, @NonNull String p4port,
