@@ -268,22 +268,15 @@ public class PerforceScm extends SCM {
 			return PollingResult.NO_CHANGES;
 		}
 
-		// Get change for last run
+		// Get last run and build workspace
 		Run<?, ?> lastRun = job.getLastBuild();
-		P4Revision last = TagAction.getHighestChange(lastRun, listener);
-
-		// if no previous run then build now.
-		if (last == null) {
-			return PollingResult.BUILD_NOW;
-		}
-
 		buildWorkspace = j.getRootPath();
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
 				// Poll PARENT only
 				EnvVars envVars = job.getEnvironment(node, listener);
-				state = pollWorkspace(envVars, listener, buildWorkspace, last);
+				state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
 			} else {
 				// Poll CHILDREN only
 				MatrixProject matrixProj = (MatrixProject) job;
@@ -292,7 +285,7 @@ public class PerforceScm extends SCM {
 
 				for (MatrixConfiguration config : configs) {
 					EnvVars envVars = config.getEnvironment(node, listener);
-					state = pollWorkspace(envVars, listener, buildWorkspace, last);
+					state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
 					// exit early if changes found
 					if (state == PollingResult.BUILD_NOW) {
 						return PollingResult.BUILD_NOW;
@@ -301,7 +294,7 @@ public class PerforceScm extends SCM {
 			}
 		} else {
 			EnvVars envVars = job.getEnvironment(node, listener);
-			state = pollWorkspace(envVars, listener, buildWorkspace, last);
+			state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
 		}
 
 		return state;
@@ -315,7 +308,7 @@ public class PerforceScm extends SCM {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, P4Revision last)
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, Run<?, ?> lastRun)
 			throws InterruptedException, IOException {
 		PrintStream log = listener.getLogger();
 
@@ -345,6 +338,8 @@ public class PerforceScm extends SCM {
 			pin = ws.getExpand().format(pin, false);
 			ws.getExpand().set(ReviewProp.LABEL.toString(), pin);
 		}
+
+		P4Revision last = TagAction.getLastChange(lastRun, listener, client);
 
 		// Create task
 		PollTask task = new PollTask(filter, last);

@@ -109,11 +109,16 @@ public abstract class AbstractTask implements Serializable {
 			setWorkspace(ws);
 
 			// Template workspace to .cloneN (where N is the @ number)
-			String charset = ws.getCharset();
-			boolean pin = ws.isPinHost();
-			String template = client + ".clone" + exec;
-			ws = new TemplateWorkspaceImpl(charset, pin, client, template);
-			ws.setExpand(envVars);
+			try {
+				int n = Integer.parseInt(exec);
+				String charset = ws.getCharset();
+				boolean pin = ws.isPinHost();
+				String template = client + ".clone" + n;
+				ws = new TemplateWorkspaceImpl(charset, pin, client, template);
+				ws.setExpand(envVars);
+			} catch (NumberFormatException e) {
+				// do not template; e.g. 'script' keeps original name
+			}
 		}
 		ws.setRootPath(root);
 
