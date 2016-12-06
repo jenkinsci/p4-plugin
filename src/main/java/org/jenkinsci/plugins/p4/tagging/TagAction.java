@@ -195,10 +195,10 @@ public class TagAction extends AbstractScmTagAction {
 		for (TagAction action : actions) {
 			if (client.equals(action.getClient())) {
 				last = action.getBuildChange();
+				listener.getLogger().println("Found last change " + last.toString() + " on client " + client);
 			}
 		}
 
-		listener.getLogger().println("Found last change " + last.toString() + " on client " + client);
 		return last;
 	}
 
