@@ -210,12 +210,6 @@ To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using 
 
 When polling is used, changes can be filtered to not trigger a build; the filters are configured on the Jenkin Job configuration page and support the following types:
 
-### Limit polling to Master
-
-The Polling event is calculated from the Master node (even if the build would normally occur on the Slave).  When enable, polling does not require a Perforce Workspace and the last built change is determined from the previous Jenkins build log.  
-
-![Poll on Master](docs/images/masterF.png)
-
 ### Polling per change
 
 The polling event will only return the oldest unbuilt change, resulting in incremental builds.
@@ -339,6 +333,8 @@ Shelving with Post Build Action
 Submitting with Post Build Action
 
 ![Submit Asset](docs/images/SubmitAsset.png)
+
+Use a unique Perforce Workspace to Publish the assets.  The Client View should be as narrow as possible, ideally only mapping the assets that need to be published.  Adding a postfix of `-publish` to the Workspace will help to identify its purpose.  For Perforce Streams, a virtual stream may help to filter the view and `+import` mappings when submitting assets to non-stream location.
 
 ## Repository Browsing
 
