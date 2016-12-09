@@ -1,5 +1,26 @@
 ## Release notes
 
+[@21228](https://swarm.workshop.perforce.com/changes/21228) - Prevent NPE if client is not found.  If the workspace client name is changed in the Jenkins file, then getLastChange() will not find a previous actions and should return null.  JENKINS-40258
+
+[@21215](https://swarm.workshop.perforce.com/changes/21215) - Polling fix for Multi client support in Pipeline.  Jenkins polls for each SCM checkout, so must poll each workplace and therefore need to lookup last build information for each sync.  Polling now uses same lookup as Change Summary.    JENKINS-38401 JENKINS-37462 JENKINS-39652
+
+[@21207](https://swarm.workshop.perforce.com/changes/21207) - Multi client support in Pipeline.  If two or more `p4sync` operations are called in one Pipeline script, they MUST have different client names.  During a build, multiple entries are added to the build history.  JENKINS-38401 JENKINS-37462 JENKINS-39652
+
+[@21190](https://swarm.workshop.perforce.com/changes/21190) - Test for pull request #34 Custom workspace support.
+
+[@21189](https://swarm.workshop.perforce.com/changes/21189) - Merge pull request #34 from DrakkenWulf/cleanChange. Custom workspace support.
+
+[@21163](https://swarm.workshop.perforce.com/changes/21163) - Add P4HOST to parallel sync.
+
+[@21155](https://swarm.workshop.perforce.com/changes/21155) - Update documentation for new P4_CHANGELIST behavior.  JENKINS-37584
+
+[@21154](https://swarm.workshop.perforce.com/changes/21154) - P4HOST support for connection.
+
+[@21153](https://swarm.workshop.perforce.com/changes/21153) - Merge pull request #32 from pyssling/master.  Use latest change for all builds when polling.  JENKINS-40048
+
+[@21151](https://swarm.workshop.perforce.com/changes/21151) - Update Release notes for 1.4.10
+
+
 ### Release 1.4.10 (major features/fixes)
 
 [@21149](https://swarm.workshop.perforce.com/changes/21149) - Null protection for Ticket Value/Path.
