@@ -339,7 +339,11 @@ public class PerforceScm extends SCM {
 			ws.getExpand().set(ReviewProp.LABEL.toString(), pin);
 		}
 
+		// Calculate last change, build if null
 		P4Revision last = TagAction.getLastChange(lastRun, listener, client);
+		if (last == null) {
+			return PollingResult.BUILD_NOW;
+		}
 
 		// Create task
 		PollTask task = new PollTask(filter, last);
