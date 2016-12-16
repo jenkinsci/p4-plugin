@@ -225,8 +225,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(2, job.getLastBuild().getNumber());
 		jenkins.assertLogContains("P4 Task: syncing files at change: 18", run2);
 		jenkins.assertLogContains("P4 Task: syncing files at change: 40", run2);
-		jenkins.assertLogContains("Found last change 17 on client jenkins-master-multiSync-1", run2);
-		jenkins.assertLogContains("Found last change 13 on client jenkins-master-multiSync-2", run2);
+		jenkins.assertLogContains("Found last change 17 on syncID jenkins-NODE_NAME-multiSync-1", run2);
+		jenkins.assertLogContains("Found last change 13 on syncID jenkins-NODE_NAME-multiSync-2", run2);
 	}
 
 	@Test
@@ -259,7 +259,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
 		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "multiSync");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "multiSyncPoll");
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Build 1
@@ -289,8 +289,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(2, job.getLastBuild().getNumber());
 		jenkins.assertLogContains("P4 Task: syncing files at change: 42", run2);
 		jenkins.assertLogContains("P4 Task: syncing files at change: 14", run2);
-		jenkins.assertLogContains("Found last change 17 on client jenkins-master-multiSync-1", run2);
-		jenkins.assertLogContains("Found last change 13 on client jenkins-master-multiSync-2", run2);
+		jenkins.assertLogContains("Found last change 17 on syncID jenkins-NODE_NAME-multiSyncPoll-1", run2);
+		jenkins.assertLogContains("Found last change 13 on syncID jenkins-NODE_NAME-multiSyncPoll-2", run2);
 
 		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
@@ -308,8 +308,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(3, job.getLastBuild().getNumber());
 
 		List<String> log = job.getLastBuild().getLog(1000);
-		assertTrue(log.contains("Found last change 42 on client jenkins-master-multiSync-1"));
-		assertTrue(log.contains("Found last change 14 on client jenkins-master-multiSync-2"));
+		assertTrue(log.contains("Found last change 42 on syncID jenkins-NODE_NAME-multiSyncPoll-1"));
+		assertTrue(log.contains("Found last change 14 on syncID jenkins-NODE_NAME-multiSyncPoll-2"));
 
 		// Test trigger, no change
 		trigger.poke(job, auth.getP4port());

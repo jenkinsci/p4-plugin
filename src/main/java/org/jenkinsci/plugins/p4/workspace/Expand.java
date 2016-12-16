@@ -69,6 +69,28 @@ public class Expand implements Serializable {
 		return format;
 	}
 
+	public String formatID(String format) {
+		if (formatTags != null) {
+			for (Entry<String, String> entry : formatTags.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				if("NODE_NAME".equals(key)) {
+					continue;
+				}
+				if("EXECUTOR_NUMBER".equals(key)) {
+					continue;
+				}
+				if (value != null) {
+					format = format.replace("${" + key + "}", value);
+				}
+			}
+		}
+
+		format = format.replace("${", "");
+		format = format.replace("}", "");
+		return format;
+	}
+
 	public void set(String tag, String value) {
 		formatTags.put(tag, value);
 	}

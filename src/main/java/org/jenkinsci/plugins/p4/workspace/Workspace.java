@@ -114,6 +114,22 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 		return clientName;
 	}
 
+	public String getSyncID() {
+		// expands Workspace name if formatters are used.
+		String clientName = expand.formatID(getName());
+
+		// replace restricted characters with "-" as per the old plugin
+		clientName = clientName.replaceAll(" ", "_");
+		clientName = clientName.replaceAll(",", "-");
+		clientName = clientName.replaceAll("=", "-");
+		clientName = clientName.replaceAll("/", "-");
+
+		// store full name in expand options for use in view
+		expand.set("P4_CLIENT", clientName);
+
+		return clientName;
+	}
+
 	public Object clone() {
 		try {
 			return super.clone();

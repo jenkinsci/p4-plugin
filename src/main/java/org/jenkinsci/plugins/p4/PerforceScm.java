@@ -330,6 +330,7 @@ public class PerforceScm extends SCM {
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
+		String syncID = ws.getSyncID();
 		log.println("P4: Polling on: " + nodeName + " with:" + client);
 
 		// Set EXPANDED pinned label/change
@@ -340,7 +341,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Calculate last change, build if null (JENKINS-40356)
-		P4Revision last = TagAction.getLastChange(lastRun, listener, client);
+		P4Revision last = TagAction.getLastChange(lastRun, listener, syncID);
 		if (last == null) {
 			return PollingResult.BUILD_NOW;
 		}
@@ -471,8 +472,8 @@ public class PerforceScm extends SCM {
 		// Look for all changes since the last build
 		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
 
-		String client = task.getClient();
-		P4Revision lastChange = TagAction.getLastChange(lastBuild, task.getListener(), client);
+		String syncID = task.getSyncID();
+		P4Revision lastChange = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
 
 		if (lastChange != null) {
 			List<P4ChangeEntry> changes;

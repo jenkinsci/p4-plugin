@@ -27,6 +27,7 @@ public abstract class AbstractTask implements Serializable {
 	private P4BaseCredentials credential;
 	private TaskListener listener;
 	private String client;
+	private String syncID;
 	private String charset;
 
 	transient private Workspace workspace;
@@ -59,6 +60,7 @@ public abstract class AbstractTask implements Serializable {
 	public void setWorkspace(Workspace workspace) throws AbortException {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.syncID = workspace.getSyncID();
 		this.charset = workspace.getCharset();
 
 		// setup the client workspace to use for the build.
@@ -149,6 +151,10 @@ public abstract class AbstractTask implements Serializable {
 
 	public String getClient() {
 		return client;
+	}
+
+	public String getSyncID() {
+		return syncID;
 	}
 
 	protected Workspace getWorkspace() {

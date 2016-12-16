@@ -35,6 +35,7 @@ public class TagAction extends AbstractScmTagAction {
 	private String credential;
 	private Workspace workspace;
 	private String client;
+	private String syncID;
 	private P4Revision buildChange;
 	private String charset;
 
@@ -130,6 +131,7 @@ public class TagAction extends AbstractScmTagAction {
 	public void setWorkspace(Workspace workspace) {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.syncID = workspace.getSyncID();
 		this.charset = workspace.getCharset();
 	}
 
@@ -141,6 +143,10 @@ public class TagAction extends AbstractScmTagAction {
 
 	public String getClient() {
 		return client;
+	}
+
+	public String getSyncID() {
+		return syncID;
 	}
 
 	public String getUser() {
@@ -193,9 +199,9 @@ public class TagAction extends AbstractScmTagAction {
 
 		// look for action matching view
 		for (TagAction action : actions) {
-			if (client.equals(action.getClient())) {
+			if (client.equals(action.getSyncID())) {
 				last = action.getBuildChange();
-				listener.getLogger().println("Found last change " + last.toString() + " on client " + client);
+				listener.getLogger().println("Found last change " + last.toString() + " on syncID " + client);
 			}
 		}
 
