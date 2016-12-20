@@ -14,6 +14,8 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.logging.Logger;
 
+import static org.junit.Assert.assertEquals;
+
 public class WorkflowTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
@@ -119,5 +121,30 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
+	}
+
+	@Test
+	public void testSyncIDManualP4Sync() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "syncIDmanualP4Sync");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   def workspace = [$class: 'ManualWorkspaceImpl',\n"
+				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      syncID: 'foo-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
+				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
+				+ "      revert:true, have:true, modtime:true]\n"
+				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
+				+ "}"));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run);
+
+		WorkflowRun run2 = job.scheduleBuild2(job.getQuietPeriod()).get();
+		jenkins.assertBuildStatusSuccess(run2);
+		assertEquals(2, job.getLastBuild().getNumber());
+		jenkins.assertLogContains("Found last change 40 on syncID foo-NODE_NAME-syncIDmanualP4Sync", run2);
 	}
 }

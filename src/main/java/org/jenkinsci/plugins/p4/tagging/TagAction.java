@@ -192,8 +192,9 @@ public class TagAction extends AbstractScmTagAction {
 	public static P4Revision getLastChange(Run<?, ?> run, TaskListener listener, String client) {
 		P4Revision last = null;
 
-		List<TagAction> actions = lastActions(run, listener);
+		List<TagAction> actions = lastActions(run);
 		if (actions == null || client == null || client.isEmpty()) {
+			listener.getLogger().println("No previous build found...");
 			return last;
 		}
 
@@ -212,11 +213,10 @@ public class TagAction extends AbstractScmTagAction {
 	 * Find the last action; use this for environment variable as the last action has the latest values.
 	 *
 	 * @param run      The current build
-	 * @param listener Listener for logging
 	 * @return Action
 	 */
-	public static TagAction getLastAction(Run<?, ?> run, TaskListener listener) {
-		List<TagAction> actions = lastActions(run, listener);
+	public static TagAction getLastAction(Run<?, ?> run) {
+		List<TagAction> actions = lastActions(run);
 		if (actions == null) {
 			return null;
 		}
@@ -226,17 +226,15 @@ public class TagAction extends AbstractScmTagAction {
 		return last;
 	}
 
-	private static List<TagAction> lastActions(Run<?, ?> run, TaskListener listener) {
+	private static List<TagAction> lastActions(Run<?, ?> run) {
 		// get last run, if none then build now.
 		if (run == null) {
-			listener.getLogger().println("No previous run found...");
 			return null;
 		}
 
 		// get last action, if no previous action then build now.
 		List<TagAction> actions = run.getActions(TagAction.class);
 		if (actions.isEmpty()) {
-			listener.getLogger().println("No previous build found...");
 			return null;
 		}
 

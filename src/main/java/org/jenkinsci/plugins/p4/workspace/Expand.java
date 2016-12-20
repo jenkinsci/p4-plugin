@@ -80,6 +80,9 @@ public class Expand implements Serializable {
 				if("EXECUTOR_NUMBER".equals(key)) {
 					continue;
 				}
+				if("BUILD_NUMBER".equals(key)) {
+					continue;
+				}
 				if (value != null) {
 					format = format.replace("${" + key + "}", value);
 				}
@@ -89,6 +92,14 @@ public class Expand implements Serializable {
 		format = format.replace("${", "");
 		format = format.replace("}", "");
 		return format;
+	}
+
+	public String clean(String id) {
+		id = id.replaceAll(" ", "_");
+		id = id.replaceAll(",", "-");
+		id = id.replaceAll("=", "-");
+		id = id.replaceAll("/", "-");
+		return id;
 	}
 
 	public void set(String tag, String value) {
