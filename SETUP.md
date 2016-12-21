@@ -354,8 +354,6 @@ The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/W
 
 To use the Workflow install the plugin(s) as needed.  Create a new Workflow Job by selecting 'New Item' from the left hand menu, provide an 'Item name' and choose a 'Workflow' project.
 
-The Workflow plugin requires a Groovy script.  Currently the `Groovy CPS DSL from SCM` is *not* supported.  Select `Groovy CPS DSL` and provide your script in the text box below.
-
 You can use the snippet genertor to create each step and use the code to compose your workflow script.  
 
 For example, a basic sync script:
@@ -405,6 +403,7 @@ For example in a Pipeline script you can use:
 
     ${env.P4_CHANGELIST}
 
+For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/workflow-plugin/blob/master/WORKFLOW.md) section.
 
 ## Troubleshooting
 
