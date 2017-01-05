@@ -102,24 +102,30 @@ public abstract class AbstractTask implements Serializable {
 		String root = buildWorkspace.getRemote();
 		if (root.contains("@")) {
 			root = root.replace("@", "%40");
-			String client = ws.getFullName();
-			String name = buildWorkspace.getName();
+		}
+
+		// Template workspace for parallel execution
+		String name = buildWorkspace.getName();
+		if (name.contains("@")) {
 			String[] parts = name.split("@");
-			String exec = parts[1];
+			if (parts.length == 2) {
+				String exec = parts[1];
 
-			// Update Workspace before cloning
-			setWorkspace(ws);
+				// Update Workspace before cloning
+				setWorkspace(ws);
 
-			// Template workspace to .cloneN (where N is the @ number)
-			try {
-				int n = Integer.parseInt(exec);
-				String charset = ws.getCharset();
-				boolean pin = ws.isPinHost();
-				String template = client + ".clone" + n;
-				ws = new TemplateWorkspaceImpl(charset, pin, client, template);
-				ws.setExpand(envVars);
-			} catch (NumberFormatException e) {
-				// do not template; e.g. 'script' keeps original name
+				// Template workspace to .cloneN (where N is the @ number)
+				try {
+					int n = Integer.parseInt(exec);
+					String charset = ws.getCharset();
+					boolean pin = ws.isPinHost();
+					String fullName = ws.getFullName();
+					String template = fullName + ".clone" + n;
+					ws = new TemplateWorkspaceImpl(charset, pin, fullName, template);
+					ws.setExpand(envVars);
+				} catch (NumberFormatException e) {
+					// do not template; e.g. 'script' keeps original name
+				}
 			}
 		}
 		ws.setRootPath(root);
