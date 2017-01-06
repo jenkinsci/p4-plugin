@@ -51,6 +51,13 @@ public class P4Groovy implements Serializable {
 		return map;
 	}
 
+	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException {
+		IOptionsServer p4 = getConnection();
+		Map<String, Object>[] map = p4.execMapCmd(cmd, args, null);
+		p4.disconnect();
+		return map;
+	}
+
 	public Map<String, Object>[] runWithArgArr(String cmd, List<String> args) throws P4JavaException {
 		String[] array = args.toArray(new String[0]);
 		IOptionsServer p4 = getConnection();
@@ -58,7 +65,7 @@ public class P4Groovy implements Serializable {
 		p4.disconnect();
 		return map;
 	}
-
+  
 	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException {
 		String[] array = { "-i" };
 		IOptionsServer p4 = getConnection();
