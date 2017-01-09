@@ -37,7 +37,8 @@ public class P4Groovy implements Serializable {
 		return user;
 	}
 
-	public Map<String, Object>[] run(String cmd, String args) throws P4JavaException {
+	@Deprecated
+	public Map<String, Object>[] runString(String cmd, String args) throws P4JavaException {
 		List<String> argList = new ArrayList<String>();
 		for (String arg : args.split(",")) {
 			arg = arg.trim();
@@ -56,6 +57,11 @@ public class P4Groovy implements Serializable {
 		Map<String, Object>[] map = p4.execMapCmd(cmd, args, null);
 		p4.disconnect();
 		return map;
+	}
+
+	public Map<String, Object>[] run(String cmd, List<String> args) throws P4JavaException {
+		String[] array = args.toArray(new String[0]);
+		return run(cmd, array);
 	}
 
 	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException {

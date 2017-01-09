@@ -147,4 +147,23 @@ public class WorkflowTest extends DefaultEnvironment {
 		assertEquals(2, job.getLastBuild().getNumber());
 		jenkins.assertLogContains("Found last change 40 on syncID foo-NODE_NAME-syncIDmanualP4Sync", run2);
 	}
+
+	@Test
+	public void testP4GroovyMultiArg() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "multiArg");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
+				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
+				+ "   p4.run('sync', '//...')\n"
+				+ "   p4.run('changes', '-m4', '//...@24,27')\n"
+				+ "}"));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("Change 27", run);
+		jenkins.assertLogContains("Change 24", run);
+		jenkins.assertLogNotContains("Change 1", run);
+		jenkins.assertLogNotContains("Change 40", run);
+	}
 }
