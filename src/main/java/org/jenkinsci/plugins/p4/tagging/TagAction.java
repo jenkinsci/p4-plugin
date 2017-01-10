@@ -187,22 +187,23 @@ public class TagAction extends AbstractScmTagAction {
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
+	 * @param syncID   Changelist Sync ID
 	 * @return Perforce change
 	 */
-	public static P4Revision getLastChange(Run<?, ?> run, TaskListener listener, String client) {
+	public static P4Revision getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
 		P4Revision last = null;
 
 		List<TagAction> actions = lastActions(run);
-		if (actions == null || client == null || client.isEmpty()) {
+		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");
 			return last;
 		}
 
 		// look for action matching view
 		for (TagAction action : actions) {
-			if (client.equals(action.getSyncID())) {
+			if (syncID.equals(action.getSyncID())) {
 				last = action.getBuildChange();
-				listener.getLogger().println("Found last change " + last.toString() + " on syncID " + client);
+				listener.getLogger().println("Found last change " + last.toString() + " on syncID " + syncID);
 			}
 		}
 
