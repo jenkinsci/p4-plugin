@@ -17,6 +17,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.Serializable;
@@ -48,7 +49,14 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	@DataBoundConstructor
 	public ManualWorkspaceImpl(String charset, boolean pinHost, String name, WorkspaceSpec spec) {
 		super(charset, pinHost);
-		this.name = name;
+
+		if ((name == null || name.length() == 0) && DescriptorImpl.defaultFormat != null &&
+				DescriptorImpl.defaultFormat.length() > 0) {
+			this.name = DescriptorImpl.defaultFormat;
+		}
+		else
+			this.name = name;
+
 		this.spec = spec;
 	}
 
@@ -91,8 +99,16 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		ClientView clientView = new ClientView();
 		int order = 0;
 		for (String line : getSpec().getView().split("\\n")) {
-			String origName = getName();
-			line = line.replace(origName, clientName);
+			String mask = DescriptorImpl.workspaceMask;
+
+			if (mask == null || mask.length() == 0)
+				mask = getName();
+
+			// replace the mask with the workspace name
+			String [] splitLine = line.split("\\s+");
+			splitLine[1] = splitLine[1].replaceFirst("//" + mask + "/", "//" + clientName + "/");
+
+			line = splitLine[0] + " " + splitLine[1];
 			line = getExpand().format(line, false);
 
 			try {
@@ -122,7 +138,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		public static String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		public static String workspaceMask = "ws";
 
 		@Override
 		public String getDisplayName() {
@@ -138,6 +155,25 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
+		}
+
+		@Override
+		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+			String workspacePattern = json.getString("defaultFormat");
+			String tempMask = json.getString("workspaceMask");
+
+			if (workspacePattern != null && workspacePattern.length() != 0)
+				defaultFormat = workspacePattern;
+			else
+				defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+
+			if (workspaceMask != null && workspaceMask.length() != 0)
+				workspaceMask = tempMask;
+			else
+				workspaceMask = "ws";
+
+			save();
+			return super.configure(req, json);
 		}
 
 		public FormValidation doCheckName(@QueryParameter String value) {

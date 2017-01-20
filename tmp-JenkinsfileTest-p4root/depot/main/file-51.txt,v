@@ -1,0 +1,76 @@
+head     1.14;
+access   ;
+symbols  ;
+locks    ;comment  @@;
+
+
+1.14
+date     2014.04.09.14.20.24;  author p4;  state Exp;
+branches ;
+next     1.6;
+
+1.6
+date     2014.04.09.14.19.59;  author p4;  state Exp;
+branches ;
+next     1.5;
+
+1.5
+date     2014.04.09.14.19.57;  author p4;  state Exp;
+branches ;
+next     1.1;
+
+1.1
+date     2014.04.09.14.19.06;  author p4;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+1.14
+log
+@@
+text
+@filename: file-51.txt
+------------------------------------------
+Delta: 5
+Path: .
+------------------------------------------
+
+------------------------------------------
+Delta: 5
+Path: .
+------------------------------------------
+
+------------------------------------------
+Delta: 7
+Path: .
+------------------------------------------
+
+@
+
+
+1.6
+log
+@@
+text
+@d12 5
+@
+
+
+1.5
+log
+@@
+text
+@d7 5
+@
+
+
+1.1
+log
+@@
+text
+@d2 5
+@

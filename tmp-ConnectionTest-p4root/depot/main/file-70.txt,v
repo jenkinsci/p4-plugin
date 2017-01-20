@@ -1,0 +1,40 @@
+head     1.13;
+access   ;
+symbols  ;
+locks    ;comment  @@;
+
+
+1.13
+date     2014.04.09.14.20.22;  author p4;  state Exp;
+branches ;
+next     1.1;
+
+1.1
+date     2014.04.09.14.19.06;  author p4;  state Exp;
+branches ;
+next     ;
+
+
+desc
+@@
+
+
+1.13
+log
+@@
+text
+@filename: file-70.txt
+------------------------------------------
+Delta: 7
+Path: .
+------------------------------------------
+
+@
+
+
+1.1
+log
+@@
+text
+@d2 5
+@
