@@ -5,10 +5,23 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Cause;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.tasks.Builder;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.publish.PublishNotifier;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 abstract public class DefaultEnvironment {
 
@@ -56,5 +69,39 @@ abstract public class DefaultEnvironment {
 			build.getWorkspace().child(filename).write(content, "UTF-8");
 			return true;
 		}
+	}
+
+	protected void submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
+		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+
+		// Create workspace
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = path + " //" + client + "/" + filename;
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// Populate with P4 scm
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// Freestyle job
+		FreeStyleProject project = jenkins.createFreeStyleProject();
+		project.setScm(scm);
+
+		// Create artifact files
+		project.getBuildersList().add(new CreateArtifact(filename, content));
+
+		// Submit artifacts
+		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
+		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
+		project.getPublishersList().add(publish);
+		project.save();
+
+		// Start build
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
 	}
 }

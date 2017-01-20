@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.workspace;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
@@ -55,29 +54,25 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
 
-		IClient iclient = connection.getClient(clientName);
-		if (iclient == null) {
-			logger.info("P4: Creating client from spec: " + clientName);
-			Client implClient = new Client(connection);
-			implClient.setName(clientName);
-			implClient.setOwnerName(user);
-			connection.createClient(implClient);
-			iclient = connection.getClient(clientName);
-		}
-
-		// Owner set for use with p4maven
-		iclient.setOwnerName(user);
-
+		// fetch spec
 		String specPathFull = getExpand().format(getSpecPath(), false);
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
 		InputStream ins = connection.getFileContents(file, printOpts);
 
+		// parse spec
 		String spec = IOUtils.toString(ins, "UTF-8");
+		spec = getExpand().format(spec, false);
 		connection.execInputStringMapCmd("client", new String[]{"-i"}, spec);
-		iclient.refresh();
 
+		// get client
+		IClient iclient = connection.getClient(clientName);
+		iclient.setName(clientName);
+		iclient.setOwnerName(user);
+
+		// save and return IClient
+		iclient.refresh();
 		return iclient;
 	}
 
