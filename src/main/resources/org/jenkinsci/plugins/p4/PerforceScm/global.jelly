@@ -41,5 +41,14 @@
             <f:textbox default="10"/>
         </f:entry>
     </f:section>
+
+	<f:section title="Perforce: Program Name">
+		<f:entry title="Name which will be used by plugin to introduce it on server." field="p4prog">
+			<f:textbox />
+		</f:entry>
+		<f:entry title="Version of the plugin." field="p4version">
+			<f:textbox />
+		</f:entry>
+	</f:section>
 	
 </j:jelly>

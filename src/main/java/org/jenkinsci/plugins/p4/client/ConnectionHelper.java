@@ -33,9 +33,10 @@ import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,11 @@ public class ConnectionHelper {
 		validate = new Validate(listener);
 	}
 
+	public ConnectionHelper(String credentialID, TaskListener listener, String p4prog) {
+		this(credentialID, listener);
+		this.p4credential.setP4prog(p4prog);
+	}
+
 	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
 		this.listener = listener;
 		this.p4credential = credential;
@@ -87,6 +93,16 @@ public class ConnectionHelper {
 
 	public IOptionsServer getConnection() {
 		return connection;
+	}
+
+	public void setP4Prog(String p4prog) {
+		if (this.p4credential != null)
+			this.p4credential.setP4prog(p4prog);
+	}
+
+	public void setP4ProgVersion(String p4version) {
+		if (this.p4credential != null)
+			this.p4credential.setP4version(p4version);
 	}
 
 	/**

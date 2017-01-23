@@ -96,8 +96,15 @@ public class ConnectionFactory {
 
 		// Identify ourselves in server log files.
 		Identifier id = new Identifier();
-		props.put(PropertyDefs.PROG_NAME_KEY, id.getProduct());
-		props.put(PropertyDefs.PROG_VERSION_KEY, id.getVersion());
+
+		if (config.getP4Prog() != null && config.getP4Prog().length() != 0) {
+			props.put(PropertyDefs.PROG_NAME_KEY, config.getP4Prog());
+			props.put(PropertyDefs.PROG_VERSION_KEY, "p4-plugin");
+		}
+		else {
+			props.put(PropertyDefs.PROG_NAME_KEY, id.getProduct());
+			props.put(PropertyDefs.PROG_VERSION_KEY, id.getVersion());
+		}
 
 		// Allow p4 admin commands.
 		props.put(RpcPropertyDefs.RPC_RELAX_CMD_NAME_CHECKS_NICK, "true");
