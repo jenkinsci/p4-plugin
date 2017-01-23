@@ -59,7 +59,6 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,20 +82,11 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 
+	private String p4prog;
+	private String p4version;
+
 	private transient List<P4Revision> incrementalChanges;
 	private transient P4Revision parentChange;
-
-	public String getP4prog() {
-		return p4prog;
-	}
-
-	public void setP4prog(String p4prog) {
-		this.p4prog = p4prog;
-	}
-
-	private String p4prog;
-
-	private String p4version;
 
 	/**
 	 * JENKINS-37442: We need to store the changelog file name for the build so
@@ -195,6 +185,15 @@ public class PerforceScm extends SCM {
 		this.p4prog = null;
 		this.p4version = null;
 	}
+
+	public String getP4Prog() {
+		return p4prog;
+	}
+
+	public void setP4Prog(String p4prog) {
+		this.p4prog = p4prog;
+	}
+
 
 	@Override
 	public String getKey() {
@@ -524,34 +523,6 @@ public class PerforceScm extends SCM {
 		return list;
 	}
 
-	private String getP4progName() {
-		String return_val = "";
-
-		if (p4prog != null && p4prog.length() != 0)
-			return_val =  p4prog;
-		else if (getDescriptor().p4prog != null && getDescriptor().p4prog.length() != 0)
-			return_val = getDescriptor().p4prog;
-
-		if (workspace != null && return_val != null && workspace.getExpand() != null)
-			return_val = workspace.getExpand().format(return_val, false);
-
-		return (return_val == null) ? "" : return_val;
-	}
-
-	private String getP4ProgVersion() {
-		String return_val = "";
-
-		if (this.p4version != null && this.p4version.length() != 0)
-			return_val = p4version;
-		else if (getDescriptor().p4version != null && getDescriptor().p4version.length() != 0)
-			return_val = getDescriptor().p4version;
-
-		if (workspace != null && return_val != null && workspace.getExpand() != null)
-			return_val = workspace.getExpand().format(return_val, false);
-
-		return (return_val == null) ? "" : return_val;
-	}
-
 	@Override
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
@@ -655,6 +626,34 @@ public class PerforceScm extends SCM {
 		return name;
 	}
 
+	private String getP4progName() {
+		String return_val = "";
+
+		if (p4prog != null && p4prog.length() != 0)
+			return_val =  p4prog;
+		else if (getDescriptor().p4prog != null && getDescriptor().p4prog.length() != 0)
+			return_val = getDescriptor().p4prog;
+
+		if (workspace != null && return_val != null && workspace.getExpand() != null)
+			return_val = workspace.getExpand().format(return_val, false);
+
+		return (return_val == null) ? "" : return_val;
+	}
+
+	private String getP4ProgVersion() {
+		String return_val = "";
+
+		if (this.p4version != null && this.p4version.length() != 0)
+			return_val = p4version;
+		else if (getDescriptor().p4version != null && getDescriptor().p4version.length() != 0)
+			return_val = getDescriptor().p4version;
+
+		if (workspace != null && return_val != null && workspace.getExpand() != null)
+			return_val = workspace.getExpand().format(return_val, false);
+
+		return (return_val == null) ? "" : return_val;
+	}
+
 	/**
 	 * The checkout method should, besides checking out the modified files,
 	 * write a changelog.xml file that contains the changes for a certain build.
@@ -754,14 +753,6 @@ public class PerforceScm extends SCM {
 		private int maxFiles;
 		private int maxChanges;
 
-		public String getP4prog() {
-			return p4prog;
-		}
-
-		private String p4prog;
-
-		private String p4version;
-
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -798,9 +789,9 @@ public class PerforceScm extends SCM {
 			return maxChanges;
 		}
 
-		public String getP4version() {
-			return p4version;
-		}
+		private String p4prog;
+
+		private String p4version;
 
 		/**
 		 * public no-argument constructor
@@ -808,6 +799,14 @@ public class PerforceScm extends SCM {
 		public DescriptorImpl() {
 			super(PerforceScm.class, P4Browser.class);
 			load();
+		}
+
+		public String getP4Prog() {
+			return p4prog;
+		}
+
+		public String getP4Version() {
+			return p4version;
 		}
 
 		/**
@@ -847,7 +846,6 @@ public class PerforceScm extends SCM {
 				depotPath = json.getString("depotPath");
 				p4prog = json.getString("p4prog");
 				p4version = json.getString("p4version");
-
 			} catch (JSONException e) {
 				logger.info("Unable to read Auto Version configuration.");
 				autoSave = false;

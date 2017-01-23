@@ -100,8 +100,8 @@ public class ConnectionFactory {
 		if (config.getP4Prog() != null && config.getP4Prog().length() != 0) {
 			props.put(PropertyDefs.PROG_NAME_KEY, config.getP4Prog());
 
-			if (config.getP4version() != null && config.getP4version().length() != 0)
-				props.put(PropertyDefs.PROG_VERSION_KEY, config.getP4version());
+			if (config.getP4Version() != null && config.getP4Version().length() != 0)
+				props.put(PropertyDefs.PROG_VERSION_KEY, config.getP4Version());
 			else
 				props.put(PropertyDefs.PROG_VERSION_KEY, "p4-plugin");
 		}

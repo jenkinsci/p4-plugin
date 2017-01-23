@@ -89,7 +89,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	}
 
 	public boolean isSsl() {
-		return (ssl == null) ? false : true;
+		return ssl != null;
 	}
 
 	@CheckForNull
@@ -122,19 +122,19 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		return (p4host == null) ? "" : p4host;
 	}
 
-	public String getP4prog() {
+	public String getP4Prog() {
 		return (p4prog == null ) ? "" : p4prog;
 	}
 
-	public void setP4prog(String p4prog) {
+	public void setP4Prog(String p4prog) {
 		this.p4prog = p4prog;
 	}
 
-	public String getP4version() {
+	public String getP4Version() {
 		return (p4version == null) ? "" : p4version;
 	}
 
-	public void setP4version(String p4version) {
+	public void setP4Version(String p4version) {
 		this.p4version = p4version;
 	}
 }

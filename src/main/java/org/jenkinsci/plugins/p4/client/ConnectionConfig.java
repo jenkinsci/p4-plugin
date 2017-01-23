@@ -15,7 +15,6 @@ public class ConnectionConfig implements Serializable {
 	private final int timeout;
 	private final String p4host;
 	private String p4prog;
-
 	private String p4version;
 
 	public ConnectionConfig(P4BaseCredentials credential) {
@@ -25,7 +24,8 @@ public class ConnectionConfig implements Serializable {
 		this.serverUri = credential.getP4JavaUri();
 		this.timeout = credential.getTimeout();
 		this.p4host = credential.getP4host();
-		this.p4prog = credential.getP4prog();
+		this.p4prog = credential.getP4Prog();
+		this.p4version = credential.getP4Version();
 	}
 
 	public String getPort() {
@@ -50,20 +50,24 @@ public class ConnectionConfig implements Serializable {
 
 	public String getP4Host() { return p4host; }
 
-	public String getP4Prog() {
-		return p4prog;
-	}
-
 	public String toString() {
 		return serverUri;
 	}
 
-	public void setP4prog(String p4prog) {
-		this.p4prog = p4prog;
+	public String getP4Prog() {
+		return p4prog;
 	}
 
-	public String getP4version() {
+	public String getP4Version() {
 		return p4version;
+	}
+
+	public void setP4Version(String p4version) {
+		this.p4version = p4version;
+	}
+
+	public void setP4Prog(String p4prog) {
+		this.p4prog = p4prog;
 	}
 
 	@Override

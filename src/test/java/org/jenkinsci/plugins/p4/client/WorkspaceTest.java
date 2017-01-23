@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.SpecWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
@@ -222,4 +223,42 @@ public class WorkspaceTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 	}
 
+	@Test
+	public void testFreeStyleProject_SpecWs() throws Exception {
+
+		String client = "jenkins-${JOB_NAME}";
+		String specPath = "//depot/spec/test1";
+
+		String specFile = ""
+				+ "Client: jenkins-${JOB_NAME}\n"
+				+ "Owner: pallen\n"
+				+ "Root: /tmp\n"
+				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
+				+ "SubmitOptions: submitunchanged\n"
+				+ "LineEnd:	local\n"
+				+ "View:\n"
+				+ "\t//depot/Data/... //jenkins-${JOB_NAME}/...\n";
+
+		submitFile(jenkins, specPath, specFile);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Spec-Head");
+		SpecWorkspaceImpl workspace = new SpecWorkspaceImpl("none", false, client, specPath);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		WorkspaceDescriptor desc = workspace.getDescriptor();
+		assertNotNull(desc);
+		assertEquals("Spec File (load workspace spec from file in Perforce)", desc.getDisplayName());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 18"));
+		assertTrue(log.contains("... totalFileCount 6"));
+	}
 }

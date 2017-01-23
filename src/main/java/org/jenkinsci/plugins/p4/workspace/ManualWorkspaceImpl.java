@@ -17,8 +17,8 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
@@ -27,7 +27,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String name;
+	private String name;
 	public WorkspaceSpec spec;
 
 	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
@@ -104,12 +104,14 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			if (mask == null || mask.length() == 0)
 				mask = getName();
 
-			line = line.replaceFirst(mask, clientName);
+			line = line.replace(mask, clientName);
 			// replace the mask with the workspace name
 			// String [] splitLine = line.split("\\s+");
 			// splitLine[1] = splitLine[1].replaceFirst("//" + mask + "/", "//" + clientName + "/");
 
 			//line = splitLine[0] + " " + splitLine[1];
+			//String origName = getName();
+			//line = line.replace(origName, clientName);
 			line = getExpand().format(line, false);
 
 			try {
@@ -140,11 +142,30 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		public static String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		public static String workspaceMask = "ws";
+		public static String workspaceMask = "";
 
 		@Override
 		public String getDisplayName() {
 			return "Manual (custom view)";
+		}
+
+		@Override
+		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+			String workspacePattern = json.getString("defaultFormat");
+			String tempMask = json.getString("workspaceMask");
+
+			if (workspacePattern != null && workspacePattern.length() != 0)
+				defaultFormat = workspacePattern;
+			//else
+			//	defaultFormat = "";
+
+			if (workspaceMask != null && workspaceMask.length() != 0)
+				workspaceMask = tempMask;
+			else
+				workspaceMask = "ws";
+
+			save();
+			return super.configure(req, json);
 		}
 
 		/**
@@ -156,25 +177,6 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
-		}
-
-		@Override
-		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-			String workspacePattern = json.getString("defaultFormat");
-			String tempMask = json.getString("workspaceMask");
-
-			if (workspacePattern != null && workspacePattern.length() != 0)
-				defaultFormat = workspacePattern;
-			else
-				defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-
-			if (workspaceMask != null && workspaceMask.length() != 0)
-				workspaceMask = tempMask;
-			else
-				workspaceMask = "ws";
-
-			save();
-			return super.configure(req, json);
 		}
 
 		public FormValidation doCheckName(@QueryParameter String value) {
