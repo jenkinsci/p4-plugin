@@ -18,6 +18,11 @@
 	<f:entry title="Polling build filters">	
 		<f:repeatableHeteroProperty field="filter" hasHeader="true" addCaption="Add new build filter"/>
  	</f:entry>
- 	   
+
     <t:listScmBrowsers name="p4.browser" />
+
+	<f:entry title="Perforce Program Name">
+		<f:textbox field="p4prog" />
+		<f:textbox field="p4version" />
+	</f:entry>
 </j:jelly>

@@ -114,7 +114,7 @@ public class PollingTest extends DefaultEnvironment {
 		List<Filter> filter = new ArrayList<Filter>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null, null, null);
 		project.setScm(scm);
 		project.save();
 
@@ -158,7 +158,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Filter changes outside of //depot/Data path
 		FilterViewMaskImpl mask = new FilterViewMaskImpl("//depot/Data");
 		filter.add(mask);
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null, null, null);
 		project.setScm(scm);
 		project.save();
 
@@ -205,7 +205,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		FilterViewMaskImpl mask = new FilterViewMaskImpl(sb.toString());
 		filter.add(mask);
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null, null, null);
 		project.setScm(scm);
 		project.save();
 

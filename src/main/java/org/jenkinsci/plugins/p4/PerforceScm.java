@@ -59,6 +59,7 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import sun.security.krb5.internal.crypto.Des;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,6 +85,18 @@ public class PerforceScm extends SCM {
 
 	private transient List<P4Revision> incrementalChanges;
 	private transient P4Revision parentChange;
+
+	public String getP4prog() {
+		return p4prog;
+	}
+
+	public void setP4prog(String p4prog) {
+		this.p4prog = p4prog;
+	}
+
+	private String p4prog;
+
+	private String p4version;
 
 	/**
 	 * JENKINS-37442: We need to store the changelog file name for the build so
@@ -161,12 +174,14 @@ public class PerforceScm extends SCM {
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
-	                   P4Browser browser) {
+	                   P4Browser browser, String p4prog, String p4version) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
 		this.populate = populate;
 		this.browser = browser;
+		this.p4prog = p4prog;
+		this.p4version = p4version;
 	}
 
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
@@ -175,6 +190,8 @@ public class PerforceScm extends SCM {
 		this.filter = null;
 		this.populate = populate;
 		this.browser = null;
+		this.p4prog = null;
+		this.p4version = null;
 	}
 
 	@Override
@@ -218,6 +235,8 @@ public class PerforceScm extends SCM {
 		try {
 			String scmCredential = getCredential();
 			ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+			connection.setP4Prog(getP4progName());
+			connection.setP4ProgVersion(getP4ProgVersion());
 			String swarm = connection.getSwarm();
 			URL url = new URL(swarm);
 			return new SwarmBrowser(url);
@@ -503,6 +522,34 @@ public class PerforceScm extends SCM {
 		return list;
 	}
 
+	private String getP4progName() {
+		String return_val = "";
+
+		if (p4prog != null && p4prog.length() != 0)
+			return_val =  p4prog;
+		else if (getDescriptor().p4prog != null && getDescriptor().p4prog.length() != 0)
+			return_val = getDescriptor().p4prog;
+
+		if (workspace != null)
+			return_val = workspace.getExpand().format(return_val, false);
+
+		return return_val;
+	}
+
+	private String getP4ProgVersion() {
+		String return_val = "";
+
+		if (this.p4version != null && this.p4version.length() != 0)
+			return_val = p4version;
+		else if (getDescriptor().p4version != null && getDescriptor().p4version.length() != 0)
+			return_val = getDescriptor().p4version;
+
+		if (workspace != null)
+			return_val = workspace.getExpand().format(return_val, false);
+
+		return return_val;
+	}
+
 	@Override
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
@@ -568,6 +615,8 @@ public class PerforceScm extends SCM {
 		}
 
 		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
+		p4.setP4Prog(getP4progName());
+		p4.setP4ProgVersion(getP4ProgVersion());
 		String name = buildChange.toString();
 		try {
 			Label label = p4.getLabel(name);
@@ -645,6 +694,8 @@ public class PerforceScm extends SCM {
 
 		// exit early if client workspace does not exist
 		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+		connection.setP4Prog(getP4progName());
+		connection.setP4ProgVersion(getP4ProgVersion());
 		try {
 			if (!connection.isClient(client)) {
 				logger.warning("P4: client not found:" + client);
@@ -701,6 +752,14 @@ public class PerforceScm extends SCM {
 		private int maxFiles;
 		private int maxChanges;
 
+		public String getP4prog() {
+			return p4prog;
+		}
+
+		private String p4prog;
+
+		private String p4version;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -735,6 +794,10 @@ public class PerforceScm extends SCM {
 
 		public int getMaxChanges() {
 			return maxChanges;
+		}
+
+		public String getP4version() {
+			return p4version;
 		}
 
 		/**
@@ -780,6 +843,9 @@ public class PerforceScm extends SCM {
 				credential = json.getString("credential");
 				clientName = json.getString("clientName");
 				depotPath = json.getString("depotPath");
+				p4prog = json.getString("p4prog");
+				p4version = json.getString("p4version");
+
 			} catch (JSONException e) {
 				logger.info("Unable to read Auto Version configuration.");
 				autoSave = false;

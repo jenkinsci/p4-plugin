@@ -135,7 +135,7 @@ public class P4Step extends SCMStep {
 			populate = new AutoCleanImpl(true, true, false, false, null, null);
 		}
 
-		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
+		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser, null, null);
 
 		return scm;
 	}

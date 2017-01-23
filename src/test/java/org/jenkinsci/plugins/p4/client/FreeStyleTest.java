@@ -131,7 +131,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("buildLabel");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, browser);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, browser, null, null);
 		project.setScm(scm);
 		project.save();
 
