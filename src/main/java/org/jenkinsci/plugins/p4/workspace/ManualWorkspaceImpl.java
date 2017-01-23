@@ -105,13 +105,6 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 				mask = getName();
 
 			line = line.replace(mask, clientName);
-			// replace the mask with the workspace name
-			// String [] splitLine = line.split("\\s+");
-			// splitLine[1] = splitLine[1].replaceFirst("//" + mask + "/", "//" + clientName + "/");
-
-			//line = splitLine[0] + " " + splitLine[1];
-			//String origName = getName();
-			//line = line.replace(origName, clientName);
 			line = getExpand().format(line, false);
 
 			try {
@@ -141,8 +134,9 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		public static String workspaceMask = "";
+		static String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		static String workspaceMask = "";
+		static final private Object lock = new Object();
 
 		@Override
 		public String getDisplayName() {
@@ -154,16 +148,16 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			String workspacePattern = json.getString("defaultFormat");
 			String tempMask = json.getString("workspaceMask");
 
-			if (workspacePattern != null && workspacePattern.length() != 0)
-				defaultFormat = workspacePattern;
-			//else
-			//	defaultFormat = "";
+			synchronized (lock) {
+				if (workspacePattern != null && workspacePattern.length() != 0)
+					defaultFormat = workspacePattern;
 
-			if (workspaceMask != null && workspaceMask.length() != 0)
-				workspaceMask = tempMask;
-			else
-				workspaceMask = "ws";
-
+				if (workspaceMask != null && workspaceMask.length() != 0)
+					workspaceMask = tempMask;
+				else
+					workspaceMask = "ws";
+			}
+			
 			save();
 			return super.configure(req, json);
 		}
