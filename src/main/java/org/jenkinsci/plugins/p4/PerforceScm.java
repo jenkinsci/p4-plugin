@@ -171,6 +171,8 @@ public class PerforceScm extends SCM {
 	 * @param filter     Polling filters
 	 * @param populate   Populate options
 	 * @param browser    Browser options
+	 * @param p4prog     Name that will be presented on Perforce Server
+	 * @param p4version  Version which will be presented on Perforce Server
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
@@ -530,10 +532,10 @@ public class PerforceScm extends SCM {
 		else if (getDescriptor().p4prog != null && getDescriptor().p4prog.length() != 0)
 			return_val = getDescriptor().p4prog;
 
-		if (workspace != null)
+		if (workspace != null && return_val != null && workspace.getExpand() != null)
 			return_val = workspace.getExpand().format(return_val, false);
 
-		return return_val;
+		return (return_val == null) ? "" : return_val;
 	}
 
 	private String getP4ProgVersion() {
@@ -544,10 +546,10 @@ public class PerforceScm extends SCM {
 		else if (getDescriptor().p4version != null && getDescriptor().p4version.length() != 0)
 			return_val = getDescriptor().p4version;
 
-		if (workspace != null)
+		if (workspace != null && return_val != null && workspace.getExpand() != null)
 			return_val = workspace.getExpand().format(return_val, false);
 
-		return return_val;
+		return (return_val == null) ? "" : return_val;
 	}
 
 	@Override

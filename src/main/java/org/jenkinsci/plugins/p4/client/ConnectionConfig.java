@@ -16,6 +16,8 @@ public class ConnectionConfig implements Serializable {
 	private final String p4host;
 	private String p4prog;
 
+	private String p4version;
+
 	public ConnectionConfig(P4BaseCredentials credential) {
 		this.p4port = credential.getP4port();
 		this.ssl = credential.isSsl();
@@ -54,6 +56,14 @@ public class ConnectionConfig implements Serializable {
 
 	public String toString() {
 		return serverUri;
+	}
+
+	public void setP4prog(String p4prog) {
+		this.p4prog = p4prog;
+	}
+
+	public String getP4version() {
+		return p4version;
 	}
 
 	@Override

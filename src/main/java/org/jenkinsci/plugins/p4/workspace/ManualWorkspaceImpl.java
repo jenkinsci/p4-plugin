@@ -104,11 +104,12 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			if (mask == null || mask.length() == 0)
 				mask = getName();
 
+			line = line.replaceFirst(mask, clientName);
 			// replace the mask with the workspace name
-			String [] splitLine = line.split("\\s+");
-			splitLine[1] = splitLine[1].replaceFirst("//" + mask + "/", "//" + clientName + "/");
+			// String [] splitLine = line.split("\\s+");
+			// splitLine[1] = splitLine[1].replaceFirst("//" + mask + "/", "//" + clientName + "/");
 
-			line = splitLine[0] + " " + splitLine[1];
+			//line = splitLine[0] + " " + splitLine[1];
 			line = getExpand().format(line, false);
 
 			try {
