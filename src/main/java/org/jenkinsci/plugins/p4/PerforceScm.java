@@ -215,8 +215,12 @@ public class PerforceScm extends SCM {
 
 	@Override
 	public RepositoryBrowser<?> guessBrowser() {
+		String scmCredential = getCredential();
+		if (scmCredential == null) {
+			logger.fine("No credential for perforce");
+			return null;
+		}
 		try {
-			String scmCredential = getCredential();
 			ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
 			String swarm = connection.getSwarm();
 			URL url = new URL(swarm);
