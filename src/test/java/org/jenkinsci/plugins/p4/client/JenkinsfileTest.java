@@ -156,7 +156,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		List<String> log = job.getLastBuild().getLog(1000);
 		assertTrue(log.contains("P4_CHANGELIST: 43"));
 
-		assertEquals(2, job.getLastBuild().getChangeSets().size());
+		assertEquals(1, job.getLastBuild().getChangeSets().size());
 	}
 
 	@Test
