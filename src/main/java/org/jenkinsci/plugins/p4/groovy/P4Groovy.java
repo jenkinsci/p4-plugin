@@ -2,10 +2,12 @@ package org.jenkinsci.plugins.p4.groovy;
 
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.FilePath;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +19,15 @@ public class P4Groovy implements Serializable {
 
 	private final String credential;
 	private final Workspace workspace;
+	private final FilePath buildWorkspace;
 	
 	private final TaskListener listener;
 
-	public P4Groovy(String credential, TaskListener listener, Workspace workspace) {
+	public P4Groovy(String credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.listener = listener;
+		this.buildWorkspace = buildWorkspace;
 	}
 
 	public String getClientName() {
@@ -38,7 +42,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	@Deprecated
-	public Map<String, Object>[] runString(String cmd, String args) throws P4JavaException {
+	public Map<String, Object>[] runString(String cmd, String args) throws P4JavaException, InterruptedException, IOException {
 		List<String> argList = new ArrayList<String>();
 		for (String arg : args.split(",")) {
 			arg = arg.trim();
@@ -46,38 +50,39 @@ public class P4Groovy implements Serializable {
 		}
 
 		String[] array = argList.toArray(new String[0]);
-		IOptionsServer p4 = getConnection();
-		Map<String, Object>[] map = p4.execMapCmd(cmd, array, null);
-		p4.disconnect();
-		return map;
+		return run(cmd, array);
 	}
 
-	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException {
-		IOptionsServer p4 = getConnection();
-		Map<String, Object>[] map = p4.execMapCmd(cmd, args, null);
-		p4.disconnect();
-		return map;
+	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException, InterruptedException, IOException {
+		P4GroovyTask task = new P4GroovyTask(cmd, args);
+		task.setListener(listener);
+		task.setCredential(credential);
+		task.setWorkspace(workspace);
+
+		return buildWorkspace.act(task);
 	}
 
-	public Map<String, Object>[] run(String cmd, List<String> args) throws P4JavaException {
+	public Map<String, Object>[] run(String cmd, List<String> args) throws P4JavaException, InterruptedException, IOException {
 		String[] array = args.toArray(new String[0]);
 		return run(cmd, array);
 	}
 
-	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException {
+	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException, InterruptedException, IOException {
 		String[] array = { "-i" };
-		IOptionsServer p4 = getConnection();
-		Map<String, Object>[] map = p4.execMapCmd(type, array, spec);
-		p4.disconnect();
-		return map;
+		P4GroovyTask task = new P4GroovyTask(type, array, spec);
+		task.setListener(listener);
+		task.setCredential(credential);
+		task.setWorkspace(workspace);
+
+		return buildWorkspace.act(task);
 	}
 
-	public Map<String, Object> fetch(String type, String id) throws P4JavaException {
+	public Map<String, Object> fetch(String type, String id) throws P4JavaException, InterruptedException, IOException {
 		String[] array = { "-o", id };
-		IOptionsServer p4 = getConnection();
-		Map<String, Object>[] map = p4.execMapCmd(type, array, null);
-		p4.disconnect();
-		return map[0];
+		Map<String, Object>[] maps = run(type, array);
+		if(maps.length == 0)
+			return null;
+		return maps[0];
 	}
 
 	private IOptionsServer getConnection() {
