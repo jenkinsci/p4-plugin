@@ -221,12 +221,15 @@ public class ConnectionHelper {
 			connection.setCharsetName("utf8");
 		}
 
+		// Exit early if logged in
+		if (isLogin()) {
+			return true;
+		}
+
 		switch (authorisationConfig.getType()) {
 			case PASSWORD:
-				if (!isLogin()) {
-					String pass = authorisationConfig.getPassword();
-					connection.login(pass);
-				}
+				String pass = authorisationConfig.getPassword();
+				connection.login(pass);
 				break;
 
 			case TICKET:
