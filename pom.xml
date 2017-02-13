@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.4.14-SNAPSHOT</version>
+  <version>1.4.15-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
@@ -176,5 +176,14 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
 
 </project>

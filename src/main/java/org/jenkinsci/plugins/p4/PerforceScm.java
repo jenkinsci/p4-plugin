@@ -398,8 +398,7 @@ public class PerforceScm extends SCM {
 		incrementalChanges = new ArrayList<P4Revision>();
 
 		// Add tagging action to build, enabling label support.
-		TagAction tag = new TagAction(run);
-		tag.setCredential(credential);
+		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setBuildChange(task.getSyncChange());
 		run.addAction(tag);
@@ -514,26 +513,26 @@ public class PerforceScm extends SCM {
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
-			if (tagAction.getBuildChange() != null) {
-				String change = getChangeNumber(tagAction);
+			String change = getChangeNumber(tagAction);
+			if (change != null) {
 				env.put("P4_CHANGELIST", change);
 			}
 
 			// Set P4_CLIENT workspace value
-			if (tagAction.getClient() != null) {
-				String client = tagAction.getClient();
+			String client = tagAction.getClient();
+			if (client != null) {
 				env.put("P4_CLIENT", client);
 			}
 
 			// Set P4_PORT connection
-			if (tagAction.getPort() != null) {
-				String port = tagAction.getPort();
+			String port = tagAction.getPort();
+			if (port != null) {
 				env.put("P4_PORT", port);
 			}
 
 			// Set P4_USER connection
-			if (tagAction.getUser() != null) {
-				String user = tagAction.getUser();
+			String user = tagAction.getUser();
+			if (user != null) {
 				env.put("P4_USER", user);
 			}
 
@@ -544,8 +543,8 @@ public class PerforceScm extends SCM {
 				Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 				DescriptorImpl p4scm = (DescriptorImpl) scm;
 
-				if (tagAction.getTicket() != null && !p4scm.isHideTicket()) {
-					String ticket = tagAction.getTicket();
+				String ticket = tagAction.getTicket();
+				if (ticket != null && !p4scm.isHideTicket()) {
 					env.put("P4_TICKET", ticket);
 				}
 			}

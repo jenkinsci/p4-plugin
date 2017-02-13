@@ -1,5 +1,18 @@
 ## Release notes
 
+### Release 1.4.14 (major features/fixes)
+
+[@21668](https://swarm.workshop.perforce.com/changes/21668) - Identifier fix by adding filtering to resources.
+
+[@21659](https://swarm.workshop.perforce.com/changes/21659) - Cleanup TagAction.  Only call get method on TagAction once per entry.  Fetch values at construction or workspace creation, not on demand.
+
+[@21658](https://swarm.workshop.perforce.com/changes/21658) - Reduce login requests.  Avoid running `p4 login -s` twice.
+
+[@21642](https://swarm.workshop.perforce.com/changes/21642) - Merge pull request #37 from i386/feature/JENKINS-41459.  JENKINS-41459 fixes NPE when credential is null
+
+[@21562](https://swarm.workshop.perforce.com/changes/21562) - Expand variables for Spec Workspace definitions.  Add test to verify variable expansion for name and view.
+
+
 ### Release 1.4.13 (major features/fixes)
 
 [@21449](https://swarm.workshop.perforce.com/changes/21449) - **Rename** and **Deprecated** the old P4Groovy run method.  Force use of variable arg/Array method over a single String.  Add support for List<String> PR #35.  JENKINS-40454

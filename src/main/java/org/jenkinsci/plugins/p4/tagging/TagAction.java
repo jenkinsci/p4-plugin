@@ -32,15 +32,30 @@ public class TagAction extends AbstractScmTagAction {
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
 
-	private String credential;
+	private P4Revision buildChange;
+
+	private final String credential;
+	private final String p4port;
+	private final String p4user;
+	private final String p4ticket;
+
+	// Set when workspace is defined
 	private Workspace workspace;
 	private String client;
 	private String syncID;
-	private P4Revision buildChange;
 	private String charset;
 
-	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
+	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
+
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
+		this.credential = credential;
+		this.p4port = auth.getP4port();
+		this.p4user = auth.getUsername();
+
+		ConnectionHelper p4 = new ConnectionHelper(credential, null);
+		this.p4ticket = p4.getTicket();
+		p4.disconnect();
 	}
 
 	public String getIconFileName() {
@@ -120,10 +135,6 @@ public class TagAction extends AbstractScmTagAction {
 		return credential;
 	}
 
-	public void setCredential(String credential) {
-		this.credential = credential;
-	}
-
 	public Workspace getWorkspace() {
 		return workspace;
 	}
@@ -136,8 +147,6 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public String getPort() {
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
-		String p4port = auth.getP4port();
 		return p4port;
 	}
 
@@ -150,14 +159,10 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public String getUser() {
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
-		String p4user = auth.getUsername();
 		return p4user;
 	}
 
 	public String getTicket() {
-		ConnectionHelper p4 = new ConnectionHelper(credential, null);
-		String p4ticket = p4.getTicket();
 		return p4ticket;
 	}
 
@@ -174,12 +179,18 @@ public class TagAction extends AbstractScmTagAction {
 	 *
 	 * @param tag Label name
 	 * @return Perforce Label object
-	 * @throws Exception push up stack
 	 */
-	public Label getLabel(String tag) throws Exception {
+	public Label getLabel(String tag) {
 		ClientHelper p4 = new ClientHelper(credential, null, client, charset);
-		Label label = p4.getLabel(tag);
-		return label;
+		try {
+			Label label = p4.getLabel(tag);
+			return label;
+		} catch (Exception e) {
+			logger.warning("Unable to get label from tag: " + tag);
+		} finally {
+			p4.disconnect();
+		}
+		return null;
 	}
 
 	/**
