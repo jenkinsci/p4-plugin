@@ -108,7 +108,9 @@ public class PerforceScmSource extends SCMSource {
 			for (PerforceHead stream : streams) {
 				String base = stream.getPath();
 				SCMSourceCriteria.Probe probe = new PerforceProbe(listener, base);
-				if (criteria.isHead(probe, listener)) {
+
+				// null criteria means that all branches match.
+				if (criteria == null || criteria.isHead(probe, listener)) {
 					// get revision and add observe
 					SCMRevision revision = getRevision(stream, listener);
 					observer.observe(stream, revision);
