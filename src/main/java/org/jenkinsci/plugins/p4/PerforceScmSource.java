@@ -97,14 +97,15 @@ public class PerforceScmSource extends SCMSource {
 
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
+
+		// check criteria; if null exit early
+		if (criteria == null) {
+			return;
+		}
+
 		try {
 			List<PerforceHead> streams = getStreams(listener);
 			for (PerforceHead stream : streams) {
-				// check criteria; if null or not met, continue to next item
-				if (criteria == null) {
-					continue;
-				}
-
 				String base = stream.getPath();
 				SCMSourceCriteria.Probe probe = new PerforceProbe(listener, base);
 				if (criteria.isHead(probe, listener)) {
@@ -132,9 +133,7 @@ public class PerforceScmSource extends SCMSource {
 			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
 			return scm;
 		}
-
-		logger.severe("SCMHead not an instance of PerforceHead!");
-		return new PerforceScm(credential, null, populate);
+		throw new IllegalArgumentException("SCMHead not an instance of PerforceHead!");
 	}
 
 	private List<PerforceHead> getStreams(TaskListener listener) throws Exception {
