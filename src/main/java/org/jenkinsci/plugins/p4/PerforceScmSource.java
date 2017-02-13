@@ -97,12 +97,6 @@ public class PerforceScmSource extends SCMSource {
 
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
-
-		// check criteria; if null exit early
-		if (criteria == null) {
-			return;
-		}
-
 		try {
 			List<PerforceHead> streams = getStreams(listener);
 			for (PerforceHead stream : streams) {
