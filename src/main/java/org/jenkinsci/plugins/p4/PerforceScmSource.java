@@ -106,14 +106,21 @@ public class PerforceScmSource extends SCMSource {
 		try {
 			List<PerforceHead> streams = getStreams(listener);
 			for (PerforceHead stream : streams) {
-				String base = stream.getPath();
-				SCMSourceCriteria.Probe probe = new PerforceProbe(listener, base);
 
 				// null criteria means that all branches match.
-				if (criteria == null || criteria.isHead(probe, listener)) {
+				if (criteria == null) {
 					// get revision and add observe
 					SCMRevision revision = getRevision(stream, listener);
 					observer.observe(stream, revision);
+				}
+				else {
+					String base = stream.getPath();
+					SCMSourceCriteria.Probe probe = new PerforceProbe(listener, base);
+					if (criteria.isHead(probe, listener)) {
+						// get revision and add observe
+						SCMRevision revision = getRevision(stream, listener);
+						observer.observe(stream, revision);
+					}
 				}
 			}
 		} catch (Exception e) {
