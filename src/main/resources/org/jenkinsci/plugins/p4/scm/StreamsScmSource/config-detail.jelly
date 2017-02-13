@@ -8,7 +8,7 @@
     </f:entry>
 
     <f:entry title="${%Include streams}" field="includes">
-        <f:textbox default="//..."/>
+      <f:textbox default="//streams/projACE/..."/>
     </f:entry>
 
     <f:entry title="${%Character Set}" field="charset">

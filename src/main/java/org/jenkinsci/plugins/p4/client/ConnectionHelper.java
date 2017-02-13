@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -280,12 +281,20 @@ public class ConnectionHelper {
 	/**
 	 * Gets a list of Dirs given a path (multi-branch?)
 	 *
-	 * @param path path to look for dirs (only takes * as wildcard)
+	 * @param paths lost of paths to look for dirs (only takes * as wildcard)
 	 * @return list of dirs or empty list
 	 * @throws Exception push up stack
 	 */
-	public List<IFileSpec> getDirs(String path) throws Exception {
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+	public List<IFileSpec> getDirs(List<String> paths) throws Exception {
+		ListIterator<String> list = paths.listIterator();
+		while (list.hasNext()) {
+			String i = list.next();
+			if (!i.endsWith("/*")) {
+				list.set(i + "/*");
+			}
+		}
+
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(paths);
 		GetDirectoriesOptions opts = new GetDirectoriesOptions();
 
 		List<IFileSpec> dirs = connection.getDirectories(spec, opts);
