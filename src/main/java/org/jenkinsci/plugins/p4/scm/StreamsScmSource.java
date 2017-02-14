@@ -6,6 +6,8 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
@@ -37,6 +39,11 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 			p4.disconnect();
 		}
 		return new ArrayList<>(list);
+	}
+
+	@Override
+	public Workspace getWorkspace(String path) {
+		return new StreamWorkspaceImpl(getCharset(), false, path, getFormat());
 	}
 
 	@Extension

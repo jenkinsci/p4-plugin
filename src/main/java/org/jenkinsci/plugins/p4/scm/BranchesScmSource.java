@@ -6,6 +6,9 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.nio.file.Path;
@@ -41,6 +44,14 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			p4.disconnect();
 		}
 		return new ArrayList<>(list);
+	}
+
+	@Override
+	public Workspace getWorkspace(String path) {
+		String client = getFormat();
+		String view = path + "/..." + " //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "LOCAL", view);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
 	@Extension

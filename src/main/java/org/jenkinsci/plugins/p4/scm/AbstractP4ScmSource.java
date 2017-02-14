@@ -22,7 +22,6 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -87,14 +86,16 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public abstract List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception;
 
+	public abstract Workspace getWorkspace(String path);
+
 	@Override
 	public SCM build(SCMHead head, SCMRevision revision) {
 
 		if (head instanceof P4Head) {
 			P4Head perforceHead = (P4Head) head;
-			String stream = perforceHead.getPath();
+			String path = perforceHead.getPath();
 
-			Workspace workspace = new StreamWorkspaceImpl(charset, false, stream, format);
+			Workspace workspace = getWorkspace(path);
 			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
 			return scm;
 		}

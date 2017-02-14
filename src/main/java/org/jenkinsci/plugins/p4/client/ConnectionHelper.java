@@ -289,6 +289,9 @@ public class ConnectionHelper {
 		ListIterator<String> list = paths.listIterator();
 		while (list.hasNext()) {
 			String i = list.next();
+			if (i.endsWith("/...")) {
+				i = i.substring(0, i.length() - "/...".length());
+			}
 			if (!i.endsWith("/*")) {
 				list.set(i + "/*");
 			}
