@@ -30,19 +30,28 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		HashSet<P4Head> list = new HashSet<P4Head>();
 
 		ConnectionHelper p4 = new ConnectionHelper(credential, listener);
-		try {
-			List<IFileSpec> specs = p4.getDirs(paths);
-			for (IFileSpec s : specs) {
-				String branch = s.getOriginalPathString();
-				Path depotPath = Paths.get(branch);
-				String name = depotPath.getFileName().toString();
 
-				P4Head head = new P4Head(name, branch, false);
-				list.add(head);
+		List<IFileSpec> specs = p4.getDirs(paths);
+		for (IFileSpec s : specs) {
+			String branch = s.getOriginalPathString();
+
+			// get depotPath and check for null
+			Path depotPath = Paths.get(branch);
+			if (depotPath == null) {
+				continue;
 			}
-		} finally {
-			p4.disconnect();
+
+			// get filename and check for null
+			Path file = depotPath.getFileName();
+			if (file == null) {
+				continue;
+			}
+
+			P4Head head = new P4Head(file.toString(), branch, false);
+			list.add(head);
 		}
+		p4.disconnect();
+
 		return new ArrayList<>(list);
 	}
 
