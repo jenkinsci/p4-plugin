@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public abstract class AbstractP4ScmSource extends SCMSource {
 
 	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
-	private static String hack = "jenkins-master";
+	public static String ScmSourceClient = "jenkins-master";
 
 	protected final String credential;
 
@@ -114,20 +114,20 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					observer.observe(head, revision);
 				} else {
 					String base = head.getPath();
-					ClientHelper p4 = new ClientHelper(credential, listener, hack, charset);
-					SCMSourceCriteria.Probe probe = new P4Probe(p4, base);
+					SCMSourceCriteria.Probe probe = new P4Probe(credential, listener, charset, base);
 					if (criteria.isHead(probe, listener)) {
 						// get revision and add observe
 						SCMRevision revision = getRevision(head, listener);
 						observer.observe(head, revision);
 					}
 				}
+
+				if (Thread.interrupted()) {
+					throw new InterruptedException("User abort.");
+				}
 			}
 		} catch (Exception e) {
-			String err = "P4: Unable add streams to observer.";
-			logger.severe(err);
-			listener.error(err);
-			throw new InterruptedException(e.getMessage());
+			throw new IOException(e.getMessage());
 		}
 	}
 
@@ -137,15 +137,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-
-		ClientHelper p4 = new ClientHelper(credential, listener, hack, charset);
-		try {
+		try (ClientHelper p4 = new ClientHelper(credential, listener, ScmSourceClient, charset)) {
 			long change = p4.getHead(head.getPath() + "/...");
-
 			P4Revision revision = new P4Revision(head, change);
 			return revision;
-		} finally {
-			p4.disconnect();
 		}
 	}
 

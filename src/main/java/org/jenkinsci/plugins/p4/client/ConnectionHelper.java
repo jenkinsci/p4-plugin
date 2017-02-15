@@ -37,6 +37,7 @@ import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -45,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ConnectionHelper {
+public class ConnectionHelper implements AutoCloseable {
 
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
@@ -577,5 +578,10 @@ public class ConnectionHelper {
 
 	public void abort() {
 		this.abort = true;
+	}
+
+	@Override
+	public void close() throws Exception {
+		disconnect();
 	}
 }
