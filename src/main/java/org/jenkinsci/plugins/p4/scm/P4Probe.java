@@ -10,7 +10,7 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import static org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource.ScmSourceClient;
+import static org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource.scmSourceClient;
 
 public class P4Probe extends SCMProbe {
 
@@ -24,7 +24,7 @@ public class P4Probe extends SCMProbe {
 
 	public P4Probe(String credential, TaskListener listener, String charset, String base) {
 		this.base = base;
-		this.p4 = new ClientHelper(credential, listener, ScmSourceClient, charset);
+		this.p4 = new ClientHelper(credential, listener, scmSourceClient, charset);
 	}
 
 	@Override

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public abstract class AbstractP4ScmSource extends SCMSource {
 
 	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
-	public static String ScmSourceClient = "jenkins-master";
+	public static final String scmSourceClient = "jenkins-master";
 
 	protected final String credential;
 
@@ -135,7 +135,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-		try (ClientHelper p4 = new ClientHelper(credential, listener, ScmSourceClient, charset)) {
+		try (ClientHelper p4 = new ClientHelper(credential, listener, scmSourceClient, charset)) {
 			long change = p4.getHead(head.getPath() + "/...");
 			P4Revision revision = new P4Revision(head, change);
 			return revision;
