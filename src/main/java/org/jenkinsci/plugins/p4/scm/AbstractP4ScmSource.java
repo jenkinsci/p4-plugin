@@ -121,10 +121,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 						observer.observe(head, revision);
 					}
 				}
-
-				if (Thread.interrupted()) {
-					throw new InterruptedException("User abort.");
-				}
+				// check for user abort
+				checkInterrupt();
 			}
 		} catch (Exception e) {
 			throw new IOException(e.getMessage());
