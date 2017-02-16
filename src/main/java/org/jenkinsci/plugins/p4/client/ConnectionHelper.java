@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
@@ -29,6 +30,8 @@ import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
+import hudson.model.Item;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
@@ -39,6 +42,7 @@ import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -59,9 +63,20 @@ public class ConnectionHelper implements AutoCloseable {
 	protected final P4BaseCredentials p4credential;
 	protected final Validate validate;
 
+	@Deprecated
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
 		P4BaseCredentials credential = findCredential(credentialID);
+		this.p4credential = credential;
+		this.connectionConfig = new ConnectionConfig(credential);
+		this.authorisationConfig = new AuthorisationConfig(credential);
+		connectionRetry();
+		validate = new Validate(listener);
+	}
+
+	public ConnectionHelper(Item job, String credentialID, TaskListener listener) {
+		this.listener = listener;
+		P4BaseCredentials credential = findCredential(credentialID, job);
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
 		this.authorisationConfig = new AuthorisationConfig(credential);
@@ -585,6 +600,30 @@ public class ConnectionHelper implements AutoCloseable {
 			}
 		}
 		return null;
+	}
+
+	public static P4BaseCredentials findCredential(String credentialsId, Item project) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, project,
+						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsMatchers.allOf(
+						CredentialsMatchers.withId(credentialsId),
+						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
+		CredentialsProvider.track(project, credentials);
+		return credentials;
+	}
+
+	public static P4BaseCredentials findCredential(String credentialsId, Run run) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsProvider.findCredentialById(credentialsId,
+				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
+		CredentialsProvider.track(run, credentials);
+		return credentials;
 	}
 
 	public void log(String msg) {

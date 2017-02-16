@@ -4,10 +4,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -17,7 +14,9 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -83,7 +82,7 @@ public class PublishNotifier extends Notifier {
 		// Create task
 		PublishTask task = new PublishTask(publish);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, build);
 		task.setWorkspace(ws);
 
 		boolean success = filePath.act(task);
@@ -111,8 +110,8 @@ public class PublishNotifier extends Notifier {
 			return "Perforce: Publish assets";
 		}
 
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 	}
 }

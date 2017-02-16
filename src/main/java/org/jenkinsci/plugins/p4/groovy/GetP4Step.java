@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.groovy;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
@@ -12,7 +13,9 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.inject.Inject;
 
@@ -52,8 +55,8 @@ public class GetP4Step extends AbstractStepImpl {
 			return "P4 Groovy (BETA)";
 		}
 
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 	}
 

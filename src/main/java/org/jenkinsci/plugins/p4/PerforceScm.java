@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.p4;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
@@ -12,19 +15,14 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
-import hudson.model.Computer;
-import hudson.model.Descriptor;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.LogTaskListener;
@@ -40,6 +38,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -56,19 +55,18 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -352,7 +350,7 @@ public class PerforceScm extends SCM {
 
 		// Create task
 		PollTask task = new PollTask(filter, last);
-		task.setCredential(credential);
+		task.setCredential(credential, lastRun);
 		task.setWorkspace(ws);
 		task.setListener(listener);
 		task.setLimit(pin);
@@ -382,7 +380,7 @@ public class PerforceScm extends SCM {
 		// Create task
 		CheckoutTask task = new CheckoutTask(populate);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, run);
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
@@ -513,7 +511,7 @@ public class PerforceScm extends SCM {
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
-			String change = getChangeNumber(tagAction);
+			String change = getChangeNumber(tagAction, build);
 			if (change != null) {
 				env.put("P4_CHANGELIST", change);
 			}
@@ -554,7 +552,7 @@ public class PerforceScm extends SCM {
 		}
 	}
 
-	private String getChangeNumber(TagAction tagAction) {
+	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {
 		P4Revision buildChange = tagAction.getBuildChange();
 
 		if (!buildChange.isLabel()) {
@@ -570,7 +568,7 @@ public class PerforceScm extends SCM {
 			// not a change number
 		}
 
-		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
+		ConnectionHelper p4 = new ConnectionHelper(run.getParent(), credential, null);
 		String name = buildChange.toString();
 		try {
 			Label label = p4.getLabel(name);
@@ -629,7 +627,6 @@ public class PerforceScm extends SCM {
 
 		logger.info("processWorkspaceBeforeDeletion");
 
-		String scmCredential = getCredential();
 		Run<?, ?> run = job.getLastBuild();
 
 		if (run == null) {
@@ -647,7 +644,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// exit early if client workspace does not exist
-		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+		ConnectionHelper connection = new ConnectionHelper(job, credential, null);
 		try {
 			if (!connection.isClient(client)) {
 				logger.warning("P4: client not found:" + client);
@@ -661,7 +658,7 @@ public class PerforceScm extends SCM {
 		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(client);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, job);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
@@ -823,12 +820,12 @@ public class PerforceScm extends SCM {
 		 * @return A list of Perforce credential items to populate the jelly
 		 * Select list.
 		 */
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 
-		public FormValidation doCheckCredential(@QueryParameter String value) {
-			return P4CredentialsImpl.doCheckCredential(value);
+		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
+			return P4CredentialsImpl.doCheckCredential(project, value);
 		}
 	}
 

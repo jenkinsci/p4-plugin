@@ -65,7 +65,7 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 		// Setup Unshelve Task
 		RemoveClientTask task = new RemoveClientTask(client);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, run);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);

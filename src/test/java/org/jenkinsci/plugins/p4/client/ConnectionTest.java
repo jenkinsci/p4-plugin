@@ -74,10 +74,10 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertNotNull(desc);
 
 		PerforceScm.DescriptorImpl impl = (DescriptorImpl) desc;
-		ListBoxModel list = impl.doFillCredentialItems();
+		ListBoxModel list = impl.doFillCredentialItems(project, null);
 		assertTrue(list.size() == 1);
 
-		FormValidation form = impl.doCheckCredential(CREDENTIAL);
+		FormValidation form = impl.doCheckCredential(project, CREDENTIAL);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
