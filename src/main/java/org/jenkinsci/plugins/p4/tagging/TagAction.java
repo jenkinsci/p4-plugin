@@ -48,12 +48,12 @@ public class TagAction extends AbstractScmTagAction {
 	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
 
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, run);
 		this.credential = credential;
 		this.p4port = auth.getP4port();
 		this.p4user = auth.getUsername();
 
-		ConnectionHelper p4 = new ConnectionHelper(credential, null);
+		ConnectionHelper p4 = new ConnectionHelper(auth, null);
 		this.p4ticket = p4.getTicket();
 		p4.disconnect();
 	}
@@ -100,7 +100,7 @@ public class TagAction extends AbstractScmTagAction {
 
 		TaggingTask task = new TaggingTask(name, description);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, getRun().getParent());
 		task.setWorkspace(workspace);
 		task.setBuildChange(buildChange);
 

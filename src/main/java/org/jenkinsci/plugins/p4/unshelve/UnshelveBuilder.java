@@ -79,7 +79,7 @@ public class UnshelveBuilder extends Builder {
 		// Setup Unshelve Task
 		UnshelveTask task = new UnshelveTask(resolve);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, run.getParent());
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
