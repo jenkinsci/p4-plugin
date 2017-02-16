@@ -55,10 +55,7 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.*;
 
 import javax.annotation.CheckForNull;
 import java.io.File;
@@ -218,8 +215,20 @@ public class PerforceScm extends SCM {
 			logger.fine("No credential for perforce");
 			return null;
 		}
+		StaplerRequest req = Stapler.getCurrentRequest();
+		if (req == null) {
+			logger.fine("Unable to retrieve job from request");
+			return null;
+		}
+
+		Job job = req.findAncestorObject(Job.class);
+		if (req == null) {
+			logger.fine("Unable to retrieve job");
+			return null;
+		}
+
 		try {
-			ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+			ConnectionHelper connection = new ConnectionHelper(job, scmCredential, null);
 			String swarm = connection.getSwarm();
 			URL url = new URL(swarm);
 			return new SwarmBrowser(url);
