@@ -35,8 +35,7 @@ public class P4CredentialsImpl {
 						project,
 						P4BaseCredentials.class,
 						Collections.<DomainRequirement>emptyList(),
-						CredentialsMatchers.instanceOf(P4BaseCredentials.class))
-				.includeCurrentValue(credentialsId);
+						CredentialsMatchers.instanceOf(P4BaseCredentials.class));
 	}
 
 	@Deprecated
