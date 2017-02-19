@@ -73,11 +73,18 @@ public class ConnectionTest extends DefaultEnvironment {
 		SCMDescriptor<?> desc = project.getScm().getDescriptor();
 		assertNotNull(desc);
 
+		// Dropdown should show 2 credentials: none and "id"
 		PerforceScm.DescriptorImpl impl = (DescriptorImpl) desc;
 		ListBoxModel list = impl.doFillCredentialItems(project, null);
-		assertTrue(list.size() == 1);
+		assertTrue(list.size() == 2);
 
-		FormValidation form = impl.doCheckCredential(project, CREDENTIAL);
+		list = impl.doFillCredentialItems(project, CREDENTIAL);
+		assertTrue(list.size() == 2);
+
+		FormValidation form = impl.doCheckCredential(project, null);
+		assertEquals(FormValidation.Kind.OK, form.kind);
+
+		form = impl.doCheckCredential(project, CREDENTIAL);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
