@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
@@ -16,7 +17,8 @@ import org.kohsuke.stapler.QueryParameter;
 import java.util.Collections;
 
 public class P4CredentialsImpl {
-	
+
+	@SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
 	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
 		if(project == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||

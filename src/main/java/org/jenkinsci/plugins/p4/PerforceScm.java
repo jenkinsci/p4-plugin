@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.p4;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
@@ -22,7 +19,6 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
-import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.LogTaskListener;
@@ -38,7 +34,6 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -57,7 +52,6 @@ import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.*;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -215,6 +209,7 @@ public class PerforceScm extends SCM {
 			logger.fine("No credential for perforce");
 			return null;
 		}
+
 		StaplerRequest req = Stapler.getCurrentRequest();
 		if (req == null) {
 			logger.fine("Unable to retrieve job from request");
@@ -222,7 +217,7 @@ public class PerforceScm extends SCM {
 		}
 
 		Job job = req.findAncestorObject(Job.class);
-		if (req == null) {
+		if (job == null) {
 			logger.fine("Unable to retrieve job");
 			return null;
 		}
