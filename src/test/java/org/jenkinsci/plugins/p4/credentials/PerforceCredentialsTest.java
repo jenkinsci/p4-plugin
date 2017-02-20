@@ -2,9 +2,13 @@ package org.jenkinsci.plugins.p4.credentials;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
-import com.cloudbees.plugins.credentials.*;
-import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.CredentialsNameProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.Domain;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.security.ACL;
@@ -22,7 +26,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class PerforceCredentialsTest {
 
