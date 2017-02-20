@@ -58,8 +58,6 @@ public class P4CredentialsImpl {
 			return new StandardListBoxModel().includeCurrentValue(credentialsId);
 		}
 
-		CredentialsMatchers.instanceOf(P4BaseCredentials.class);
-
 		return new StandardListBoxModel()
 				.includeEmptyValue()
 				.includeMatchingAs(
