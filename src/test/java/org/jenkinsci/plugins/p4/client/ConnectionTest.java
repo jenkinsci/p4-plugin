@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.cloudbees.plugins.credentials.CredentialsDescriptor;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
 import hudson.model.Cause;
 import hudson.model.Cause.UserIdCause;
+import hudson.model.Fingerprint;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -15,6 +19,7 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -33,6 +38,11 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -86,6 +96,35 @@ public class ConnectionTest extends DefaultEnvironment {
 
 		form = impl.doCheckCredential(project, CREDENTIAL);
 		assertEquals(FormValidation.Kind.OK, form.kind);
+	}
+
+	@Test
+	public void testTrackingOfCredential() throws Exception {
+
+		P4BaseCredentials credential = new P4PasswordImpl(
+				CredentialsScope.GLOBAL, "id", "desc:passwd", p4d.getRshPort(),
+				null, "jenkins", "0", "0", null, "jenkins");
+		SystemCredentialsProvider.getInstance().getCredentials().add(credential);
+		SystemCredentialsProvider.getInstance().save();
+
+		Fingerprint fingerprint = CredentialsProvider.getFingerprintOf(credential);
+		assertThat("No fingerprint created until first use", fingerprint, nullValue());
+
+		FreeStyleProject job = jenkins.createFreeStyleProject("testTrackingOfCredential");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(credential.getId(), workspace, populate);
+		job.setScm(scm);
+		job.save();
+
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		fingerprint = CredentialsProvider.getFingerprintOf(credential);
+		assertThat(fingerprint, notNullValue());
+		assertThat(fingerprint.getJobs(), hasItem(is(job.getFullName())));
+		Fingerprint.RangeSet rangeSet = fingerprint.getRangeSet(job);
+		assertThat(rangeSet, notNullValue());
+		assertThat(rangeSet.includes(job.getLastBuild().getNumber()), is(true));
 	}
 
 	@Test
