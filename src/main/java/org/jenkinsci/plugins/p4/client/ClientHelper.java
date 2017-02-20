@@ -72,7 +72,7 @@ public class ClientHelper extends ConnectionHelper {
 	private IClient iclient;
 
 	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
-		super(credential, listener);
+		super(Jenkins.getActiveInstance(), credential, listener);
 		clientLogin(client, charset);
 	}
 

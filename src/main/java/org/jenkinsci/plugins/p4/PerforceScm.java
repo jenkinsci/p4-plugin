@@ -41,6 +41,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -220,20 +221,21 @@ public class PerforceScm extends SCM {
 			return null;
 		}
 
+		// Retrieve item from request
 		StaplerRequest req = Stapler.getCurrentRequest();
-		if (req == null) {
-			logger.fine("Unable to retrieve job from request");
+		Job job = req == null ? null : req.findAncestorObject(Job.class);
+
+		// If cannot retrieve item, check from root
+		P4BaseCredentials credentials = job == null
+				? ConnectionHelper.findCredential(scmCredential, Jenkins.getActiveInstance())
+				: ConnectionHelper.findCredential(scmCredential, job);
+
+		if(credentials == null) {
+			logger.fine("Could not retrieve credentials from id: '${scmCredential}");
 			return null;
 		}
-
-		Job job = req.findAncestorObject(Job.class);
-		if (job == null) {
-			logger.fine("Unable to retrieve job");
-			return null;
-		}
-
 		try {
-			ConnectionHelper connection = new ConnectionHelper(job, scmCredential, null);
+			ConnectionHelper connection = new ConnectionHelper(credentials, null);
 			String swarm = connection.getSwarm();
 			URL url = new URL(swarm);
 			return new SwarmBrowser(url);
@@ -658,7 +660,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// exit early if client workspace does not exist
-		ConnectionHelper connection = new ConnectionHelper(job, credential, null);
+		ConnectionHelper connection = new ConnectionHelper(run, credential, null);
 		try {
 			if (!connection.isClient(client)) {
 				logger.warning("P4: client not found:" + client);

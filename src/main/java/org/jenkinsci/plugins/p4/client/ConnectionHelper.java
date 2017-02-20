@@ -30,6 +30,7 @@ import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
@@ -72,14 +73,16 @@ public class ConnectionHelper {
 		validate = new Validate(listener);
 	}
 
+	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) {
+        this(findCredential(credentialID, context), listener);
+	}
+
 	public ConnectionHelper(Item job, String credentialID, TaskListener listener) {
-		this.listener = listener;
-		P4BaseCredentials credential = findCredential(credentialID, job);
-		this.p4credential = credential;
-		this.connectionConfig = new ConnectionConfig(credential);
-		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry();
-		validate = new Validate(listener);
+        this(findCredential(credentialID, job), listener);
+	}
+
+	public ConnectionHelper(Run run, String credentialID, TaskListener listener) {
+		this(findCredential(credentialID, run), listener);
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
@@ -543,9 +546,11 @@ public class ConnectionHelper {
 	/**
 	 * Finds a Perforce Credential based on the String id.
 	 *
+	 * @deprecated Use {@link #findCredential(String, ItemGroup)} or {@link #findCredential(String, Item)}
 	 * @param id Credential ID
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
+	@Deprecated
 	public static P4BaseCredentials findCredential(String id) {
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
 		Jenkins scope = Jenkins.getInstance();
@@ -563,20 +568,56 @@ public class ConnectionHelper {
 		return null;
 	}
 
-	public static P4BaseCredentials findCredential(String credentialsId, Item project) {
+	/**
+	 * Finds a Perforce Credential based on the String id.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param context The context
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
+	public static P4BaseCredentials findCredential(String credentialsId, ItemGroup context) {
 		if (credentialsId == null) {
 			return null;
 		}
 		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, project,
+				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, context,
 						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
 				CredentialsMatchers.allOf(
 						CredentialsMatchers.withId(credentialsId),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
-		CredentialsProvider.track(project, credentials);
 		return credentials;
 	}
 
+	/**
+	 * Finds a Perforce Credential based on credentials ID and {@link Item}.
+	 * This also tracks usage of the credentials.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param item The {@link Item}
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
+	public static P4BaseCredentials findCredential(String credentialsId, Item item) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
+						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsMatchers.allOf(
+						CredentialsMatchers.withId(credentialsId),
+						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
+		CredentialsProvider.track(item, credentials);
+		return credentials;
+	}
+
+	/**
+	 * Finds a Perforce Credential based on the String id and {@link Run}.
+	 * This also tracks usage of the credentials.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param run The {@link Run}
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
 	public static P4BaseCredentials findCredential(String credentialsId, Run run) {
 		if (credentialsId == null) {
 			return null;
