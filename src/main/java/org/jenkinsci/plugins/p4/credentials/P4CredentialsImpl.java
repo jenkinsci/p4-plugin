@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.credentials;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -11,12 +12,43 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.util.Collections;
+import java.util.List;
 
 public class P4CredentialsImpl {
+
+	@Deprecated
+	static public ListBoxModel doFillCredentialItems() {
+		ListBoxModel list = new ListBoxModel();
+
+		Class<P4BaseCredentials> type = P4BaseCredentials.class;
+		Jenkins scope = Jenkins.getInstance();
+		Authentication acl = ACL.SYSTEM;
+		DomainRequirement domain = new DomainRequirement();
+
+		List<P4BaseCredentials> credentials;
+		credentials = CredentialsProvider.lookupCredentials(type, scope,
+				acl, domain);
+
+		if (credentials.isEmpty()) {
+			list.add("Select credential...", null);
+		}
+		for (P4BaseCredentials c : credentials) {
+			StringBuffer sb = new StringBuffer();
+			sb.append(c.getDescription());
+			sb.append(" (");
+			sb.append(c.getUsername());
+			sb.append(":");
+			sb.append(c.getP4port());
+			sb.append(")");
+			list.add(sb.toString(), c.getId());
+		}
+		return list;
+	}
 
 	@SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
 	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {

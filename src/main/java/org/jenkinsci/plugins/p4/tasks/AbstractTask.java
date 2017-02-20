@@ -46,6 +46,11 @@ public abstract class AbstractTask implements Serializable {
 		return credential;
 	}
 
+	@Deprecated
+	public void setCredential(String credential) {
+		this.credential = ConnectionHelper.findCredential(credential);
+	}
+
 	public void setCredential(String credential, Item project) {
 		this.credential = ConnectionHelper.findCredential(credential, project);
 	}
