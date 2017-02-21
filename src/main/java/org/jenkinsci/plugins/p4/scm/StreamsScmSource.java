@@ -51,7 +51,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Streams";
+			return "BETA! Perforce Streams";
 		}
 	}
 }

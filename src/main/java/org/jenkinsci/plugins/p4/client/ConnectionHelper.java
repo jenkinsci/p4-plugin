@@ -37,7 +37,6 @@ import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;

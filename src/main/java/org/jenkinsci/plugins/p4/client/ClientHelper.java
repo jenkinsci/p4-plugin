@@ -1114,6 +1114,6 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
 		GetDepotFilesOptions opts = new GetDepotFilesOptions();
 		List<IFileSpec> specs = connection.getDepotFiles(files, opts);
-		return validate.check(specs, "");
+		return validate.checkCatch(specs, "");
 	}
 }

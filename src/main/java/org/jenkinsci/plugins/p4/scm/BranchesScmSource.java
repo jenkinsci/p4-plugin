@@ -68,7 +68,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Branches";
+			return "BETA! Perforce Branches";
 		}
 	}
 }
