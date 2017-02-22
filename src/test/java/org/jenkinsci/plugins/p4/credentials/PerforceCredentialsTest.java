@@ -7,8 +7,8 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.security.ACL;
@@ -16,6 +16,8 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
 import org.junit.Rule;
@@ -30,10 +32,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class PerforceCredentialsTest {
+public class PerforceCredentialsTest extends DefaultEnvironment {
+
+	private static final String P4ROOT = "tmp-CredentialsTest-p4root";
 
 	@Rule
 	public JenkinsRule jenkins = new JenkinsRule();
+
+	@Rule
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, VERSION);
 
 	@Test
 	public void testAddStandardCredentials() throws IOException {
@@ -251,12 +258,15 @@ public class PerforceCredentialsTest {
 	@Test
 	public void testInJobCredentialsList() throws Exception {
 
+		String port = p4d.getRshPort();
+
 		P4BaseCredentials systemCredentials = new P4PasswordImpl(
-				CredentialsScope.SYSTEM, "idSystem", "desc:passwd", "localhost:1666",
-				null, "user", "0", "0", null, "pass");
+				CredentialsScope.SYSTEM, "idSystem", "desc:passwd", port,
+				null, "jenkins", "0", "0", null, "jenkins");
 		P4BaseCredentials globalCredentials = new P4PasswordImpl(
-				CredentialsScope.GLOBAL, "idInGlobal", "desc:passwd", "localhost:1666",
-				null, "user", "0", "0", null, "pass");
+				CredentialsScope.GLOBAL, "idInGlobal", "desc:passwd", port,
+				null, "jenkins", "0", "0", null, "jenkins");
+
 		SystemCredentialsProvider.getInstance().getCredentials().add(systemCredentials);
 		SystemCredentialsProvider.getInstance().getCredentials().add(globalCredentials);
 		SystemCredentialsProvider.getInstance().save();
@@ -277,19 +287,22 @@ public class PerforceCredentialsTest {
 	@Test
 	public void testInFolderCredentialsList() throws Exception {
 
+		String port = p4d.getRshPort();
+
 		// Create a folder with credentials in store
 		Folder folder = createFolder();
 		CredentialsStore folderStore = getFolderStore(folder);
 		P4BaseCredentials inFolderCredentials = new P4PasswordImpl(
-				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", "localhost:1666",
-				null, "user", "0", "0", null, "pass");
+				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", port,
+				null, "jenkins", "0", "0", null, "jenkins");
 		folderStore.addCredentials(Domain.global(), inFolderCredentials);
 		P4BaseCredentials systemCredentials = new P4PasswordImpl(
-				CredentialsScope.SYSTEM, "idSystem", "desc:passwd", "localhost:1666",
-				null, "user", "0", "0", null, "pass");
+				CredentialsScope.SYSTEM, "idSystem", "desc:passwd", port,
+				null, "jenkins", "0", "0", null, "jenkins");
 		P4BaseCredentials globalCredentials = new P4PasswordImpl(
-				CredentialsScope.GLOBAL, "idInGlobal", "desc:passwd", "localhost:1666",
-				null, "user", "0", "0", null, "pass");
+				CredentialsScope.GLOBAL, "idInGlobal", "desc:passwd", port,
+				null, "jenkins", "0", "0", null, "jenkins");
+
 		SystemCredentialsProvider.getInstance().getCredentials().add(systemCredentials);
 		SystemCredentialsProvider.getInstance().getCredentials().add(globalCredentials);
 		SystemCredentialsProvider.getInstance().save();
