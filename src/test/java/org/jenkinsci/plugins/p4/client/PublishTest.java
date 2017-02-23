@@ -1,5 +1,9 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.core.file.FileSpecBuilder;
+import com.perforce.p4java.core.file.IExtendedFileSpec;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.option.server.GetExtendedFilesOptions;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -23,7 +27,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class PublishTest extends DefaultEnvironment {
 
@@ -73,10 +76,11 @@ public class PublishTest extends DefaultEnvironment {
 		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.SUCCESS, build.getResult());
 
-		List<String> log = build.getLog(LOG_LIMIT);
-		assertTrue(log.contains("P4 Task: syncing files at change: 18"));
-		assertTrue(log.contains("p4 reopen -c41 -t+S3 //manual.ws/..."));
-		assertTrue(log.contains("... submitting files"));
-		assertTrue(log.contains("p4 describe -s 41"));
+		// Stat file and check type
+		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client, "none");
+		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/artifact.1");
+		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
+		List<IExtendedFileSpec> eSpec = p4.connection.getExtendedFiles(fileSpec, opts);
+		assertEquals(eSpec.get(0).getHeadType(), "text+S3");
 	}
 }

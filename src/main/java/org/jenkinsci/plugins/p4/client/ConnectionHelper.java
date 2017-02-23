@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.IStreamSummary;
@@ -286,16 +287,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<IFileSpec> getDirs(List<String> paths) throws Exception {
-		ListIterator<String> list = paths.listIterator();
-		while (list.hasNext()) {
-			String i = list.next();
-			if (i.endsWith("/...")) {
-				i = i.substring(0, i.length() - "/...".length());
-			}
-			if (!i.endsWith("/*")) {
-				list.set(i + "/*");
-			}
-		}
+		paths = cleanDirPaths(paths);
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(paths);
 		GetDirectoriesOptions opts = new GetDirectoriesOptions();
@@ -307,6 +299,34 @@ public class ConnectionHelper implements AutoCloseable {
 		return new ArrayList<IFileSpec>();
 	}
 
+	private List<String> cleanDirPaths(List<String> paths) throws Exception {
+		if(paths.contains("//...")) {
+			return getDepotsForDirs();
+		}
+
+		ListIterator<String> list = paths.listIterator();
+		while (list.hasNext()) {
+			String i = list.next();
+			if (i.endsWith("/...")) {
+				i = i.substring(0, i.length() - "/...".length());
+			}
+			if (!i.endsWith("/*")) {
+				list.set(i + "/*");
+			}
+		}
+		return paths;
+	}
+
+	private List<String> getDepotsForDirs() throws Exception {
+		List<String> paths = new ArrayList<>();
+		List<IDepot> depots = connection.getDepots();
+		for(IDepot depot : depots) {
+			String name = depot.getName();
+			paths.add("//" + name + "/*");
+		}
+		return paths;
+	}
+
 	/**
 	 * Gets a list of Dirs given a path (multi-stream?)
 	 *
@@ -315,8 +335,15 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<IStreamSummary> getStreams(List<String> paths) throws Exception {
-		GetStreamsOptions opts = new GetStreamsOptions();
+		ListIterator<String> list = paths.listIterator();
+		while (list.hasNext()) {
+			String i = list.next();
+			if (!i.endsWith("/...") && !i.endsWith("/*")) {
+				list.set(i + "/*");
+			}
+		}
 
+		GetStreamsOptions opts = new GetStreamsOptions();
 		List<IStreamSummary> streams = connection.getStreams(paths, opts);
 		return streams;
 	}

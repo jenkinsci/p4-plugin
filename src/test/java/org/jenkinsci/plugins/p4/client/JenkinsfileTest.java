@@ -63,6 +63,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
+		// Get current change
+		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client, "none");
+		int head = Integer.parseInt(p4.getCounter("change"));
+
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -74,7 +78,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run);
-		jenkins.assertLogContains("P4_CHANGELIST: 42", run);
+		jenkins.assertLogContains("P4_CHANGELIST: " + head, run);
 
 		// Make changes for polling
 		submitFile(jenkins, "//depot/Data/j002", "Content");
@@ -93,7 +97,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 		assertEquals(2, job.getLastBuild().getNumber());
 		List<String> log = job.getLastBuild().getLog(1000);
-		assertTrue(log.contains("P4_CHANGELIST: 43"));
+		assertTrue(log.contains("P4_CHANGELIST: " + (head + 1)));
 
 		assertEquals(2, job.getLastBuild().getChangeSets().size());
 	}
@@ -122,6 +126,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
+		// Get current change
+		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client, "none");
+		int head = Integer.parseInt(p4.getCounter("change"));
+
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -133,7 +141,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run);
-		jenkins.assertLogContains("P4_CHANGELIST: 42", run);
+		assertEquals(head, Integer.parseInt(p4.getCounter("change")));
 
 		// Make changes for trigger
 		submitFile(jenkins, "//depot/Data/j002", "Content");
@@ -153,8 +161,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertEquals(2, job.getLastBuild().getNumber());
-		List<String> log = job.getLastBuild().getLog(1000);
-		assertTrue(log.contains("P4_CHANGELIST: 43"));
+		assertEquals(head + 1, Integer.parseInt(p4.getCounter("change")));
 
 		assertEquals(1, job.getLastBuild().getChangeSets().size());
 	}
@@ -277,11 +284,15 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
 
+		// Get latest change
+		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client, "none");
+		int head = Integer.parseInt(p4.getCounter("change"));
+
 		// Build 2
 		WorkflowRun run2 = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run2);
 		assertEquals(2, job.getLastBuild().getNumber());
-		jenkins.assertLogContains("P4 Task: syncing files at change: 42", run2);
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + head, run2);
 		jenkins.assertLogContains("P4 Task: syncing files at change: 14", run2);
 		jenkins.assertLogContains("Found last change 17 on syncID jenkins-NODE_NAME-multiSyncPoll-1", run2);
 		jenkins.assertLogContains("Found last change 13 on syncID jenkins-NODE_NAME-multiSyncPoll-2", run2);
@@ -302,7 +313,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(3, job.getLastBuild().getNumber());
 
 		List<String> log = job.getLastBuild().getLog(1000);
-		assertTrue(log.contains("Found last change 42 on syncID jenkins-NODE_NAME-multiSyncPoll-1"));
+		assertTrue(log.contains("Found last change " + head + " on syncID jenkins-NODE_NAME-multiSyncPoll-1"));
 		assertTrue(log.contains("Found last change 14 on syncID jenkins-NODE_NAME-multiSyncPoll-2"));
 
 		// Test trigger, no change

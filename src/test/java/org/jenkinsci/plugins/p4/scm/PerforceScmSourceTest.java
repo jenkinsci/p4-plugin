@@ -1,15 +1,26 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.Collection;
+import java.util.Collections;
+
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
 public class PerforceScmSourceTest extends DefaultEnvironment {
 
@@ -33,16 +44,159 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		String credential = auth.getId();
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		String includes = "//streams/...";
+		String includes = "//stream/...";
 		SCMSource source = new StreamsScmSource("streams", credential, includes, null, format, null);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams");
-		multi.getSCMSourceCriteria(source);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
 
-		multi.scheduleBuild();
+		assertThat("We now have branches",
+				multi.getItems(), not(is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
 
-		// How to get the indexing results?
+		WorkflowJob job = multi.getItem("Ace-main");
 
-		// How to get the build result?
+		assertThat("We now have a branch", job, notNullValue());
+
+		WorkflowRun build = job.getLastBuild();
+
+		assertThat("The branch was built", build, notNullValue());
+		assertThat("The branch was built", build.getNumber(), is(1));
+	}
+
+	@Test
+	public void testMultiBranchWithClassic() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/...";
+		SCMSource source = new BranchesScmSource("classic", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not(is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+
+		WorkflowJob job = multi.getItem("Ace-main");
+
+		assertThat("We now have a branch", job, notNullValue());
+
+		WorkflowRun build = job.getLastBuild();
+
+		assertThat("The branch was built", build, notNullValue());
+		assertThat("The branch was built", build.getNumber(), is(1));
+	}
+
+	@Test
+	public void testNoMultiStreams() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//depot/...";
+		SCMSource source = new StreamsScmSource("no-streams", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "no-streams");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We have no branches",
+				multi.getItems(), is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList()));
+	}
+
+	@Test
+	public void testSimplePathStreams() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream";
+		SCMSource source = new StreamsScmSource("path-streams", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-streams");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+	}
+
+	@Test
+	public void testSimplePathClassic() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream";
+		SCMSource source = new BranchesScmSource("path-classic", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+	}
+
+	@Test
+	public void testStarPathClassic() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/*";
+		SCMSource source = new BranchesScmSource("star-classic", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "star-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+	}
+
+	@Test
+	public void testRootPathClassic() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//...";
+		SCMSource source = new BranchesScmSource("root-classic", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "root-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+	}
+
+	@Test
+	public void testRootPathStreams() throws Exception {
+
+		String credential = auth.getId();
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//...";
+		SCMSource source = new StreamsScmSource("root-streams", credential, includes, null, format, null);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "root-streams");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches",
+				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
 	}
 }
