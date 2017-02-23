@@ -14,9 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
@@ -52,8 +50,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not(is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 
 		WorkflowJob job = multi.getItem("Ace-main");
 
@@ -79,8 +76,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not(is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 
 		WorkflowJob job = multi.getItem("Ace-main");
 
@@ -106,8 +102,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We have no branches",
-				multi.getItems(), is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList()));
+		assertThat("We have no branches", multi.getItems(), containsInAnyOrder());
 	}
 
 	@Test
@@ -124,8 +119,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
@@ -142,8 +136,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
@@ -160,8 +153,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
@@ -178,8 +170,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
@@ -196,7 +187,6 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertThat("We now have branches",
-				multi.getItems(), not (is((Collection<WorkflowJob>) Collections.<WorkflowJob>emptyList())));
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 }
