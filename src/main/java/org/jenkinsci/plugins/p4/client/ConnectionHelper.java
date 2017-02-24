@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.IStreamSummary;
@@ -39,12 +40,13 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class ConnectionHelper {
+public class ConnectionHelper implements AutoCloseable {
 
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
@@ -280,12 +282,14 @@ public class ConnectionHelper {
 	/**
 	 * Gets a list of Dirs given a path (multi-branch?)
 	 *
-	 * @param path path to look for dirs (only takes * as wildcard)
+	 * @param paths lost of paths to look for dirs (only takes * as wildcard)
 	 * @return list of dirs or empty list
 	 * @throws Exception push up stack
 	 */
-	public List<IFileSpec> getDirs(String path) throws Exception {
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+	public List<IFileSpec> getDirs(List<String> paths) throws Exception {
+		paths = cleanDirPaths(paths);
+
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(paths);
 		GetDirectoriesOptions opts = new GetDirectoriesOptions();
 
 		List<IFileSpec> dirs = connection.getDirectories(spec, opts);
@@ -293,6 +297,34 @@ public class ConnectionHelper {
 			return dirs;
 		}
 		return new ArrayList<IFileSpec>();
+	}
+
+	private List<String> cleanDirPaths(List<String> paths) throws Exception {
+		if(paths.contains("//...")) {
+			return getDepotsForDirs();
+		}
+
+		ListIterator<String> list = paths.listIterator();
+		while (list.hasNext()) {
+			String i = list.next();
+			if (i.endsWith("/...")) {
+				i = i.substring(0, i.length() - "/...".length());
+			}
+			if (!i.endsWith("/*")) {
+				list.set(i + "/*");
+			}
+		}
+		return paths;
+	}
+
+	private List<String> getDepotsForDirs() throws Exception {
+		List<String> paths = new ArrayList<>();
+		List<IDepot> depots = connection.getDepots();
+		for(IDepot depot : depots) {
+			String name = depot.getName();
+			paths.add("//" + name + "/*");
+		}
+		return paths;
 	}
 
 	/**
@@ -303,8 +335,15 @@ public class ConnectionHelper {
 	 * @throws Exception push up stack
 	 */
 	public List<IStreamSummary> getStreams(List<String> paths) throws Exception {
-		GetStreamsOptions opts = new GetStreamsOptions();
+		ListIterator<String> list = paths.listIterator();
+		while (list.hasNext()) {
+			String i = list.next();
+			if (!i.endsWith("/...") && !i.endsWith("/*")) {
+				list.set(i + "/*");
+			}
+		}
 
+		GetStreamsOptions opts = new GetStreamsOptions();
 		List<IStreamSummary> streams = connection.getStreams(paths, opts);
 		return streams;
 	}
@@ -565,5 +604,10 @@ public class ConnectionHelper {
 
 	public void abort() {
 		this.abort = true;
+	}
+
+	@Override
+	public void close() throws Exception {
+		disconnect();
 	}
 }

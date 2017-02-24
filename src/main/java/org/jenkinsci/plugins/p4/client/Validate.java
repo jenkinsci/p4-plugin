@@ -25,11 +25,26 @@ public class Validate {
 	 *
 	 * @param fileSpecs List of Perforce file specs
 	 * @param ignore    Parameter list of messages to ignore
-	 * @throws Exception push up stack
 	 * @return true if no errors.
+	 * @throws Exception push up stack
 	 */
 	public boolean check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
 		return check(fileSpecs, true, ignore);
+	}
+
+	/**
+	 * Only return boolean; false is returned for an exception.
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param ignore    Parameter list of messages to ignore
+	 * @return true if no errors or exceptions
+	 */
+	public boolean checkCatch(List<IFileSpec> fileSpecs, String... ignore) {
+		try {
+			return check(fileSpecs, true, ignore);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
