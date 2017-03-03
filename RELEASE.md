@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.5.1 (major features/fixes)
+
+[@21779](https://swarm.workshop.perforce.com/changes/21779) - Help for MultiBranch include field and update BETA label.  JENKINS-32616
+
+[@21758](https://swarm.workshop.perforce.com/changes/21758) - Merge pull request #38 from jenkinsci/dev.  scm-api 2.0.2 updates
+
+
+### ~~Release 1.5.0~~ (broken deployment)
+
 ### Release 1.4.14 (major features/fixes)
 
 [@21668](https://swarm.workshop.perforce.com/changes/21668) - Identifier fix by adding filtering to resources.
