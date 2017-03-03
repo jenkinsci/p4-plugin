@@ -282,7 +282,7 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Gets a list of Dirs given a path (multi-branch?)
 	 *
-	 * @param paths lost of paths to look for dirs (only takes * as wildcard)
+	 * @param paths list of paths to look for dirs (only takes * as wildcard)
 	 * @return list of dirs or empty list
 	 * @throws Exception push up stack
 	 */
