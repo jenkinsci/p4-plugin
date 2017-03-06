@@ -5,6 +5,7 @@ import hudson.model.TaskListener;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
+import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 
 import java.io.IOException;
@@ -22,9 +23,9 @@ public class P4Probe extends SCMProbe {
 
 	private transient ClientHelper p4;
 
-	public P4Probe(String credential, TaskListener listener, String charset, String base) {
+	public P4Probe(SCMSourceOwner owner, String credential, TaskListener listener, String charset, String base) {
 		this.base = base;
-		this.p4 = new ClientHelper(credential, listener, scmSourceClient, charset);
+		this.p4 = new ClientHelper(owner, credential, listener, scmSourceClient, charset);
 	}
 
 	@Override

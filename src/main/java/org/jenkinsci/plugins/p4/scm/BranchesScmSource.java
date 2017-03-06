@@ -29,7 +29,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<String> paths = getIncludePaths();
 		HashSet<P4Head> list = new HashSet<P4Head>();
 
-		ConnectionHelper p4 = new ConnectionHelper(credential, listener);
+		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
 
 		List<IFileSpec> specs = p4.getDirs(paths);
 		for (IFileSpec s : specs) {

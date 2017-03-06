@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
@@ -29,6 +30,9 @@ import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.security.ACL;
 import hudson.util.LogTaskListener;
@@ -39,6 +43,7 @@ import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -59,6 +64,7 @@ public class ConnectionHelper implements AutoCloseable {
 	protected final P4BaseCredentials p4credential;
 	protected final Validate validate;
 
+	@Deprecated
 	public ConnectionHelper(String credentialID, TaskListener listener) {
 		this.listener = listener;
 		P4BaseCredentials credential = findCredential(credentialID);
@@ -67,6 +73,18 @@ public class ConnectionHelper implements AutoCloseable {
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
 		validate = new Validate(listener);
+	}
+
+	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) {
+        this(findCredential(credentialID, context), listener);
+	}
+
+	public ConnectionHelper(Item job, String credentialID, TaskListener listener) {
+        this(findCredential(credentialID, job), listener);
+	}
+
+	public ConnectionHelper(Run run, String credentialID, TaskListener listener) {
+		this(findCredential(credentialID, run), listener);
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
@@ -567,9 +585,11 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Finds a Perforce Credential based on the String id.
 	 *
+	 * @deprecated Use {@link #findCredential(String, ItemGroup)} or {@link #findCredential(String, Item)}
 	 * @param id Credential ID
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
+	@Deprecated
 	public static P4BaseCredentials findCredential(String id) {
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
 		Jenkins scope = Jenkins.getInstance();
@@ -585,6 +605,66 @@ public class ConnectionHelper implements AutoCloseable {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Finds a Perforce Credential based on the String id.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param context The context
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
+	public static P4BaseCredentials findCredential(String credentialsId, ItemGroup context) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, context,
+						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsMatchers.allOf(
+						CredentialsMatchers.withId(credentialsId),
+						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
+		return credentials;
+	}
+
+	/**
+	 * Finds a Perforce Credential based on credentials ID and {@link Item}.
+	 * This also tracks usage of the credentials.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param item The {@link Item}
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
+	public static P4BaseCredentials findCredential(String credentialsId, Item item) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
+						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsMatchers.allOf(
+						CredentialsMatchers.withId(credentialsId),
+						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
+		CredentialsProvider.track(item, credentials);
+		return credentials;
+	}
+
+	/**
+	 * Finds a Perforce Credential based on the String id and {@link Run}.
+	 * This also tracks usage of the credentials.
+	 *
+	 * @param credentialsId Credential ID
+	 * @param run The {@link Run}
+	 * @return a P4StandardCredentials credential or null if not found.
+	 */
+	public static P4BaseCredentials findCredential(String credentialsId, Run run) {
+		if (credentialsId == null) {
+			return null;
+		}
+		P4BaseCredentials credentials = CredentialsProvider.findCredentialById(credentialsId,
+				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
+		CredentialsProvider.track(run, credentials);
+		return credentials;
 	}
 
 	public void log(String msg) {

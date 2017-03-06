@@ -86,7 +86,7 @@ public class ConfigurationListener extends SaveableListener {
 		workspace.setExpand(new HashMap<String, String>());
 		workspace.setRootPath(rootPath);
 
-		ClientHelper p4 = new ClientHelper(credential, listener, clientName, "utf8");
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, clientName, "utf8");
 		p4.setClient(workspace);
 
 		return p4;

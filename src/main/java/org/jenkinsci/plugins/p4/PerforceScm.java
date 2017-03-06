@@ -16,6 +16,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Job;
+import hudson.model.Item;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -40,6 +41,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -56,8 +58,10 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
@@ -220,8 +224,22 @@ public class PerforceScm extends SCM {
 			logger.fine("No credential for perforce");
 			return null;
 		}
+
+		// Retrieve item from request
+		StaplerRequest req = Stapler.getCurrentRequest();
+		Job job = req == null ? null : req.findAncestorObject(Job.class);
+
+		// If cannot retrieve item, check from root
+		P4BaseCredentials credentials = job == null
+				? ConnectionHelper.findCredential(scmCredential, Jenkins.getActiveInstance())
+				: ConnectionHelper.findCredential(scmCredential, job);
+
+		if(credentials == null) {
+			logger.fine("Could not retrieve credentials from id: '${scmCredential}");
+			return null;
+		}
 		try {
-			ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+			ConnectionHelper connection = new ConnectionHelper(credentials, null);
 			String swarm = connection.getSwarm();
 			URL url = new URL(swarm);
 			return new SwarmBrowser(url);
@@ -352,7 +370,7 @@ public class PerforceScm extends SCM {
 
 		// Create task
 		PollTask task = new PollTask(filter, last);
-		task.setCredential(credential);
+		task.setCredential(credential, lastRun);
 		task.setWorkspace(ws);
 		task.setListener(listener);
 		task.setLimit(pin);
@@ -382,7 +400,7 @@ public class PerforceScm extends SCM {
 		// Create task
 		CheckoutTask task = new CheckoutTask(populate);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, run);
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
@@ -513,7 +531,7 @@ public class PerforceScm extends SCM {
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
-			String change = getChangeNumber(tagAction);
+			String change = getChangeNumber(tagAction, build);
 			if (change != null) {
 				env.put("P4_CHANGELIST", change);
 			}
@@ -554,7 +572,7 @@ public class PerforceScm extends SCM {
 		}
 	}
 
-	private String getChangeNumber(TagAction tagAction) {
+	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {
 		P4Revision buildChange = tagAction.getBuildChange();
 
 		if (!buildChange.isLabel()) {
@@ -570,7 +588,7 @@ public class PerforceScm extends SCM {
 			// not a change number
 		}
 
-		ConnectionHelper p4 = new ConnectionHelper(getCredential(), null);
+		ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
 		String name = buildChange.toString();
 		try {
 			Label label = p4.getLabel(name);
@@ -629,7 +647,6 @@ public class PerforceScm extends SCM {
 
 		logger.info("processWorkspaceBeforeDeletion");
 
-		String scmCredential = getCredential();
 		Run<?, ?> run = job.getLastBuild();
 
 		if (run == null) {
@@ -647,7 +664,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// exit early if client workspace does not exist
-		ConnectionHelper connection = new ConnectionHelper(scmCredential, null);
+		ConnectionHelper connection = new ConnectionHelper(run, credential, null);
 		try {
 			if (!connection.isClient(client)) {
 				logger.warning("P4: client not found:" + client);
@@ -661,7 +678,7 @@ public class PerforceScm extends SCM {
 		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(client);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, job);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
@@ -823,12 +840,12 @@ public class PerforceScm extends SCM {
 		 * @return A list of Perforce credential items to populate the jelly
 		 * Select list.
 		 */
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 
-		public FormValidation doCheckCredential(@QueryParameter String value) {
-			return P4CredentialsImpl.doCheckCredential(value);
+		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
+			return P4CredentialsImpl.doCheckCredential(project, value);
 		}
 	}
 

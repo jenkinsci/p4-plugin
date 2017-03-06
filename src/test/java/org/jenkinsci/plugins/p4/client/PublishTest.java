@@ -77,7 +77,7 @@ public class PublishTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Stat file and check type
-		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client, "none");
+		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, client, "none");
 		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/artifact.1");
 		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
 		List<IExtendedFileSpec> eSpec = p4.connection.getExtendedFiles(fileSpec, opts);

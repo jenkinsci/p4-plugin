@@ -173,7 +173,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						String credential = scm.getCredential();
 
 						// Log in to Perforce and find change-list
-						ConnectionHelper p4 = new ConnectionHelper(credential, null);
+						ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
 
 						// Add changelist to entry
 						if (qName.equalsIgnoreCase("changenumber")) {

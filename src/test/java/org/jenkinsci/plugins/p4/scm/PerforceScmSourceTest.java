@@ -1,9 +1,17 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import hudson.model.Result;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -18,6 +26,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class PerforceScmSourceTest extends DefaultEnvironment {
@@ -188,5 +197,62 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+
+	@Test
+	public void testMultiBranchClassicWithCredentialsInFolder() throws Exception {
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-classic-creds-in-folder");
+
+		CredentialsStore folderStore = getFolderStore(multi);
+		P4BaseCredentials inFolderCredentials = new P4PasswordImpl(
+				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", p4d.getRshPort(),
+				null, "jenkins", "0", "0", null, "jenkins");
+		folderStore.addCredentials(Domain.global(), inFolderCredentials);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/...";
+		SCMSource source = new BranchesScmSource("classic", inFolderCredentials.getId(), includes, null, format, null);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
+	public void testMultiBranchStreamWithCredentialsInFolder() throws Exception {
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams-creds-in-folder");
+
+		CredentialsStore folderStore = getFolderStore(multi);
+		P4BaseCredentials inFolderCredentials = new P4PasswordImpl(
+				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", p4d.getRshPort(),
+				null, "jenkins", "0", "0", null, "jenkins");
+		folderStore.addCredentials(Domain.global(), inFolderCredentials);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/...";
+		SCMSource source = new StreamsScmSource("streams", inFolderCredentials.getId(), includes, null, format, null);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	private CredentialsStore getFolderStore(AbstractFolder f) {
+		Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
+		CredentialsStore folderStore = null;
+		for (CredentialsStore s : stores) {
+			if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
+				folderStore = s;
+				break;
+			}
+		}
+		return folderStore;
 	}
 }

@@ -48,12 +48,12 @@ public class TagAction extends AbstractScmTagAction {
 	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
 
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, run);
 		this.credential = credential;
 		this.p4port = auth.getP4port();
 		this.p4user = auth.getUsername();
 
-		ConnectionHelper p4 = new ConnectionHelper(credential, null);
+		ConnectionHelper p4 = new ConnectionHelper(auth, null);
 		this.p4ticket = p4.getTicket();
 		p4.disconnect();
 	}
@@ -100,7 +100,7 @@ public class TagAction extends AbstractScmTagAction {
 
 		TaggingTask task = new TaggingTask(name, description);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, getRun().getParent());
 		task.setWorkspace(workspace);
 		task.setBuildChange(buildChange);
 
@@ -181,7 +181,7 @@ public class TagAction extends AbstractScmTagAction {
 	 * @return Perforce Label object
 	 */
 	public Label getLabel(String tag) {
-		ClientHelper p4 = new ClientHelper(credential, null, client, charset);
+		ClientHelper p4 = new ClientHelper(ClientHelper.findCredential(credential, getRun()), null, client, charset);
 		try {
 			Label label = p4.getLabel(tag);
 			return label;

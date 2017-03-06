@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.tasks;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -45,8 +46,17 @@ public abstract class AbstractTask implements Serializable {
 		return credential;
 	}
 
+	@Deprecated
 	public void setCredential(String credential) {
 		this.credential = ConnectionHelper.findCredential(credential);
+	}
+
+	public void setCredential(String credential, Item project) {
+		this.credential = ConnectionHelper.findCredential(credential, project);
+	}
+
+	public void setCredential(String credential, Run run) {
+		this.credential = ConnectionHelper.findCredential(credential, run);
 	}
 
 	public TaskListener getListener() {

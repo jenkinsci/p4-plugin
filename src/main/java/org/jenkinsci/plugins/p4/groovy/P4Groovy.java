@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.groovy;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.TaskListener;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -84,7 +85,7 @@ public class P4Groovy implements Serializable {
 		String client = workspace.getFullName();
 		String charset = workspace.getCharset();
 
-		ClientHelper p4 = new ClientHelper(credential, listener, client, charset);
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, client, charset);
 		try {
 			p4.setClient(workspace);
 		} catch (Exception e) {

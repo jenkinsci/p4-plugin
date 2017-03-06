@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import hudson.model.Item;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -12,6 +13,7 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.steps.scm.SCMStep;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -161,12 +163,12 @@ public class P4Step extends SCMStep {
 		 * @return A list of Perforce credential items to populate the jelly
 		 *         Select list.
 		 */
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 
-		public FormValidation doCheckCredential(@QueryParameter String value) {
-			return P4CredentialsImpl.doCheckCredential(value);
+		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
+			return P4CredentialsImpl.doCheckCredential(project, value);
 		}
 
 		public AutoCompletionCandidates doAutoCompleteStream(@QueryParameter String value) {
