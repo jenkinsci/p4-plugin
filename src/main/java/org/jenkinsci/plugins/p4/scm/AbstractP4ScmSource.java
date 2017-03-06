@@ -104,7 +104,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					observer.observe(head, revision);
 				} else {
 					String base = head.getPath();
-					SCMSourceCriteria.Probe probe = new P4Probe(credential, listener, charset, base);
+					SCMSourceCriteria.Probe probe = new P4Probe(getOwner(), credential, listener, charset, base);
 					if (criteria.isHead(probe, listener)) {
 						// get revision and add observe
 						SCMRevision revision = getRevision(head, listener);
@@ -125,7 +125,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-		try (ClientHelper p4 = new ClientHelper(credential, listener, scmSourceClient, charset)) {
+
+		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
 			long change = p4.getHead(head.getPath() + "/...");
 			P4Revision revision = new P4Revision(head, change);
 			return revision;

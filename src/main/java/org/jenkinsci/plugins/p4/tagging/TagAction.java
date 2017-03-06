@@ -181,7 +181,7 @@ public class TagAction extends AbstractScmTagAction {
 	 * @return Perforce Label object
 	 */
 	public Label getLabel(String tag) {
-		ClientHelper p4 = new ClientHelper(credential, null, client, charset);
+		ClientHelper p4 = new ClientHelper(ClientHelper.findCredential(credential, getRun()), null, client, charset);
 		try {
 			Label label = p4.getLabel(tag);
 			return label;

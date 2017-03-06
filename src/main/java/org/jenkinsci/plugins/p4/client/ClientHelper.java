@@ -29,6 +29,8 @@ import com.perforce.p4java.server.CmdSpec;
 import hudson.AbortException;
 import hudson.model.Descriptor;
 import hudson.model.TaskListener;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -71,8 +73,19 @@ public class ClientHelper extends ConnectionHelper {
 
 	private IClient iclient;
 
+	@Deprecated
 	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
 		super(Jenkins.getActiveInstance(), credential, listener);
+		clientLogin(client, charset);
+	}
+
+	public ClientHelper(ItemGroup context, String credential, TaskListener listener, String client, String charset) {
+		super(context, credential, listener);
+		clientLogin(client, charset);
+	}
+
+	public ClientHelper(Item context, String credential, TaskListener listener, String client, String charset) {
+		super(context, credential, listener);
 		clientLogin(client, charset);
 	}
 

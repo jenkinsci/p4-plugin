@@ -26,7 +26,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 		List<String> paths = getIncludePaths();
 		HashSet<P4Head> list = new HashSet<P4Head>();
 
-		ConnectionHelper p4 = new ConnectionHelper(credential, listener);
+		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener);
 		try {
 			List<IStreamSummary> specs = p4.getStreams(paths);
 			for (IStreamSummary s : specs) {

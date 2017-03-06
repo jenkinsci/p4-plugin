@@ -588,7 +588,7 @@ public class PerforceScm extends SCM {
 			// not a change number
 		}
 
-		ConnectionHelper p4 = new ConnectionHelper(run.getParent(), credential, null);
+		ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
 		String name = buildChange.toString();
 		try {
 			Label label = p4.getLabel(name);
