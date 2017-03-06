@@ -102,10 +102,9 @@ public class ConnectionTest extends DefaultEnvironment {
 	public void testTrackingOfCredential() throws Exception {
 
 		P4BaseCredentials credential = new P4PasswordImpl(
-				CredentialsScope.GLOBAL, "id", "desc:passwd", p4d.getRshPort(),
+				CredentialsScope.GLOBAL, "testTrackingOfCredential", "desc:passwd", p4d.getRshPort(),
 				null, "jenkins", "0", "0", null, "jenkins");
 		SystemCredentialsProvider.getInstance().getCredentials().add(credential);
-		SystemCredentialsProvider.getInstance().save();
 
 		Fingerprint fingerprint = CredentialsProvider.getFingerprintOf(credential);
 		assertThat("No fingerprint created until first use", fingerprint, nullValue());
