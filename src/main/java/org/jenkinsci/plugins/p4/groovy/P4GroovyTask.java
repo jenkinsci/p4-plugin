@@ -28,7 +28,7 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 
 	public P4GroovyTask(String cmd, String[] args, Map<String,Object> spec) {
 		this.cmd = cmd;
-		this.args = args;
+		this.args = Arrays.copyOf(args, args.length);
 		this.spec = spec;
 	}
 
