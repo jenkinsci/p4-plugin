@@ -74,6 +74,12 @@ public class ClientHelper extends ConnectionHelper {
 	private IClient iclient;
 
 	@Deprecated
+	public ClientHelper(String credential, TaskListener listener, String client) {
+		super(Jenkins.getActiveInstance(), credential, listener);
+		clientLogin(client, "none");
+	}
+
+	@Deprecated
 	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
 		super(Jenkins.getActiveInstance(), credential, listener);
 		clientLogin(client, charset);
