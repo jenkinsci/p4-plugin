@@ -1,5 +1,20 @@
 ## Release notes
 
+### Release 1.6.0 (major features/fixes)
+
+[@21923](https://swarm.workshop.perforce.com/changes/21923) - Added old ClientHelper constructor and mark Deprecated.  ClientHelper constructor breaking change introduced in 1.3.6 #26
+
+[@21865](https://swarm.workshop.perforce.com/changes/21865) - Update P4Java to 2016.1.1499206
+
+[@21856](https://swarm.workshop.perforce.com/changes/21856) - Update min Jenkins version
+
+[@21821](https://swarm.workshop.perforce.com/changes/21821) - Merge pull request #40 from s-sutherland/slaveexec.  P4Groovy execution to run on the slave
+
+[@21795](https://swarm.workshop.perforce.com/changes/21795) - Fix Credential Test to use RSH server.  Jenkins 34825
+
+[@21794](https://swarm.workshop.perforce.com/changes/21794) - Merge pull request #39 from Dohbedoh/JENKINS-34825.  Jenkins 34825
+
+
 ### Release 1.5.1 (major features/fixes)
 
 [@21779](https://swarm.workshop.perforce.com/changes/21779) - Help for MultiBranch include field and update BETA label.  JENKINS-32616
