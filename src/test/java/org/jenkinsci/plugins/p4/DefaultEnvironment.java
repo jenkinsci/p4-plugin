@@ -20,7 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 abstract public class DefaultEnvironment {
 
-	protected final static String VERSION = "r15.1";
+	protected final static String R15_1 = "r15.1";
+	protected final static String R17_1 = "r17.1";
+
 	protected final static String CREDENTIAL = "id";
 	protected final static int HTTP_PORT = 1888;
 	protected final static String HTTP_URL = "http://localhost:" + HTTP_PORT;

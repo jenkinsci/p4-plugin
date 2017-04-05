@@ -54,7 +54,7 @@ public class PollingTest extends DefaultEnvironment {
 	public static JenkinsRule jenkins = new JenkinsRule();
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, VERSION);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@Before
 	public void buildCredentials() throws Exception {

@@ -28,6 +28,7 @@ public class SimpleTestServer {
 
 	private final String p4d;
 	private final File p4root;
+	private final String p4ver;
 
 	public SimpleTestServer(String root, String version) {
 		String p4d = new File(RESOURCES + version).getAbsolutePath().toString();
@@ -43,10 +44,11 @@ public class SimpleTestServer {
 		}
 		this.p4d = p4d;
 		this.p4root = new File(root).getAbsoluteFile();
+		this.p4ver = version;
 	}
 
 	public String getResources() {
-		return RESOURCES;
+		return RESOURCES + p4ver;
 	}
 
 	public String getRshPort() {

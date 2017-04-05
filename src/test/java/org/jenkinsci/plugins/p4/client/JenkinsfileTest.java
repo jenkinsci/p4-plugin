@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 public class JenkinsfileTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
+	private static Logger logger = Logger.getLogger(JenkinsfileTest.class.getName());
 	private static final String P4ROOT = "tmp-JenkinsfileTest-p4root";
 	private static P4PasswordImpl auth;
 
@@ -35,7 +35,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	public static JenkinsRule jenkins = new JenkinsRule();
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, VERSION);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@Before
 	public void buildCredentials() throws Exception {

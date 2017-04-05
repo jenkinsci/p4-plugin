@@ -56,12 +56,12 @@ public class FreeStyleTest extends DefaultEnvironment {
 	public static JenkinsRule jenkins = new JenkinsRule();
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, VERSION);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@BeforeClass
 	public static void startWebServer() throws Exception {
 		// start pseudo web server
-		startHttpServer(HTTP_PORT);
+		// TODO startHttpServer(HTTP_PORT);
 	}
 
 	@Before
