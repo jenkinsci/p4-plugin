@@ -491,17 +491,13 @@ public class PerforceScm extends SCM {
 		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
 
 		// Look for all changes since the last build
-		Run<?, ?> lastBuild = run.getPreviousSuccessfulBuild();
+		Run<?, ?> lastBuild = run.getPreviousBuild();
 
 		String syncID = task.getSyncID();
 		P4Revision lastChange = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
 
 		if (lastChange != null) {
-			List<P4ChangeEntry> changes;
-			changes = task.getChangesFull(lastChange);
-			for (P4ChangeEntry c : changes) {
-				list.add(c);
-			}
+			list.addAll(task.getChangesFull(lastChange));
 		}
 
 		// if empty, look for shelves in current build. The latest change
@@ -509,11 +505,7 @@ public class PerforceScm extends SCM {
 		if (list.isEmpty()) {
 			P4Revision lastRevision = task.getBuildChange();
 			if (lastRevision != null) {
-				List<P4ChangeEntry> changes;
-				changes = task.getChangesFull(lastRevision);
-				for (P4ChangeEntry c : changes) {
-					list.add(c);
-				}
+				list.addAll(task.getChangesFull(lastRevision));
 			}
 		}
 
