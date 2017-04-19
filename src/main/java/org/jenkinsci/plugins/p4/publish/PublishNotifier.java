@@ -1,13 +1,12 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Item;
 import hudson.model.BuildListener;
+import hudson.model.Item;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -72,22 +71,18 @@ public class PublishNotifier extends Notifier {
 		}
 
 		Workspace ws = (Workspace) workspace.clone();
-		try {
-			EnvVars envVars = build.getEnvironment(listener);
-			ws.setExpand(envVars);
-			ws.setRootPath(filePath.getRemote());
-			String desc = publish.getDescription();
-			desc = ws.getExpand().format(desc, false);
-			publish.setExpandedDesc(desc);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 		// Create task
 		PublishTask task = new PublishTask(publish);
 		task.setListener(listener);
 		task.setCredential(credential, build);
+		ws = task.setEnvironment(build, ws, filePath);
 		task.setWorkspace(ws);
+
+		// Expand description
+		String desc = publish.getDescription();
+		desc = ws.getExpand().format(desc, false);
+		publish.setExpandedDesc(desc);
 
 		boolean success = filePath.act(task);
 		return success;

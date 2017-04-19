@@ -60,10 +60,9 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 		String credential = tagAction.getCredential();
 		Workspace workspace = tagAction.getWorkspace();
-		String client = tagAction.getClient();
 
-		// Setup Unshelve Task
-		RemoveClientTask task = new RemoveClientTask(client);
+		// Setup Cleanup Task
+		RemoveClientTask task = new RemoveClientTask();
 		task.setListener(listener);
 		task.setCredential(credential, run);
 

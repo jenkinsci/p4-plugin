@@ -668,7 +668,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Setup Cleanup Task
-		RemoveClientTask task = new RemoveClientTask(client);
+		RemoveClientTask task = new RemoveClientTask();
 		task.setListener(listener);
 		task.setCredential(credential, job);
 

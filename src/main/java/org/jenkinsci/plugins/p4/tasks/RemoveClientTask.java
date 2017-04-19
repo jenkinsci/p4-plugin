@@ -1,10 +1,11 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.logging.Logger;
-
+import hudson.FilePath.FileCallable;
+import hudson.model.Descriptor;
+import hudson.remoting.VirtualChannel;
+import hudson.scm.SCM;
+import jenkins.model.Jenkins;
+import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
@@ -13,12 +14,10 @@ import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
-import hudson.FilePath.FileCallable;
-import hudson.model.Descriptor;
-import hudson.remoting.VirtualChannel;
-import hudson.scm.SCM;
-import jenkins.model.Jenkins;
-import jenkins.security.Roles;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class RemoveClientTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
@@ -26,13 +25,10 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
 
-	private final String client;
 	private final boolean deleteClient;
 	private final boolean deleteFiles;
 
-	public RemoveClientTask(String client) {
-		this.client = client;
-
+	public RemoveClientTask() {
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
 			@SuppressWarnings("unchecked")
@@ -52,6 +48,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	public Object task(ClientHelper p4) throws Exception {
 		logger.info("Task: remove client.");
 
+		String client = getClient();
 		try {
 			// remove files if required
 			if (deleteFiles) {
