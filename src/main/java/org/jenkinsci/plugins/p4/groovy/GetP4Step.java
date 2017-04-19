@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.groovy;
 
+import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -9,17 +10,18 @@ import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.inject.Inject;
+import java.util.Set;
 
-public class GetP4Step extends AbstractStepImpl {
+public class GetP4Step extends Step {
 
 	private final String credential;
 	private final Workspace workspace;
@@ -39,11 +41,7 @@ public class GetP4Step extends AbstractStepImpl {
 	}
 
 	@Extension(optional = true)
-	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-
-		public DescriptorImpl() {
-			super(P4RunCommandStepExecution.class);
-		}
+	public static class DescriptorImpl extends StepDescriptor {
 
 		@Override
 		public String getFunctionName() {
@@ -52,7 +50,12 @@ public class GetP4Step extends AbstractStepImpl {
 
 		@Override
 		public String getDisplayName() {
-			return "P4 Groovy (BETA)";
+			return "P4 Groovy";
+		}
+
+		@Override
+		public Set<? extends Class<?>> getRequiredContext() {
+			return ImmutableSet.of(Run.class, FilePath.class, Launcher.class, TaskListener.class);
 		}
 
 		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
@@ -60,25 +63,26 @@ public class GetP4Step extends AbstractStepImpl {
 		}
 	}
 
-	public static class P4RunCommandStepExecution extends AbstractSynchronousStepExecution<P4Groovy> {
+	@Override
+	public StepExecution start(StepContext context) throws Exception {
+		return new Execution(this, context);
+	}
+
+	public static class Execution extends SynchronousNonBlockingStepExecution<P4Groovy> {
 
 		private static final long serialVersionUID = 1L;
 
-		@Inject
-		private transient GetP4Step step;
-		@StepContextParameter
-		private transient Run<?, ?> run;
-		@StepContextParameter
-		private transient FilePath workspace;
-		@StepContextParameter
-		private transient TaskListener listener;
-		@StepContextParameter
-		private transient Launcher launcher;
+		private transient final GetP4Step step;
+
+		Execution(GetP4Step step, StepContext context) {
+			super(context);
+			this.step = step;
+		}
 
 		@Override
 		protected P4Groovy run() throws Exception {
 			GetP4 p4Groovy = new GetP4(step.getCredential(), step.getWorkspace());
-			p4Groovy.perform(run, workspace, launcher, listener);
+			p4Groovy.perform(getContext().get(Run.class), getContext().get(FilePath.class), getContext().get(Launcher.class), getContext().get(TaskListener.class));
 			return p4Groovy.getP4Groovy();
 		}
 	}
