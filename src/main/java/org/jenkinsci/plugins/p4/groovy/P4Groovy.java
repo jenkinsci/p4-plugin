@@ -22,7 +22,7 @@ public class P4Groovy implements Serializable {
 	private final Workspace workspace;
 	private final FilePath buildWorkspace;
 	
-	private transient final TaskListener listener;
+	private transient TaskListener listener = null;
 
 	public P4Groovy(String credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
 		this.credential = credential;
