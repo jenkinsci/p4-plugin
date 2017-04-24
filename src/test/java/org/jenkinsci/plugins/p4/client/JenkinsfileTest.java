@@ -17,6 +17,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.Issue;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -322,4 +323,111 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 		assertEquals(3, job.getLastBuild().getNumber());
 	}
+	
+	@Test
+	@Issue("JENKINS-43770")
+        public void testMultiSyncParallelPolling() throws Exception {
+
+                String content1 = ""
+                                + "parallel first: {\n"
+                                + "    node {\n"
+                                + "        p4sync credential: '" + CREDENTIAL + "',\n"
+                                + "           format: 'jenkins-master-${JOB_NAME}-1',\n"
+                                + "           depotPath: '//depot/Data',\n"
+                                + "           populate: [$class: 'AutoCleanImpl', pin: '1', quiet: true]\n"
+                                + "    }\n"
+                                + "},\n"
+                                + "second: {\n"
+                                + "    node {\n"
+                                + "        p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
+                                + "           format: 'jenkins-master-${JOB_NAME}-2',\n"
+                                + "           depotPath: '//depot/Main',\n"
+                                + "           populate: [$class: 'AutoCleanImpl', pin: '8', quiet: true]\n"
+                                + "    }\n"
+                                + "}";
+
+                submitFile(jenkins, "//depot/Data/Jenkinsfile", content1);
+
+                // Manual workspace spec definition
+                String client = "jenkins-master-${JOB_NAME}-script";
+                String stream = null;
+                String line = "LOCAL";
+                String view = "//depot/Data/Jenkinsfile //" + client + "/Jenkinsfile";
+                WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+                ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+                // SCM and Populate options
+                Populate populate = new AutoCleanImpl();
+                PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+                // SCM Jenkinsfile job
+                WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "multiParallelSyncPoll");
+                job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+
+                // Build 1
+                WorkflowRun run1 = job.scheduleBuild2(0).get();
+                jenkins.assertBuildStatusSuccess(run1);
+                assertEquals(1, job.getLastBuild().getNumber());
+                jenkins.assertLogContains("P4 Task: syncing files at change: 1", run1);
+                jenkins.assertLogContains("P4 Task: syncing files at change: 8", run1);
+
+		String content2 = ""
+                                + "parallel first_branch: {\n"
+                                + "    node {\n"
+                                + "        p4sync credential: '" + CREDENTIAL + "',\n"
+                                + "           format: 'jenkins-master-${JOB_NAME}-1',\n"
+                                + "           depotPath: '//depot/Data',\n"
+                                + "           populate: [$class: 'AutoCleanImpl', pin: '', quiet: true]\n"
+                                + "    }\n"
+                                + "},\n"
+                                + "second_branch: {\n"
+                                + "    node {\n"
+                                + "        p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
+                                + "           format: 'jenkins-master-${JOB_NAME}-2',\n"
+                                + "           depotPath: '//depot/Main',\n"
+                                + "           populate: [$class: 'AutoCleanImpl', pin: '9', quiet: true]\n"
+                                + "    }\n"
+                                + "}";
+
+                submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
+
+                // Get latest change
+                ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, client, "none");
+                int head = Integer.parseInt(p4.getCounter("change"));
+
+                // Build 2
+                WorkflowRun run2 = job.scheduleBuild2(0).get();
+                jenkins.assertBuildStatusSuccess(run2);
+                assertEquals(2, job.getLastBuild().getNumber());
+                jenkins.assertLogContains("P4 Task: syncing files at change: " + head, run2);
+                jenkins.assertLogContains("P4 Task: syncing files at change: 9", run2);
+                jenkins.assertLogContains("Found last change 1 on syncID jenkins-master-multiParallelSyncPoll-1", run2);
+                jenkins.assertLogContains("Found last change 8 on syncID jenkins-master-multiParallelSyncPoll-2.clone2", run2);
+
+                // Add a trigger
+                P4Trigger trigger = new P4Trigger();
+                trigger.start(job, false);
+                job.addTrigger(trigger);
+                job.save();
+
+                // Add change to //depot/Data/...
+                submitFile(jenkins, "//depot/Data/new01", "Content");
+
+                // Test trigger, build 3
+                trigger.poke(job, auth.getP4port());
+                TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+                jenkins.waitUntilNoActivity();
+                assertEquals(3, job.getLastBuild().getNumber());
+
+                List<String> log = job.getLastBuild().getLog(1000);
+                assertTrue(log.contains("[first_branch] Found last change " + head + " on syncID jenkins-master-multiParallelSyncPoll-1"));
+                assertTrue(log.contains("[second_branch] Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2.clone2"));
+
+                // Test trigger, no change
+                trigger.poke(job, auth.getP4port());
+                TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+                jenkins.waitUntilNoActivity();
+                assertEquals(3, job.getLastBuild().getNumber());
+	}
+
 }

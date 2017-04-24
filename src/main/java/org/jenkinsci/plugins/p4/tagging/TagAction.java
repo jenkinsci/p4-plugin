@@ -212,7 +212,7 @@ public class TagAction extends AbstractScmTagAction {
 
 		// look for action matching view
 		for (TagAction action : actions) {
-			if (syncID.equals(action.getSyncID())) {
+			if (syncID.equals(action.getSyncID()) || action.getSyncID().contains(syncID)) {
 				last = action.getBuildChange();
 				listener.getLogger().println("Found last change " + last.toString() + " on syncID " + syncID);
 			}
