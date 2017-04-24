@@ -125,9 +125,13 @@ public class P4Step extends SCMStep {
 			else if (notNull(template))
 				workspace = new TemplateWorkspaceImpl(charset, false, template, format);
 			else if (notNull(depotPath)) {
-				if (depotPath.endsWith("/"))
-					depotPath = depotPath.substring(0, depotPath.length()-1);
-				String view = depotPath + "/..." + " " + "//" + format + "/...";
+				if(depotPath.endsWith("/")) {
+					depotPath = depotPath + "...";
+				}
+				if(!depotPath.endsWith("/...")) {
+					depotPath = depotPath + "/...";
+				}
+				String view = depotPath + " " + "//" + format + "/...";
 				WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
 
 				workspace = new ManualWorkspaceImpl(charset, false, format, spec);
