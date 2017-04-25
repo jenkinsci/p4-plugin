@@ -122,8 +122,6 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-
 		@Override
 		public String getDisplayName() {
 			return "Manual (custom view)";

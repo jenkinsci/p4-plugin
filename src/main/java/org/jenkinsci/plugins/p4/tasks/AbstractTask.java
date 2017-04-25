@@ -6,6 +6,8 @@ import hudson.FilePath;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -105,7 +107,8 @@ public abstract class AbstractTask implements Serializable {
 
 		// Set environment
 		EnvVars envVars = run.getEnvironment(listener);
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		String node = getNodeName(buildWorkspace);
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", node));
 		ws.setExpand(envVars);
 
 		// Set workspace root (check for parallel execution)
@@ -147,6 +150,15 @@ public abstract class AbstractTask implements Serializable {
 			ws.setHostName("");
 		}
 		return ws;
+	}
+
+	private String getNodeName(FilePath build) {
+		VirtualChannel vc = build.getChannel();
+		if(vc instanceof Channel) {
+			Channel channel = (Channel) vc;
+			return channel.getName();
+		}
+		return "master";
 	}
 
 	/**

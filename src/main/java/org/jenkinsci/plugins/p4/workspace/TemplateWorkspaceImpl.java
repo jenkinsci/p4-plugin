@@ -101,8 +101,6 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
-		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-
 		@Override
 		public String getDisplayName() {
 			return "Template (view generated for each node)";
