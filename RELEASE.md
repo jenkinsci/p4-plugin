@@ -1,5 +1,20 @@
 ## Release notes
 
+### Release 1.6.1 (major features/fixes)
+
+[@22043](https://swarm.workshop.perforce.com/changes/22043) - Access remote Channel to find NODE_NAME.  If NODE_NAME is not set in the environment, look at the remote channel, then default to 'master'.  JENKINS-34128  JENKINS-43551
+
+[@22040](https://swarm.workshop.perforce.com/changes/22040) - Merge pull request #41 from lizlam/master.  Strip the trailing slash in the depot path so that p4sync step doesn't fail.
+
+[@22038](https://swarm.workshop.perforce.com/changes/22038) - Merge pull request #42 from tangkun75/JENKINS-43770_p4sync_in_parallel_causes_invalid_SCM_triggering.  JENKINS-43770 p4sync in parallel causes invalid SCM triggering
+
+[@22021](https://swarm.workshop.perforce.com/changes/22021) - Set environment to expand client name for Publish and Remove Client.  JENKINS-43378
+
+[@22019](https://swarm.workshop.perforce.com/changes/22019) - Fix TaskListener serialisation issue.  TaskListener field must be transient as part of the program state, but is marked `Serializable` for the Task as it is sent over the Remoting Channel.  Update p4 groovy to extend Step and not AbstractStepImpl.
+
+[@21937](https://swarm.workshop.perforce.com/changes/21937) - Only reports changes since the last build.  Previously the build summary reported all changes since the last successful build.  JENKINS-40747
+
+
 ### Release 1.6.0 (major features/fixes)
 
 [@21923](https://swarm.workshop.perforce.com/changes/21923) - Added old ClientHelper constructor and mark Deprecated.  ClientHelper constructor breaking change introduced in 1.3.6 #26
