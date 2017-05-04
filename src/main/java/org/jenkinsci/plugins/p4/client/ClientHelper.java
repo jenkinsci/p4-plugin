@@ -73,6 +73,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jenkinsci.plugins.p4.populate.FlushOnlyImpl;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -194,7 +195,7 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		} else {
-			log("P4 Task: syncing files at change: " + buildChange);
+			log("P4 Task: syncing files at changes: " + buildChange);
 		}
 
 		// Sync changes/labels
@@ -204,7 +205,7 @@ public class ClientHelper extends ConnectionHelper {
 			String revisions = path + "@" + buildChange;
 
 			// Sync files
-			if (populate instanceof CheckOnlyImpl) {
+			if (populate instanceof CheckOnlyImpl || populate instanceof FlushOnlyImpl) {
 				syncHaveList(revisions, populate);
 			} else {
 				syncFiles(revisions, populate);
@@ -228,7 +229,7 @@ public class ClientHelper extends ConnectionHelper {
 	private boolean syncHaveList(String revisions, Populate populate) throws Exception {
 		// Preview (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setClientBypass(true);
+		syncOpts.setClientBypass(populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
