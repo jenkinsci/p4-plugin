@@ -1,14 +1,12 @@
-# P4Groovy (BETA)
+# P4Groovy
 
 ## Introduction
 
-P4Groovy is a groovy interface to P4Java that allows you to write Perforce commands in the pipleline DSL.
-
-Note: P4Groovy is currently released as a Beta feature so may not work as expected.  
+P4Groovy is a Groovy interface to P4Java that allows you to write Perforce commands in the pipleline DSL.
 
 ## Setup
 
-To allow P4Roovy code to be executed uncheck the 'Use Groovy Sandbox' checkbox under the Pipeline script.
+To allow P4Groovy code to be executed uncheck the 'Use Groovy Sandbox' checkbox under the Pipeline script.
 
 The setup P4Groovy create a 'p4' object. For example:
 
@@ -24,7 +22,7 @@ This code can be created for you using the 'p4: P4 Groovy' pipeline syntax snipp
 
 ## Running a command
 
-The run command takes a comma seperated list of Perforce command and then arguments
+The run command takes a comma separated list of Perforce command and then arguments.
 
 For example:
 
@@ -45,7 +43,7 @@ You can iterate through the response by iterating through each array item and ex
 
 ## Working with forms
 
-To retreive the contents of a form as a map use 'fetch' providing a 'spec type' and 'spec id'. For example:
+To retrieve the contents of a form as a map use 'fetch' providing a 'spec type' and 'spec id'. For example:
 
 	def client = p4.fetch(‘client’, ‘my_ws’)
 

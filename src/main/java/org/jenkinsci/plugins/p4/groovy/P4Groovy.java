@@ -21,7 +21,7 @@ public class P4Groovy implements Serializable {
 	private final String credential;
 	private final Workspace workspace;
 	private final FilePath buildWorkspace;
-	
+
 	private transient TaskListener listener = null;
 
 	public P4Groovy(String credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
@@ -69,7 +69,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException, InterruptedException, IOException {
-		String[] array = { "-i" };
+		String[] array = {"-i"};
 		P4GroovyTask task = new P4GroovyTask(type, array, spec);
 		task.setListener(listener);
 		task.setCredential(credential);
@@ -79,10 +79,12 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object> fetch(String type, String id) throws P4JavaException, InterruptedException, IOException {
-		String[] array = { "-o", id };
+		String[] array = {"-o", id};
 		Map<String, Object>[] maps = run(type, array);
-		if(maps.length == 0)
+		if (maps.length == 0)
 			return null;
+
+		maps[0].remove("specFormatted");
 		return maps[0];
 	}
 
