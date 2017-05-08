@@ -20,7 +20,7 @@ public class FlushOnlyImpl extends Populate {
 	@DataBoundConstructor
 	public FlushOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet,
 	                     String pin) {
-		super(true, false, false, quiet, null, null); 
+		super(true, false, false, quiet, pin, null); 
 	}
 
 	@Extension
