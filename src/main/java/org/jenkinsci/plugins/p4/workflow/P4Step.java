@@ -164,10 +164,11 @@ public class P4Step extends SCMStep {
 		}
 
 		/**
-		 * Credentials list, a Jelly config method for a build job.
+		 * A list of Perforce credential items
 		 *
-		 * @return A list of Perforce credential items to populate the jelly
-		 *         Select list.
+		 * @param project Jenkins Item
+		 * @param credential Perforce Credential
+		 * @return A list of Perforce credential items to populate the jelly Select list.
 		 */
 		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
 			return P4CredentialsImpl.doFillCredentialItems(project, credential);

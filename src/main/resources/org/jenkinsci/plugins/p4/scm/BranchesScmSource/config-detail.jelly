@@ -9,7 +9,7 @@
         <c:select/>
     </f:entry>
 
-    <f:entry title="${%Include streams}" field="includes">
+    <f:entry title="${%Include branches}" field="includes">
       <f:textbox/>
     </f:entry>
 

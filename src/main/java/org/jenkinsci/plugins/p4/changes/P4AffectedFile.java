@@ -2,28 +2,47 @@ package org.jenkinsci.plugins.p4.changes;
 
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
-
-import hudson.scm.EditType;
 import hudson.scm.ChangeLogSet.AffectedFile;
+import hudson.scm.EditType;
 
 public class P4AffectedFile implements AffectedFile {
 
-	private final IFileSpec item;
+	private final String path;
+	private final String revision;
+	private final EditType action;
 
 	public P4AffectedFile(IFileSpec item) {
-		this.item = item;
+		this.path = item.getDepotPathString();
+		this.revision = "#" + item.getEndRevision();
+		this.action = parseFileAction(item.getAction());
+	}
+
+	public P4AffectedFile(String path, String revision, FileAction action) {
+		this.path = path;
+		this.revision = revision;
+		this.action = parseFileAction(action);
 	}
 
 	@Override
 	public String getPath() {
-		return item.getDepotPathString();
+		return path;
 	}
 
 	@Override
 	public EditType getEditType() {
-		FileAction action = item.getAction();
+		return action;
+	}
 
-		switch (action) {
+	public String getRevision() {
+		return revision;
+	}
+
+	public String getAction() {
+		return action.getName();
+	}
+
+	private EditType parseFileAction(FileAction fileAction) {
+		switch (fileAction) {
 		case ADD:
 		case MOVE_ADD:
 			return EditType.ADD;

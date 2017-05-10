@@ -20,7 +20,6 @@ public class TrustImpl extends AbstractDescribableImpl<TrustImpl> implements Ser
 		this.trust = trust;
 	}
 
-	@NonNull
 	public String getTrust() {
 		return trust;
 	}

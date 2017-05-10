@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-/**
- * Created by pallen on 16/09/2016.
- */
 public interface P4Ticket extends P4Credentials {
 
 	/**

@@ -3,9 +3,6 @@ package org.jenkinsci.plugins.p4.publish;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * Created by pallen on 31/10/2016.
- */
 public class PurgeLimitTest {
 
 	@Test

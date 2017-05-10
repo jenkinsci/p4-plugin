@@ -33,6 +33,8 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	private final String line;
 	private final String view;
 
+	private String type;
+
 	public String getStreamName() {
 		return streamName;
 	}
@@ -43,6 +45,15 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 
 	public String getView() {
 		return view;
+	}
+
+	// TODO expose this to Jelly
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getType() {
+		return type;
 	}
 
 	@DataBoundConstructor

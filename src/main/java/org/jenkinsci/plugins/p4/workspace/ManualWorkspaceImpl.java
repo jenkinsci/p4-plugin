@@ -107,6 +107,9 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 		iclient.setClientView(clientView);
 
+		// Set client Type (null or "graph")
+		iclient.setType(getSpec().getType());
+
 		return iclient;
 	}
 

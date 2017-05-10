@@ -44,7 +44,6 @@ public class P4Probe extends SCMProbe {
 		return last;
 	}
 
-	@NonNull
 	@Override
 	public SCMProbeStat stat(@NonNull String path) throws IOException {
 		try {

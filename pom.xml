@@ -40,6 +40,11 @@
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
+    <repository>
+      <id>artifactory.bnr.perforce.com</id>
+      <name>artifactory.bnr.perforce.com-snapshots</name>
+      <url>http://artifactory.bnr.perforce.com/artifactory/snapshots</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -54,7 +59,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2016.1.1499206</version>
+      <version>2017.1.1508395</version>
     </dependency>
 
     <dependency>

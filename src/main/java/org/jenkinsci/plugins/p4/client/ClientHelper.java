@@ -4,6 +4,7 @@ import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -15,6 +16,7 @@ import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Parameters;
 import com.perforce.p4java.option.changelist.SubmitOptions;
+import com.perforce.p4java.option.client.AddFilesOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.ResolveFilesAutoOptions;
@@ -27,22 +29,25 @@ import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
 import hudson.AbortException;
-import hudson.model.Descriptor;
-import hudson.model.TaskListener;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
+import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4GraphRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
+import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.ParallelSync;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
+import org.jenkinsci.plugins.p4.publish.CommitImpl;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
@@ -167,7 +172,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @param populate    Populate strategy
 	 * @throws Exception push up stack
 	 */
-	public void syncFiles(P4Revision buildChange, Populate populate) throws Exception {
+	public void syncFiles(P4Ref buildChange, Populate populate) throws Exception {
 		TimeTask timer = new TimeTask();
 
 		// test label is valid
@@ -190,15 +195,24 @@ public class ClientHelper extends ConnectionHelper {
 			log("P4 Task: syncing files at change: " + buildChange);
 		}
 
-		// build file revision spec
-		String path = iclient.getRoot() + "/...";
-		String revisions = path + "@" + buildChange;
+		// Sync changes/labels
+		if (buildChange instanceof P4ChangeRef || buildChange instanceof P4LabelRef) {
+			// build file revision spec
+			String path = iclient.getRoot() + "/...";
+			String revisions = path + "@" + buildChange;
 
-		// Sync files
-		if (populate instanceof CheckOnlyImpl) {
-			syncHaveList(revisions, populate);
-		} else {
-			syncFiles(revisions, populate);
+			// Sync files
+			if (populate instanceof CheckOnlyImpl) {
+				syncHaveList(revisions, populate);
+			} else {
+				syncFiles(revisions, populate);
+			}
+		}
+
+		// Sync graph repos
+		if (buildChange instanceof P4GraphRef && populate instanceof GraphHybridImpl) {
+			String rev = ((P4GraphRef) buildChange).getRepo() + "/...";
+			syncFiles(rev, populate);
 		}
 
 		log("duration: " + timer.toString() + "\n");
@@ -286,7 +300,7 @@ public class ClientHelper extends ConnectionHelper {
 			command.add("-u" + p4credential.getUsername());
 
 			String p4host = p4credential.getP4host();
-			if(p4host != null && !p4host.isEmpty()) {
+			if (p4host != null && !p4host.isEmpty()) {
 				command.add("-H" + p4host);
 			}
 
@@ -372,6 +386,10 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		if (populate instanceof ForceCleanImpl) {
+			tidyForceSyncImpl(path, populate);
+		}
+
+		if (populate instanceof GraphHybridImpl) {
 			tidyForceSyncImpl(path, populate);
 		}
 
@@ -607,10 +625,18 @@ public class ClientHelper extends ConnectionHelper {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: reconcile files to changelist.");
 
-		// build file revision spec
-		String ws = "//" + iclient.getName() + "/...";
-		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
-		findChangeFiles(files, publish.isDelete());
+		List<IFileSpec> files;
+		if (publish instanceof CommitImpl) {
+			CommitImpl commit = (CommitImpl) publish;
+			files = FileSpecBuilder.makeFileSpecList(commit.getFiles());
+			AddFilesOptions opts = new AddFilesOptions();
+			iclient.addFiles(files, opts);
+		} else {
+			// build file revision spec
+			String ws = "//" + iclient.getName() + "/...";
+			files = FileSpecBuilder.makeFileSpecList(ws);
+			findChangeFiles(files, publish.isDelete());
+		}
 
 		// Check if file is open
 		boolean open = isOpened(files);
@@ -677,6 +703,12 @@ public class ClientHelper extends ConnectionHelper {
 			shelveFiles(change, files, revert);
 		}
 
+		// if COMMIT
+		if (publish instanceof CommitImpl) {
+			CommitImpl commit = (CommitImpl) publish;
+			commitFiles(change);
+		}
+
 		log("duration: " + timer.toString() + "\n");
 	}
 
@@ -722,6 +754,24 @@ public class ClientHelper extends ConnectionHelper {
 		} else {
 			throw new P4JavaException("Unable to submit change.");
 		}
+	}
+
+	private void commitFiles(IChangelist change) throws Exception {
+		log("... committing files");
+		List<String> opts = new ArrayList<>();
+		opts.add("-c");
+		opts.add(String.valueOf(change.getId()));
+		String[] args = opts.toArray(new String[opts.size()]);
+
+		Map<String, Object>[] results = connection.execMapCmd(CmdSpec.SUBMIT.name(), args, null);
+		for (Map<String, Object> map : results) {
+			if (map.containsKey("submittedCommit")) {
+				String sha = (String) map.get("submittedCommit");
+				log("... committing SHA: " + sha);
+				return;
+			}
+		}
+		throw new P4JavaException("Unable to commit change.");
 	}
 
 	private void shelveFiles(IChangelist change, List<IFileSpec> files, boolean revert) throws Exception {
@@ -889,6 +939,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Get the latest change on the given path
+	 *
 	 * @param path Perforce depot path //foo/...
 	 * @return change number
 	 * @throws Exception push up stack
@@ -957,27 +1008,51 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
+	 * List of Graph Repos within the client's view
+	 *
+	 * @return A list of Graph Repos
+	 * @throws Exception push up stack
+	 */
+	public List<IRepo> listRepos() throws Exception {
+		List<IRepo> repos = iclient.getRepos();
+		return repos;
+	}
+
+	/**
 	 * Show all changes within the scope of the client, between the 'from' and
 	 * 'to' change limits.
 	 *
-	 * @param from From revision (change or label)
-	 * @param to   To revision (change or label)
+	 * @param fromRefs list of from revisions (change or label)
+	 * @param to       To revision (change or label)
 	 * @return List of changes
 	 * @throws Exception push up stack
 	 */
-	public List<P4Revision> listChanges(P4Revision from, P4Revision to) throws Exception {
+	public List<P4Ref> listChanges(List<P4Ref> fromRefs, P4Ref to) throws Exception {
+
+		P4Ref from = getSingleChange(fromRefs);
+
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
-			return new ArrayList<P4Revision>();
+			return new ArrayList<P4Ref>();
 		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
-		List<P4Revision> list = listChanges(ws);
+		List<P4Ref> list = listChanges(ws);
 		if (!from.isLabel()) {
 			list.remove(from);
 		}
 		return list;
+	}
+
+	private P4Ref getSingleChange(List<P4Ref> refs) {
+		// fetch single change and ignore commits
+		for (P4Ref ref : refs) {
+			if (!ref.isCommit()) {
+				return ref;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -988,9 +1063,9 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return List of changes
 	 * @throws Exception push up stack
 	 */
-	public List<P4Revision> listChanges(P4Revision from) throws Exception {
+	public List<P4Ref> listChanges(P4Ref from) throws Exception {
 		String ws = "//" + iclient.getName() + "/...@" + from + ",now";
-		List<P4Revision> list = listChanges(ws);
+		List<P4Ref> list = listChanges(ws);
 		if (!from.isLabel()) {
 			list.remove(from);
 		}
@@ -1003,24 +1078,15 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return List of changes
 	 * @throws Exception push up stack
 	 */
-	public List<P4Revision> listChanges() throws Exception {
+	public List<P4Ref> listChanges() throws Exception {
 		String ws = "//" + iclient.getName() + "/...";
 		return listChanges(ws);
 	}
 
-	private List<P4Revision> listChanges(String ws) throws Exception {
-		List<P4Revision> list = new ArrayList<P4Revision>();
+	private List<P4Ref> listChanges(String ws) throws Exception {
+		List<P4Ref> list = new ArrayList<P4Ref>();
 		GetChangelistsOptions opts = new GetChangelistsOptions();
-
-		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			Descriptor dsc = j.getDescriptor(PerforceScm.class);
-			if (dsc instanceof PerforceScm.DescriptorImpl) {
-				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
-				int CHANGE_COUNT_LIMIT = p4scm.getMaxChanges();
-				opts.setMaxMostRecent(CHANGE_COUNT_LIMIT);
-			}
-		}
+		opts.setMaxMostRecent(getMaxChangeLimit());
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
 		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
@@ -1028,7 +1094,7 @@ public class ClientHelper extends ConnectionHelper {
 			for (IChangelistSummary c : cngs) {
 				// don't try to add null or -1 changes
 				if (c != null && c.getId() != -1) {
-					P4Revision rev = new P4Revision(c.getId());
+					P4Ref rev = new P4ChangeRef(c.getId());
 					// don't add change entries already in the list
 					if (!(list.contains(rev))) {
 						list.add(rev);
@@ -1045,11 +1111,12 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Fetches a list of changes needed to update the workspace to head.
 	 *
-	 * @param from From revision
+	 * @param fromRefs List from revisions
 	 * @return List of changes
 	 * @throws Exception push up stack
 	 */
-	public List<P4Revision> listHaveChanges(P4Revision from) throws Exception {
+	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs) throws Exception {
+		P4Ref from = getSingleChange(fromRefs);
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + ",now");
 			return listChanges(from);
@@ -1063,15 +1130,17 @@ public class ClientHelper extends ConnectionHelper {
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number or label.
 	 *
-	 * @param from        From revision
+	 * @param fromRefs    List of from revisions
 	 * @param changeLimit To Revision
 	 * @return List of changes
 	 * @throws Exception push up stack
 	 */
-	public List<P4Revision> listHaveChanges(P4Revision from, P4Revision changeLimit) throws Exception {
+	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs, P4Ref changeLimit) throws Exception {
+
+		P4Ref from = getSingleChange(fromRefs);
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + "," + changeLimit);
-			return listChanges(from, changeLimit);
+			return listChanges(fromRefs, changeLimit);
 		}
 
 		String path = "//" + iclient.getName() + "/...";
@@ -1079,10 +1148,10 @@ public class ClientHelper extends ConnectionHelper {
 		return listHaveChanges(fileSpec);
 	}
 
-	private List<P4Revision> listHaveChanges(String fileSpec) throws Exception {
+	private List<P4Ref> listHaveChanges(String fileSpec) throws Exception {
 		log("P4: Polling with cstat: " + fileSpec);
 
-		List<P4Revision> haveChanges = new ArrayList<P4Revision>();
+		List<P4Ref> haveChanges = new ArrayList<P4Ref>();
 		Map<String, Object>[] map;
 		map = connection.execMapCmd("cstat", new String[]{fileSpec}, null);
 
@@ -1092,7 +1161,7 @@ public class ClientHelper extends ConnectionHelper {
 				if (status.startsWith("have")) {
 					String value = (String) entry.get("change");
 					int change = Integer.parseInt(value);
-					haveChanges.add(new P4Revision(change));
+					haveChanges.add(new P4ChangeRef(change));
 				}
 			}
 		}

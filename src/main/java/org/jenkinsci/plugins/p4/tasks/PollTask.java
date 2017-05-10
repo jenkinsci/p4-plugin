@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.tasks;
 
+import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
@@ -7,7 +8,9 @@ import com.perforce.p4java.impl.generic.core.Changelist;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
@@ -22,47 +25,60 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PollTask extends AbstractTask implements FileCallable<List<P4Revision>>, Serializable {
+public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
-	private final P4Revision last;
+	private final List<P4Ref> lastRefs;
 
 	private String pin;
 
-	public PollTask(List<Filter> filter, P4Revision last) {
+	public PollTask(List<Filter> filter, List<P4Ref> lastRefs) {
 		this.filter = filter;
-		this.last = last;
+		this.lastRefs = lastRefs;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<P4Revision> invoke(File workspace, VirtualChannel channel) throws IOException {
-		return (List<P4Revision>) tryTask();
+	public List<P4Ref> invoke(File workspace, VirtualChannel channel) throws IOException {
+		return (List<P4Ref>) tryTask();
 	}
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
-		List<P4Revision> changes = new ArrayList<P4Revision>();
+		List<P4Ref> changes = new ArrayList<P4Ref>();
 
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			changes = p4.listHaveChanges(last, new P4Revision(pin));
+			changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
 		} else {
-			changes = p4.listHaveChanges(last);
+			changes = p4.listHaveChanges(lastRefs);
 		}
 
 		// filter changes...
-		List<P4Revision> remainder = new ArrayList<P4Revision>();
-		for (P4Revision c : changes) {
-			Changelist changelist = p4.getChange(c.getChange());
-			// add unfiltered changes to remainder list
-			if (!filterChange(changelist, filter)) {
-				remainder.add(new P4Revision(changelist.getId()));
-				p4.log("... found change: " + changelist.getId());
+		List<P4Ref> remainder = new ArrayList<P4Ref>();
+		for (P4Ref c : changes) {
+			int change = c.getChange();
+			if (change > 0) {
+				Changelist changelist = p4.getChange(change);
+				// add unfiltered changes to remainder list
+				if (!filterChange(changelist, filter)) {
+					remainder.add(new P4ChangeRef(changelist.getId()));
+					p4.log("... found change: " + changelist.getId());
+				}
 			}
 		}
 		changes = remainder;
+
+		// Poll Graph commit changes
+		if (p4.checkVersion(20171)) {
+			List<IRepo> repos = p4.listRepos();
+			for (IRepo repo : repos) {
+				P4Ref graphHead = p4.getGraphHead(repo.getName());
+				List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
+				changes.addAll(commits);
+			}
+		}
 
 		return changes;
 	}
@@ -73,7 +89,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Revisi
 
 	/**
 	 * Returns true if change should be filtered
-	 * 
+	 *
 	 * @param changelist
 	 * @throws AccessException
 	 * @throws RequestException
@@ -128,7 +144,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Revisi
 				for (IFileSpec s : files) {
 					boolean isFileInViewMask = false;
 					String p = s.getDepotPathString();
-					for(String maskPath : viewMask.split("\n")) {
+					for (String maskPath : viewMask.split("\n")) {
 						if (p.startsWith(maskPath)) {
 							isFileInViewMask = true;
 						}
@@ -141,7 +157,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Revisi
 						}
 					}
 
-					if(isFileInViewMask) {
+					if (isFileInViewMask) {
 						included.add(s);
 					}
 				}

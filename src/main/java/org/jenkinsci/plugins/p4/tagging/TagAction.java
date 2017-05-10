@@ -8,6 +8,9 @@ import hudson.model.TaskListener;
 import hudson.scm.AbstractScmTagAction;
 import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -31,6 +34,8 @@ public class TagAction extends AbstractScmTagAction {
 
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
+
+	private List<P4Ref> refChanges;
 
 	private P4Revision buildChange;
 
@@ -102,7 +107,7 @@ public class TagAction extends AbstractScmTagAction {
 		task.setListener(listener);
 		task.setCredential(credential, getRun().getParent());
 		task.setWorkspace(workspace);
-		task.setBuildChange(buildChange);
+		task.setBuildChange(getRefChange());
 
 		FilePath buildWorkspace = nodeWorkspace;
 		if (nodeWorkspace == null) {
@@ -123,10 +128,45 @@ public class TagAction extends AbstractScmTagAction {
 		}
 	}
 
+	public void setRefChanges(List<P4Ref> refChanges) {
+		this.refChanges = refChanges;
+	}
+
+	public List<P4Ref> getRefChanges() {
+		// parse Legacy XML data from P4Revision to P4Ref
+		if (refChanges == null || refChanges.isEmpty()) {
+			refChanges = new ArrayList<>();
+			if (buildChange != null) {
+				if (buildChange.isLabel()) {
+					P4LabelRef label = new P4LabelRef(buildChange.toString());
+					refChanges.add(label);
+				} else {
+					P4ChangeRef change = new P4ChangeRef(buildChange.getChange());
+					refChanges.add(change);
+				}
+			}
+		}
+		return refChanges;
+	}
+
+	public P4Ref getRefChange() {
+		for (P4Ref change : refChanges) {
+			if (change instanceof P4ChangeRef) {
+				return change;
+			}
+			if (change instanceof P4LabelRef) {
+				return change;
+			}
+		}
+		return null;
+	}
+
+	@Deprecated
 	public void setBuildChange(P4Revision buildChange) {
 		this.buildChange = buildChange;
 	}
 
+	@Deprecated
 	public P4Revision getBuildChange() {
 		return buildChange;
 	}
@@ -201,30 +241,35 @@ public class TagAction extends AbstractScmTagAction {
 	 * @param syncID   Changelist Sync ID
 	 * @return Perforce change
 	 */
-	public static P4Revision getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		P4Revision last = null;
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4Ref> list = new ArrayList<>();
 
 		List<TagAction> actions = lastActions(run);
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");
-			return last;
+			return list;
 		}
 
 		// look for action matching view
 		for (TagAction action : actions) {           //JENKINS-43877
 			if (syncID.equals(action.getSyncID()) || (action.getSyncID() != null && action.getSyncID().contains(syncID))) {
-				last = action.getBuildChange();
-				listener.getLogger().println("Found last change " + last.toString() + " on syncID " + syncID);
+				List<P4Ref> changes = action.getRefChanges();
+				for (P4Ref change : changes) {
+					if (!change.isCommit()) {
+						listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
+					}
+				}
+				return changes;
 			}
 		}
 
-		return last;
+		return list;
 	}
 
 	/**
 	 * Find the last action; use this for environment variable as the last action has the latest values.
 	 *
-	 * @param run      The current build
+	 * @param run The current build
 	 * @return Action
 	 */
 	public static TagAction getLastAction(Run<?, ?> run) {

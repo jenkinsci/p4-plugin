@@ -37,7 +37,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -95,11 +94,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
 		String text = page.asText();
-		assertTrue(text.contains("9 by jenkins@jenkins.data.ws"));
+		assertTrue(text.contains("9 by jenkins (jenkins.data.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
 		text = page.asText();
-		assertTrue(text.contains("//depot/Main/file-11.txt#4"));
+		assertTrue(text.contains("//depot/Main/file-11.txt #4"));
 
 		// Check workspace descriptors
 		WorkspaceDescriptor desc = workspace.getDescriptor();
@@ -125,7 +124,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	@Test
 	public void testFreeStyleProject_buildLabel() throws Exception {
 
-		URL url = new URL("http://localhost");
+		String url = "http://localhost";
 		P4WebBrowser browser = new P4WebBrowser(url);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("buildLabel");
@@ -152,7 +151,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
 		String text = page.asText();
-		assertTrue(text.contains("15 by jenkins@jenkins.data.ws"));
+		assertTrue(text.contains("15 by jenkins (jenkins.data.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
 		text = page.asText();
@@ -205,7 +204,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	@Test
 	public void testFreeStyleProject_buildShelf() throws Exception {
 
-		URL url = new URL("http://localhost");
+		String url = "http://localhost";
 		SwarmBrowser browser = new SwarmBrowser(url);
 
 		String client = "test.ws";
@@ -235,7 +234,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
 		String text = page.asText();
-		assertTrue(text.contains("19 by admin@admin.ws"));
+		assertTrue(text.contains("19 by admin (admin.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
 		text = page.asText();

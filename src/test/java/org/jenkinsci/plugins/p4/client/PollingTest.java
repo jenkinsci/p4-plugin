@@ -13,7 +13,7 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -93,7 +93,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<P4Revision> buildList = scm.getIncrementalChanges();
+		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(12, buildList.size());
 	}
 
@@ -176,7 +176,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<P4Revision> buildList = scm.getIncrementalChanges();
+		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(2, buildList.size());
 		int change = buildList.get(0).getChange();
 		assertEquals(18, change);
@@ -224,7 +224,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
-		List<P4Revision> buildList = scm.getIncrementalChanges();
+		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(13, buildList.size());
 		int change = buildList.get(0).getChange();
 		assertEquals(16, change);

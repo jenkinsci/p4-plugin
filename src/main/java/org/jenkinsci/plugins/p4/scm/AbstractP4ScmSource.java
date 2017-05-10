@@ -12,6 +12,8 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.changes.P4GraphRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -128,6 +130,13 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
 			long change = p4.getHead(head.getPath() + "/...");
+			if(change < 0) {
+				P4Ref ref = p4.getGraphHead(head.getPath());
+				if (ref instanceof P4GraphRef) {
+					P4GraphRef graphHead = (P4GraphRef) ref;
+					change = graphHead.getDate();
+				}
+			}
 			P4Revision revision = new P4Revision(head, change);
 			return revision;
 		}

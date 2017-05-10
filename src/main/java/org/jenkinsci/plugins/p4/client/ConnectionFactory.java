@@ -106,6 +106,10 @@ public class ConnectionFactory {
 		String timeout = String.valueOf(config.getTimeout());
 		props.put(RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK, timeout);
 
+		// enable graph depot and AndMaps
+		props.put(PropertyDefs.ENABLE_GRAPH_SHORT_FORM, "true");
+		props.put(PropertyDefs.ENABLE_ANDMAPS_SHORT_FORM, "true");
+
 		// Set P4HOST if defined
 		UsageOptions opts = new UsageOptions(props);
 		String p4host = config.getP4Host();

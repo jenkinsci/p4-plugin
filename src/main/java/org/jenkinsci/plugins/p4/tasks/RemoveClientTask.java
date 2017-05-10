@@ -8,7 +8,7 @@ import jenkins.model.Jenkins;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.remoting.RoleChecker;
@@ -54,7 +54,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 			if (deleteFiles) {
 				ForceCleanImpl forceClean = new ForceCleanImpl(true, true, null, null);
 				logger.info("P4: unsyncing client: " + client);
-				p4.syncFiles(new P4Revision(0), forceClean);
+				p4.syncFiles(new P4ChangeRef(0), forceClean);
 
 				// TODO: Jenkins should do this, uncomment if needed.
 				// File root = workspace.getCanonicalFile();

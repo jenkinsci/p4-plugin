@@ -1,13 +1,16 @@
 package org.jenkinsci.plugins.p4.tasks;
 
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -33,7 +36,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	private CheckoutStatus status;
 	private int head;
-	private P4Revision buildChange;
+	private List<P4Ref> builds;
 	private int review;
 
 	/**
@@ -47,12 +50,14 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public void initialise() throws AbortException {
 		ClientHelper p4 = getConnection();
+		builds = new ArrayList<>();
+
 		try {
 			// fetch and calculate change to sync to or review to unshelve.
 			status = getStatus(getWorkspace());
 			head = p4.getClientHead();
 			review = getReview(getWorkspace());
-			buildChange = getBuildChange(getWorkspace());
+			P4Ref buildChange = getBuildChange(getWorkspace());
 
 			// try to get change-number if automatic label
 			if (buildChange.isLabel()) {
@@ -65,9 +70,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 							int change = Integer.parseInt(revSpec.substring(1));
 							// if change is bigger than head, use head
 							if (change > head) {
-								buildChange = new P4Revision(head);
+								buildChange = new P4ChangeRef(head);
 							} else {
-								buildChange = new P4Revision(change);
+								buildChange = new P4ChangeRef(change);
 							}
 						} catch (NumberFormatException e) {
 							// leave buildChange as is
@@ -81,9 +86,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						int change = Integer.parseInt(counter);
 						// if change is bigger than head, use head
 						if (change > head) {
-							buildChange = new P4Revision(head);
+							buildChange = new P4ChangeRef(head);
 						} else {
-							buildChange = new P4Revision(change);
+							buildChange = new P4ChangeRef(change);
 						}
 					} catch (NumberFormatException n) {
 						// no change number in counter
@@ -92,7 +97,20 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			} else {
 				// if change is bigger than head, use head
 				if (buildChange.getChange() > head) {
-					buildChange = new P4Revision(head);
+					buildChange = new P4ChangeRef(head);
+				}
+			}
+
+			// add buildChange to list of changes to builds
+			builds.add(buildChange);
+
+			// Initialise Graph commit changes
+			if (p4.checkVersion(20171)) {
+				List<IRepo> repos = p4.listRepos();
+				for (IRepo repo : repos) {
+					P4Ref graphHead = p4.getGraphHead(repo.getName());
+					// add graphHead to list of commits to builds
+					builds.add(graphHead);
 				}
 			}
 		} catch (Exception e) {
@@ -119,8 +137,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		// Tidy the workspace before sync/build
 		p4.tidyWorkspace(populate);
 
-		// Sync workspace to label, head or specified change
-		p4.syncFiles(buildChange, populate);
+		// Sync workspace to label, head or specified change for each repo to build
+		for (P4Ref build : builds) {
+			p4.syncFiles(build, populate);
+		}
 
 		// Unshelve review if specified
 		if (status == CheckoutStatus.SHELVED) {
@@ -149,9 +169,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 *
 	 * @param workspace
 	 */
-	private P4Revision getBuildChange(Workspace workspace) {
+	private P4Ref getBuildChange(Workspace workspace) {
 		// Use head as the default
-		P4Revision build = new P4Revision(this.head);
+		P4Ref build = new P4ChangeRef(this.head);
 
 		// Get Environment parameters from expand
 		Expand expand = workspace.getExpand();
@@ -165,10 +185,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				try {
 					// if build is a change-number passed as a label
 					int change = Integer.parseInt(expandedPopulateLabel);
-					build = new P4Revision(change);
+					build = new P4ChangeRef(change);
 					logger.info("getBuildChange:pinned:change:" + change);
 				} catch (NumberFormatException e) {
-					build = new P4Revision(expandedPopulateLabel);
+					build = new P4LabelRef(expandedPopulateLabel);
 					logger.info("getBuildChange:pinned:label:" + expandedPopulateLabel);
 				}
 			}
@@ -179,7 +199,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		if (cngStr != null && !cngStr.isEmpty()) {
 			try {
 				int change = Integer.parseInt(cngStr);
-				build = new P4Revision(change);
+				build = new P4ChangeRef(change);
 				logger.info("getBuildChange:ReviewProp:CHANGE:" + change);
 			} catch (NumberFormatException e) {
 			}
@@ -191,10 +211,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			try {
 				// if build is a change-number passed as a label
 				int change = Integer.parseInt(lblStr);
-				build = new P4Revision(change);
+				build = new P4ChangeRef(change);
 				logger.info("getBuildChange:ReviewProp:LABEL:" + change);
 			} catch (NumberFormatException e) {
-				build = new P4Revision(lblStr);
+				build = new P4LabelRef(lblStr);
 				logger.info("getBuildChange:ReviewProp:LABEL:" + lblStr);
 			}
 		}
@@ -221,32 +241,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		return review;
 	}
 
-	public List<P4Revision> getChanges(P4Revision last) {
-
-		List<P4Revision> changes = new ArrayList<P4Revision>();
-
-		// Add changes to this build.
-		ClientHelper p4 = getConnection();
-		try {
-			changes = p4.listChanges(last, buildChange);
-		} catch (Exception e) {
-			String err = "Unable to get changes: " + e;
-			logger.severe(err);
-			p4.log(err);
-			e.printStackTrace();
-		} finally {
-			p4.disconnect();
-		}
-
-		// Include shelf if a review
-		if (status == CheckoutStatus.SHELVED) {
-			changes.add(new P4Revision(review));
-		}
-
-		return changes;
-	}
-
-	public List<P4ChangeEntry> getChangesFull(P4Revision last) {
+	public List<P4ChangeEntry> getChangesFull(List<P4Ref> lastRefs) {
 
 		List<P4ChangeEntry> changesFull = new ArrayList<P4ChangeEntry>();
 
@@ -261,12 +256,22 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			}
 
 			// add all changes to list
-			List<P4Revision> changes = p4.listChanges(last, buildChange);
-			for (P4Revision change : changes) {
-				P4ChangeEntry cl = new P4ChangeEntry();
-				IChangelistSummary summary = p4.getChangeSummary(change.getChange());
-				cl.setChange(p4, summary);
-				changesFull.add(cl);
+			for(P4Ref build : builds) {
+				if(build.isCommit()) {
+					// add graph commits to list
+					List<P4Ref> commits = p4.listCommits(lastRefs, build);
+					for (P4Ref ref : commits) {
+						P4ChangeEntry cl = ref.getChangeEntry(p4);
+						changesFull.add(cl);
+					}
+				} else {
+					// add classic changes
+					List<P4Ref> changes = p4.listChanges(lastRefs, build);
+					for (P4Ref change : changes) {
+						P4ChangeEntry cl = change.getChangeEntry(p4);
+						changesFull.add(cl);
+					}
+				}
 			}
 		} catch (Exception e) {
 			String err = "Unable to get full changes: " + e;
@@ -282,7 +287,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public P4ChangeEntry getCurrentChange() {
 		P4ChangeEntry cl = new P4ChangeEntry();
-		P4Revision current = getBuildChange();
+		P4Ref current = getBuildChange();
 
 		ClientHelper p4 = getConnection();
 		try {
@@ -303,26 +308,33 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		return status;
 	}
 
-	// Returns the number of the build change not the review change
-	public P4Revision getSyncChange() {
-		return buildChange;
+	// Returns the build changes not the review change
+	public List<P4Ref> getSyncChange() {
+		return builds;
 	}
 
-	public P4Revision getBuildChange() {
+	public P4Ref getBuildChange() {
 		if (status == CheckoutStatus.SHELVED) {
-			return new P4Revision(review);
+			return new P4ChangeRef(review);
 		}
-		return buildChange;
+		for(P4Ref build : builds) {
+			if(!build.isCommit()) {
+				return build;
+			}
+		}
+		return null;
 	}
 
-	public void setBuildChange(P4Revision parentChange) {
-		buildChange = parentChange;
+	public void setBuildChange(P4Ref parentChange) {
+		builds = new ArrayList<>();
+		builds.add(parentChange);
 	}
 
-	public void setIncrementalChanges(List<P4Revision> changes) {
+	public void setIncrementalChanges(List<P4Ref> changes) {
 		if (changes != null && !changes.isEmpty()) {
-			P4Revision lowest = changes.get(changes.size() - 1);
-			buildChange = lowest;
+			P4Ref lowest = changes.get(changes.size() - 1);
+			builds = new ArrayList<>();
+			builds.add(lowest);
 		}
 	}
 

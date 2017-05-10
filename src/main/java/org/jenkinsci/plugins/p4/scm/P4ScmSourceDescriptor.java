@@ -27,6 +27,8 @@ public abstract class P4ScmSourceDescriptor extends SCMSourceDescriptor {
 	/**
 	 * Credentials list, a Jelly config method for a build job.
 	 *
+	 * @param project    Jenkins project item
+	 * @param credential Perforce credential ID
 	 * @return A list of Perforce credential items to populate the jelly
 	 * Select list.
 	 */
@@ -46,4 +48,11 @@ public abstract class P4ScmSourceDescriptor extends SCMSourceDescriptor {
 		return RepositoryBrowsers.filter(P4Browser.class);
 	}
 
+	public FormValidation doCheckIncludes(@QueryParameter String value) {
+		if (value != null && !value.isEmpty()) {
+			return FormValidation.ok();
+		} else {
+			return FormValidation.error("Please provide a valid Includes path.");
+		}
+	}
 }

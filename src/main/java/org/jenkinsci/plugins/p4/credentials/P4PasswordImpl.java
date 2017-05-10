@@ -34,7 +34,6 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		this.password = Secret.fromString(password);
 	}
 
-	@NonNull
 	public Secret getPassword() {
 		return password;
 	}

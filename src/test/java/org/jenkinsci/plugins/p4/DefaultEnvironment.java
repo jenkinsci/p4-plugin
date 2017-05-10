@@ -7,7 +7,9 @@ import hudson.model.*;
 import hudson.tasks.Builder;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.publish.CommitImpl;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -93,6 +95,42 @@ abstract public class DefaultEnvironment {
 		// Submit artifacts
 		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
 		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
+		project.getPublishersList().add(publish);
+		project.save();
+
+		// Start build
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+	}
+
+	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {
+		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+
+		// Create workspace
+		String client = "graphCommit.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = path + " //" + client + "/" + filename;
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
+		spec.setType("graph");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// Populate with P4 scm
+		Populate populate = new GraphHybridImpl(false, null, null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// Freestyle job
+		FreeStyleProject project = jenkins.createFreeStyleProject();
+		project.setScm(scm);
+
+		// Create artifact files
+		project.getBuildersList().add(new CreateArtifact(filename, content));
+
+		// Submit artifacts
+		CommitImpl commit = new CommitImpl("publish", true, true);
+		commit.addFile(path);
+		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, commit);
 		project.getPublishersList().add(publish);
 		project.save();
 

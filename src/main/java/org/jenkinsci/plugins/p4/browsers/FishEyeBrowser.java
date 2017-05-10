@@ -1,7 +1,5 @@
 package org.jenkinsci.plugins.p4.browsers;
 
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -9,6 +7,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -16,6 +15,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
@@ -27,7 +27,6 @@ public class FishEyeBrowser extends P4Browser {
 	 * The URL of the FishEye repository, e.g.
 	 * <tt>http://deadlock.netbeans.org/fisheye/browse/netbeans/</tt>
 	 */
-	public final URL url;
 
 	/**
 	 * This is the root 'module' of the FishEye repository. It is a path that is
@@ -36,36 +35,34 @@ public class FishEyeBrowser extends P4Browser {
 	public final String rootModule;
 
 	@DataBoundConstructor
-	public FishEyeBrowser(URL url, String rootModule) {
-		this.url = normalizeToEndWithSlash(url);
+	public FishEyeBrowser(String url, String rootModule) throws MalformedURLException {
+		super(url);
 		this.rootModule = trimHeadSlash(trimHeadSlash(rootModule));
 	}
 
 	@Override
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(url, "../../changelog/" + getProjectName() + "/?cs="
+		return new URL(getUrl(), "../../changelog/" + getProjectName() + "/?cs="
 				+ changeSet.getId());
 	}
 
 	@Override
-	public URL getDiffLink(IFileSpec file) throws Exception {
-		if (file.getAction() != FileAction.EDIT
-				&& file.getAction() != FileAction.INTEGRATE) {
+	public URL getDiffLink(P4AffectedFile file, String change) throws Exception {
+		if (!file.getAction().equalsIgnoreCase("edit")) {
 			return null;
 		}
-		int change = file.getChangelistId();
-		if (change <= 1) {
+		if (change == null || change.isEmpty()) {
 			return null;
 		}
-		return new URL(url, getRelativeFilename(file)
-				+ new QueryBuilder(url.getQuery()).add("r1=").add(
+		return new URL(getUrl(), getRelativeFilename(file)
+				+ new QueryBuilder(getUrl().getQuery()).add("r1=").add(
 				"r2=" + change));
 	}
 
 	@Override
-	public URL getFileLink(IFileSpec file) throws Exception {
-		return new URL(url, getRelativeFilename(file)
-				+ new QueryBuilder(url.getQuery()));
+	public URL getFileLink(P4AffectedFile file) throws Exception {
+		return new URL(getUrl(), getRelativeFilename(file)
+				+ new QueryBuilder(getUrl().getQuery()));
 	}
 
 	@Override
@@ -74,8 +71,8 @@ public class FishEyeBrowser extends P4Browser {
 		return null;
 	}
 
-	private String getRelativeFilename(IFileSpec file) {
-		String path = trimHeadSlash(trimHeadSlash(file.getDepotPathString()));
+	private String getRelativeFilename(P4AffectedFile file) {
+		String path = trimHeadSlash(trimHeadSlash(file.getPath()));
 		if (path.startsWith(getRootModule())) {
 			path = path.substring(getRootModule().length());
 		}
@@ -86,7 +83,7 @@ public class FishEyeBrowser extends P4Browser {
 	 * Pick up "FOOBAR" from "http://site/browse/FOOBAR/"
 	 */
 	private String getProjectName() {
-		String p = url.getPath();
+		String p = getUrl().getPath();
 		if (p.endsWith("/"))
 			p = p.substring(0, p.length() - 1);
 

@@ -17,7 +17,6 @@ public class ReviewActionFactory extends TransientActionFactory<Job> {
 		return Job.class;
 	}
 
-	@Nonnull
 	@Override
 	public Collection<? extends Action> createFor(@Nonnull Job target) {
 		try {

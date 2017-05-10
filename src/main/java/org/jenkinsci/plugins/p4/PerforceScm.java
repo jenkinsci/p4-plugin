@@ -15,8 +15,8 @@ import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.Computer;
 import hudson.model.Descriptor;
-import hudson.model.Job;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -38,8 +38,11 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.jenkinsci.plugins.p4.changes.P4Revision;
+import org.jenkinsci.plugins.p4.changes.P4GraphRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -68,7 +71,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -86,8 +88,11 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 
-	private transient List<P4Revision> incrementalChanges;
-	private transient P4Revision parentChange;
+	private transient List<P4Ref> incrementalChanges;
+	private transient P4Ref parentChange;
+
+	public static final int DEFAULT_FILE_LIMIT = 50;
+	public static final int DEFAULT_CHANGE_LIMIT = 20;
 
 	/**
 	 * JENKINS-37442: We need to store the changelog file name for the build so
@@ -116,7 +121,7 @@ public class PerforceScm extends SCM {
 		return browser;
 	}
 
-	public List<P4Revision> getIncrementalChanges() {
+	public List<P4Ref> getIncrementalChanges() {
 		return incrementalChanges;
 	}
 
@@ -240,9 +245,7 @@ public class PerforceScm extends SCM {
 		}
 		try {
 			ConnectionHelper connection = new ConnectionHelper(credentials, null);
-			String swarm = connection.getSwarm();
-			URL url = new URL(swarm);
-			return new SwarmBrowser(url);
+			return new SwarmBrowser(connection.getSwarm());
 		} catch (MalformedURLException e) {
 			logger.info("Unable to guess repository browser.");
 			return null;
@@ -363,13 +366,13 @@ public class PerforceScm extends SCM {
 		}
 
 		// Calculate last change, build if null (JENKINS-40356)
-		P4Revision last = TagAction.getLastChange(lastRun, listener, syncID);
-		if (last == null) {
+		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
+		if (lastRefs == null || lastRefs.isEmpty()) {
 			return PollingResult.BUILD_NOW;
 		}
 
 		// Create task
-		PollTask task = new PollTask(filter, last);
+		PollTask task = new PollTask(filter, lastRefs);
 		task.setCredential(credential, lastRun);
 		task.setWorkspace(ws);
 		task.setListener(listener);
@@ -413,19 +416,19 @@ public class PerforceScm extends SCM {
 		if (isIncremental()) {
 			task.setIncrementalChanges(incrementalChanges);
 		}
-		incrementalChanges = new ArrayList<P4Revision>();
+		incrementalChanges = new ArrayList<P4Ref>();
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
-		tag.setBuildChange(task.getSyncChange());
+		tag.setRefChanges(task.getSyncChange());
 		run.addAction(tag);
 
 		// Invoke build.
 		String node = ws.getExpand().get("NODE_NAME");
 		Job<?, ?> job = run.getParent();
 		if (run instanceof MatrixBuild) {
-			parentChange = task.getSyncChange();
+			parentChange = new P4LabelRef(getChangeNumber(tag, run));
 			if (isBuildParent(job)) {
 				log.println("Building Parent on Node: " + node);
 				success &= buildWorkspace.act(task);
@@ -494,18 +497,19 @@ public class PerforceScm extends SCM {
 		Run<?, ?> lastBuild = run.getPreviousBuild();
 
 		String syncID = task.getSyncID();
-		P4Revision lastChange = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
+		List<P4Ref> lastRefs = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
 
-		if (lastChange != null) {
-			list.addAll(task.getChangesFull(lastChange));
+		if (lastRefs != null && !lastRefs.isEmpty()) {
+			list.addAll(task.getChangesFull(lastRefs));
 		}
 
 		// if empty, look for shelves in current build. The latest change
 		// will not get listed as 'p4 changes n,n' will return no change
 		if (list.isEmpty()) {
-			P4Revision lastRevision = task.getBuildChange();
-			if (lastRevision != null) {
-				list.addAll(task.getChangesFull(lastRevision));
+			List<P4Ref> lastRevisions = new ArrayList<>();
+			lastRevisions.add(task.getBuildChange());
+			if (lastRevisions != null && !lastRevisions.isEmpty()) {
+				list.addAll(task.getChangesFull(lastRevisions));
 			}
 		}
 
@@ -513,6 +517,7 @@ public class PerforceScm extends SCM {
 		if ((lastBuild == null) && list.isEmpty()) {
 			list.add(task.getCurrentChange());
 		}
+
 		return list;
 	}
 
@@ -523,7 +528,7 @@ public class PerforceScm extends SCM {
 		TagAction tagAction = build.getAction(TagAction.class);
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
-			String change = getChangeNumber(tagAction, build);
+			String change = tagAction.getRefChange().toString();
 			if (change != null) {
 				env.put("P4_CHANGELIST", change);
 			}
@@ -565,56 +570,63 @@ public class PerforceScm extends SCM {
 	}
 
 	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {
-		P4Revision buildChange = tagAction.getBuildChange();
+		List<P4Ref> builds = tagAction.getRefChanges();
 
-		if (!buildChange.isLabel()) {
-			// its a change, so return...
-			return buildChange.toString();
-		}
-
-		try {
-			// it is really a change number, so add change...
-			int change = Integer.parseInt(buildChange.toString());
-			return String.valueOf(change);
-		} catch (NumberFormatException n) {
-			// not a change number
-		}
-
-		ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
-		String name = buildChange.toString();
-		try {
-			Label label = p4.getLabel(name);
-			String spec = label.getRevisionSpec();
-			if (spec != null && !spec.isEmpty()) {
-				if (spec.startsWith("@")) {
-					spec = spec.substring(1);
-				}
-				return spec;
-			} else {
-				// a label, but no RevisionSpec
-				return name;
+		for(P4Ref build : builds) {
+			if (build instanceof P4ChangeRef) {
+				// its a change, so return...
+				return build.toString();
 			}
-		} catch (Exception e) {
-			// not a label
-		}
 
-		try {
-			String counter = p4.getCounter(name);
-			if (!"0".equals(counter)) {
-				try {
-					// if a change number, add change...
-					int change = Integer.parseInt(counter);
-					return String.valueOf(change);
-				} catch (NumberFormatException n) {
-					// no change number in counter
-				}
+			if (build instanceof P4GraphRef) {
+				continue;
 			}
-		} catch (Exception e) {
-			// not a counter
-		}
 
-		p4.disconnect();
-		return name;
+			try {
+				// it is really a change number, so add change...
+				int change = Integer.parseInt(build.toString());
+				return String.valueOf(change);
+			} catch (NumberFormatException n) {
+				// not a change number
+			}
+
+			ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
+			String name = build.toString();
+			try {
+				Label label = p4.getLabel(name);
+				String spec = label.getRevisionSpec();
+				if (spec != null && !spec.isEmpty()) {
+					if (spec.startsWith("@")) {
+						spec = spec.substring(1);
+					}
+					return spec;
+				} else {
+					// a label, but no RevisionSpec
+					return name;
+				}
+			} catch (Exception e) {
+				// not a label
+			}
+
+			try {
+				String counter = p4.getCounter(name);
+				if (!"0".equals(counter)) {
+					try {
+						// if a change number, add change...
+						int change = Integer.parseInt(counter);
+						return String.valueOf(change);
+					} catch (NumberFormatException n) {
+						// no change number in counter
+					}
+				}
+			} catch (Exception e) {
+				// not a counter
+			}
+
+			p4.disconnect();
+			return name;
+		}
+		return "";
 	}
 
 	/**
@@ -626,7 +638,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public ChangeLogParser createChangeLogParser() {
-		return new P4ChangeParser();
+		return new P4ChangeParser(credential);
 	}
 
 	/**
@@ -818,8 +830,8 @@ public class PerforceScm extends SCM {
 				maxChanges = json.getInt("maxChanges");
 			} catch (JSONException e) {
 				logger.info("Unable to read Max limits in configuration.");
-				maxFiles = 50;
-				maxChanges = 10;
+				maxFiles = DEFAULT_FILE_LIMIT;
+				maxChanges = DEFAULT_CHANGE_LIMIT;
 			}
 
 			save();
@@ -829,6 +841,8 @@ public class PerforceScm extends SCM {
 		/**
 		 * Credentials list, a Jelly config method for a build job.
 		 *
+		 * @param project Jenkins project item
+		 * @param credential Perforce credential ID
 		 * @return A list of Perforce credential items to populate the jelly
 		 * Select list.
 		 */
@@ -836,6 +850,14 @@ public class PerforceScm extends SCM {
 			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 
+		/**
+		 * Credentials list, a Jelly config method for a build job.
+		 *
+		 * @param project Jenkins project item
+		 * @param value credential user input value
+		 * @return A list of Perforce credential items to populate the jelly
+		 * Select list.
+		 */
 		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
 			return P4CredentialsImpl.doCheckCredential(project, value);
 		}

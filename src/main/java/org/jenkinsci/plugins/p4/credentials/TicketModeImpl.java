@@ -27,17 +27,14 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 		this.ticketPath = (ticketPath != null) ? ticketPath : "";
 	}
 
-	@NonNull
 	public String getValue() {
 		return value;
 	}
 
-	@NonNull
 	public String getTicketValue() {
 		return ticketValue;
 	}
 
-	@NonNull
 	public String getTicketPath() {
 		return ticketPath;
 	}

@@ -34,19 +34,14 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by pallen on 01/11/2016.
- */
 public class WorkspaceTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-WorkspaceTest-p4root";
 	private static P4PasswordImpl auth;
 

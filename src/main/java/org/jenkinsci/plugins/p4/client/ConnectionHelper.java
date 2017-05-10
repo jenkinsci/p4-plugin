@@ -9,12 +9,14 @@ import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.ILabel;
+import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
+import com.perforce.p4java.graph.ICommit;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
@@ -26,10 +28,13 @@ import com.perforce.p4java.option.server.GetDirectoriesOptions;
 import com.perforce.p4java.option.server.GetFixesOptions;
 import com.perforce.p4java.option.server.GetPropertyOptions;
 import com.perforce.p4java.option.server.GetStreamsOptions;
+import com.perforce.p4java.option.server.GraphCommitLogOptions;
+import com.perforce.p4java.option.server.ReposOptions;
 import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
+import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Run;
@@ -38,6 +43,10 @@ import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
+import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4GraphRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -76,11 +85,11 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) {
-        this(findCredential(credentialID, context), listener);
+		this(findCredential(credentialID, context), listener);
 	}
 
 	public ConnectionHelper(Item job, String credentialID, TaskListener listener) {
-        this(findCredential(credentialID, job), listener);
+		this(findCredential(credentialID, job), listener);
 	}
 
 	public ConnectionHelper(Run run, String credentialID, TaskListener listener) {
@@ -318,7 +327,7 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	private List<String> cleanDirPaths(List<String> paths) throws Exception {
-		if(paths.contains("//...")) {
+		if (paths.contains("//...")) {
 			return getDepotsForDirs();
 		}
 
@@ -338,7 +347,7 @@ public class ConnectionHelper implements AutoCloseable {
 	private List<String> getDepotsForDirs() throws Exception {
 		List<String> paths = new ArrayList<>();
 		List<IDepot> depots = connection.getDepots();
-		for(IDepot depot : depots) {
+		for (IDepot depot : depots) {
 			String name = depot.getName();
 			paths.add("//" + name + "/*");
 		}
@@ -568,6 +577,109 @@ public class ConnectionHelper implements AutoCloseable {
 		return null;
 	}
 
+	public ICommit getGraphCommit(String sha) throws P4JavaException {
+		return connection.getCommitObject(sha);
+	}
+
+	public List<IFileSpec> getCommitFiles(String repo, String sha) throws P4JavaException {
+		return connection.getCommitFiles(repo, sha);
+	}
+
+	/**
+	 * Get the last SHA commited to the specified repo.
+	 *
+	 * @param repo a graph repo
+	 * @return a P4Ref of the last commit
+	 */
+	public P4Ref getGraphHead(String repo) {
+		GraphCommitLogOptions opts = new GraphCommitLogOptions();
+		opts.setMaxResults(1);
+		opts.setRepo(repo);
+		List<ICommit> list = null;
+		try {
+			list = connection.getGraphCommitLogList(opts);
+		} catch (P4JavaException e) {
+			log("P4: no commits under " + repo + " using HEAD.");
+			return new P4LabelRef("HEAD");
+		}
+
+		if (!list.isEmpty() && list.get(0) != null) {
+			ICommit commit = list.get(0);
+			return new P4GraphRef(repo, commit);
+		} else {
+			log("P4: commit log empty for " + repo + " using HEAD.");
+		}
+		return new P4LabelRef("HEAD");
+	}
+
+	/**
+	 * List graph Commits with in range of SHAs
+	 *
+	 * @param fromRefs Array of potential SHAs (include other repos)
+	 * @param to       The last SHA to list commits
+	 * @return a List or Commits
+	 * @throws Exception push up stack
+	 */
+	public List<P4Ref> listCommits(List<P4Ref> fromRefs, P4Ref to) throws Exception {
+		List<P4Ref> list = new ArrayList<P4Ref>();
+
+		if (!(to instanceof P4GraphRef)) {
+			return list;
+		}
+		P4GraphRef toGraph = (P4GraphRef) to;
+
+		for (P4Ref from : fromRefs) {
+			if (!(from instanceof P4GraphRef)) {
+				continue;
+			}
+			P4GraphRef fromGraph = (P4GraphRef) from;
+
+			if (!fromGraph.getRepo().equals(toGraph.getRepo())) {
+				continue;
+			}
+
+			GraphCommitLogOptions opts = new GraphCommitLogOptions();
+			String repo = fromGraph.getRepo();
+			opts.setRepo(repo);
+			String range = fromGraph.getSha() + ".." + toGraph.getSha();
+			opts.setCommitValue(range);
+			opts.setMaxResults(getMaxChangeLimit());
+
+			List<ICommit> logList = connection.getGraphCommitLogList(opts);
+
+			for (ICommit log : logList) {
+				P4Ref ref = new P4GraphRef(repo, log);
+				list.add(ref);
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * List all Graph Repos
+	 *
+	 * @return A list of Graph Repos
+	 * @throws Exception push up stack
+	 */
+	public List<IRepo> listAllRepos() throws Exception {
+		List<IRepo> repos = connection.getRepos();
+		return repos;
+	}
+
+	/**
+	 * List of Graph Repos based on a path
+	 *
+	 * @param path Path filter
+	 * @return A list of Graph Repos
+	 * @throws Exception push up stack
+	 */
+	public List<IRepo> listRepos(String path) throws Exception {
+		ReposOptions opts = new ReposOptions();
+		opts.setNameFilter(path);
+		List<IRepo> repos = connection.getRepos(opts);
+		return repos;
+	}
+
 	/**
 	 * Disconnect from the Perforce Server.
 	 */
@@ -585,9 +697,9 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Finds a Perforce Credential based on the String id.
 	 *
-	 * @deprecated Use {@link #findCredential(String, ItemGroup)} or {@link #findCredential(String, Item)}
 	 * @param id Credential ID
 	 * @return a P4StandardCredentials credential or null if not found.
+	 * @deprecated Use {@link #findCredential(String, ItemGroup)} or {@link #findCredential(String, Item)}
 	 */
 	@Deprecated
 	public static P4BaseCredentials findCredential(String id) {
@@ -611,7 +723,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * Finds a Perforce Credential based on the String id.
 	 *
 	 * @param credentialsId Credential ID
-	 * @param context The context
+	 * @param context       The context
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
 	public static P4BaseCredentials findCredential(String credentialsId, ItemGroup context) {
@@ -632,7 +744,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * This also tracks usage of the credentials.
 	 *
 	 * @param credentialsId Credential ID
-	 * @param item The {@link Item}
+	 * @param item          The {@link Item}
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
 	public static P4BaseCredentials findCredential(String credentialsId, Item item) {
@@ -654,7 +766,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * This also tracks usage of the credentials.
 	 *
 	 * @param credentialsId Credential ID
-	 * @param run The {@link Run}
+	 * @param run           The {@link Run}
 	 * @return a P4StandardCredentials credential or null if not found.
 	 */
 	public static P4BaseCredentials findCredential(String credentialsId, Run run) {
@@ -665,6 +777,20 @@ public class ConnectionHelper implements AutoCloseable {
 				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
 		CredentialsProvider.track(run, credentials);
 		return credentials;
+	}
+
+	protected int getMaxChangeLimit() {
+		int max = 0;
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Descriptor dsc = j.getDescriptor(PerforceScm.class);
+			if (dsc instanceof PerforceScm.DescriptorImpl) {
+				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+				max = p4scm.getMaxChanges();
+			}
+		}
+		max =  (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
+		return max;
 	}
 
 	public void log(String msg) {

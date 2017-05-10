@@ -2,9 +2,6 @@ package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMRevision;
 
-/**
- * Created by pallen on 13/02/2017.
- */
 public class P4Revision extends SCMRevision {
 	private final long change;
 

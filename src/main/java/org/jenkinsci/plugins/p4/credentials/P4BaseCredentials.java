@@ -55,7 +55,6 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		this.p4host = p4host;
 	}
 
-	@NonNull
 	public String getP4port() {
 		return p4port;
 	}
@@ -81,7 +80,6 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		return (ssl == null) ? null : ssl.getTrust();
 	}
 
-	@NonNull
 	public String getUsername() {
 		return username;
 	}

@@ -26,8 +26,8 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		}
 
 		// Set P4_CHANGELIST value
-		if (tagAction.getBuildChange() != null) {
-			String change = tagAction.getBuildChange().toString();
+		if (tagAction.getRefChanges() != null) {
+			String change = tagAction.getRefChange().toString();
 			env.put("P4_CHANGELIST", change);
 		}
 
