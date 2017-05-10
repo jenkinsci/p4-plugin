@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.6.2 (major features/fixes)
+
+[@22091](https://swarm.workshop.perforce.com/changes/22091) - Fix Job form issue in P4Groovy.  A custom job spec would return an extra field 'specFormatted' normally hidden by the C++ API, but exposed in P4Java's execMap results.  P4Groovy needs to remove the field before returning the map to the user.
+
+[@22084](https://swarm.workshop.perforce.com/changes/22084) - Merge pull request #43 from tangkun75.  JENKINS-43877: P4 plugin fails during polling for freestyle job
+
+[@22061](https://swarm.workshop.perforce.com/changes/22061) - Formalise P4Groovy and update documentation.
+
+
 ### Release 1.6.1 (major features/fixes)
 
 [@22043](https://swarm.workshop.perforce.com/changes/22043) - Access remote Channel to find NODE_NAME.  If NODE_NAME is not set in the environment, look at the remote channel, then default to 'master'.  JENKINS-34128  JENKINS-43551
