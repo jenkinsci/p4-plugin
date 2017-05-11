@@ -10,7 +10,7 @@
     </f:entry>
 
     <f:entry title="${%Include repos}" field="includes">
-      <f:textbox/>
+      <f:textarea/>
     </f:entry>
 
     <f:entry title="${%Character Set}" field="charset">
