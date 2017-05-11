@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
 import jenkins.model.TransientActionFactory;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -20,7 +21,7 @@ public class ReviewActionFactory extends TransientActionFactory<Job> {
 	@Override
 	public Collection<? extends Action> createFor(@Nonnull Job target) {
 		try {
-			if ("WorkflowJob".equals(target.getClass().getName())) {
+			if (target instanceof WorkflowJob) {
 				return Collections.singletonList(new ReviewAction(target));
 			}
 		} catch (NoClassDefFoundError e) {
