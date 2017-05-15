@@ -634,7 +634,13 @@ public class ConnectionHelper implements AutoCloseable {
 			}
 			P4GraphRef fromGraph = (P4GraphRef) from;
 
+			// skip mismatched repos
 			if (!fromGraph.getRepo().equals(toGraph.getRepo())) {
+				continue;
+			}
+
+			// skip matching SHAs
+			if (fromGraph.getSha().equals(toGraph.getSha())) {
 				continue;
 			}
 
