@@ -1,0 +1,44 @@
+<div>
+	<b>Options</b>
+	<p>Flags to configure the client behavior.</p>
+	<ul>
+		<li>
+			<b>ALLWRITE</b>
+			<p>Leaves all files writable on the client;
+				by default, only files opened by 'p4 edit'
+				are writable. If set, files might be clobbered
+				as a result of ignoring the clobber option
+				(see below).</p>
+		</li>
+		<li>
+			<b>CLOBBER</b>
+			<p>Permits 'p4 sync' to overwrite writable
+				files on the client.  noclobber is ignored if
+				allwrite is set.</p>
+		</li>
+		<li>
+			<b>COMPRESS</b>
+			<p>Compresses data sent between the client
+				and server to speed up slow connections.</p>
+		</li>
+		<li>
+			<b>LOCKED</b>
+			<p>Allows only the client owner to use or change
+				the client spec.  Prevents the client spec from
+				being deleted or unloaded.</p>
+		</li>
+		<li>
+			<b>MODTIME</b>
+			<p>Causes 'p4 sync' and 'p4 submit' to preserve
+				file modification time, as with files with the
+				+m type modifier. (See 'p4 help filetypes'.)
+				With nomodtime, file timestamps are updated by
+				sync and submit operations.</p>
+		</li>
+		<li>
+			<b>RMDIR</b>
+			<p>Makes 'p4 sync' attempt to delete a workspace
+				directory when all files in it are removed.</p>
+		</li>
+	</ul>
+</div>

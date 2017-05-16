@@ -1,0 +1,18 @@
+<div>
+	<b>Change View</b>
+	<p>Lines to restrict depot files to specific changelists.</p>
+	<p>Restricts depot paths to a particular point in time.
+		Example: //depot/path/...@1000
+		Revisions submitted to the path after the specified
+		changelist will not be visible.  Files matching a
+		ChangeView path may not be submitted.
+
+		Automatic labels may also used to specify a particular
+		point in time: the label's 'Revision' field must be set
+		to a changelist number or a date.  If the label has a
+		view, only files that match the intersection of the
+		ChangeViewpath and the label's view will be restricted to
+		the point in time specified by the 'Revision' field; any
+		other files matching the ChangeView path may sync to
+		#head, but cannot be submitted.</p>
+</div>
