@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
  
-	<f:entry title="${%Options}">
+	<f:entry title="${%Options}" field="options">
 	<table width="100%"> 
 	<td><f:checkbox title="${%ALLWRITE}" 	field="allwrite" 	id="id.allwrite"	/></td>
 	<td><f:checkbox title="${%CLOBBER}" 	field="clobber" 	id="id.clobber" 	/></td>
@@ -11,17 +11,35 @@
 	<td><f:checkbox title="${%RMDIR}" 		field="rmdir" 		id="id.rmdir" 		/></td>
 	</table>
 	</f:entry>
-	
-	<f:entry title="${%Stream }" field="streamName">
-		<f:textbox id="id.streamName" />
-	</f:entry>
-	
-	<f:entry title="${%Line Endings }" field="line">
+
+	<f:entry title="${%Line Endings}" field="line">
 		<f:select id="id.line" />
 	</f:entry>
-	
-	<f:entry title="${%View Mappings }" field="view">
+
+	<f:entry title="${%Type}" field="type">
+    	<f:select id="id.type" />
+    </f:entry>
+
+	<f:entry title="${%Stream}" field="streamName">
+		<f:textbox id="id.streamName" />
+    </f:entry>
+
+	<f:entry title="${%View Mappings}" field="view">
 		<f:textarea id="id.view" />
 	</f:entry>
-	  
+
+<!--
+	<f:entry title="${%Change View}" field="changeView">
+    	<f:textarea id="id.changeView" />
+    </f:entry>
+-->
+    <f:entry title="${%Server ID}" field="serverID">
+    	<f:textbox id="id.serverID" />
+    </f:entry>
+<!--
+	<f:entry title="${%Backup Client}" field="backup">
+		<f:checkbox id="id.backup" default="true" />
+	</f:entry>
+-->
+
 </j:jelly>

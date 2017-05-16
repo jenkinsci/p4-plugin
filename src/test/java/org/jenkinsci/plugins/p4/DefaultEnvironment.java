@@ -112,8 +112,7 @@ abstract public class DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = path + " //" + client + "/" + filename;
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
-		spec.setType("graph");
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, "graph", null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
 		// Populate with P4 scm

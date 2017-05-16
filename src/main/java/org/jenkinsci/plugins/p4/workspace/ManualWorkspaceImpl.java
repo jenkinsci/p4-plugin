@@ -63,6 +63,11 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
 			implClient.setOwnerName(user);
+
+			if (connection.getServerVersionNumber() >= 20171) {
+				WorkspaceSpecType type = parseClientType(getSpec().getType());
+				implClient.setType(type.getId());
+			}
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
@@ -107,8 +112,23 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 		iclient.setClientView(clientView);
 
-		// Set client Type (null or "graph")
-		iclient.setType(getSpec().getType());
+		// TODO (p4java 17.2) changeView
+
+		// Allow change between GRAPH and WRITEABLE
+		if (connection.getServerVersionNumber() >= 20171) {
+			WorkspaceSpecType type = parseClientType(getSpec().getType());
+			switch (type) {
+				case GRAPH:
+				case WRITABLE:
+					iclient.setType(type.getId());
+					break;
+				default:
+			}
+		}
+
+		iclient.setServerId(getSpec().getServerID());
+
+		// TODO (p4java 17.2) backup
 
 		return iclient;
 	}
@@ -120,6 +140,15 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			}
 		}
 		return ClientLineEnd.LOCAL;
+	}
+
+	private WorkspaceSpecType parseClientType(String line) {
+		for (WorkspaceSpecType type : WorkspaceSpecType.values()) {
+			if (type.name().equalsIgnoreCase(line)) {
+				return type;
+			}
+		}
+		return WorkspaceSpecType.WRITABLE;
 	}
 
 	@Extension

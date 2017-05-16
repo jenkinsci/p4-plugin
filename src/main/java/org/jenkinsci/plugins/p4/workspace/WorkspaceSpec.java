@@ -32,8 +32,11 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	private final String streamName;
 	private final String line;
 	private final String view;
+	private final String changeView;
+	private final String type;
 
-	private String type;
+	private final String serverID;
+	private final boolean backup;
 
 	public String getStreamName() {
 		return streamName;
@@ -47,19 +50,27 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		return view;
 	}
 
-	// TODO expose this to Jelly
-	public void setType(String type) {
-		this.type = type;
+	public String getChangeView() {
+		return changeView;
 	}
 
 	public String getType() {
 		return type;
 	}
 
+	public String getServerID() {
+		return serverID;
+	}
+
+	public boolean isBackup() {
+		return backup;
+	}
+
 	@DataBoundConstructor
 	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
 	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
-	                     String line, String view) {
+	                     String line, String view, String changeView, String type,
+	                     String serverID, boolean backup) {
 		this.allwrite = allwrite;
 		this.clobber = clobber;
 		this.compress = compress;
@@ -69,6 +80,17 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		this.streamName = streamName;
 		this.line = line;
 		this.view = view;
+		this.changeView = changeView;
+		this.type = type;
+		this.serverID = serverID;
+		this.backup = backup;
+	}
+
+	@Deprecated
+	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
+	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
+	                     String line, String view) {
+		this(allwrite, clobber, compress, locked, modtime, rmdir, streamName, line, view, null, null, null, true);
 	}
 
 	@Extension
@@ -83,6 +105,14 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 			ListBoxModel list = new ListBoxModel();
 			for (ClientLineEnd end : IClientSummary.ClientLineEnd.values()) {
 				list.add(end.name());
+			}
+			return list;
+		}
+
+		public ListBoxModel doFillTypeItems() {
+			ListBoxModel list = new ListBoxModel();
+			for (WorkspaceSpecType type : WorkspaceSpecType.values()) {
+				list.add(type.name());
 			}
 			return list;
 		}

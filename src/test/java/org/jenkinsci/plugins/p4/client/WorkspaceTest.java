@@ -96,6 +96,9 @@ public class WorkspaceTest extends DefaultEnvironment {
 		ListBoxModel lineItems = implSpec.doFillLineItems();
 		assertFalse(lineItems.isEmpty());
 
+		ListBoxModel typeItems = implSpec.doFillTypeItems();
+		assertFalse(typeItems.isEmpty());
+
 		ManualWorkspaceImpl.DescriptorImpl impl = (ManualWorkspaceImpl.DescriptorImpl) desc;
 		FormValidation form = impl.doCheckName("test.ws");
 		assertEquals(FormValidation.Kind.OK, form.kind);
