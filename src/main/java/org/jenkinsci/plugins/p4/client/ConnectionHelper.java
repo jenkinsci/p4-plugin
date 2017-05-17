@@ -20,6 +20,7 @@ import com.perforce.p4java.graph.ICommit;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Server;
+import com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
@@ -59,6 +60,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
 
 public class ConnectionHelper implements AutoCloseable {
 
@@ -292,16 +295,25 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	private boolean isLogin() throws Exception {
-		String status = connection.getLoginStatus();
-		if (status.contains("not necessary")) {
-			return true;
-		}
-		if (status.contains("ticket expires in")) {
-			return true;
-		}
-		// If there is a broker or something else that swallows the message
-		if (status.isEmpty()) {
-			return true;
+		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
+
+		if (nonNull(resultMaps) && !resultMaps.isEmpty()) {
+			for (Map<String, Object> map : resultMaps) {
+				String status = ResultMapParser.getInfoStr(map);
+				if (status == null) {
+					continue;
+				}
+				if (status.contains("not necessary")) {
+					return true;
+				}
+				if (status.contains("ticket expires in")) {
+					return true;
+				}
+				// If there is a broker or something else that swallows the message
+				if (status.isEmpty()) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -795,7 +807,7 @@ public class ConnectionHelper implements AutoCloseable {
 				max = p4scm.getMaxChanges();
 			}
 		}
-		max =  (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
+		max = (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
 		return max;
 	}
 
