@@ -29,7 +29,7 @@ public class AuthorisationConfig implements Serializable {
 
 		if (credential instanceof P4TicketImpl) {
 			P4TicketImpl t = (P4TicketImpl) credential;
-			this.type = AuthorisationType.TICKET;
+			this.type = AuthorisationType.TICKETPATH;
 			this.username = t.getUsername();
 
 			if (t.isTicketValueSet()) {

@@ -271,6 +271,9 @@ public class ConnectionHelper implements AutoCloseable {
 
 			case TICKETPATH:
 				String path = authorisationConfig.getTicketPath();
+				if(path == null || path.isEmpty()) {
+					path = connection.getTicketsFilePath();
+				}
 				connection.setTicketsFilePath(path);
 				break;
 
