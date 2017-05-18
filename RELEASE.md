@@ -1,5 +1,22 @@
 ## Release notes
 
+### Release 1.7.0 (major features/fixes)
+
+[@22168](https://swarm.workshop.perforce.com/changes/22168) - Check all login messages. Fix for 'pre-user-login' triggers. JENKINS-44166
+
+[@22164](https://swarm.workshop.perforce.com/changes/22164) - Jelly Configuration Documentation for Workspace Spec.
+
+[@22163](https://swarm.workshop.perforce.com/changes/22163) - Manual Workspace support for READONLY and PARTITIONED. Change Type to Enum. JENKINS-39753
+
+[@22159](https://swarm.workshop.perforce.com/changes/22159) - Minor fix on Graph commit change summary. Skip query when listing commits between the same SHAs.
+
+[@22140](https://swarm.workshop.perforce.com/changes/22140) - Update class check on ReviewActionFactory. Fixes Review end-point for Pipeline builds.
+
+[@22139](https://swarm.workshop.perforce.com/changes/22139) - Change MultiBranch pipeline Include box to textarea.
+
+[@22128](https://swarm.workshop.perforce.com/changes/22128) - Helix Graph support for Jenkins. JENKINS-40354
+
+
 ### Release 1.6.2 (major features/fixes)
 
 [@22091](https://swarm.workshop.perforce.com/changes/22091) - Fix Job form issue in P4Groovy.  A custom job spec would return an extra field 'specFormatted' normally hidden by the C++ API, but exposed in P4Java's execMap results.  P4Groovy needs to remove the field before returning the map to the user.
