@@ -1,10 +1,5 @@
 package org.jenkinsci.plugins.p4.review;
 
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.logging.Logger;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.matrix.MatrixRun;
@@ -13,6 +8,12 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import jenkins.model.Jenkins;
+import jenkins.model.JenkinsLocationConfiguration;
+
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.logging.Logger;
 
 @Extension
 public class ReviewNotifier extends RunListener<Run> {
@@ -48,11 +49,11 @@ public class ReviewNotifier extends RunListener<Run> {
 			if (url != null && !url.isEmpty()) {
 				String rootUrl = j.getRootUrl();
 				if (rootUrl == null) {
-					postURL(url, null);
-				} else {
-					String path = run.getUrl();
-					postURL(url, rootUrl + path);
+					JenkinsLocationConfiguration globalConfig = new JenkinsLocationConfiguration();
+					rootUrl = (globalConfig.getUrl() == null) ? "unset" : globalConfig.getUrl();
 				}
+				String path = run.getUrl();
+				postURL(url, rootUrl + path);
 			} 
 			
 		} catch (Exception e) {
