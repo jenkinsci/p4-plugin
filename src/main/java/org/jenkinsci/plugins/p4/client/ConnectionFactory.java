@@ -1,22 +1,21 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.PropertyDefs;
+import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
+import com.perforce.p4java.option.UsageOptions;
+import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.ServerFactory;
 import hudson.util.FormValidation;
 
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import com.perforce.p4java.PropertyDefs;
-import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
-import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.ServerFactory;
-
 /**
  * Connection Factory
- * 
+ * <p>
  * Provides concurrent connections to the Perforce Server
- * 
+ *
  * @author pallen
- * 
  */
 public class ConnectionFactory {
 
@@ -27,8 +26,8 @@ public class ConnectionFactory {
 
 	/**
 	 * Returns existing connection
-	 * 
-	 * @return
+	 *
+	 * @return Server connection object
 	 */
 	public static IOptionsServer getConnection() {
 		return currentP4;
@@ -37,9 +36,10 @@ public class ConnectionFactory {
 	/**
 	 * Creates a server connection; provides a connection to the Perforce
 	 * Server, initially client is undefined.
-	 * 
-	 * @return
-	 * @throws Exception
+	 *
+	 * @param config Connection configuration
+	 * @return Server connection object
+	 * @throws Exception push up stack
 	 */
 	public static IOptionsServer getConnection(ConnectionConfig config)
 			throws Exception {
@@ -106,10 +106,21 @@ public class ConnectionFactory {
 		String timeout = String.valueOf(config.getTimeout());
 		props.put(RpcPropertyDefs.RPC_SOCKET_SO_TIMEOUT_NICK, timeout);
 
+		// enable graph depot and AndMaps
+		props.put(PropertyDefs.ENABLE_GRAPH_SHORT_FORM, "true");
+		props.put(PropertyDefs.ENABLE_ANDMAPS_SHORT_FORM, "true");
+
+		// Set P4HOST if defined
+		UsageOptions opts = new UsageOptions(props);
+		String p4host = config.getP4Host();
+		if (p4host != null && !p4host.isEmpty()) {
+			opts.setHostName(p4host);
+		}
+
 		// Get a server connection
 		String serverUri = config.getServerUri();
 		IOptionsServer iserver;
-		iserver = ServerFactory.getOptionsServer(serverUri, props);
+		iserver = ServerFactory.getOptionsServer(serverUri, props, opts);
 		return iserver;
 	}
 }

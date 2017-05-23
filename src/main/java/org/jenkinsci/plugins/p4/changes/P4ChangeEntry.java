@@ -1,5 +1,22 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.ChangelistStatus;
+import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.IFix;
+import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.graph.ICommit;
+import com.perforce.p4java.impl.generic.core.Label;
+import hudson.model.Descriptor;
+import hudson.model.User;
+import hudson.scm.ChangeLogSet;
+import hudson.tasks.Mailer.UserProperty;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.email.P4UserProperty;
+import org.kohsuke.stapler.export.Exported;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -8,47 +25,40 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.email.P4UserProperty;
-import org.kohsuke.stapler.export.Exported;
-
-import com.perforce.p4java.core.ChangelistStatus;
-import com.perforce.p4java.core.IChangelistSummary;
-import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.generic.core.Label;
-
-import hudson.model.User;
-import hudson.scm.ChangeLogSet;
-import hudson.tasks.Mailer.UserProperty;
-
 public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private static Logger logger = Logger.getLogger(P4ChangeEntry.class.getName());
 
-	private int FILE_COUNT_LIMIT = 50;
+	private int fileCountLimit = PerforceScm.DEFAULT_FILE_LIMIT;
 
-	private P4Revision id;
+	private P4Ref id;
 
 	private User author;
 	private Date date = new Date();
 	private String clientId = "";
 	private String msg = "";
-	private Collection<String> affectedPaths;
+
+	private List<P4AffectedFile> affectedFiles;
 	private boolean shelved;
 
 	private boolean fileLimit = false;
-	public List<IFileSpec> files;
-	public List<IFix> jobs;
+	private List<IFix> jobs;
 
 	public P4ChangeEntry(P4ChangeSet parent) {
 		super();
 		setParent(parent);
 
-		files = new ArrayList<IFileSpec>();
 		jobs = new ArrayList<IFix>();
-		affectedPaths = new ArrayList<String>();
+		affectedFiles = new ArrayList<P4AffectedFile>();
+
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Descriptor dsc = j.getDescriptor(PerforceScm.class);
+			if (dsc instanceof PerforceScm.DescriptorImpl) {
+				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+				fileCountLimit = p4scm.getMaxFiles();
+			}
+		}
 	}
 
 	public P4ChangeEntry() {
@@ -59,7 +69,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set id
 		int changeId = changelist.getId();
-		id = new P4Revision(changeId);
+		id = new P4ChangeRef(changeId);
 
 		// set author
 		String user = changelist.getUsername();
@@ -71,10 +81,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			P4UserProperty p4prop = new P4UserProperty(email);
 			author.addProperty(p4prop);
 			logger.fine("Setting email for user: " + user + ":" + email);
-			
+
 			// Set default email for Jenkins user if not defined
 			UserProperty prop = author.getProperty(UserProperty.class);
-			if( prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
+			if (prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
 				prop = new UserProperty(email);
 				author.addProperty(prop);
 				logger.fine("Setting default user: " + user + ":" + email);
@@ -91,6 +101,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		msg = changelist.getDescription();
 
 		// set list of file revisions in change
+		List<IFileSpec> files;
 		if (changelist.getStatus() == ChangelistStatus.PENDING) {
 			files = p4.getShelvedFiles(changeId);
 			shelved = true;
@@ -98,15 +109,17 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			files = p4.getChangeFiles(changeId);
 			shelved = false;
 		}
-		if (files.size() > FILE_COUNT_LIMIT) {
+		if (files != null && files.size() > fileCountLimit) {
 			fileLimit = true;
-			files = files.subList(0, FILE_COUNT_LIMIT);
+			files = files.subList(0, fileCountLimit);
 		}
 
-		// set list of affected paths
-		affectedPaths = new ArrayList<String>();
-		for (IFileSpec item : files) {
-			affectedPaths.add(item.getDepotPathString());
+		// set list of affected paths/files
+		affectedFiles = new ArrayList<P4AffectedFile>();
+		if (files != null) {
+			for (IFileSpec item : files) {
+				affectedFiles.add(new P4AffectedFile(item));
+			}
 		}
 
 		// set list of jobs in change
@@ -117,7 +130,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		Label label = (Label) p4.getLabel(labelId);
 
 		// set id
-		id = new P4Revision(labelId);
+		id = new P4LabelRef(labelId);
 
 		// set author
 		String user = label.getOwnerName();
@@ -134,16 +147,66 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		msg = label.getDescription();
 
 		// set list of file revisions in change
-		files = p4.getLabelFiles(labelId, FILE_COUNT_LIMIT + 1);
-		if (files.size() > FILE_COUNT_LIMIT) {
+		List<IFileSpec> files = p4.getLabelFiles(labelId, fileCountLimit + 1);
+		if (files.size() > fileCountLimit) {
 			fileLimit = true;
-			files = files.subList(0, FILE_COUNT_LIMIT);
+			files = files.subList(0, fileCountLimit);
 		}
 
-		// set list of affected paths
-		affectedPaths = new ArrayList<String>();
+		// set list of affected files
+		affectedFiles = new ArrayList<P4AffectedFile>();
 		for (IFileSpec item : files) {
-			affectedPaths.add(item.getDepotPathString());
+			affectedFiles.add(new P4AffectedFile(item));
+		}
+	}
+
+	public void setGraphCommit(ConnectionHelper p4, String id) throws Exception {
+		if (id == null || id.isEmpty() || !id.contains("@")) {
+			return;
+		}
+
+		String[] parts = id.split("@");
+		if (parts.length != 2) {
+			return;
+		}
+
+		String repo = parts[0];
+		String sha = parts[1];
+		setGraphCommit(p4, repo, sha);
+	}
+
+	public void setGraphCommit(ConnectionHelper p4, String repo, String sha) throws Exception {
+
+		ICommit commit = p4.getGraphCommit(sha);
+		id = new P4GraphRef(repo, commit);
+
+		// set author
+		String user = commit.getAuthor();
+		user = (user != null && !user.isEmpty()) ? user : "unknown";
+		author = User.get(user);
+
+		// set date of change
+		date = commit.getDate();
+
+		// set client id
+		clientId = commit.getAuthorEmail();
+
+		// set display message
+		msg = commit.getDescription();
+
+		// set list of affected paths
+		affectedFiles = new ArrayList<>();
+
+		List<IFileSpec> graphFiles = p4.getCommitFiles(repo, sha);
+		for (IFileSpec item : graphFiles) {
+			String path = item.getDepotPathString();
+			FileAction action = item.getAction();
+			affectedFiles.add(new P4AffectedFile(path, sha, action));
+		}
+
+		if (affectedFiles.size() > fileCountLimit) {
+			fileLimit = true;
+			affectedFiles = affectedFiles.subList(0, fileCountLimit);
 		}
 	}
 
@@ -158,11 +221,11 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return sdf.format(date);
 	}
 
-	public P4Revision getId() {
+	public P4Ref getId() {
 		return id;
 	}
 
-	public void setId(P4Revision value) {
+	public void setId(P4Ref value) {
 		id = value;
 	}
 
@@ -180,7 +243,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public Date getDate() {
-		return date;
+		return (Date) date.clone();
 	}
 
 	public void setDate(String value) {
@@ -208,27 +271,39 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return msg;
 	}
 
+	public int getRows() {
+		String[] lines = msg.split("\r\n|\r|\n");
+		int rows = lines.length;
+		rows = (rows > 10) ? 10 : rows;
+		return rows;
+	}
+
 	public void setMsg(String value) {
 		msg = value;
 	}
 
+	// JENKINS-31306
 	@Override
 	public Collection<String> getAffectedPaths() {
-		// JENKINS-31306
-		if (affectedPaths.size() < 1 && files != null && files.size() > 0) {
-			for (IFileSpec item : files) {
-				affectedPaths.add(item.getDepotPathString());
-			}
+		Collection<String> affectedPaths = new ArrayList<String>();
+		for (P4AffectedFile item : getAffectedFiles()) {
+			affectedPaths.add(item.getPath());
 		}
+
 		return affectedPaths;
+	}
+
+	@Override
+	public Collection<P4AffectedFile> getAffectedFiles() {
+		return affectedFiles;
+	}
+
+	public void addAffectedFiles(P4AffectedFile file) {
+		affectedFiles.add(file);
 	}
 
 	public boolean isFileLimit() {
 		return fileLimit;
-	}
-
-	public List<IFileSpec> getFiles() {
-		return files;
 	}
 
 	public String getAction(IFileSpec file) {
@@ -253,12 +328,28 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return jobs;
 	}
 
+	public void addJob(IFix job) {
+		jobs.add(job);
+	}
+
 	public String getJobStatus(IFix job) {
 		String status = job.getStatus();
 		return status;
 	}
 
 	public int getMaxLimit() {
-		return FILE_COUNT_LIMIT;
+		return fileCountLimit;
+	}
+
+	// For email-ext
+	@Exported
+	public long getTimestamp() {
+		return getDate().getTime();
+	}
+
+	// For email-ext
+	@Exported
+	public String getCommitId() {
+		return getChangeNumber();
 	}
 }

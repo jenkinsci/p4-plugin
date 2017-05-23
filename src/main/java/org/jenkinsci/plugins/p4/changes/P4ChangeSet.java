@@ -1,5 +1,12 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.IFix;
+import hudson.model.Run;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.RepositoryBrowser;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.kohsuke.stapler.framework.io.WriterOutputStream;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,17 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.lang.StringEscapeUtils;
-import org.kohsuke.stapler.framework.io.WriterOutputStream;
-
-import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
-
-import hudson.model.Run;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.RepositoryBrowser;
 
 public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
@@ -58,7 +54,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 			Charset c = Charset.forName("UTF-8");
 			OutputStreamWriter w = new OutputStreamWriter(b, c);
 			WriterOutputStream s = new WriterOutputStream(w);
-			PrintStream stream = new PrintStream(s);
+			PrintStream stream = new PrintStream(s, true, "UTF-8");
 
 			stream.println("<?xml version='1.0' encoding='UTF-8'?>");
 			stream.println("<changelog>");
@@ -76,16 +72,19 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 				stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 
 				stream.println("\t\t<files>");
-				for (IFileSpec filespec : cl.getFiles()) {
-					FileAction action = filespec.getAction();
-					int revision = filespec.getEndRevision();
+				Collection<P4AffectedFile> files = cl.getAffectedFiles();
+				if (files != null) {
+					for (P4AffectedFile f : files) {
+						String action = f.getAction();
+						String revision = f.getRevision();
 
-					// URL encode depot path
-					String depotPath = filespec.getDepotPathString();
-					String safePath = URLEncoder.encode(depotPath, "UTF-8");
+						// URL encode depot path
+						String depotPath = f.getPath();
+						String safePath = URLEncoder.encode(depotPath, "UTF-8");
 
-					stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action.name()
-							+ "\" depot=\"" + safePath + "\" />");
+						stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action
+								+ "\" depot=\"" + safePath + "\" />");
+					}
 				}
 				stream.println("\t\t</files>");
 

@@ -127,11 +127,13 @@ Or use the call the build/ URL endpoint e.g. http://jenkins_host:8080/job/myJobI
 
 A Jenkins job can build at any point in the codes history, identified by a Perforce Helix change or label.
 
-The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point.
+The Jenkins job can be _pinned_ to a Perforce Helix change or label by setting the `Pin build at Perforce Label` field under the Populate options.  Any time the Jenkins job is trigged, it will only build upto the pinned point. 
 
-Alternativly, a change or label can be passed using the `Build Review` paramiters or URL end point (see the _Build Review_ chapter for details) 
+If you are using downstream jobs (for example) you can use the [Parameterized Trigger Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Parameterized+Trigger+Plugin) to pass '${P4_CHANGELIST}' as the parameter to the downstream job. The downstream job can then pin the build at the passed in changelist so both upstream and downstream jobs run against the same point in the history of the code.
 
-Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296)
+Alternativly, a change or label can be passed using the `Build Review` parameters or URL end point (see the _Build Review_ chapter for details) 
+
+Related issues: [JENKINS-29296](https://issues.jenkins-ci.org/browse/JENKINS-29296), [JENKINS-33163](https://issues.jenkins-ci.org/browse/JENKINS-33163)
 
 ### Parallel builds
 
@@ -166,6 +168,22 @@ and have an entry in `p4 triggers` for changes on `//depot/...`:
 
 	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
 
+
+Note: If your Jenkins server needs authentication you will also need to provide a security 'CRUMB'. The following is an example of how you can get this and use to trigger a job:
+
+    #!/bin/bash
+    CHANGE=$1
+    USER=triggeruser
+    PASSWORD=Password
+    P4PORT=localhost:1666
+    SERVER=http://localhost:8080
+
+    # Get CRUMB
+    CRUMB=$(curl -s --user $USER:$PASSWORD $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+
+    # Trigger builds across all triggered jobs (where relevant)
+    curl -s --user $USER:$PASSWORD -H "$CRUMB" --request POST --data "payload={change:$CHANGE,p4port:\"$P4PORT\"}" $SERVER/p4/change
+
 On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
 
 ![Perforce trigger](docs/images/p4trigger.png)
@@ -191,12 +209,6 @@ To enable SCM polling, check the 'Poll SCM' option and provide a Schedule using 
 ## Filtering
 
 When polling is used, changes can be filtered to not trigger a build; the filters are configured on the Jenkin Job configuration page and support the following types:
-
-### Limit polling to Master
-
-The Polling event is calculated from the Master node (even if the build would normally occur on the Slave).  When enable, polling does not require a Perforce Workspace and the last built change is determined from the previous Jenkins build log.  
-
-![Poll on Master](docs/images/masterF.png)
 
 ### Polling per change
 
@@ -249,6 +261,18 @@ The Build Review Action support the following parameters:
 * fail (URL to call after a build failed)
 
 *Please note these paramiter are stored in the Environment and can be used with variable expansion e.g. `${label}`; for this reason please avoid these names for slaves and matrix axis.*
+
+### Review Authorisation
+
+If Jenkins requires users to login, then your Perforce trigger will need to use a Jenkins authorised account.  Find the `API Token` for the trigger user under:
+
+Jenkins --> People --> (user) --> Configure --> API Token --> Show API Token
+
+Use the API Token with BasicAuth in the URL, for example:
+
+`https://user:0923840952a90898cf90fe0989@jenkins_host:8080/job/myJobID/review/build?status=shelved&review=23980`
+
+### Manual Review
 
 The Build Review Action can be invoked manually from within Jenkins by selecting the Build Review button on the left hand side.  This provides a form to specify the parameters for build.
 
@@ -310,6 +334,8 @@ Submitting with Post Build Action
 
 ![Submit Asset](docs/images/SubmitAsset.png)
 
+Use a unique Perforce Workspace to Publish the assets.  The Client View should be as narrow as possible, ideally only mapping the assets that need to be published.  Adding a postfix of `-publish` to the Workspace will help to identify its purpose.  For Perforce Streams, a virtual stream may help to filter the view and `+import` mappings when submitting assets to non-stream location.
+
 ## Repository Browsing
 
 Repository browsing allows Jenkins to use an external browser, like Swarm, P4Web, etc... to navigate files and changes associated with a Jenkins build.
@@ -327,8 +353,6 @@ Link to change in Swarm
 The plugin supports the [Workflow](https://wiki.jenkins-ci.org/display/JENKINS/Workflow+Plugin) and has DSL support for Perforce Helix `p4sync`, `p4unshelve`, `p4tag` and `p4publish`.
 
 To use the Workflow install the plugin(s) as needed.  Create a new Workflow Job by selecting 'New Item' from the left hand menu, provide an 'Item name' and choose a 'Workflow' project.
-
-The Workflow plugin requires a Groovy script.  Currently the `Groovy CPS DSL from SCM` is *not* supported.  Select `Groovy CPS DSL` and provide your script in the text box below.
 
 You can use the snippet genertor to create each step and use the code to compose your workflow script.  
 
@@ -364,12 +388,22 @@ Use this snippet with your intended target e.g. a slave calles 'my_slave'
 
 For more examples and usage please refer to the [Workflow docs](https://github.com/jenkinsci/workflow-plugin/blob/master/README.md).
 
-### Workflow Limitations
+### Exposed Variables
 
-There are several limitations as the Workflow plugin is relativly new, these include:
+The plugin exposes the following additional variables:
 
-* SCM Polling (not functional)
-* No access to Environment ${VAR} varables
+* *P4_CHANGELIST* - current changelist (valid for this to be blank when there are no changes).
+* *P4_CLIENT* - Client currently in use.
+* *P4_PORT* - Perforce server port currently in use.
+* *P4_USER* - Perforce user in use.
+* *P4_TICKET* - Perforce ticket used (can be hidden using global configuration option 'Perforce: Secure P4_TICKET').
+* *HUDSON_CHANGELOG_FILE* - Location on disk of 'changelog.xml' containing list of changes in this build.
+
+For example in a Pipeline script you can use:
+
+    ${env.P4_CHANGELIST}
+
+For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/workflow-plugin/blob/master/WORKFLOW.md) section.
 
 ## Troubleshooting
 

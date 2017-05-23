@@ -10,12 +10,15 @@ public class ForceCleanImpl extends Populate {
 
 	/**
 	 * Force sync of workspace (optional have update)
-	 * 
-	 * @param have
+	 *
+	 * @param have     populate have list
+	 * @param quiet    Perforce quiet option
+	 * @param pin      Change or label to pin the sync
+	 * @param parallel Parallel sync options
 	 */
 	@DataBoundConstructor
-	public ForceCleanImpl(boolean have, boolean modtime, boolean quiet, String pin, ParallelSync parallel) {
-		super(have, true, modtime, quiet, pin, parallel);
+	public ForceCleanImpl(boolean have, boolean quiet, String pin, ParallelSync parallel) {
+		super(have, true, false, quiet, pin, parallel);
 	}
 
 	@Extension

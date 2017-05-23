@@ -7,13 +7,13 @@ public class Identifier {
 	private String version;
 
 	public Identifier() {
-		ResourceBundle bundle = ResourceBundle
-				.getBundle("org.jenkinsci.plugins.p4.Identifier");
+		ResourceBundle bundle = ResourceBundle.getBundle("org.jenkinsci.plugins.p4.Identifier");
 
 		version = bundle.getString("org.jenkinsci.plugins.p4.version");
 		product = bundle.getString("org.jenkinsci.plugins.p4.product");
-		
+
 		String platform = System.getProperty("os.name");
+		platform = platform.replaceAll(" ", "_");
 		version += "/" + platform;
 	}
 

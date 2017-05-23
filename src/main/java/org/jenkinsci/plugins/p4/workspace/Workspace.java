@@ -1,24 +1,26 @@
 package org.jenkinsci.plugins.p4.workspace;
 
+import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.Serializable;
 import java.util.Map;
 
-import jenkins.model.Jenkins;
+public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace>, Serializable {
 
-import com.perforce.p4java.client.IClient;
-import com.perforce.p4java.server.IOptionsServer;
-
-public abstract class Workspace implements Cloneable, ExtensionPoint,
-		Describable<Workspace> {
-
+	private static final long serialVersionUID = 1L;
+	
 	private String charset;
 	private boolean pinHost;
 	private String rootPath;
 	private String hostname;
 	private Expand expand;
+	private String syncID;
 
 	public Workspace(String charset, boolean pinHost) {
 		this.charset = charset;
@@ -30,8 +32,8 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 	/**
 	 * Returns the client workspace name as defined in the configuration. This
 	 * may include ${tag} that have not been expanded.
-	 * 
-	 * @return
+	 *
+	 * @return Client name
 	 */
 	public abstract String getName();
 
@@ -45,24 +47,28 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 
 	/**
 	 * Setup/Create a Perforce workspace for this mode.
-	 * 
-	 * @param connection
-	 * @param user
+	 *
+	 * @param connection Server connection
+	 * @param user       Perforce user
 	 * @return Perforce client
-	 * @throws Exception
+	 * @throws Exception push up stack
 	 */
-	public abstract IClient setClient(IOptionsServer connection, String user)
-			throws Exception;
+	public abstract IClient setClient(IOptionsServer connection, String user) throws Exception;
 
 	public WorkspaceDescriptor getDescriptor() {
-		return (WorkspaceDescriptor) Jenkins.getInstance().getDescriptor(
-				getClass());
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return (WorkspaceDescriptor) j.getDescriptor(getClass());
+		}
+		return null;
 	}
 
 	public static DescriptorExtensionList<Workspace, WorkspaceDescriptor> all() {
-		return Jenkins.getInstance()
-				.<Workspace, WorkspaceDescriptor> getDescriptorList(
-						Workspace.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.<Workspace, WorkspaceDescriptor>getDescriptorList(Workspace.class);
+		}
+		return null;
 	}
 
 	public String getRootPath() {
@@ -91,23 +97,45 @@ public abstract class Workspace implements Cloneable, ExtensionPoint,
 
 	/**
 	 * Returns the fully expanded client workspace name.
-	 * 
-	 * @return
+	 *
+	 * @return Client name
 	 */
 	public String getFullName() {
 		// expands Workspace name if formatters are used.
 		String clientName = expand.format(getName(), false);
 
 		// replace restricted characters with "-" as per the old plugin
-		clientName = clientName.replaceAll(" ", "_");
-		clientName = clientName.replaceAll(",", "-");
-		clientName = clientName.replaceAll("=", "-");
-		clientName = clientName.replaceAll("/", "-");
-		
+		clientName = expand.clean(clientName);
+
 		// store full name in expand options for use in view
 		expand.set("P4_CLIENT", clientName);
-		
+
 		return clientName;
+	}
+
+	public String getSyncID() {
+		String id = null;
+
+		if(expand == null) {
+			return id;
+		}
+
+		// if syncID provide expand or use client name.
+		if(syncID != null && !syncID.isEmpty()) {
+			id = expand.formatID(syncID);
+		} else {
+			id = expand.formatID(getName());
+		}
+
+		// replace restricted characters with "-" as per the old plugin
+		id = expand.clean(id);
+
+		return id;
+	}
+
+	@DataBoundSetter
+	public void setSyncID(String syncID) {
+		this.syncID = syncID;
 	}
 
 	public Object clone() {

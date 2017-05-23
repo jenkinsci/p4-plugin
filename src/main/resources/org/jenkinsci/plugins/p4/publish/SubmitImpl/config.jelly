@@ -5,9 +5,17 @@
 	<f:entry title="${%Description}" field="description">
 		<f:textarea default="Submitted by Jenkins. Build: $${BUILD_TAG}"/>
 	</f:entry>
-	
+
+    <f:entry title="${%Purge Revisions}" field="purge">
+        <f:textbox default=""/>
+    </f:entry>
+
 	<f:entry field="onlyOnSuccess">
 		<f:checkbox title="${%Only publish on build success}" default="false"/>
+	</f:entry>
+	
+	<f:entry field="delete">
+		<f:checkbox title="${%Propagate deletes}" default="false"/>
 	</f:entry>
 	
 	<f:entry field="reopen">

@@ -1,27 +1,27 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.logging.Logger;
-
+import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.core.file.FileSpecBuilder;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.option.server.GetFileContentsOptions;
+import com.perforce.p4java.server.IOptionsServer;
+import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.perforce.p4java.client.IClient;
-import com.perforce.p4java.core.file.FileSpecBuilder;
-import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.impl.mapbased.client.Client;
-import com.perforce.p4java.option.server.GetFileContentsOptions;
-import com.perforce.p4java.server.IOptionsServer;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.List;
+import java.util.logging.Logger;
 
-import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.util.FormValidation;
+public class SpecWorkspaceImpl extends Workspace implements Serializable {
 
-public class SpecWorkspaceImpl extends Workspace {
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	private final String specPath;
@@ -54,28 +54,25 @@ public class SpecWorkspaceImpl extends Workspace {
 		// expands Workspace name if formatters are used.
 		String clientName = getFullName();
 
-		IClient iclient = connection.getClient(clientName);
-		if (iclient == null) {
-			logger.info("P4: Creating client from spec: " + clientName);
-			Client implClient = new Client(connection);
-			implClient.setName(clientName);
-			implClient.setOwnerName(user);
-			connection.createClient(implClient);
-			iclient = connection.getClient(clientName);
-		}
-
-		// Owner set for use with p4maven
-		iclient.setOwnerName(user);
-
-		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPath);
+		// fetch spec
+		String specPathFull = getExpand().format(getSpecPath(), false);
+		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
 		InputStream ins = connection.getFileContents(file, printOpts);
 
+		// parse spec
 		String spec = IOUtils.toString(ins, "UTF-8");
-		connection.execInputStringMapCmd("client", new String[] { "-i" }, spec);
-		iclient.refresh();
+		spec = getExpand().format(spec, false);
+		connection.execInputStringMapCmd("client", new String[]{"-i"}, spec);
 
+		// get client
+		IClient iclient = connection.getClient(clientName);
+		iclient.setName(clientName);
+		iclient.setOwnerName(user);
+
+		// save and return IClient
+		iclient.refresh();
 		return iclient;
 	}
 
@@ -90,9 +87,9 @@ public class SpecWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
@@ -105,9 +102,9 @@ public class SpecWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteSpecPath(@QueryParameter String value) {
 			return NavigateHelper.getPath(value);

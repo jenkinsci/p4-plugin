@@ -5,28 +5,21 @@ import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.net.URL;
-
-import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
+import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import com.perforce.p4java.core.IJob;
-import com.perforce.p4java.core.file.FileAction;
-import com.perforce.p4java.core.file.IFileSpec;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class P4WebBrowser extends P4Browser {
 
 	private static final long serialVersionUID = 1L;
-
-	public final URL url;
 
 	// 'ac' stands for action and corresponds to a unique screen in P4Web
 	public final String p4FileEnd = "?ac=22"; // file contents screen
@@ -36,41 +29,43 @@ public class P4WebBrowser extends P4Browser {
 	public final String p4LabelEnd = "?ac=16"; // label content screen
 
 	@DataBoundConstructor
-	public P4WebBrowser(URL url) {
-		this.url = normalizeToEndWithSlash(url);
+	public P4WebBrowser(String url) throws MalformedURLException {
+		super(url);
 	}
 
 	@Override
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(url.toString() + changeSet.getId() + p4ChangeEnd);
+		return new URL(getUrl().toString() + changeSet.getId() + p4ChangeEnd);
 	}
 
 	public URL getLabelSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(url.toString() + changeSet.getId() + p4LabelEnd);
+		return new URL(getUrl().toString() + changeSet.getId() + p4LabelEnd);
 	}
 
 	@Override
-	public URL getDiffLink(IFileSpec file) throws Exception {
-		if (file.getAction() != FileAction.EDIT
-				&& file.getAction() != FileAction.INTEGRATE) {
+	public URL getDiffLink(P4AffectedFile file, String change) throws Exception {
+		if (!file.getAction().equalsIgnoreCase("edit")) {
 			return null;
 		}
-		int r = new Integer(file.getEndRevision());
-		if (r <= 1) {
+
+		int rev = parseRevision(file);
+		if(rev <= 1) {
+			// nothing to diff
 			return null;
 		}
-		return new URL(url.toString() + file.getDepotPathString() + p4DiffEnd
-				+ "&rev1=" + (r - 1) + "&rev2=" + (r));
+
+		return new URL(getUrl().toString() + file.getPath() + p4DiffEnd
+				+ "&rev1=" + (rev - 1) + "&rev2=" + (rev));
 	}
 
 	@Override
-	public URL getFileLink(IFileSpec file) throws Exception {
-		return new URL(url.toString() + file.getDepotPathString() + p4FileEnd);
+	public URL getFileLink(P4AffectedFile file) throws Exception {
+		return new URL(getUrl().toString() + file.getPath() + p4FileEnd);
 	}
 
 	@Override
 	public URL getJobLink(String job) throws Exception {
-		return new URL(url.toString() + job + p4JobEnd);
+		return new URL(getUrl().toString() + job + p4JobEnd);
 	}
 
 	@Extension
@@ -98,7 +93,11 @@ public class P4WebBrowser extends P4Browser {
 		@Override
 		public P4WebBrowser newInstance(StaplerRequest req, JSONObject formData)
 				throws FormException {
-			return req.bindParameters(P4WebBrowser.class, "p4web.");
+			P4WebBrowser browser = null;
+			if (req != null) {
+				browser = req.bindParameters(P4WebBrowser.class, "p4web.");
+			}
+			return browser;
 		}
 	}
 }

@@ -5,15 +5,8 @@
 	<f:entry title="Unshelve Changelist" field="shelf">
 		<f:textbox />
 	</f:entry>
-		  
-	<f:entry name="resolve" title="Resolve Options" field="resolve">
-		<select name="resolve">
-			<option value="none">Resolve: None</option>
-			<option value="as">Resolve: Safe (-as)</option>
-			<option value="af">Resolve: Force Merge (-af)</option>
-			<option value="ay">Resolve: Yours (-ay) -- keep your edits</option>
-			<option value="at">Resolve: Theirs (-at) -- keep shelf content</option>
-		</select>
-	</f:entry>
+        <f:entry field="resolve" title="Resolve Options">
+           <f:select />
+        </f:entry>
 	
 </j:jelly>

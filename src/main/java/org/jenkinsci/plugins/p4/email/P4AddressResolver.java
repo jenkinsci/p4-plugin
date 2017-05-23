@@ -1,10 +1,12 @@
 package org.jenkinsci.plugins.p4.email;
 
+import hudson.Extension;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
 
 import java.util.logging.Logger;
 
+@Extension
 public class P4AddressResolver extends MailAddressResolver {
 
 	private static Logger logger = Logger.getLogger(P4AddressResolver.class

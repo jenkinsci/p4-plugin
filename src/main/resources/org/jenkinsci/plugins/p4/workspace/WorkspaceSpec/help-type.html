@@ -1,0 +1,21 @@
+<div>
+	<b>Type</b>
+	<p>Type of client: writeable/readonly/partitioned/graph</p>
+	<p>By default all clients are 'writeable', certain clients
+		are short lived and perform long sync and build cycles.
+		Over time these build clients can fragment the 'db.have'
+		table which is used to track what files a client has
+		synced.  Setting a type of 'readonly' gives the client
+		its own personal 'db.have' database table.  A 'readonly'
+		client cannot 'edit' or 'submit' files, however for build
+		automation this is not usually a requirement and the
+		performance tradeoff is worth considering if your build
+		automation is causing issues with the 'db.have' table.
+		This option requires that an administrator has first
+		configured the 'client.readonly.dir' setting.  If it is
+		necessary to submit changes as part of your build,
+		you may specify a 'partitioned' client: like a 'reaonly'
+		client, this type also has a separate 'db.have' table
+		under the 'client.readonly.dir' directory, but allows
+		journalled 'edit' and 'submit' of files.</p>
+</div>

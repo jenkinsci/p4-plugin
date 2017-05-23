@@ -1,10 +1,10 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import hudson.Extension;
-
 import java.io.Serializable;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import hudson.Extension;
 
 public class ShelveImpl extends Publish implements Serializable {
 
@@ -17,8 +17,8 @@ public class ShelveImpl extends Publish implements Serializable {
 	}
 
 	@DataBoundConstructor
-	public ShelveImpl(String description, boolean onlyOnSuccess, boolean revert) {
-		super(description, onlyOnSuccess);
+	public ShelveImpl(String description, boolean onlyOnSuccess, boolean delete, boolean revert) {
+		super(description, onlyOnSuccess, delete);
 		this.revert = revert;
 	}
 

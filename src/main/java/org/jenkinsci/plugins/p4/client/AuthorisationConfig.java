@@ -29,7 +29,7 @@ public class AuthorisationConfig implements Serializable {
 
 		if (credential instanceof P4TicketImpl) {
 			P4TicketImpl t = (P4TicketImpl) credential;
-			this.type = AuthorisationType.TICKET;
+			this.type = AuthorisationType.TICKETPATH;
 			this.username = t.getUsername();
 
 			if (t.isTicketValueSet()) {
@@ -49,23 +49,6 @@ public class AuthorisationConfig implements Serializable {
 		sb.append(username);
 		sb.append((client != null) ? "@" + client : "@no-client");
 		return sb.toString();
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof ConnectionConfig) {
-			ConnectionConfig comp = (ConnectionConfig) obj;
-			return this.toString().equals(comp.toString());
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		int hash = 7;
-		hash = (int) (1777 * hash + this.toString().hashCode());
-		return hash;
 	}
 
 	public String getClient() {

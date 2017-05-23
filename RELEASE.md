@@ -1,5 +1,294 @@
 ## Release notes
 
+### Release 1.7.0 (major features/fixes)
+
+[@22168](https://swarm.workshop.perforce.com/changes/22168) - Check all login messages. Fix for 'pre-user-login' triggers. JENKINS-44166
+
+[@22164](https://swarm.workshop.perforce.com/changes/22164) - Jelly Configuration Documentation for Workspace Spec.
+
+[@22163](https://swarm.workshop.perforce.com/changes/22163) - Manual Workspace support for READONLY and PARTITIONED. Change Type to Enum. JENKINS-39753
+
+[@22159](https://swarm.workshop.perforce.com/changes/22159) - Minor fix on Graph commit change summary. Skip query when listing commits between the same SHAs.
+
+[@22140](https://swarm.workshop.perforce.com/changes/22140) - Update class check on ReviewActionFactory. Fixes Review end-point for Pipeline builds.
+
+[@22139](https://swarm.workshop.perforce.com/changes/22139) - Change MultiBranch pipeline Include box to textarea.
+
+[@22128](https://swarm.workshop.perforce.com/changes/22128) - Helix Graph support for Jenkins. JENKINS-40354
+
+
+### Release 1.6.2 (major features/fixes)
+
+[@22091](https://swarm.workshop.perforce.com/changes/22091) - Fix Job form issue in P4Groovy.  A custom job spec would return an extra field 'specFormatted' normally hidden by the C++ API, but exposed in P4Java's execMap results.  P4Groovy needs to remove the field before returning the map to the user.
+
+[@22084](https://swarm.workshop.perforce.com/changes/22084) - Merge pull request #43 from tangkun75.  JENKINS-43877: P4 plugin fails during polling for freestyle job
+
+[@22061](https://swarm.workshop.perforce.com/changes/22061) - Formalise P4Groovy and update documentation.
+
+
+### Release 1.6.1 (major features/fixes)
+
+[@22043](https://swarm.workshop.perforce.com/changes/22043) - Access remote Channel to find NODE_NAME.  If NODE_NAME is not set in the environment, look at the remote channel, then default to 'master'.  JENKINS-34128  JENKINS-43551
+
+[@22040](https://swarm.workshop.perforce.com/changes/22040) - Merge pull request #41 from lizlam/master.  Strip the trailing slash in the depot path so that p4sync step doesn't fail.
+
+[@22038](https://swarm.workshop.perforce.com/changes/22038) - Merge pull request #42 from tangkun75/JENKINS-43770_p4sync_in_parallel_causes_invalid_SCM_triggering.  JENKINS-43770 p4sync in parallel causes invalid SCM triggering
+
+[@22021](https://swarm.workshop.perforce.com/changes/22021) - Set environment to expand client name for Publish and Remove Client.  JENKINS-43378
+
+[@22019](https://swarm.workshop.perforce.com/changes/22019) - Fix TaskListener serialisation issue.  TaskListener field must be transient as part of the program state, but is marked `Serializable` for the Task as it is sent over the Remoting Channel.  Update p4 groovy to extend Step and not AbstractStepImpl.
+
+[@21937](https://swarm.workshop.perforce.com/changes/21937) - Only reports changes since the last build.  Previously the build summary reported all changes since the last successful build.  JENKINS-40747
+
+
+### Release 1.6.0 (major features/fixes)
+
+[@21923](https://swarm.workshop.perforce.com/changes/21923) - Added old ClientHelper constructor and mark Deprecated.  ClientHelper constructor breaking change introduced in 1.3.6 #26
+
+[@21865](https://swarm.workshop.perforce.com/changes/21865) - Update P4Java to 2016.1.1499206
+
+[@21856](https://swarm.workshop.perforce.com/changes/21856) - Update min Jenkins version
+
+[@21821](https://swarm.workshop.perforce.com/changes/21821) - Merge pull request #40 from s-sutherland/slaveexec.  P4Groovy execution to run on the slave
+
+[@21795](https://swarm.workshop.perforce.com/changes/21795) - Fix Credential Test to use RSH server.  Jenkins 34825
+
+[@21794](https://swarm.workshop.perforce.com/changes/21794) - Merge pull request #39 from Dohbedoh/JENKINS-34825.  Jenkins 34825
+
+
+### Release 1.5.1 (major features/fixes)
+
+[@21779](https://swarm.workshop.perforce.com/changes/21779) - Help for MultiBranch include field and update BETA label.  JENKINS-32616
+
+[@21758](https://swarm.workshop.perforce.com/changes/21758) - Merge pull request #38 from jenkinsci/dev.  scm-api 2.0.2 updates
+
+
+### ~~Release 1.5.0~~ (broken deployment)
+
+### Release 1.4.14 (major features/fixes)
+
+[@21668](https://swarm.workshop.perforce.com/changes/21668) - Identifier fix by adding filtering to resources.
+
+[@21659](https://swarm.workshop.perforce.com/changes/21659) - Cleanup TagAction.  Only call get method on TagAction once per entry.  Fetch values at construction or workspace creation, not on demand.
+
+[@21658](https://swarm.workshop.perforce.com/changes/21658) - Reduce login requests.  Avoid running `p4 login -s` twice.
+
+[@21642](https://swarm.workshop.perforce.com/changes/21642) - Merge pull request #37 from i386/feature/JENKINS-41459.  JENKINS-41459 fixes NPE when credential is null
+
+[@21562](https://swarm.workshop.perforce.com/changes/21562) - Expand variables for Spec Workspace definitions.  Add test to verify variable expansion for name and view.
+
+
+### Release 1.4.13 (major features/fixes)
+
+[@21449](https://swarm.workshop.perforce.com/changes/21449) - **Rename** and **Deprecated** the old P4Groovy run method.  Force use of variable arg/Array method over a single String.  Add support for List<String> PR #35.  JENKINS-40454
+
+[@21447](https://swarm.workshop.perforce.com/changes/21447) - P4Groovy can take variable args or one string for run.  JENKINS-40454
+
+[@21437](https://swarm.workshop.perforce.com/changes/21437) - Prevent NPE on paths with @ in the parent.  JENKINS-40055
+
+
+### Release 1.4.12 (major features/fixes)
+
+[@21372](https://swarm.workshop.perforce.com/changes/21372) - Support custom SyncID.  Exclude BUILD_NUMBER from SyncID.  Pushed logging to higher level, so it is not reporting TagActions when building the Environment.  JENKINS-40460
+
+[@21324](https://swarm.workshop.perforce.com/changes/21324) - Create syncID to track syncs when polling.  Original design used the client name to track the sync from previous builds, however as polling is on the master if NODE_NAME is used it breaks with slaves.  JENKINS-40356
+
+[@21272](https://swarm.workshop.perforce.com/changes/21272) - Use ExecutorService to prevent blocking during polling task.  JENKINS-39278 JENKINS-39152
+
+[@21271](https://swarm.workshop.perforce.com/changes/21271) - Prevent NPE on polling if no previous builds. JENKINS-40356
+
+
+### Release 1.4.11 (major features/fixes)
+
+[@21228](https://swarm.workshop.perforce.com/changes/21228) - Prevent NPE if client is not found.  If the workspace client name is changed in the Jenkins file, then getLastChange() will not find a previous actions and should return null.  JENKINS-40258
+
+[@21215](https://swarm.workshop.perforce.com/changes/21215) - Polling fix for Multi client support in Pipeline.  Jenkins polls for each SCM checkout, so must poll each workplace and therefore need to lookup last build information for each sync.  Polling now uses same lookup as Change Summary.    JENKINS-38401 JENKINS-37462 JENKINS-39652
+
+[@21207](https://swarm.workshop.perforce.com/changes/21207) - Multi client support in Pipeline.  If two or more `p4sync` operations are called in one Pipeline script, they MUST have different client names.  During a build, multiple entries are added to the build history.  JENKINS-38401 JENKINS-37462 JENKINS-39652
+
+[@21190](https://swarm.workshop.perforce.com/changes/21190) - Test for pull request #34 Custom workspace support.
+
+[@21189](https://swarm.workshop.perforce.com/changes/21189) - Merge pull request #34 from DrakkenWulf/cleanChange. Custom workspace support.
+
+[@21163](https://swarm.workshop.perforce.com/changes/21163) - Add P4HOST to parallel sync.
+
+[@21155](https://swarm.workshop.perforce.com/changes/21155) - Update documentation for new P4_CHANGELIST behavior.  JENKINS-37584
+
+[@21154](https://swarm.workshop.perforce.com/changes/21154) - P4HOST support for connection.
+
+[@21153](https://swarm.workshop.perforce.com/changes/21153) - Merge pull request #32 from pyssling/master.  Use latest change for all builds when polling.  JENKINS-40048
+
+[@21151](https://swarm.workshop.perforce.com/changes/21151) - Update Release notes for 1.4.10
+
+
+### Release 1.4.10 (major features/fixes)
+
+[@21149](https://swarm.workshop.perforce.com/changes/21149) - Null protection for Ticket Value/Path.
+
+[@21133](https://swarm.workshop.perforce.com/changes/21133) - P4 Environment Variables for pipeline.  JENKINS-37584
+
+[@21077](https://swarm.workshop.perforce.com/changes/21077) - Switch polling back to build.xml - Change in Polling behaviour; use last build details in the build.xml file.  It gathers 'last' change details on the master thread and not a slave thread.  JENKINS-37462
+
+[@21062](https://swarm.workshop.perforce.com/changes/21062) - Avoid dependency errors on WorkflowJob.
+
+### Release 1.4.9 (major features/fixes)
+
+[@21042](https://swarm.workshop.perforce.com/changes/21042) - Use `textarea` for change description (CSS: 10 rows max).  JENKINS-39257
+
+[@21024](https://swarm.workshop.perforce.com/changes/21024) - Allow concurrent use a Client during polling.  Prevents Jenkins from blocking trigger events when polling and a build is in progress.  JENKINS-38425
+
+[@20986](https://swarm.workshop.perforce.com/changes/20986) - Ground work for MultiJob support.  Pushed validate up to ConnectionHelper and added new Perforce functions.
+
+[@20980](https://swarm.workshop.perforce.com/changes/20980) - Functional test upgrade.  Switched to RSH pipe for Perforce connection and upgraded to 15.1 P4D binaries.  Made use of ClassRule for Jenkins (faster startup) and a Rule for Perforce with separate roots (to allow for parallel test runs).
+
+[@20954](https://swarm.workshop.perforce.com/changes/20954) - Add purge -S<n> option for the Submit stage of Publish.  If a value is provided it will set the purge option on all files found as part of the reconcile (ADD/EDIT).  It will not remove the purge option once set.  JENKINS-36112
+
+[@20950](https://swarm.workshop.perforce.com/changes/20950) - Add variable expansion to SpecFile based workspaces.
+
+[@20908](https://swarm.workshop.perforce.com/changes/20908) - Filter for WorkFlowJob.  Avoids duplicate Review buttons in FreeStyle Jobs.
+
+[@20903](https://swarm.workshop.perforce.com/changes/20903) - Document BasicAuth from Reviews.
+
+[@20902](https://swarm.workshop.perforce.com/changes/20902) - Enable Swarm builds on pipeline.  JENKINS-38233
+
+[@20897](https://swarm.workshop.perforce.com/changes/20897) - Report all P4Java errors on validate.  Ignore 'no such file' warning on populate, caused by empty file list on sync -k.
+
+[@20893](https://swarm.workshop.perforce.com/changes/20893) - Update trigger documentation to include using a CRUMB for security.
+
+[@20889](https://swarm.workshop.perforce.com/changes/20889) - Document downstream changelists. Workaround for JENKINS-33163.
+
+[@20877](https://swarm.workshop.perforce.com/changes/20877) - Merge pull request #29 from tangkun75/master.  Not throw AbortException when unknown errors (except for those ignoring ones ) occurred during P4 task post-validation
+
+### Release 1.4.8 (major features/fixes)
+
+[@20873](https://swarm.workshop.perforce.com/changes/20873) - Support Pin to a change in a counter.
+
+[@20820](https://swarm.workshop.perforce.com/changes/20820) - Find bug fix for null checking on Jenkins.getInstance()
+
+[@20818](https://swarm.workshop.perforce.com/changes/20818) - Global limits for changes and files.  Max number of change lists to show for a build (default 10.  Max number of files to list in a change (default 50)
+
+[@20814](https://swarm.workshop.perforce.com/changes/20814) - Merge pull request #31 from psytale/discoverable_mails.  Make P4AddressResolver discoverable
+
+[@20788](https://swarm.workshop.perforce.com/changes/20788) - Fix for findbugs
+
+[@20787](https://swarm.workshop.perforce.com/changes/20787) - Polling Fix for use with quiet period.  Switched all uses of change/label to P4Revision object and implemented Comparable.  The changes to build are now calculated at build time (after the quiet period) not during the polling phase.  JENKINS-36883
+
+[@20786](https://swarm.workshop.perforce.com/changes/20786) - Upgrade p4java 2015.2.1365273
+
+### Release 1.4.7 (major features/fixes)
+
+[@20667](https://swarm.workshop.perforce.com/changes/20667) - Merge pull request #28 from tangkun75/master.  Workspace's root path overwritten to "null" when enabling polling in Pipeline job
+
+[@20620](https://swarm.workshop.perforce.com/changes/20620) - Change 'now' to the latest change at the point of sync.  JENKINS-36883
+
+[@20598](https://swarm.workshop.perforce.com/changes/20598) - P4Credentials Interfaces for Mixins.  Updated test cases to match changes from CredentialsNameProvider.
+
+[@20593](https://swarm.workshop.perforce.com/changes/20593) - Unshelve options in Pipeline.  Update merge options and support unshelve ListBoxModel Option in Pipeline.
+
+[@20418](https://swarm.workshop.perforce.com/changes/20418) - Replace FileCallable and checkRoles with MasterToSlaveCallable.
+
+[@20308](https://swarm.workshop.perforce.com/changes/20308) - P4Groovy (experimental).  Get a P4 object in groovy.  Supporting basic functions: ’run’ (to run perforce commands), ‘fetch’ and ‘save’ (to access Perforce specs).
+
+### Release 1.4.6 (major features/fixes)
+
+[@20247](https://swarm.workshop.perforce.com/changes/20247) - Access 'author' User and User url through the current P4ChangeEntry
+
+[@20246](https://swarm.workshop.perforce.com/changes/20246) - Convert merge options for unshelve to ListBoxModel Option (from basic jelly) @atiniir
+
+[@20245](https://swarm.workshop.perforce.com/changes/20245) - Don't disconnect after an abort.  Don't disconnect from the P4 server immediately after an abort is detected.  JENKINS-37487 @stuartr
+
+[@20226](https://swarm.workshop.perforce.com/changes/20226) - Support for Multiple SCMs Plugin.  Optional dependency on multiple-scms and helper method for safely casting SCM object to PerforceSCM instance, especially in the scenario where the SCM object is a MultiSCM instance.  JENKINS-32064
+
+[@20224](https://swarm.workshop.perforce.com/changes/20224) - Implementing View Mask Filter.  JENKINS-30622  JENKINS-28225 @stuartr
+
+[@20208](https://swarm.workshop.perforce.com/changes/20208) - Parallel sync for SSL connections.  JENKINS-37476
+
+[@20207](https://swarm.workshop.perforce.com/changes/20207) - Added implementation for getAffectedFiles()
+
+[@20201](https://swarm.workshop.perforce.com/changes/20201) - Moved set to null checked block.
+
+[@20190](https://swarm.workshop.perforce.com/changes/20190) - Expose HUDSON_CHANGELOG_FILE environment variable.  JENKINS-37442 @p4karl
+
+[@20179](https://swarm.workshop.perforce.com/changes/20179) - Javadoc fixes for java 8 builds.
+
+[@20174](https://swarm.workshop.perforce.com/changes/20174) - Adding retries (5) to P4Server.clean @stuartr.  JENKINS-26764
+
+### Release 1.4.5 (major features/fixes)
+
+Not a release.
+
+### Release 1.4.4 (major features/fixes)
+
+[@20038](https://swarm.workshop.perforce.com/changes/20038) - Add Help buttons to ReviewBuild page.  JENKINS-35437
+
+[@20015](https://swarm.workshop.perforce.com/changes/20015) - Force sort order for 'p4 cstat' and 'p4 changes'.  Resolve issue for Polling.  JENKINS-37124
+
+[@20012](https://swarm.workshop.perforce.com/changes/20012) - Logging for changelist calculation at checkout.
+
+[@20011](https://swarm.workshop.perforce.com/changes/20011) - @mjoubert Add parallel sync options to Sync Only
+
+[@19918](https://swarm.workshop.perforce.com/changes/19918) - Use StreamingCallback for Reconcile.  Reduce memory for servers 14.1 and above.
+
+### Release 1.4.3 (major features/fixes)
+
+[@19890](https://swarm.workshop.perforce.com/changes/19890) - Set environment before removing workspace.  Verify NPE with test case.  JENKINS-36422
+
+[@19881](https://swarm.workshop.perforce.com/changes/19881) - Change label form submit button to input.
+
+[@19880](https://swarm.workshop.perforce.com/changes/19880) - Use system logger to avoid serialisation of listener.
+
+[@19878](https://swarm.workshop.perforce.com/changes/19878) - Export getTimestamp() and getCommitId() for email-ext.  JENKINS-36409
+
+### Release 1.4.2 (major features/fixes)
+
+[@19830](https://swarm.workshop.perforce.com/changes/19830) - @mjoubert Add checks for sync CL and head CL
+
+[@19790](https://swarm.workshop.perforce.com/changes/19790) - Add a propagate delete option to Publish.  Originally only add/edits were permitted to prevent users deleting files with incorrect View maps, but this option allows deletes if enabled.  JENKINS-27885
+
+[@19765](https://swarm.workshop.perforce.com/changes/19765) - A Post Build 'P4 Cleanup' with DSL support.  Can be added as a PostBuild action to remove the client workspace spec.  It uses the options set in the Global configuration to delete the Client Spec and/or Local Files.
+
+[@19764](https://swarm.workshop.perforce.com/changes/19764) - Simplify RemoveClientTask by using AbstractTask.
+
+[@19752](https://swarm.workshop.perforce.com/changes/19752) - Remove 'modtime' option from ForceClean
+
+[@19750](https://swarm.workshop.perforce.com/changes/19750) - Add default workspace name to Manual Client.
+
+[@19716](https://swarm.workshop.perforce.com/changes/19716) - Login error to include exception message.
+
+### Release 1.4.1 (major features/fixes)
+
+[@19712](https://swarm.workshop.perforce.com/changes/19712) - NPE fix when code line has no changes.
+
+[@19641](https://swarm.workshop.perforce.com/changes/19641) - Merge pull request #26 from Dohbedoh/hotfix/JENKINS-25249. Fixed Null Pointer dereference
+
+[@19633](https://swarm.workshop.perforce.com/changes/19633) - Merge pull request #25 from amuniz/JENKINS-35210. Fix for SECURITY-170
+
+[@19630](https://swarm.workshop.perforce.com/changes/19630) - Merge pull request #24 from Dohbedoh/JENKINS-25249. Changes to make the P4 Trigger pipeline compatible. Added some tests of the P4 trigger for both Pipeline/Non Pipeline jobs.
+
+[@19612](https://swarm.workshop.perforce.com/changes/19612) - Polling fix, if no previous build.
+
+### Release 1.4.0 (major features/fixes)
+
+[@19593](https://swarm.workshop.perforce.com/changes/19593) - More minor fixes to satisfy FindBugs Analysis.
+
+[@19581](https://swarm.workshop.perforce.com/changes/19581) - Minor fixes to satisfy FindBugs Analysis.
+
+[@19578](https://swarm.workshop.perforce.com/changes/19578) - Upgrade plugin to 2.9
+
+### Release 1.3.10 (major features/fixes)
+
+[@19574](https://swarm.workshop.perforce.com/changes/19574) - Support for guessBrowser and getKey.
+
+[@19519](https://swarm.workshop.perforce.com/changes/19519) - Jelly header update.  <?jelly escape-by-default='true'?>
+
+[@19516](https://swarm.workshop.perforce.com/changes/19516) - Merge pull request #23 from Dohbedoh/JENKINS-29979
+
+[@19455](https://swarm.workshop.perforce.com/changes/19455) - Minor package fix.
+
+[@19454](https://swarm.workshop.perforce.com/changes/19454) - Hide `P4_TICKET` for secure systems.  An option in the global configuration to hide the `P4_TICKET` variable (not set by default).  JENKINS-24591
+
+[@19431](https://swarm.workshop.perforce.com/changes/19431) - Raise failed submit as Exception and mark build as failed.  JENKINS-34770
+
 ### Release 1.3.9 (major features/fixes)
 
 [@19374](https://swarm.workshop.perforce.com/changes/19374) - Poll on Master (without workspace).  New Polling Filter ‘Poll on Master using Last Build’.  Only polls on the master and fetches it change from the last Build. Note that 0 is assumed if no previous build is found.  JENKINS-32814

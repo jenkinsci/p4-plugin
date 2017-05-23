@@ -1,33 +1,61 @@
 package org.jenkinsci.plugins.p4.browsers;
 
-import java.net.URL;
-
+import hudson.scm.RepositoryBrowser;
+import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 
-import com.perforce.p4java.core.file.IFileSpec;
-
-import hudson.scm.RepositoryBrowser;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 
 	private static final long serialVersionUID = 1L;
 
+	private final URL url;
+
+	P4Browser(String url) throws MalformedURLException {
+		this.url = normalizeToEndWithSlash(new URL(url));
+	}
+
+	public URL getUrl() {
+		return url;
+	}
+
 	/**
-	 * Determines the link to the diff between the version. in the
-	 * {@link PerforceChangeLogEntry.Change.File} to its previous version.
+	 * Determines the link to the diff between the version.
 	 * 
+	 * @param file  Perforce file spec
+	 * @param change changelist number
 	 * @return null if the browser doesn't have any URL for diff.
+	 * @throws Exception push up stack
 	 */
-	public abstract URL getDiffLink(IFileSpec file) throws Exception;
+	public abstract URL getDiffLink(P4AffectedFile file, String change) throws Exception;
 
 	/**
 	 * Determines the link to a single file under Perforce. This page should
 	 * display all the past revisions of this file, etc.
 	 * 
+	 * @param file  Perforce file spec
 	 * @return null if the browser doesn't have any suitable URL.
+	 * @throws Exception push up stack
 	 */
-	public abstract URL getFileLink(IFileSpec file) throws Exception;
+	public abstract URL getFileLink(P4AffectedFile file) throws Exception;
 
+	/**
+	 * Determines the link for associated Perforce jobs.
+	 *
+	 * @param job ID
+	 * @return null if the browser doesn't have any suitable URL.
+	 * @throws Exception push up stack
+	 */
 	public abstract URL getJobLink(String job) throws Exception;
 
+	protected int parseRevision(P4AffectedFile file) {
+		if (file.getRevision() == null || !file.getRevision().contains("#")) {
+			// nothing to diff
+			return -1;
+		}
+		String[] parts = file.getRevision().split("#");
+		return Integer.parseInt(parts[0]);
+	}
 }

@@ -1,14 +1,5 @@
 package org.jenkinsci.plugins.p4;
 
-import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-
 import hudson.Extension;
 import hudson.XmlFile;
 import hudson.model.Descriptor;
@@ -17,6 +8,15 @@ import hudson.model.listeners.SaveableListener;
 import hudson.scm.SCM;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class ConfigurationListener extends SaveableListener {
@@ -24,8 +24,13 @@ public class ConfigurationListener extends SaveableListener {
 	private static Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			return;
+		}
+
 		@SuppressWarnings("unchecked")
-		Descriptor<SCM> scm = Jenkins.getInstance().getDescriptor(PerforceScm.class);
+		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
 		// Exit early if disabled
@@ -33,18 +38,24 @@ public class ConfigurationListener extends SaveableListener {
 			return;
 		}
 
-		ClientHelper p4 = null;
 		try {
 			String file = xml.getFile().getCanonicalPath();
 			logger.info(">>> onUpdated: " + file);
 
-			p4 = getClientHelper(p4scm);
-			p4.versionFile(file, "Configuration change");
+			// create Publish object
+			String desc = "Configuration change";
+			boolean success = false;
+			boolean delete = true;
+			boolean reopen = false;
+			String purge = "";
+			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
+
+			ClientHelper p4 = getClientHelper(p4scm);
+			p4.versionFile(file, publish);
+			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-			p4.disconnect();
 		}
 	}
 
@@ -57,7 +68,12 @@ public class ConfigurationListener extends SaveableListener {
 		String depotPath = p4scm.getDepotPath();
 		depotPath = depotPath.endsWith("/") ? depotPath : depotPath + "/";
 
-		String rootPath = Jenkins.getInstance().getRootDir().getCanonicalPath();
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			return null;
+		}
+		
+		String rootPath = j.getRootDir().getCanonicalPath();
 
 		StringBuffer view = new StringBuffer();
 		view.append(depotPath + "...");
@@ -70,7 +86,7 @@ public class ConfigurationListener extends SaveableListener {
 		workspace.setExpand(new HashMap<String, String>());
 		workspace.setRootPath(rootPath);
 
-		ClientHelper p4 = new ClientHelper(credential, listener, clientName, "utf8");
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, clientName, "utf8");
 		p4.setClient(workspace);
 
 		return p4;

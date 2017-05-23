@@ -1,7 +1,12 @@
 package org.jenkinsci.plugins.p4.workflow;
 
-import javax.inject.Inject;
-
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilder;
 import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilderStep;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -9,11 +14,7 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import javax.inject.Inject;
 
 public class P4UnshelveStep extends AbstractStepImpl {
 
@@ -51,6 +52,9 @@ public class P4UnshelveStep extends AbstractStepImpl {
 			return "P4 Unshelve";
 		}
 
+		public ListBoxModel doFillResolveItems() {
+			return UnshelveBuilder.DescriptorImpl.doFillResolveItems();
+		}
 	}
 
 	public static class P4UnshelveStepExecution extends AbstractSynchronousStepExecution<Void> {

@@ -51,14 +51,14 @@
                                 </j:otherwise>
                             </j:choose>
 						
-                            by <a href="${rootURL}/${entry.author.url}/">${entry.author}@${entry.clientId}</a>
+                            by <a href="${rootURL}/${entry.author.url}/">${entry.author}</a> (${entry.clientId})
                             on <i:formatDate value="${entry.date}" type="both" dateStyle="medium" timeStyle="medium"/>
                             <hr/>
-                            ${entry.msgAnnotated}
+                            <textarea readonly="readonly" rows="${entry.rows}" style="resize: none; width: 100%; border: none; background: transparent; outline: none;">${entry.msg}</textarea>
                             <br/>
                         </div>
 					
-                        <j:if test="${entry.files.size() > 0}">
+                        <j:if test="${entry.affectedFiles.size() > 0}">
                             <j:choose>
                                 <j:when test="${entry.shelved}">
                                     Shelved Files:
@@ -69,23 +69,23 @@
                             </j:choose>
 						
                             <ul style="list-style-type: none;">
-                                <j:forEach var="file" items="${entry.files}" varStatus="fileloop">
+                                <j:forEach var="file" items="${entry.affectedFiles}" varStatus="fileloop">
                                     <li>
-                                        <img src="${rootURL}/plugin/p4/icons/action-${entry.getAction(file)}.gif" border="0" style="vertical-align"/>
+                                        <img src="${rootURL}/plugin/p4/icons/action-${file.action}.gif" border="0" style="vertical-align"/>
                                         <st:nbsp/> 
-                                        <a href="${browser.getFileLink(file)}">${file.depotPathString}</a>
+                                        <a href="${browser.getFileLink(file)}">${file.getPath()}</a>
                                         <j:choose>
                                             <j:when test="${entry.shelved}">                                    
                                             </j:when>	
                                             <j:otherwise>
-                                                <j:set var="diff" value="${browser.getDiffLink(file)}"/>
+                                                <j:set var="diff" value="${browser.getDiffLink(file, entry.id)}"/>
                                                 <j:choose>
                                                     <j:when test="${diff!=null}">
                                                         <st:nbsp/>
-                                                        <a href="${diff}">#${file.endRevision}</a>
+                                                        <a href="${diff}">${file.revision}</a>
                                                     </j:when>
                                                     <j:otherwise>
-                                                        #${file.endRevision}
+                                                    	<st:nbsp/>${file.revision}
                                                     </j:otherwise>
                                                 </j:choose>
                                             </j:otherwise>

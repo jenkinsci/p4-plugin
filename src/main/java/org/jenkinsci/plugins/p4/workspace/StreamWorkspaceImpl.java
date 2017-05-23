@@ -1,16 +1,17 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.Extension;
-
-import java.util.logging.Logger;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.Extension;
+import org.kohsuke.stapler.DataBoundConstructor;
 
-public class StreamWorkspaceImpl extends Workspace {
+import java.io.Serializable;
+import java.util.logging.Logger;
+
+public class StreamWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String streamName;
 	private final String format;
@@ -72,8 +73,6 @@ public class StreamWorkspaceImpl extends Workspace {
 
 	@Extension
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
-
-		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
 
 		@Override
 		public String getDisplayName() {

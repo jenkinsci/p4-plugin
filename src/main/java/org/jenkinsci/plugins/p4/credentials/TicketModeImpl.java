@@ -1,51 +1,40 @@
 package org.jenkinsci.plugins.p4.credentials;
 
+import java.io.Serializable;
+
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 
-import java.io.Serializable;
-
-import org.apache.commons.lang.StringUtils;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl>
-		implements Serializable {
+public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@NonNull
-	private final String value;
+	@NonNull private final String value;
 
-	@NonNull
-	private final String ticketValue;
+	@NonNull private final String ticketValue;
 
-	@NonNull
-	private final String ticketPath;
+	@NonNull private final String ticketPath;
 
 	@DataBoundConstructor
-	public TicketModeImpl(@CheckForNull String value,
-			@CheckForNull String ticketValue, @CheckForNull String ticketPath) {
+	public TicketModeImpl(String value, String ticketValue, String ticketPath) {
 		this.value = value;
-		this.ticketValue = ticketValue;
-		this.ticketPath = ticketPath;
+		this.ticketValue = (ticketValue != null) ? ticketValue : "";
+		this.ticketPath = (ticketPath != null) ? ticketPath : "";
 	}
 
-	@NonNull
 	public String getValue() {
 		return value;
 	}
 
-	@NonNull
 	public String getTicketValue() {
 		return ticketValue;
 	}
 
-	@NonNull
 	public String getTicketPath() {
 		return ticketPath;
 	}

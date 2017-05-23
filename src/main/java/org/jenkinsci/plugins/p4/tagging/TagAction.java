@@ -1,18 +1,16 @@
 package org.jenkinsci.plugins.p4.tagging;
 
+import com.perforce.p4java.impl.generic.core.Label;
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.model.TaskListener;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.scm.AbstractScmTagAction;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.ServletException;
-
+import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -23,21 +21,46 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.perforce.p4java.impl.generic.core.Label;
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TagAction extends AbstractScmTagAction {
+
+	private static Logger logger = Logger.getLogger(TagAction.class.getName());
 
 	private String tag;
 	private List<String> tags = new ArrayList<String>();
 
-	private String credential;
+	private List<P4Ref> refChanges;
+
+	private P4Revision buildChange;
+
+	private final String credential;
+	private final String p4port;
+	private final String p4user;
+	private final String p4ticket;
+
+	// Set when workspace is defined
 	private Workspace workspace;
 	private String client;
-	private P4Revision buildChange;
+	private String syncID;
 	private String charset;
 
-	public TagAction(Run<?, ?> run) throws IOException, InterruptedException {
+	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
+
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, run);
+		this.credential = credential;
+		this.p4port = auth.getP4port();
+		this.p4user = auth.getUsername();
+
+		ConnectionHelper p4 = new ConnectionHelper(auth, null);
+		this.p4ticket = p4.getTicket();
+		p4.disconnect();
 	}
 
 	public String getIconFileName() {
@@ -58,20 +81,22 @@ public class TagAction extends AbstractScmTagAction {
 		return tags != null && !tags.isEmpty();
 	}
 
-	public void doSubmit(StaplerRequest req, StaplerResponse rsp)
-			throws Exception, ServletException {
+	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
 
 		getACL().checkPermission(PerforceScm.TAG);
 
 		String description = req.getParameter("desc");
 		String name = req.getParameter("name");
-		labelBuild(null, name, description, null);
+
+		TaskListener listener = new LogTaskListener(logger, Level.INFO);
+
+		labelBuild(listener, name, description, null);
 
 		rsp.sendRedirect(".");
 	}
 
-	public void labelBuild(TaskListener listener, String name,
-			String description, final FilePath nodeWorkspace) throws Exception {
+	public void labelBuild(TaskListener listener, String name, String description, final FilePath nodeWorkspace)
+			throws Exception {
 		// Expand label name and description
 		EnvVars env = getRun().getEnvironment(listener);
 		Expand expand = new Expand(env);
@@ -80,39 +105,74 @@ public class TagAction extends AbstractScmTagAction {
 
 		TaggingTask task = new TaggingTask(name, description);
 		task.setListener(listener);
-		task.setCredential(credential);
+		task.setCredential(credential, getRun().getParent());
 		task.setWorkspace(workspace);
-		task.setBuildChange(buildChange);
+		task.setBuildChange(getRefChange());
 
 		FilePath buildWorkspace = nodeWorkspace;
 		if (nodeWorkspace == null) {
 			buildWorkspace = build.getWorkspace();
 		}
+		if (buildWorkspace == null) {
+			logger.warning("FilePath is null!");
+			return;
+		}
 
 		// Invoke the Label Task
-		buildWorkspace.act(task);
+		Boolean ok = buildWorkspace.act(task);
 
 		// save label
-		if (!tags.contains(name)) {
+		if (ok && !tags.contains(name)) {
 			tags.add(name);
 			getRun().save();
 		}
 	}
 
+	public void setRefChanges(List<P4Ref> refChanges) {
+		this.refChanges = refChanges;
+	}
+
+	public List<P4Ref> getRefChanges() {
+		// parse Legacy XML data from P4Revision to P4Ref
+		if (refChanges == null || refChanges.isEmpty()) {
+			refChanges = new ArrayList<>();
+			if (buildChange != null) {
+				if (buildChange.isLabel()) {
+					P4LabelRef label = new P4LabelRef(buildChange.toString());
+					refChanges.add(label);
+				} else {
+					P4ChangeRef change = new P4ChangeRef(buildChange.getChange());
+					refChanges.add(change);
+				}
+			}
+		}
+		return refChanges;
+	}
+
+	public P4Ref getRefChange() {
+		for (P4Ref change : refChanges) {
+			if (change instanceof P4ChangeRef) {
+				return change;
+			}
+			if (change instanceof P4LabelRef) {
+				return change;
+			}
+		}
+		return null;
+	}
+
+	@Deprecated
 	public void setBuildChange(P4Revision buildChange) {
 		this.buildChange = buildChange;
 	}
 
+	@Deprecated
 	public P4Revision getBuildChange() {
 		return buildChange;
 	}
 
 	public String getCredential() {
 		return credential;
-	}
-
-	public void setCredential(String credential) {
-		this.credential = credential;
 	}
 
 	public Workspace getWorkspace() {
@@ -122,12 +182,11 @@ public class TagAction extends AbstractScmTagAction {
 	public void setWorkspace(Workspace workspace) {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.syncID = workspace.getSyncID();
 		this.charset = workspace.getCharset();
 	}
 
 	public String getPort() {
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
-		String p4port = auth.getP4port();
 		return p4port;
 	}
 
@@ -135,15 +194,15 @@ public class TagAction extends AbstractScmTagAction {
 		return client;
 	}
 
+	public String getSyncID() {
+		return syncID;
+	}
+
 	public String getUser() {
-		P4BaseCredentials auth = ConnectionHelper.findCredential(credential);
-		String p4user = auth.getUsername();
 		return p4user;
 	}
 
 	public String getTicket() {
-		ConnectionHelper p4 = new ConnectionHelper(credential, null);
-		String p4ticket = p4.getTicket();
 		return p4ticket;
 	}
 
@@ -157,14 +216,85 @@ public class TagAction extends AbstractScmTagAction {
 
 	/**
 	 * Method used by Jelly code to show Label information (do not remove)
-	 * 
-	 * @param tag
-	 * @return
-	 * @throws Exception
+	 *
+	 * @param tag Label name
+	 * @return Perforce Label object
 	 */
-	public Label getLabel(String tag) throws Exception {
-		ClientHelper p4 = new ClientHelper(credential, null, client, charset);
-		Label label = p4.getLabel(tag);
-		return label;
+	public Label getLabel(String tag) {
+		ClientHelper p4 = new ClientHelper(ClientHelper.findCredential(credential, getRun()), null, client, charset);
+		try {
+			Label label = p4.getLabel(tag);
+			return label;
+		} catch (Exception e) {
+			logger.warning("Unable to get label from tag: " + tag);
+		} finally {
+			p4.disconnect();
+		}
+		return null;
+	}
+
+	/**
+	 * Change reporting...
+	 *
+	 * @param run      The current build
+	 * @param listener Listener for logging
+	 * @param syncID   Changelist Sync ID
+	 * @return Perforce change
+	 */
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4Ref> list = new ArrayList<>();
+
+		List<TagAction> actions = lastActions(run);
+		if (actions == null || syncID == null || syncID.isEmpty()) {
+			listener.getLogger().println("No previous build found...");
+			return list;
+		}
+
+		// look for action matching view
+		for (TagAction action : actions) {           //JENKINS-43877
+			if (syncID.equals(action.getSyncID()) || (action.getSyncID() != null && action.getSyncID().contains(syncID))) {
+				List<P4Ref> changes = action.getRefChanges();
+				for (P4Ref change : changes) {
+					if (!change.isCommit()) {
+						listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
+					}
+				}
+				return changes;
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Find the last action; use this for environment variable as the last action has the latest values.
+	 *
+	 * @param run The current build
+	 * @return Action
+	 */
+	public static TagAction getLastAction(Run<?, ?> run) {
+		List<TagAction> actions = lastActions(run);
+		if (actions == null) {
+			return null;
+		}
+
+		// #Review 21165
+		TagAction last = actions.get(actions.size() - 1);
+		return last;
+	}
+
+	private static List<TagAction> lastActions(Run<?, ?> run) {
+		// get last run, if none then build now.
+		if (run == null) {
+			return null;
+		}
+
+		// get last action, if no previous action then build now.
+		List<TagAction> actions = run.getActions(TagAction.class);
+		if (actions.isEmpty()) {
+			return null;
+		}
+
+		return actions;
 	}
 }

@@ -1,25 +1,25 @@
 package org.jenkinsci.plugins.p4.tasks;
 
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.remoting.Channel;
+import hudson.remoting.VirtualChannel;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-
-import hudson.AbortException;
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Run;
-import hudson.model.TaskListener;
 
 public abstract class AbstractTask implements Serializable {
 
@@ -30,16 +30,17 @@ public abstract class AbstractTask implements Serializable {
 	private P4BaseCredentials credential;
 	private TaskListener listener;
 	private String client;
+	private String syncID;
 	private String charset;
 
 	transient private Workspace workspace;
 
 	/**
 	 * Implements the Perforce task to retry if necessary
-	 * 
-	 * @param p4
-	 * @return
-	 * @throws Exception
+	 *
+	 * @param p4 Perforce connection helper
+	 * @return Task object
+	 * @throws Exception push up stack
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
 
@@ -47,8 +48,17 @@ public abstract class AbstractTask implements Serializable {
 		return credential;
 	}
 
+	@Deprecated
 	public void setCredential(String credential) {
 		this.credential = ConnectionHelper.findCredential(credential);
+	}
+
+	public void setCredential(String credential, Item project) {
+		this.credential = ConnectionHelper.findCredential(credential, project);
+	}
+
+	public void setCredential(String credential, Run run) {
+		this.credential = ConnectionHelper.findCredential(credential, run);
 	}
 
 	public TaskListener getListener() {
@@ -58,22 +68,23 @@ public abstract class AbstractTask implements Serializable {
 	public void setListener(TaskListener listener) {
 		this.listener = listener;
 	}
-	 
+
 	public void setWorkspace(Workspace workspace) throws AbortException {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
+		this.syncID = workspace.getSyncID();
 		this.charset = workspace.getCharset();
 
 		// setup the client workspace to use for the build.
 		ClientHelper p4 = getConnection();
 
 		// Check connection (might be on remote slave)
-		if (!checkConnection(p4)) {
-			String err = "P4: Abort, no server connection.\n";
-			logger.severe(err);
-			p4.log(err);
-			throw new AbortException(err);
-		}
+//		if (!checkConnection(p4)) {
+//			String err = "P4: Abort, no server connection.\n";
+//			logger.severe(err);
+//			p4.log(err);
+//			throw new AbortException(err);
+//		}
 
 		// Set the client
 		try {
@@ -96,30 +107,42 @@ public abstract class AbstractTask implements Serializable {
 
 		// Set environment
 		EnvVars envVars = run.getEnvironment(listener);
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		String node = getNodeName(buildWorkspace);
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", node));
 		ws.setExpand(envVars);
 
 		// Set workspace root (check for parallel execution)
 		String root = buildWorkspace.getRemote();
 		if (root.contains("@")) {
 			root = root.replace("@", "%40");
-			String client = ws.getFullName();
-			String name = buildWorkspace.getName();
+		}
+
+		// Template workspace for parallel execution
+		String name = buildWorkspace.getName();
+		if (name.contains("@")) {
 			String[] parts = name.split("@");
-			String exec = parts[1];
+			if (parts.length == 2) {
+				String exec = parts[1];
 
-			// Update Workspace before cloning
-			setWorkspace(ws);
+				// Update Workspace before cloning
+				setWorkspace(ws);
 
-			// Template workspace to .cloneN (where N is the @ number)
-			String charset = ws.getCharset();
-			boolean pin = ws.isPinHost();
-			String template = client + ".clone" + exec;
-			ws = new TemplateWorkspaceImpl(charset, pin, client, template);
-			ws.setExpand(envVars);
+				// Template workspace to .cloneN (where N is the @ number)
+				try {
+					int n = Integer.parseInt(exec);
+					String charset = ws.getCharset();
+					boolean pin = ws.isPinHost();
+					String fullName = ws.getFullName();
+					String template = fullName + ".clone" + n;
+					ws = new TemplateWorkspaceImpl(charset, pin, fullName, template);
+					ws.setExpand(envVars);
+				} catch (NumberFormatException e) {
+					// do not template; e.g. 'script' keeps original name
+				}
+			}
 		}
 		ws.setRootPath(root);
-		
+
 		if (ws.isPinHost()) {
 			String hostname = getHostName(buildWorkspace);
 			ws.setHostName(hostname);
@@ -128,23 +151,21 @@ public abstract class AbstractTask implements Serializable {
 		}
 		return ws;
 	}
-	
-	public Workspace setNextChange(Workspace ws, List<Integer> changes) {
-		// Set label for changes to build
-		if (changes != null) {
-			if (!changes.isEmpty()) {
-				String label = Integer.toString(changes.get(0));
-				ws.getExpand().set(ReviewProp.LABEL.toString(), label);
-			}
+
+	private String getNodeName(FilePath build) {
+		VirtualChannel vc = build.getChannel();
+		if(vc instanceof Channel) {
+			Channel channel = (Channel) vc;
+			return channel.getName();
 		}
-		return ws;
+		return "master";
 	}
 
 	/**
 	 * Remote execute to find hostname.
-	 * 
-	 * @param buildWorkspace
-	 * @return
+	 *
+	 * @param buildWorkspace Jenkins remote path
+	 * @return Hostname
 	 */
 	private static String getHostName(FilePath buildWorkspace) {
 		try {
@@ -156,8 +177,12 @@ public abstract class AbstractTask implements Serializable {
 		}
 	}
 
-	protected String getClient() {
+	public String getClient() {
 		return client;
+	}
+
+	public String getSyncID() {
+		return syncID;
 	}
 
 	protected Workspace getWorkspace() {
@@ -227,6 +252,7 @@ public abstract class AbstractTask implements Serializable {
 
 				return result;
 			} catch (AbortException e) {
+				p4.disconnect();
 				throw e;
 			} catch (Exception e) {
 				last = e;

@@ -52,10 +52,18 @@ public abstract class Populate implements ExtensionPoint, Describable<Populate>,
 	}
 
 	public PopulateDescriptor getDescriptor() {
-		return (PopulateDescriptor) Jenkins.getInstance().getDescriptor(getClass());
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return (PopulateDescriptor) j.getDescriptor(getClass());
+		}
+		return null;
 	}
 
 	public static DescriptorExtensionList<Populate, PopulateDescriptor> all() {
-		return Jenkins.getInstance().<Populate, PopulateDescriptor> getDescriptorList(Populate.class);
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			return j.<Populate, PopulateDescriptor> getDescriptorList(Populate.class);
+		}
+		return null;
 	}
 }

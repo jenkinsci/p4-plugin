@@ -1,15 +1,14 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.core.file.FileSpecOpStatus;
+import com.perforce.p4java.core.file.IFileSpec;
+import hudson.AbortException;
+import hudson.model.TaskListener;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-
-import com.perforce.p4java.core.file.FileSpecOpStatus;
-import com.perforce.p4java.core.file.IFileSpec;
-
-import hudson.AbortException;
-import hudson.model.TaskListener;
 
 public class Validate {
 
@@ -23,19 +22,35 @@ public class Validate {
 
 	/**
 	 * Look for a message in the returned FileSpec from operation.
-	 * 
-	 * @param fileSpecs
-	 * @param ignore
-	 * @return
-	 * @throws ConverterException
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param ignore    Parameter list of messages to ignore
+	 * @return true if no errors.
+	 * @throws Exception push up stack
 	 */
-	public void check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
-		check(fileSpecs, true, ignore);
+	public boolean check(List<IFileSpec> fileSpecs, String... ignore) throws Exception {
+		return check(fileSpecs, true, ignore);
+	}
+
+	/**
+	 * Only return boolean; false is returned for an exception.
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param ignore    Parameter list of messages to ignore
+	 * @return true if no errors or exceptions
+	 */
+	public boolean checkCatch(List<IFileSpec> fileSpecs, String... ignore) {
+		try {
+			return check(fileSpecs, true, ignore);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
+		StringBuffer errorLog = new StringBuffer();
 
 		ArrayList<String> ignoreList = new ArrayList<String>();
 		ignoreList.addAll(Arrays.asList(ignore));
@@ -48,7 +63,7 @@ public class Validate {
 				// superfluous p4java message
 				boolean unknownMsg = true;
 				for (String istring : ignoreList) {
-					if (msg.contains(istring)) {
+					if (!istring.isEmpty() && msg.contains(istring)) {
 						// its a known message
 						unknownMsg = false;
 						break;
@@ -61,9 +76,11 @@ public class Validate {
 						msg = "P4JAVA: " + msg;
 						log(msg);
 						logger.warning(msg);
-						if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
-							abort = true;
-						}
+					}
+					if (status == FileSpecOpStatus.ERROR || status == FileSpecOpStatus.CLIENT_ERROR) {
+						errorLog.append(msg);
+						errorLog.append("\n");
+						abort = true;
 					}
 					success = false;
 				}
@@ -71,7 +88,7 @@ public class Validate {
 		}
 
 		if (abort) {
-			String msg = "P4JAVA: Error(s)";
+			String msg = "P4JAVA: Error(s):\n" + errorLog.toString();
 			throw new AbortException(msg);
 		}
 		return success;

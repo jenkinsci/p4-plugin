@@ -1,25 +1,26 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Descriptor;
-import hudson.util.ListBoxModel;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
-public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	public final boolean allwrite;
 	public final boolean clobber;
@@ -31,6 +32,11 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 	private final String streamName;
 	private final String line;
 	private final String view;
+	private final String changeView;
+	private final String type;
+
+	private final String serverID;
+	private final boolean backup;
 
 	public String getStreamName() {
 		return streamName;
@@ -44,10 +50,27 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 		return view;
 	}
 
+	public String getChangeView() {
+		return changeView;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public String getServerID() {
+		return serverID;
+	}
+
+	public boolean isBackup() {
+		return backup;
+	}
+
 	@DataBoundConstructor
 	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
-			boolean locked, boolean modtime, boolean rmdir, String streamName,
-			String line, String view) {
+	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
+	                     String line, String view, String changeView, String type,
+	                     String serverID, boolean backup) {
 		this.allwrite = allwrite;
 		this.clobber = clobber;
 		this.compress = compress;
@@ -57,6 +80,17 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 		this.streamName = streamName;
 		this.line = line;
 		this.view = view;
+		this.changeView = changeView;
+		this.type = type;
+		this.serverID = serverID;
+		this.backup = backup;
+	}
+
+	@Deprecated
+	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
+	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
+	                     String line, String view) {
+		this(allwrite, clobber, compress, locked, modtime, rmdir, streamName, line, view, null, null, null, true);
 	}
 
 	@Extension
@@ -75,12 +109,20 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> {
 			return list;
 		}
 
+		public ListBoxModel doFillTypeItems() {
+			ListBoxModel list = new ListBoxModel();
+			for (WorkspaceSpecType type : WorkspaceSpecType.values()) {
+				list.add(type.name());
+			}
+			return list;
+		}
+
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteStreamName(
 				@QueryParameter String value) {

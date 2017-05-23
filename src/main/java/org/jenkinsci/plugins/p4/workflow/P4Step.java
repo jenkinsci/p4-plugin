@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import hudson.model.Item;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -12,6 +13,7 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.steps.scm.SCMStep;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -34,8 +36,9 @@ public class P4Step extends SCMStep {
 
 	private String charset = "";
 	private String format = DescriptorImpl.defaultFormat;
-	
+
 	private Populate populate;
+	private Workspace workspace;
 
 	@DataBoundConstructor
 	public P4Step(String credential) {
@@ -74,6 +77,15 @@ public class P4Step extends SCMStep {
 	}
 
 	@DataBoundSetter
+	public void setWorkspace(Workspace workspace) {
+		this.workspace = workspace;
+	}
+
+	public Workspace getWorkspace() {
+		return workspace;
+	}
+
+	@DataBoundSetter
 	public void setCharset(String charset) {
 		this.charset = charset;
 	}
@@ -95,7 +107,7 @@ public class P4Step extends SCMStep {
 	public void setPopulate(Populate populate) {
 		this.populate = populate;
 	}
-	
+
 	public Populate getPopulate() {
 		return populate;
 	}
@@ -106,16 +118,24 @@ public class P4Step extends SCMStep {
 	protected SCM createSCM() {
 		P4WebBrowser browser = null;
 
-		Workspace workspace = null;
-		if (notNull(stream))
-			workspace = new StreamWorkspaceImpl(charset, false, stream, format);
-		else if (notNull(template))
-			workspace = new TemplateWorkspaceImpl(charset, false, template, format);
-		else if (notNull(depotPath)) {
-			String view = depotPath + "/..." + " " + "//" + format + "/...";
-			WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
+		if ( workspace == null)
+		{
+			if (notNull(stream))
+				workspace = new StreamWorkspaceImpl(charset, false, stream, format);
+			else if (notNull(template))
+				workspace = new TemplateWorkspaceImpl(charset, false, template, format);
+			else if (notNull(depotPath)) {
+				if(depotPath.endsWith("/")) {
+					depotPath = depotPath + "...";
+				}
+				if(!depotPath.endsWith("/...")) {
+					depotPath = depotPath + "/...";
+				}
+				String view = depotPath + " " + "//" + format + "/...";
+				WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
 
-			workspace = new ManualWorkspaceImpl(charset, false, format, spec);
+				workspace = new ManualWorkspaceImpl(charset, false, format, spec);
+			}
 		}
 
 		// use basic populate options if no class provided
@@ -144,17 +164,18 @@ public class P4Step extends SCMStep {
 		}
 
 		/**
-		 * Credentials list, a Jelly config method for a build job.
-		 * 
-		 * @return A list of Perforce credential items to populate the jelly
-		 *         Select list.
+		 * A list of Perforce credential items
+		 *
+		 * @param project Jenkins Item
+		 * @param credential Perforce Credential
+		 * @return A list of Perforce credential items to populate the jelly Select list.
 		 */
-		public ListBoxModel doFillCredentialItems() {
-			return P4CredentialsImpl.doFillCredentialItems();
+		public ListBoxModel doFillCredentialItems(@AncestorInPath Item project, @QueryParameter String credential) {
+			return P4CredentialsImpl.doFillCredentialItems(project, credential);
 		}
 
-		public FormValidation doCheckCredential(@QueryParameter String value) {
-			return P4CredentialsImpl.doCheckCredential(value);
+		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
+			return P4CredentialsImpl.doCheckCredential(project, value);
 		}
 
 		public AutoCompletionCandidates doAutoCompleteStream(@QueryParameter String value) {

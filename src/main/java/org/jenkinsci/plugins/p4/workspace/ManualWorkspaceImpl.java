@@ -1,28 +1,30 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.client.IClientViewMapping;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
-
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
-public class ManualWorkspaceImpl extends Workspace {
+import java.io.Serializable;
+import java.util.logging.Logger;
+
+public class ManualWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 	public WorkspaceSpec spec;
@@ -61,6 +63,11 @@ public class ManualWorkspaceImpl extends Workspace {
 			Client implClient = new Client(connection);
 			implClient.setName(clientName);
 			implClient.setOwnerName(user);
+
+			if (connection.getServerVersionNumber() >= 20171) {
+				WorkspaceSpecType type = parseClientType(getSpec().getType());
+				implClient.setType(type.getId());
+			}
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
@@ -79,7 +86,7 @@ public class ManualWorkspaceImpl extends Workspace {
 
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
-		if(streamFullName != null) {
+		if (streamFullName != null) {
 			streamFullName = getExpand().format(streamFullName, false);
 		}
 		iclient.setStream(streamFullName);
@@ -105,6 +112,24 @@ public class ManualWorkspaceImpl extends Workspace {
 		}
 		iclient.setClientView(clientView);
 
+		// TODO (p4java 17.2) changeView
+
+		// Allow change between GRAPH and WRITEABLE
+		if (connection.getServerVersionNumber() >= 20171) {
+			WorkspaceSpecType type = parseClientType(getSpec().getType());
+			switch (type) {
+				case GRAPH:
+				case WRITABLE:
+					iclient.setType(type.getId());
+					break;
+				default:
+			}
+		}
+
+		iclient.setServerId(getSpec().getServerID());
+
+		// TODO (p4java 17.2) backup
+
 		return iclient;
 	}
 
@@ -115,6 +140,15 @@ public class ManualWorkspaceImpl extends Workspace {
 			}
 		}
 		return ClientLineEnd.LOCAL;
+	}
+
+	private WorkspaceSpecType parseClientType(String line) {
+		for (WorkspaceSpecType type : WorkspaceSpecType.values()) {
+			if (type.name().equalsIgnoreCase(line)) {
+				return type;
+			}
+		}
+		return WorkspaceSpecType.WRITABLE;
 	}
 
 	@Extension
@@ -128,9 +162,9 @@ public class ManualWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(@QueryParameter String value) {
 			return autoCompleteName(value);
@@ -167,8 +201,7 @@ public class ManualWorkspaceImpl extends Workspace {
 			spec.put("view", sb.toString());
 			spec.put("options", option);
 			return spec;
-
-		} catch (Exception e) {
+		} catch (P4JavaException e) {
 			JSONObject option = new JSONObject();
 			option.put("allwrite", false);
 			option.put("clobber", true);

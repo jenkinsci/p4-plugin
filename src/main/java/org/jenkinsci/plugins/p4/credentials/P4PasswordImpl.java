@@ -1,42 +1,39 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
+import hudson.util.FormValidation;
+import hudson.util.Secret;
 import org.jenkinsci.plugins.p4.client.ConnectionConfig;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.cloudbees.plugins.credentials.CredentialsScope;
+import javax.servlet.ServletException;
+import java.io.IOException;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import hudson.Extension;
-import hudson.util.FormValidation;
-import hudson.util.Secret;
-
-public class P4PasswordImpl extends P4BaseCredentials {
+public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 
 	/**
 	 * Ensure consistent serialisation.
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@CheckForNull
+	@NonNull
 	private final Secret password;
 
 	@DataBoundConstructor
-	public P4PasswordImpl(CredentialsScope scope, String id, String description, @CheckForNull String p4port,
-			TrustImpl ssl, @CheckForNull String username, @CheckForNull String retry, @CheckForNull String timeout,
-			@CheckForNull String password) {
+	public P4PasswordImpl(CredentialsScope scope, String id, String description, @NonNull String p4port,
+	                      TrustImpl ssl, @NonNull String username, @CheckForNull String retry,
+	                      @CheckForNull String timeout, @CheckForNull String p4host, @NonNull String password) {
 
-		super(scope, id, description, p4port, ssl, username, retry, timeout);
+		super(scope, id, description, p4port, ssl, username, retry, timeout, p4host);
 		this.password = Secret.fromString(password);
 	}
 
-	@CheckForNull
 	public Secret getPassword() {
 		return password;
 	}
@@ -57,26 +54,24 @@ public class P4PasswordImpl extends P4BaseCredentials {
 		}
 
 		public FormValidation doTestConnection(@QueryParameter("p4port") String p4port,
-				@QueryParameter("ssl") String ssl, @QueryParameter("trust") String trust,
-				@QueryParameter("username") String username, @QueryParameter("retry") String retry,
-				@QueryParameter("timeout") String timeout, @QueryParameter("password") String password)
-						throws IOException, ServletException {
+		                                       @QueryParameter("ssl") String ssl,
+		                                       @QueryParameter("trust") String trust,
+		                                       @QueryParameter("p4host") String p4host,
+		                                       @QueryParameter("username") String username,
+		                                       @QueryParameter("password") String password)
+				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
-				ConnectionConfig config = new ConnectionConfig(p4port, "true".equals(ssl), trust);
-				FormValidation validation;
-				validation = ConnectionFactory.testConnection(config);
+				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
+				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, null, null, p4host, password);
+
+				ConnectionConfig config = new ConnectionConfig(test);
+				FormValidation validation = ConnectionFactory.testConnection(config);
 				if (!FormValidation.ok().equals(validation)) {
 					return validation;
 				}
 
 				// Test an open connection
-				TrustImpl sslTrust;
-				sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
-
-				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, retry, timeout,
-						password);
-
 				ConnectionHelper p4 = new ConnectionHelper(test);
 
 				if (!p4.isConnected()) {
@@ -85,8 +80,12 @@ public class P4PasswordImpl extends P4BaseCredentials {
 
 				// Test authentication
 				p4.logout(); // invalidate any earlier ticket before test.
-				if (!p4.login()) {
-					return FormValidation.error("Authentication Error: Unable to login.");
+				try {
+					if (!p4.login()) {
+						return FormValidation.error("Authentication Error: Unable to login.");
+					}
+				} catch (Exception e) {
+					return FormValidation.error("Authentication Error: " + e.getMessage());
 				}
 
 				// Test minimum server version

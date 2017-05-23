@@ -4,13 +4,17 @@ import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 
+import java.io.Serializable;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
 
-public class StaticWorkspaceImpl extends Workspace {
+public class StaticWorkspaceImpl extends Workspace implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String name;
 
@@ -50,9 +54,9 @@ public class StaticWorkspaceImpl extends Workspace {
 		/**
 		 * Provides auto-completion for workspace names. Stapler finds this
 		 * method via the naming convention.
-		 * 
-		 * @param value
-		 *            The text that the user entered.
+		 *
+		 * @param value The text that the user entered.
+		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteName(
 				@QueryParameter String value) {

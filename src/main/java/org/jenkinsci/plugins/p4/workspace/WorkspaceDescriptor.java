@@ -1,16 +1,5 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.Descriptor;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.core.IStream;
@@ -18,8 +7,19 @@ import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.option.server.GetClientsOptions;
 import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.Descriptor;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
+
+	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
 
 	public WorkspaceDescriptor(Class<? extends Workspace> clazz) {
 		super(clazz);
@@ -106,9 +106,9 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 	/**
 	 * Provides auto-completion for workspace names. Stapler finds this method
 	 * via the naming convention.
-	 * 
-	 * @param value
-	 *            The text that the user entered.
+	 *
+	 * @param value The text that the user entered.
+	 * @return suggestion
 	 */
 	static public AutoCompletionCandidates doAutoCompleteTemplateName(
 			@QueryParameter String value) {

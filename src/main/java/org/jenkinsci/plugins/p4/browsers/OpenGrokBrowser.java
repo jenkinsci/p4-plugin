@@ -5,17 +5,15 @@ import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLEncoder;
-
+import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.perforce.p4java.core.IJob;
-import com.perforce.p4java.core.file.IFileSpec;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 
 public class OpenGrokBrowser extends P4Browser {
 
@@ -25,7 +23,6 @@ public class OpenGrokBrowser extends P4Browser {
 	 * The URL of the OpenGrok server, e.g.
 	 * <tt>http://opengrok.libreoffice.org/</tt>
 	 */
-	public final URL url;
 
 	/**
 	 * The Perforce depot path for the 'project', e.g.
@@ -39,33 +36,31 @@ public class OpenGrokBrowser extends P4Browser {
 	public final String projectName;
 
 	@DataBoundConstructor
-	public OpenGrokBrowser(URL url, String depotPath, String projectName) {
-		this.url = normalizeToEndWithSlash(url);
+	public OpenGrokBrowser(String url, String depotPath, String projectName) throws MalformedURLException {
+		super(url);
 		this.depotPath = depotPath;
 		this.projectName = projectName;
 	}
 
 	@Override
-	public URL getDiffLink(IFileSpec file) throws Exception {
-		if (file.getEndRevision() <= 1) {
-			// nothing to diff
+	public URL getDiffLink(P4AffectedFile file, String change) throws Exception {
+		String path = getRelativeFilename(file);
+
+		int rev = parseRevision(file);
+		if(rev <= 1) {
 			return null;
 		}
 
-		String path = getRelativeFilename(file);
-		int rev2 = file.getEndRevision();
-		int rev1 = file.getEndRevision() - 1;
+		String r1 = "r1=" + URLEncoder.encode(path + "#" + (rev - 1), "UTF-8");
+		String r2 = "r2=" + URLEncoder.encode(path + "#" + rev, "UTF-8");
 
-		String r1 = "r1=" + URLEncoder.encode(path + "#" + rev1, "UTF-8");
-		String r2 = "r2=" + URLEncoder.encode(path + "#" + rev2, "UTF-8");
-
-		return new URL(url, "source/diff/" + projectName + "/build.properties?"
+		return new URL(getUrl(), "source/diff/" + projectName + "/build.properties?"
 				+ r2 + "&" + r1 + getRelativeFilename(file));
 	}
 
 	@Override
-	public URL getFileLink(IFileSpec file) throws Exception {
-		return new URL(url, "source/xref/" + projectName + "/"
+	public URL getFileLink(P4AffectedFile file) throws Exception {
+		return new URL(getUrl(), "source/xref/" + projectName + "/"
 				+ getRelativeFilename(file));
 	}
 
@@ -75,8 +70,8 @@ public class OpenGrokBrowser extends P4Browser {
 		return null;
 	}
 
-	private String getRelativeFilename(IFileSpec file) {
-		String path = file.getDepotPathString();
+	private String getRelativeFilename(P4AffectedFile file) {
+		String path = file.getPath();
 		if (path.startsWith(depotPath)) {
 			path = path.substring(depotPath.length());
 		}

@@ -1,101 +1,85 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.changes.P4Revision;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.filters.Filter;
-import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPollMasterImpl;
-import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
-import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
-
+import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
-
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
+import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
+import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
 
-public class PollTask extends AbstractTask implements FileCallable<List<Integer>>, Serializable {
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
-	private final boolean perChange;
+	private final List<P4Ref> lastRefs;
 
 	private String pin;
 
-	public PollTask(List<Filter> filter) {
+	public PollTask(List<Filter> filter, List<P4Ref> lastRefs) {
 		this.filter = filter;
-
-		// look for incremental filter option
-		boolean incremental = false;
-		if (filter != null) {
-			for (Filter f : filter) {
-				if (f instanceof FilterPerChangeImpl) {
-					if (((FilterPerChangeImpl) f).isPerChange()) {
-						incremental = true;
-					}
-				}
-			}
-		}
-		this.perChange = incremental;
+		this.lastRefs = lastRefs;
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<Integer> invoke(File workspace, VirtualChannel channel) throws IOException {
-		return (List<Integer>) tryTask();
+	public List<P4Ref> invoke(File workspace, VirtualChannel channel) throws IOException {
+		return (List<P4Ref>) tryTask();
 	}
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
-		List<Integer> changes = new ArrayList<Integer>();
-
-		// When polling from master use last build, otherwise fetch the change
-		// from client spec.
-		P4Revision from;
-		if (FilterPollMasterImpl.isMasterPolling(filter)) {
-			FilterPollMasterImpl pollM = FilterPollMasterImpl.findSelf(filter);
-			from = pollM.getLastChange();
-		} else {
-			from = new P4Revision(p4.getClient());
-		}
+		List<P4Ref> changes = new ArrayList<P4Ref>();
 
 		// find changes...
 		if (pin != null && !pin.isEmpty()) {
-			changes = p4.listHaveChanges(from, new P4Revision(pin));
+			changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
 		} else {
-			changes = p4.listHaveChanges(from);
+			changes = p4.listHaveChanges(lastRefs);
 		}
 
 		// filter changes...
-		List<Integer> remainder = new ArrayList<Integer>();
-		for (int c : changes) {
-			Changelist changelist = p4.getChange(c);
-			// add unfiltered changes to remainder list
-			if (!filterChange(changelist, filter)) {
-				remainder.add(changelist.getId());
-				p4.log("... found change: " + changelist.getId());
+		List<P4Ref> remainder = new ArrayList<P4Ref>();
+		for (P4Ref c : changes) {
+			int change = c.getChange();
+			if (change > 0) {
+				Changelist changelist = p4.getChange(change);
+				// add unfiltered changes to remainder list
+				if (!filterChange(changelist, filter)) {
+					remainder.add(new P4ChangeRef(changelist.getId()));
+					p4.log("... found change: " + changelist.getId());
+				}
 			}
 		}
 		changes = remainder;
 
-		// if build per change...
-		if (!changes.isEmpty() && perChange) {
-			int lowest = changes.get(changes.size() - 1);
-			changes = Arrays.asList(lowest);
-			p4.log("next change: " + lowest);
+		// Poll Graph commit changes
+		if (p4.checkVersion(20171)) {
+			List<IRepo> repos = p4.listRepos();
+			for (IRepo repo : repos) {
+				P4Ref graphHead = p4.getGraphHead(repo.getName());
+				List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
+				changes.addAll(commits);
+			}
 		}
+
 		return changes;
 	}
 
@@ -105,9 +89,8 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 
 	/**
 	 * Returns true if change should be filtered
-	 * 
+	 *
 	 * @param changelist
-	 * @return
 	 * @throws AccessException
 	 * @throws RequestException
 	 * @throws Exception
@@ -148,6 +131,38 @@ public class PollTask extends AbstractTask implements FileCallable<List<Integer>
 
 				// add if all files are removed then remove change
 				if (files.isEmpty()) {
+					return true;
+				}
+			}
+
+			// Scan through View Mask filters
+			if (f instanceof FilterViewMaskImpl) {
+				// at least one file in the change must be contained in the view mask
+				List<IFileSpec> included = new ArrayList<IFileSpec>();
+
+				String viewMask = ((FilterViewMaskImpl) f).getViewMask();
+				for (IFileSpec s : files) {
+					boolean isFileInViewMask = false;
+					String p = s.getDepotPathString();
+					for (String maskPath : viewMask.split("\n")) {
+						if (p.startsWith(maskPath)) {
+							isFileInViewMask = true;
+						}
+
+						if (maskPath.startsWith("-")) {
+							String excludedMaskPath = maskPath.substring(maskPath.indexOf("-") + 1);
+							if (p.startsWith(excludedMaskPath)) {
+								isFileInViewMask = false;
+							}
+						}
+					}
+
+					if (isFileInViewMask) {
+						included.add(s);
+					}
+				}
+
+				if (included.isEmpty()) {
 					return true;
 				}
 			}
