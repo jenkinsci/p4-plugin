@@ -56,7 +56,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 		LOGGER.info("P4: poking: " + job.getName());
 
-		StreamTaskListener listener = new StreamTaskListener(getLogFile());
+		StreamTaskListener listener = new StreamTaskListener(getLogFile(job));
 		try {
 			PrintStream log = listener.getLogger();
 
@@ -90,7 +90,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	 */
 	private void build(final Job<?, ?> job) throws IOException {
 
-		SCMTriggerCause cause = new SCMTriggerCause(getLogFile());
+		SCMTriggerCause cause = new SCMTriggerCause(getLogFile(job));
 
 		@SuppressWarnings("rawtypes")
 		ParameterizedJobMixIn pJob = new ParameterizedJobMixIn() {
@@ -103,7 +103,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		pJob.scheduleBuild(cause);
 	}
 
-	public File getLogFile() {
+	public File getLogFile(Job<?, ?> job) {
 		if (job == null) {
 			return null;
 		}
@@ -155,7 +155,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		}
 
 		public String getLog() throws IOException {
-			return Util.loadFile(getLogFile());
+			return Util.loadFile(getLogFile(job));
 		}
 
 		/**
@@ -165,7 +165,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		 * @throws IOException pudh up stack
 		 */
 		public void writeLogTo(XMLOutput out) throws IOException {
-			new AnnotatedLargeText<P4TriggerAction>(getLogFile(), Charset.defaultCharset(), true, this).writeHtmlTo(0,
+			new AnnotatedLargeText<P4TriggerAction>(getLogFile(job), Charset.defaultCharset(), true, this).writeHtmlTo(0,
 					out.asWriter());
 		}
 	}
