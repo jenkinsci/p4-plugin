@@ -55,7 +55,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		}
 
 		LOGGER.info("P4: poking: " + job.getName());
-                                                             //JENKINS-44251
+                                                            //JENKINS-44251
 		StreamTaskListener listener = new StreamTaskListener(new File(job.getRootDir(), "p4trigger.log"));
 		try {
 			PrintStream log = listener.getLogger();
