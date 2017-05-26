@@ -745,10 +745,16 @@ public class ClientHelper extends ConnectionHelper {
 		SubmitOptions submitOpts = new SubmitOptions();
 		submitOpts.setReOpen(reopen);
 
-		List<IFileSpec> submitted = change.submit(submitOpts);
-		validate.check(submitted, "Submitted as change");
+		// submit with asynchronous callback
+		SubmitStreamingCallback callback = new SubmitStreamingCallback(iclient.getServer(), listener);
+		synchronized (callback) {
+			change.submit(submitOpts, callback, 0);
+			while (!callback.isDone()) {
+				callback.wait();
+			}
+		}
 
-		long cngNumber = findSubmittedChange(submitted);
+		long cngNumber = callback.getChange();
 		if (cngNumber > 0) {
 			log("... submitted in change: " + cngNumber);
 		} else {
@@ -787,25 +793,6 @@ public class ClientHelper extends ConnectionHelper {
 		String r = (revert) ? "(revert)" : "(revert -k)";
 		log("... reverting open files " + r);
 		iclient.revertFiles(files, revertOpts);
-	}
-
-	private long findSubmittedChange(List<IFileSpec> submitted) {
-		long change = 0;
-		for (IFileSpec spec : submitted) {
-			if (spec.getOpStatus() != FileSpecOpStatus.VALID) {
-				String msg = spec.getStatusMessage();
-				String cng = "Submitted as change ";
-				if (msg.startsWith(cng)) {
-					try {
-						String id = msg.substring(cng.length());
-						change = Long.parseLong(id);
-					} catch (NumberFormatException e) {
-						change = -1;
-					}
-				}
-			}
-		}
-		return change;
 	}
 
 	private boolean isOpened(List<IFileSpec> files) throws Exception {
