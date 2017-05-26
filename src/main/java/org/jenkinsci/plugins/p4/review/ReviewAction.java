@@ -100,8 +100,9 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		TimeDuration delay = new TimeDuration(project.getQuietPeriod());
 		CauseAction cause = new CauseAction(new Cause.UserIdCause());
 
-		List<ParameterValue> internalParams = extractAndRemoveInternalParameters(values);
-		ParametersAction params = new SafeParametersAction(values, internalParams);
+		//List<ParameterValue> internalParams = extractAndRemoveInternalParameters(values);
+		//ParametersAction params = new SafeParametersAction(values, internalParams);
+		ParametersAction params = new ParametersAction(values);
 
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {

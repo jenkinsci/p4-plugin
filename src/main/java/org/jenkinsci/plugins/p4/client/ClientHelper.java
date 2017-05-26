@@ -286,6 +286,59 @@ public class ClientHelper extends ConnectionHelper {
 		}
 	}
 
+	private int CheckNativeUseReconcile(String path, List<String> reconcileOpts, ParallelSync parallel) {
+		try {
+			String p4 = parallel.getPath();
+
+			List<String> command = new ArrayList<String>();
+			String p4port = p4credential.getP4port();
+			p4port = (p4credential.isSsl()) ? "ssl:" + p4port : p4port;
+			command.add(p4);
+			command.add("-c" + iclient.getName());
+			command.add("-p" + p4port);
+			command.add("-u" + p4credential.getUsername());
+
+			command.add("reconcile");
+			command.addAll(reconcileOpts);
+			command.add(path);
+
+			ProcessBuilder builder = new ProcessBuilder(command);
+			final Process process = builder.start();
+			InputStream inputStream = process.getInputStream();
+			InputStream errorStream = process.getErrorStream();
+
+			BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+			BufferedReader errorStreamReader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
+
+			// Log commands
+			log("(p4):cmd:... " + StringUtils.join(command, " "));
+			log("");
+
+			String line;
+			while ((line = inputStreamReader.readLine()) != null) {
+				log(line);
+			}
+			while ((line = errorStreamReader.readLine()) != null) {
+				log(line);
+			}
+			int exitCode = process.waitFor();
+
+			inputStreamReader.close();
+			errorStreamReader.close();
+
+			log("exitCode=" + Integer.toString(exitCode));
+			log("(p4):stop:0");
+			return exitCode;
+		} catch (UnsupportedEncodingException e) {
+			log(e.getMessage());
+		} catch (IOException e) {
+			log(e.getMessage());
+		} catch (InterruptedException e) {
+			log(e.getMessage());
+		}
+		return 1;
+	}
+
 	private int CheckNativeUse(String revisions, SyncOptions syncOpts, ParallelSync parallel) {
 
 		try {
@@ -509,6 +562,17 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 
+		ParallelSync parallel = populate.getParallel();
+		if (parallel != null && parallel.isEnable()) {
+			TimeTask timer = new TimeTask();
+			log("P4 Task Native: cleaning workspace to match have list.");
+			int exitCode = CheckNativeUseReconcile(path, list, parallel);
+			log("duration: " + timer.toString() + "\n");
+			if (exitCode == 0) {
+				return;
+			}
+		}
+		//fallback
 		TimeTask timer = new TimeTask();
 		log("P4 Task: cleaning workspace to match have list.");
 
