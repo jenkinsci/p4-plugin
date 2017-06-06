@@ -11,6 +11,7 @@ import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -119,27 +120,8 @@ public abstract class AbstractTask implements Serializable {
 
 		// Template workspace for parallel execution
 		String name = buildWorkspace.getName();
-		if (name.contains("@")) {
-			String[] parts = name.split("@");
-			if (parts.length == 2) {
-				String exec = parts[1];
-
-				// Update Workspace before cloning
-				setWorkspace(ws);
-
-				// Template workspace to .cloneN (where N is the @ number)
-				try {
-					int n = Integer.parseInt(exec);
-					String charset = ws.getCharset();
-					boolean pin = ws.isPinHost();
-					String fullName = ws.getFullName();
-					String template = fullName + ".clone" + n;
-					ws = new TemplateWorkspaceImpl(charset, pin, fullName, template);
-					ws.setExpand(envVars);
-				} catch (NumberFormatException e) {
-					// do not template; e.g. 'script' keeps original name
-				}
-			}
+		if (name.matches(".*@[0-9]+")) {
+			ws = cloneWorkspace(ws, name, envVars);
 		}
 		ws.setRootPath(root);
 
@@ -152,9 +134,42 @@ public abstract class AbstractTask implements Serializable {
 		return ws;
 	}
 
+	private Workspace cloneWorkspace(Workspace ws, String name, EnvVars envVars) throws AbortException {
+
+		// Skip cloning the workspace if clone option is not set
+		if(ws instanceof StaticWorkspaceImpl) {
+			StaticWorkspaceImpl staticWs = (StaticWorkspaceImpl)ws;
+			if(!staticWs.isClone()) {
+				return ws;
+			}
+		}
+
+		String[] parts = name.split("@");
+		if (parts.length == 2) {
+			String exec = parts[1];
+
+			// Update Workspace before cloning
+			setWorkspace(ws);
+
+			// Template workspace to .cloneN (where N is the @ number)
+			try {
+				int n = Integer.parseInt(exec);
+				String charset = ws.getCharset();
+				boolean pin = ws.isPinHost();
+				String fullName = ws.getFullName();
+				String template = fullName + ".clone" + n;
+				ws = new TemplateWorkspaceImpl(charset, pin, fullName, template);
+				ws.setExpand(envVars);
+			} catch (NumberFormatException e) {
+				// do not template; e.g. 'script' keeps original name
+			}
+		}
+		return ws;
+	}
+
 	private String getNodeName(FilePath build) {
 		VirtualChannel vc = build.getChannel();
-		if(vc instanceof Channel) {
+		if (vc instanceof Channel) {
 			Channel channel = (Channel) vc;
 			return channel.getName();
 		}
