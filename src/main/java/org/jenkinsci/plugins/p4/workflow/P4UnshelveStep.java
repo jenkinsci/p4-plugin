@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -8,15 +9,17 @@ import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilder;
 import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilderStep;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.inject.Inject;
+import javax.annotation.Nonnull;
+import java.util.Set;
 
-public class P4UnshelveStep extends AbstractStepImpl {
+public class P4UnshelveStep extends Step {
 
 	private final String shelf;
 	private final String resolve;
@@ -25,6 +28,11 @@ public class P4UnshelveStep extends AbstractStepImpl {
 	public P4UnshelveStep(String shelf, String resolve) {
 		this.shelf = shelf;
 		this.resolve = resolve;
+	}
+
+	@Override
+	public StepExecution start(StepContext context) throws Exception {
+		return new P4UnshelveStepExecution(this, context);
 	}
 
 	public String getShelf() {
@@ -36,11 +44,7 @@ public class P4UnshelveStep extends AbstractStepImpl {
 	}
 
 	@Extension(optional = true)
-	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-
-		public DescriptorImpl() {
-			super(P4UnshelveStepExecution.class);
-		}
+	public static final class DescriptorImpl extends StepDescriptor {
 
 		@Override
 		public String getFunctionName() {
@@ -52,32 +56,32 @@ public class P4UnshelveStep extends AbstractStepImpl {
 			return "P4 Unshelve";
 		}
 
+		@Override
+		public Set<? extends Class<?>> getRequiredContext() {
+			return ImmutableSet.of(Run.class, FilePath.class, Launcher.class, TaskListener.class);
+		}
+
 		public ListBoxModel doFillResolveItems() {
 			return UnshelveBuilder.DescriptorImpl.doFillResolveItems();
 		}
 	}
 
-	public static class P4UnshelveStepExecution extends AbstractSynchronousStepExecution<Void> {
+	public static class P4UnshelveStepExecution extends SynchronousNonBlockingStepExecution<Void> {
 
 		private static final long serialVersionUID = 1L;
 
-		@Inject
 		private transient P4UnshelveStep step;
-		@StepContextParameter
-		private transient Run<?, ?> run;
-		@StepContextParameter
-		private transient FilePath workspace;
-		@StepContextParameter
-		private transient TaskListener listener;
-		@StepContextParameter
-		private transient Launcher launcher;
+
+		protected P4UnshelveStepExecution(P4UnshelveStep step, @Nonnull StepContext context) {
+			super(context);
+			this.step = step;
+		}
 
 		@Override
 		protected Void run() throws Exception {
 			UnshelveBuilderStep unshelve = new UnshelveBuilderStep(step.getShelf(), step.getResolve());
-			unshelve.perform(run, workspace, launcher, listener);
+			unshelve.perform(getContext().get(Run.class), getContext().get(FilePath.class), getContext().get(Launcher.class), getContext().get(TaskListener.class));
 			return null;
 		}
-
 	}
 }
