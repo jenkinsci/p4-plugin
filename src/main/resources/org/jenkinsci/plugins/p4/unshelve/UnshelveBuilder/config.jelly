@@ -5,8 +5,12 @@
 		<f:textbox />
 	</f:entry>
 
-        <f:entry field="resolve" title="Resolve Options">
-           <f:select />
-        </f:entry>
+	<f:entry field="resolve" title="Resolve Options">
+		<f:select />
+	</f:entry>
+
+	<f:entry field="tidy">
+		<f:checkbox title="${%Clean up Review actions}" default="false"/>
+	</f:entry>
 
 </j:jelly>

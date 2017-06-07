@@ -1,17 +1,16 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.logging.Logger;
-
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-import jenkins.security.Roles;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
@@ -20,10 +19,17 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 	private static Logger logger = Logger.getLogger(UnshelveTask.class.getName());
 
 	private final String resolve;
+	private final boolean tidy;
 	private int shelf;
 
-	public UnshelveTask(String resolve) {
+	public UnshelveTask(String resolve, boolean tidy) {
 		this.resolve = resolve;
+		this.tidy = tidy;
+	}
+
+	@Deprecated
+	public UnshelveTask(String resolve) {
+		this(resolve, false);
 	}
 
 	public void setShelf(int shelf) {
@@ -41,6 +47,10 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 			p4.unshelveFiles(shelf);
 
 			p4.resolveFiles(resolve);
+
+			if(tidy) {
+				p4.revertAllFiles(true);
+			}
 
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");

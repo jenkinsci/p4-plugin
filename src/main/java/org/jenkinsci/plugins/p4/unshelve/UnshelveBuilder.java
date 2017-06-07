@@ -26,13 +26,20 @@ public class UnshelveBuilder extends Builder {
 
 	private final String shelf;
 	private final String resolve;
+	private final boolean tidy;
 
 	private static Logger logger = Logger.getLogger(UnshelveBuilder.class.getName());
 
 	@DataBoundConstructor
-	public UnshelveBuilder(String shelf, String resolve) {
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
 		this.shelf = shelf;
 		this.resolve = resolve;
+		this.tidy = tidy;
+	}
+
+	@Deprecated
+	public UnshelveBuilder(String shelf, String resolve) {
+		this(shelf, resolve, false);
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -45,6 +52,10 @@ public class UnshelveBuilder extends Builder {
 
 	public String getResolve() {
 		return resolve;
+	}
+
+	public boolean isTidy() {
+		return tidy;
 	}
 
 	@Override
@@ -77,7 +88,7 @@ public class UnshelveBuilder extends Builder {
 	                           TaskListener listener) throws IOException, InterruptedException {
 
 		// Setup Unshelve Task
-		UnshelveTask task = new UnshelveTask(resolve);
+		UnshelveTask task = new UnshelveTask(resolve, tidy);
 		task.setListener(listener);
 		task.setCredential(credential, run.getParent());
 
