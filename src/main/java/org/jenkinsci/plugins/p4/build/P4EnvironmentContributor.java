@@ -8,9 +8,11 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 
+import java.io.File;
 import java.io.IOException;
 
 @Extension()
@@ -61,5 +63,23 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 				env.put("P4_TICKET", ticket);
 			}
 		}
+
+		File changelogFile = getCurrentChangelogFile(run.getRootDir());
+		String changelogFilename = changelogFile.getAbsolutePath();
+		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
+	}
+
+	private File getCurrentChangelogFile(File rootDir) {
+		File changelogFile;
+
+		int i = 0;
+		File next = new File(rootDir, "changelog" + i + ".xml");
+		do {
+			changelogFile = next;
+			next = new File(rootDir, "changelog" + i + ".xml");
+			i++;
+		} while (next.exists());
+
+		return changelogFile;
 	}
 }
