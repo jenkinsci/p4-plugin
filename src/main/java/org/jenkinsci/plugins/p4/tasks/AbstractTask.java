@@ -11,6 +11,7 @@ import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
@@ -113,13 +114,15 @@ public abstract class AbstractTask implements Serializable {
 
 		// Set workspace root (check for parallel execution)
 		String root = buildWorkspace.getRemote();
-		if (root.contains("@")) {
+                                  //JENKINS-43874
+		if (root.contains("@") && !(ws instanceof StaticWorkspaceImpl)) {
 			root = root.replace("@", "%40");
 		}
 
 		// Template workspace for parallel execution
 		String name = buildWorkspace.getName();
-		if (name.contains("@")) {
+                                  //JENKINS-43874
+		if (name.contains("@") && !(ws instanceof StaticWorkspaceImpl)) {
 			String[] parts = name.split("@");
 			if (parts.length == 2) {
 				String exec = parts[1];
