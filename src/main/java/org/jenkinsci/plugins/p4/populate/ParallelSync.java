@@ -1,15 +1,15 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import java.io.Serializable;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
+import com.perforce.p4java.option.client.ParallelSyncOptions;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.Serializable;
 
 public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	private final boolean enable;
@@ -47,6 +47,22 @@ public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implemen
 		return minbytes;
 	}
 
+	public ParallelSyncOptions getParallelOptions() {
+		int threads = 0;
+		int minfiles = 0;
+		int minbytes = 0;
+
+		try {
+			threads = Integer.parseInt(this.threads);
+			minfiles = Integer.parseInt(this.minfiles);
+			minbytes = Integer.parseInt(this.minbytes);
+		} catch (NumberFormatException e) {
+		}
+
+		ParallelSyncOptions opts = new ParallelSyncOptions(0, 0, minfiles, minbytes, threads, null);
+		return opts;
+	}
+
 	@Extension
 	public static class DescriptorImpl extends Descriptor<ParallelSync> {
 
@@ -55,5 +71,4 @@ public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implemen
 			return "Perforce Parallel Sync";
 		}
 	}
-
 }

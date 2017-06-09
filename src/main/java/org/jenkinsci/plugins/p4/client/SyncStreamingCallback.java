@@ -1,20 +1,20 @@
 package org.jenkinsci.plugins.p4.client;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.server.IServer;
 import com.perforce.p4java.server.callback.IStreamingCallback;
-
 import hudson.model.TaskListener;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class SyncStreamingCallback implements IStreamingCallback {
 
 	private boolean done = false;
+	private boolean fail = false;
 
 	private final Server server;
 	private final Validate validate;
@@ -41,8 +41,13 @@ public class SyncStreamingCallback implements IStreamingCallback {
 		specList.add(server.handleFileReturn(map));
 
 		try {
-			validate.check(specList, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+			validate.check(specList, "file(s) up-to-date.",
+					"file does not exist",
+					"no file(s) as of that date",
+					"no such file(s)",
+					"Unexpected argument syntax - @");
 		} catch (Exception e) {
+			fail = true;
 			// re-throw exception as AbortException is only used if !quiet
 			throw new P4JavaException(e);
 		}
@@ -51,5 +56,9 @@ public class SyncStreamingCallback implements IStreamingCallback {
 
 	public boolean isDone() {
 		return done;
+	}
+
+	public boolean isFail() {
+		return fail;
 	}
 }

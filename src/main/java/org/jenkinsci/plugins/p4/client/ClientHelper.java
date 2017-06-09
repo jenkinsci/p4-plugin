@@ -17,6 +17,7 @@ import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Parameters;
 import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.AddFilesOptions;
+import com.perforce.p4java.option.client.ParallelSyncOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.ResolveFilesAutoOptions;
@@ -266,22 +267,25 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
-		// Check if we need to use the native p4 and not p4java
-		ParallelSync parallel = populate.getParallel();
-		if (parallel != null && parallel.isEnable()) {
-			int exitCode = CheckNativeUse(revisions, syncOpts, parallel);
-			if (exitCode == 0) {
-				return;
-			}
-		}
-
-		// fall back to asynchronous callback
+		// Sync files with asynchronous callback and parallel if enabled to
 		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), listener);
 		synchronized (callback) {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
-			iclient.sync(files, syncOpts, callback, 0);
+
+			ParallelSync parallel = populate.getParallel();
+			if (parallel != null && parallel.isEnable()) {
+				ParallelSyncOptions parallelOpts = parallel.getParallelOptions();
+				iclient.syncParallel(files, syncOpts, callback, 0, parallelOpts);
+			} else {
+				iclient.sync(files, syncOpts, callback, 0);
+			}
+
 			while (!callback.isDone()) {
 				callback.wait();
+			}
+
+			if (callback.isFail()) {
+				throw new P4JavaException("Sync failed in streaming callback.");
 			}
 		}
 	}
