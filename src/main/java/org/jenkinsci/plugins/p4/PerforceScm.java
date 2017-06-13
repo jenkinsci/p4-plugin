@@ -70,7 +70,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -246,9 +245,6 @@ public class PerforceScm extends SCM {
 		try {
 			ConnectionHelper connection = new ConnectionHelper(credentials, null);
 			return new SwarmBrowser(connection.getSwarm());
-		} catch (MalformedURLException e) {
-			logger.info("Unable to guess repository browser.");
-			return null;
 		} catch (P4JavaException e) {
 			logger.info("Unable to access Perforce Property.");
 			return null;

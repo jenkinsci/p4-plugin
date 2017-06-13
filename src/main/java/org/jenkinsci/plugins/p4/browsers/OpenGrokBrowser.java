@@ -5,13 +5,14 @@ import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -28,15 +29,23 @@ public class OpenGrokBrowser extends P4Browser {
 	 * The Perforce depot path for the 'project', e.g.
 	 * <tt>//depot/core/main</tt>
 	 */
-	public final String depotPath;
+	private final String depotPath;
+
+	public String getDepotPath() {
+		return depotPath;
+	}
 
 	/**
 	 * The name of the 'project' in OpenGrok, e.g. <tt>core</tt>
 	 */
-	public final String projectName;
+	private final String projectName;
+
+	public String getProjectName() {
+		return projectName;
+	}
 
 	@DataBoundConstructor
-	public OpenGrokBrowser(String url, String depotPath, String projectName) throws MalformedURLException {
+	public OpenGrokBrowser(String url, String depotPath, String projectName) {
 		super(url);
 		this.depotPath = depotPath;
 		this.projectName = projectName;
@@ -54,13 +63,13 @@ public class OpenGrokBrowser extends P4Browser {
 		String r1 = "r1=" + URLEncoder.encode(path + "#" + (rev - 1), "UTF-8");
 		String r2 = "r2=" + URLEncoder.encode(path + "#" + rev, "UTF-8");
 
-		return new URL(getUrl(), "source/diff/" + projectName + "/build.properties?"
+		return new URL(getSafeUrl(), "source/diff/" + projectName + "/build.properties?"
 				+ r2 + "&" + r1 + getRelativeFilename(file));
 	}
 
 	@Override
 	public URL getFileLink(P4AffectedFile file) throws Exception {
-		return new URL(getUrl(), "source/xref/" + projectName + "/"
+		return new URL(getSafeUrl(), "source/xref/" + projectName + "/"
 				+ getRelativeFilename(file));
 	}
 
@@ -102,6 +111,11 @@ public class OpenGrokBrowser extends P4Browser {
 						.errorWithMarkup("The URL should contain <tt>http://</tt> or <tt>https://</tt>");
 			}
 			return FormValidation.ok();
+		}
+
+		@Override
+		public OpenGrokBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+			return req.bindJSON(OpenGrokBrowser.class, jsonObject);
 		}
 	}
 }

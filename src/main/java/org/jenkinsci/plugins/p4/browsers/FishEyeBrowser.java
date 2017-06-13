@@ -15,7 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
@@ -32,17 +31,23 @@ public class FishEyeBrowser extends P4Browser {
 	 * This is the root 'module' of the FishEye repository. It is a path that is
 	 * trimmed from the beginning of depot paths for files.
 	 */
-	public final String rootModule;
+	private final String rootModule;
+
+	public String getRootModule() {
+		if (rootModule == null)
+			return "";
+		return rootModule;
+	}
 
 	@DataBoundConstructor
-	public FishEyeBrowser(String url, String rootModule) throws MalformedURLException {
+	public FishEyeBrowser(String url, String rootModule) {
 		super(url);
 		this.rootModule = trimHeadSlash(trimHeadSlash(rootModule));
 	}
 
 	@Override
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(getUrl(), "../../changelog/" + getProjectName() + "/?cs="
+		return new URL(getSafeUrl(), "../../changelog/" + getProjectName() + "/?cs="
 				+ changeSet.getId());
 	}
 
@@ -54,15 +59,15 @@ public class FishEyeBrowser extends P4Browser {
 		if (change == null || change.isEmpty()) {
 			return null;
 		}
-		return new URL(getUrl(), getRelativeFilename(file)
-				+ new QueryBuilder(getUrl().getQuery()).add("r1=").add(
+		return new URL(getSafeUrl(), getRelativeFilename(file)
+				+ new QueryBuilder(getSafeUrl().getQuery()).add("r1=").add(
 				"r2=" + change));
 	}
 
 	@Override
 	public URL getFileLink(P4AffectedFile file) throws Exception {
-		return new URL(getUrl(), getRelativeFilename(file)
-				+ new QueryBuilder(getUrl().getQuery()));
+		return new URL(getSafeUrl(), getRelativeFilename(file)
+				+ new QueryBuilder(getSafeUrl().getQuery()));
 	}
 
 	@Override
@@ -83,18 +88,12 @@ public class FishEyeBrowser extends P4Browser {
 	 * Pick up "FOOBAR" from "http://site/browse/FOOBAR/"
 	 */
 	private String getProjectName() {
-		String p = getUrl().getPath();
+		String p = getSafeUrl().getPath();
 		if (p.endsWith("/"))
 			p = p.substring(0, p.length() - 1);
 
 		int idx = p.lastIndexOf('/');
 		return p.substring(idx + 1);
-	}
-
-	private String getRootModule() {
-		if (rootModule == null)
-			return "";
-		return rootModule;
 	}
 
 	@Extension
@@ -126,13 +125,8 @@ public class FishEyeBrowser extends P4Browser {
 		}
 
 		@Override
-		public FishEyeBrowser newInstance(StaplerRequest req, JSONObject formData)
-				throws FormException {
-			FishEyeBrowser browser = null;
-			if (req != null) {
-				browser = req.bindParameters(FishEyeBrowser.class, "fisheye.");
-			}
-			return browser;
+		public FishEyeBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+			return req.bindJSON(FishEyeBrowser.class, jsonObject);
 		}
 	}
 }
