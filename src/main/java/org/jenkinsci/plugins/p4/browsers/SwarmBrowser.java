@@ -76,7 +76,7 @@ public class SwarmBrowser extends P4Browser {
 
 		@Override
 		public SwarmBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindJSON(SwarmBrowser.class, jsonObject);
+			return (req == null) ? null : req.bindJSON(SwarmBrowser.class, jsonObject);
 		}
 	}
 }

@@ -126,7 +126,7 @@ public class FishEyeBrowser extends P4Browser {
 
 		@Override
 		public FishEyeBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindJSON(FishEyeBrowser.class, jsonObject);
+			return (req == null) ? null : req.bindJSON(FishEyeBrowser.class, jsonObject);
 		}
 	}
 }

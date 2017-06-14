@@ -91,7 +91,7 @@ public class P4WebBrowser extends P4Browser {
 
 		@Override
 		public P4WebBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindJSON(P4WebBrowser.class, jsonObject);
+			return (req == null) ? null : req.bindJSON(P4WebBrowser.class, jsonObject);
 		}
 	}
 }

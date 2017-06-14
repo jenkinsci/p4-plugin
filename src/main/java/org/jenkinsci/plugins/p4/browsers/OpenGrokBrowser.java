@@ -115,7 +115,7 @@ public class OpenGrokBrowser extends P4Browser {
 
 		@Override
 		public OpenGrokBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
-			return req.bindJSON(OpenGrokBrowser.class, jsonObject);
+			return (req == null) ? null : req.bindJSON(OpenGrokBrowser.class, jsonObject);
 		}
 	}
 }
