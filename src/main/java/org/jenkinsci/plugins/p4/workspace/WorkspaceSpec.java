@@ -2,21 +2,15 @@ package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
-import com.perforce.p4java.core.IStreamSummary;
-import com.perforce.p4java.option.server.GetStreamsOptions;
-import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Serializable {
 
@@ -127,24 +121,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		public AutoCompletionCandidates doAutoCompleteStreamName(
 				@QueryParameter String value) {
 
-			AutoCompletionCandidates c = new AutoCompletionCandidates();
-			try {
-				IOptionsServer iserver = ConnectionFactory.getConnection();
-				if (iserver != null && value.length() > 1) {
-					List<String> streamPaths = new ArrayList<String>();
-					streamPaths.add(value + "...");
-					GetStreamsOptions opts = new GetStreamsOptions();
-					opts.setMaxResults(10);
-					List<IStreamSummary> list = iserver.getStreams(streamPaths,
-							opts);
-					for (IStreamSummary l : list) {
-						c.add(l.getStream());
-					}
-				}
-			} catch (Exception e) {
-			}
-
-			return c;
+			return StreamDescImpl.doAutoCompleteStreamName(value);
 		}
 	}
 }
