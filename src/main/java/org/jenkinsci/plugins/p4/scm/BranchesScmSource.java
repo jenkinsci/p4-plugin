@@ -16,12 +16,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class BranchesScmSource extends AbstractP4ScmSource {
 
+	private final String filter;
+	
 	@DataBoundConstructor
-	public BranchesScmSource(String id, String credential, String includes, String charset, String format, P4Browser browser) {
+	public BranchesScmSource(String id, String credential, String includes, String charset, String format, P4Browser browser, String filter) {
 		super(id, credential, includes, charset, format, browser);
+		this.filter = filter;
 	}
 
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
@@ -31,16 +35,26 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
 
+		String actualFilter = getFilter();
+		if(getFilter() == null || filter.trim().equals("")){
+			actualFilter = ".*";
+		}
+		Pattern filterPattern = Pattern.compile(actualFilter);
 		List<IFileSpec> specs = p4.getDirs(paths);
 		for (IFileSpec s : specs) {
 			String branch = s.getOriginalPathString();
 
+			// check the filters
+			if(!filterPattern.matcher(branch).matches()){
+				continue;
+			}
+				
 			// get depotPath and check for null
 			Path depotPath = Paths.get(branch);
 			if (depotPath == null) {
 				continue;
 			}
-
+			
 			// get filename and check for null
 			Path file = depotPath.getFileName();
 			if (file == null) {
@@ -63,6 +77,10 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
+	public String getFilter() {
+		return filter;
+	}
+	
 	@Extension
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 

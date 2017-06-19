@@ -12,6 +12,10 @@
     <f:entry title="${%Include branches}" field="includes">
       <f:textarea/>
     </f:entry>
+    
+    <f:entry title="Include Filter" field="filter">
+      <f:textbox default=".*"/>
+    </f:entry>
 
     <f:entry title="${%Character Set}" field="charset">
     	<f:select default="none"/>
