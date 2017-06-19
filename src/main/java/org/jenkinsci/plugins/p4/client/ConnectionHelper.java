@@ -199,6 +199,10 @@ public class ConnectionHelper implements AutoCloseable {
 		return p4credential.getRetry();
 	}
 
+	public String getUser() {
+		return p4credential.getUsername();
+	}
+
 	public String getPort() {
 		return p4credential.getP4port();
 	}
