@@ -2,19 +2,21 @@ package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMHead;
 
+import java.util.List;
+
 public class P4Head extends SCMHead {
 
-	private final String path;
+	private final List<String> paths;
 	private final boolean stream;
 
-	P4Head(String name, String path, boolean stream) {
+	P4Head(String name, List<String> paths, boolean stream) {
 		super(name);
-		this.path = path;
+		this.paths = paths;
 		this.stream = stream;
 	}
 
-	public String getPath() {
-		return path;
+	public List<String> getPaths() {
+		return paths;
 	}
 
 	public boolean isStream() {

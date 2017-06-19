@@ -22,7 +22,9 @@ public class P4Revision extends SCMRevision {
 			return false;
 		}
 		P4Revision that = (P4Revision) o;
-		return change == that.change && getHead().equals(that.getHead());
+		boolean c = change == that.change;
+		boolean h = getHead().equals(that.getHead());
+		return c && h;
 	}
 
 	/**

@@ -95,6 +95,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 		return expand;
 	}
 
+	public void addEnv(String tag, String value) {
+		expand.set(tag, value);
+	}
+
 	/**
 	 * Returns the fully expanded client workspace name.
 	 *

@@ -878,7 +878,8 @@ public class ClientHelper extends ConnectionHelper {
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
-		validate.check(shelveMsg, false, "also opened by", "No such file(s)", "exclusive file already opened");
+		validate.check(shelveMsg, false, "also opened by", "No such file(s)",
+				"exclusive file already opened", "no file(s) to unshelve");
 
 		// force sync any files missed due to INFO messages e.g. exclusive files
 		for (IFileSpec spec : shelveMsg) {

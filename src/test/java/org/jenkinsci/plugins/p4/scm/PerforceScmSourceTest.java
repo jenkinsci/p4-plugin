@@ -52,7 +52,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
-		SCMSource source = new StreamsScmSource("streams", credential, includes, null, format, null);
+		SCMSource source = new StreamsScmSource("streams", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -78,7 +78,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
-		SCMSource source = new BranchesScmSource("classic", credential, includes, null, format, null);
+		SCMSource source = new BranchesScmSource("classic", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-classic");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -104,7 +104,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//depot/...";
-		SCMSource source = new StreamsScmSource("no-streams", credential, includes, null, format, null);
+		SCMSource source = new StreamsScmSource("no-streams", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "no-streams");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -121,7 +121,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream";
-		SCMSource source = new StreamsScmSource("path-streams", credential, includes, null, format, null);
+		SCMSource source = new StreamsScmSource("path-streams", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-streams");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -138,7 +138,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream";
-		SCMSource source = new BranchesScmSource("path-classic", credential, includes, null, format, null);
+		SCMSource source = new BranchesScmSource("path-classic", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-classic");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -155,7 +155,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/*";
-		SCMSource source = new BranchesScmSource("star-classic", credential, includes, null, format, null);
+		SCMSource source = new BranchesScmSource("star-classic", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "star-classic");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -172,7 +172,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//...";
-		SCMSource source = new BranchesScmSource("root-classic", credential, includes, null, format, null);
+		SCMSource source = new BranchesScmSource("root-classic", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "root-classic");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -189,7 +189,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//...";
-		SCMSource source = new StreamsScmSource("root-streams", credential, includes, null, format, null);
+		SCMSource source = new StreamsScmSource("root-streams", credential, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "root-streams");
 		multi.getSourcesList().add(new BranchSource(source));
@@ -213,7 +213,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
-		SCMSource source = new BranchesScmSource("classic", inFolderCredentials.getId(), includes, null, format, null);
+		SCMSource source = new BranchesScmSource("classic", inFolderCredentials.getId(), includes, null, format);
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
@@ -235,7 +235,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
-		SCMSource source = new StreamsScmSource("streams", inFolderCredentials.getId(), includes, null, format, null);
+		SCMSource source = new StreamsScmSource("streams", inFolderCredentials.getId(), includes, null, format);
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();

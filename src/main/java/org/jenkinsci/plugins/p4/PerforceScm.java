@@ -50,8 +50,10 @@ import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
@@ -89,6 +91,7 @@ public class PerforceScm extends SCM {
 
 	private transient List<P4Ref> incrementalChanges;
 	private transient P4Ref parentChange;
+	private transient P4Review review;
 
 	public static final int DEFAULT_FILE_LIMIT = 50;
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
@@ -122,6 +125,14 @@ public class PerforceScm extends SCM {
 
 	public List<P4Ref> getIncrementalChanges() {
 		return incrementalChanges;
+	}
+
+	public P4Review getReview() {
+		return review;
+	}
+
+	public void setReview(P4Review review) {
+		this.review = review;
 	}
 
 	/**
@@ -403,6 +414,12 @@ public class PerforceScm extends SCM {
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+
+		// Add review to environment, if defined
+		if(review != null) {
+			ws.addEnv(ReviewProp.REVIEW.toString(), review.getId());
+			ws.addEnv(ReviewProp.STATUS.toString(), CheckoutStatus.SHELVED.toString());
+		}
 
 		// Set the Workspace and initialise
 		task.setWorkspace(ws);

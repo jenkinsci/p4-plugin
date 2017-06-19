@@ -6,24 +6,42 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
 public class BranchesScmSource extends AbstractP4ScmSource {
 
+	private P4Browser browser;
+
 	@DataBoundConstructor
-	public BranchesScmSource(String id, String credential, String includes, String charset, String format, P4Browser browser) {
-		super(id, credential, includes, charset, format, browser);
+	public BranchesScmSource(String id, String credential, String includes, String charset, String format) {
+		super(id, credential, charset, format);
+		setIncludes(includes);
 	}
 
+	@DataBoundSetter
+	public void setBrowser(P4Browser browser) {
+		this.browser = browser;
+	}
+
+	@Override
+	public P4Browser getBrowser() {
+		return browser;
+	}
+
+	@Override
+	public List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+		return new ArrayList<>();
+	}
+
+	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
 
 		List<String> paths = getIncludePaths();
@@ -47,7 +65,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				continue;
 			}
 
-			P4Head head = new P4Head(file.toString(), branch, false);
+			P4Head head = new P4Head(file.toString(), Arrays.asList(branch), false);
 			list.add(head);
 		}
 		p4.disconnect();
@@ -55,13 +73,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return new ArrayList<>(list);
 	}
 
-	@Override
-	public Workspace getWorkspace(String path) {
-		String client = getFormat();
-		String view = path + "/..." + " //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "LOCAL", view);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
-	}
+
 
 	@Extension
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {

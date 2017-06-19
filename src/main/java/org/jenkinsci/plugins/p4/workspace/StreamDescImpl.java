@@ -1,18 +1,16 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.model.AutoCompletionCandidates;
-import hudson.util.FormValidation;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
+import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StreamDescImpl {
 	
