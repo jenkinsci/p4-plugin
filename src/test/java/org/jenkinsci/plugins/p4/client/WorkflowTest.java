@@ -46,7 +46,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   publisher = [$class: 'SubmitImpl', description: 'Submitted by Jenkins', onlyOnSuccess: false, reopen: false]\n"
 				+ "   buildWorkspace = [$class: 'TemplateWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, templateName: 'test.ws']\n"
 				+ "   p4publish credential: '" + id + "', publish: publisher, workspace: buildWorkspace" + " \n"
-				+ "}"));
+				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 		jenkins.assertLogContains("P4 Task: tagging build.", run);
@@ -63,7 +63,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync credential: '" + id + "', template: 'test.ws'\n"
 				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}"));
+				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 		jenkins.assertLogContains("P4_CHANGELIST: 40", run);
@@ -83,7 +83,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
 				+ "      revert:true, have:true, modtime:true]\n"
 				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
-				+ "}"));
+				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 	}
@@ -96,7 +96,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
 				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
 				+ "   p4.run('sync', '//...')\n"
-				+ "}"));
+				+ "}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -116,7 +116,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   echo \"Client: ${client}\""
 				+ "   client.put('Description', 'foo')"
 				+ "   p4.save('client', client)"
-				+ "}"));
+				+ "}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -138,7 +138,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
 				+ "      revert:true, have:true, modtime:true]\n"
 				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
-				+ "}"));
+				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 
@@ -157,7 +157,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   p4 = p4(credential: '" + auth.getId() + "', workspace: ws)\n"
 				+ "   p4.run('sync', '//...')\n"
 				+ "   p4.run('changes', '-m4', '//...@24,27')\n"
-				+ "}"));
+				+ "}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -165,5 +165,35 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Change 24", run);
 		jenkins.assertLogNotContains("Change 1", run);
 		jenkins.assertLogNotContains("Change 40", run);
+	}
+
+	@Test
+	public void testCheckoutEnvironment() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "checkoutEnv");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n" +
+				"    stage('Sync files...') {\n" +
+				"        checkout([$class: 'PerforceScm', " +
+				"           credential: '" + auth.getId() + "', " +
+				"           populate: [$class: 'ForceCleanImpl', have: false, pin: '', quiet: true], " +
+				"           workspace: [$class: 'StreamWorkspaceImpl', charset: 'none', " +
+				"              format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, " +
+				"              streamName: '//stream/main']])\n" +
+				"    }\n" +
+				"    stage ('Test env...') {\n" +
+				"        println \"P4_CHANGELIST=${env.P4_CHANGELIST}\"\n" +
+				"        println \"P4_CLIENT=${env.P4_CLIENT}\"\n" +
+				"        println \"HUDSON_CHANGELOG_FILE=${env.HUDSON_CHANGELOG_FILE}\"\n" +
+				"        println \"P4_USER=${env.P4_USER}\"\n" +
+				"        println \"P4_TICKET=${env.P4_TICKET}\"\n" +
+				"    }\n" +
+				"}", false));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("P4_CHANGELIST=39", run);
+		jenkins.assertLogContains("P4_CLIENT=jenkins-master-checkoutEnv", run);
+		jenkins.assertLogContains("P4_USER=jenkins", run);
+		jenkins.assertLogNotContains("HUDSON_CHANGELOG_FILE=null", run);
 	}
 }

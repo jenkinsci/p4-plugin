@@ -249,7 +249,7 @@ public class PerforceScm extends SCM {
 				? ConnectionHelper.findCredential(scmCredential, Jenkins.getActiveInstance())
 				: ConnectionHelper.findCredential(scmCredential, job);
 
-		if(credentials == null) {
+		if (credentials == null) {
 			logger.fine("Could not retrieve credentials from id: '${scmCredential}");
 			return null;
 		}
@@ -416,7 +416,7 @@ public class PerforceScm extends SCM {
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
 
 		// Add review to environment, if defined
-		if(review != null) {
+		if (review != null) {
 			ws.addEnv(ReviewProp.REVIEW.toString(), review.getId());
 			ws.addEnv(ReviewProp.STATUS.toString(), CheckoutStatus.SHELVED.toString());
 		}
@@ -534,11 +534,22 @@ public class PerforceScm extends SCM {
 		return list;
 	}
 
+	// Pre Jenkins 2.60
 	@Override
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = build.getAction(TagAction.class);
+		buildEnvironment(tagAction, env);
+	}
+
+	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
+	public void buildEnvironment(Run<?, ?> run, java.util.Map<String, String> env) {
+		TagAction tagAction = run.getAction(TagAction.class);
+		buildEnvironment(tagAction, env);
+	}
+
+	private void buildEnvironment(TagAction tagAction, Map<String, String> env) {
 		if (tagAction != null) {
 			// Set P4_CHANGELIST value
 			String change = tagAction.getRefChange().toString();
@@ -585,7 +596,7 @@ public class PerforceScm extends SCM {
 	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {
 		List<P4Ref> builds = tagAction.getRefChanges();
 
-		for(P4Ref build : builds) {
+		for (P4Ref build : builds) {
 			if (build instanceof P4ChangeRef) {
 				// its a change, so return...
 				return build.toString();
@@ -854,7 +865,7 @@ public class PerforceScm extends SCM {
 		/**
 		 * Credentials list, a Jelly config method for a build job.
 		 *
-		 * @param project Jenkins project item
+		 * @param project    Jenkins project item
 		 * @param credential Perforce credential ID
 		 * @return A list of Perforce credential items to populate the jelly
 		 * Select list.
@@ -867,7 +878,7 @@ public class PerforceScm extends SCM {
 		 * Credentials list, a Jelly config method for a build job.
 		 *
 		 * @param project Jenkins project item
-		 * @param value credential user input value
+		 * @param value   credential user input value
 		 * @return A list of Perforce credential items to populate the jelly
 		 * Select list.
 		 */
