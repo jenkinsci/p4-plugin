@@ -1,5 +1,40 @@
 ## Release notes
 
+[@22408](https://swarm.workshop.perforce.com/changes/22408) - Set SCM Environment for Jenkins 2.60+. JENKINS-37584 JENKINS-40885
+
+[@22400](https://swarm.workshop.perforce.com/changes/22400) - (tpeths) Enabling Graph support in p4sync DSL.
+
+[@22398](https://swarm.workshop.perforce.com/changes/22398) - Pass Perforce ticket using BasicAuth to Swarm API.
+
+[@22396](https://swarm.workshop.perforce.com/changes/22396) - MultiBranch support for Perforce Swarm Reviews. A work in progress - adds Swarm API support to find branches and reviews from a Swarm project.
+
+[@22384](https://swarm.workshop.perforce.com/changes/22384) - Remove duplicate code for Stream name auto completion.
+
+[@22372](https://swarm.workshop.perforce.com/changes/22372) - Update Repository Browser for use with Pipeline. May fix the following: JENKINS-43069 JENKINS-37094
+
+[@22349](https://swarm.workshop.perforce.com/changes/22349) - Parallel Sync using P4Java. Update to P4Java 2017.2; using RPC level parallel sync and threaded within the JVM. Native parallel sync no longer requires a 'p4d' binary.
+
+[@22322](https://swarm.workshop.perforce.com/changes/22322) - Option to disable clone for StaticSyncImpl. JENKINS-43281
+
+[@22317](https://swarm.workshop.perforce.com/changes/22317) - Find changelog file for Pipeline builds and add to HUDSON_CHANGELOG_FILE environment.
+
+[@22315](https://swarm.workshop.perforce.com/changes/22315) - Pending change cleanup for unshelve. Unshelve would leave files open for add/edit/delete, the 'tidy' option will 'revert -k' the files leaving the content in the workspace, but removing the 'have' list data. Unshelve can now specify a Credential and Workspace, important for situations where more than one sync occurs in a pipeline script. JENKINS-43430
+
+[@22305](https://swarm.workshop.perforce.com/changes/22305) - Update Unshelve Step to use 'Step' and 'SynchronousNonBlockingStepExecution'
+
+[@22257](https://swarm.workshop.perforce.com/changes/22257) - Streaming Asynchronous Callback for Submit. JENKINS-44427 
+
+[@22256](https://swarm.workshop.perforce.com/changes/22256) - Update Publish Step to use 'Step' and 'SynchronousNonBlockingStepExecution'. JENKINS-44427
+
+[@22245](https://swarm.workshop.perforce.com/changes/22245) - P4Trigger use locally defined job and not super class. JENKINS-44251
+
+[@22231](https://swarm.workshop.perforce.com/changes/22231) - Fixed 'No such file(s)' on unshelve check. JENKINS-43430
+
+[@22219](https://swarm.workshop.perforce.com/changes/22219) - Use JenkinsLocationConfiguration to fetch the URL.  If Jenkins getRootUrl() returns null try JenkinsLocationConfiguration.
+
+[@22183](https://swarm.workshop.perforce.com/changes/22183) - Ticket Credential; an empty path will use system default.
+
+
 ### Release 1.7.0 (major features/fixes)
 
 [@22168](https://swarm.workshop.perforce.com/changes/22168) - Check all login messages. Fix for 'pre-user-login' triggers. JENKINS-44166
