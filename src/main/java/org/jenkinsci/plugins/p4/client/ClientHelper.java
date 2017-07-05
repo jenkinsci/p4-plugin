@@ -285,7 +285,7 @@ public class ClientHelper extends ConnectionHelper {
 			}
 
 			if (callback.isFail()) {
-				throw new P4JavaException("Sync failed in streaming callback.");
+				throw new P4JavaException(callback.getException());
 			}
 		}
 	}
