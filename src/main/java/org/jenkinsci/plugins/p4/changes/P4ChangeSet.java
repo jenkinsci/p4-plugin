@@ -11,6 +11,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -23,6 +24,7 @@ import java.util.List;
 
 public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
+	private static Object lock = new Object();
 	private List<P4ChangeEntry> history;
 
 	protected P4ChangeSet(Run<?, ?> run, RepositoryBrowser<?> browser, List<P4ChangeEntry> logs) {
@@ -49,7 +51,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 	public static void store(File file, List<P4ChangeEntry> changes) {
 		try {
-			synchronized (file) {
+			synchronized (lock) {
 				FileOutputStream o = new FileOutputStream(file);
 				BufferedOutputStream b = new BufferedOutputStream(o);
 				Charset c = Charset.forName("UTF-8");
@@ -106,11 +108,15 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 					stream.println("\t</entry>");
 				}
 				stream.println("</changelog>");
+				stream.flush();
 				stream.close();
+				o.close();
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
