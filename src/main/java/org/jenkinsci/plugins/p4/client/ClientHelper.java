@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -423,7 +424,7 @@ public class ClientHelper extends ConnectionHelper {
 		syncFiles(revisions, clean);
 
 		// remove all files from workspace
-		String root = iclient.getRoot();
+		String root = URLDecoder.decode(iclient.getRoot(), "UTF-8");
 		log("... rm -rf " + root);
 		log("");
 		silentlyForceDelete(root);
