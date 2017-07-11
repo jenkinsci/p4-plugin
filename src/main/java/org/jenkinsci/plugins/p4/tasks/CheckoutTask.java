@@ -107,11 +107,15 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 			// Initialise Graph commit changes
 			if (p4.checkVersion(20171)) {
-				List<IRepo> repos = p4.listRepos();
-				for (IRepo repo : repos) {
-					P4Ref graphHead = p4.getGraphHead(repo.getName());
-					// add graphHead to list of commits to builds
-					builds.add(graphHead);
+				try {
+					List<IRepo> repos = p4.listRepos();
+					for (IRepo repo : repos) {
+						P4Ref graphHead = p4.getGraphHead(repo.getName());
+						// add graphHead to list of commits to builds
+						builds.add(graphHead);
+					}
+				} catch (Exception e) {
+					// no graphHead in builds
 				}
 			}
 		} catch (Exception e) {
