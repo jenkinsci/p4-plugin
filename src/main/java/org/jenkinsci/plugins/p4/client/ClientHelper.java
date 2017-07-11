@@ -1003,11 +1003,15 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * List of Graph Repos within the client's view
 	 *
-	 * @return A list of Graph Repos
-	 * @throws Exception push up stack
+	 * @return A list of Graph Repos, empty list on error.
 	 */
-	public List<IRepo> listRepos() throws Exception {
-		List<IRepo> repos = iclient.getRepos();
+	public List<IRepo> listRepos() {
+		List<IRepo> repos = new ArrayList<>();
+		try {
+			repos = iclient.getRepos();
+		} catch (Exception e) {
+			logger.fine("No repos found: " + e.getMessage());
+		}
 		return repos;
 	}
 

@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.p4.scm;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
@@ -19,7 +18,6 @@ public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHe
 		this.review = review;
 	}
 
-	@NonNull
 	@Override
 	public String getId() {
 		return getName();
@@ -34,7 +32,6 @@ public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHe
 	 *
 	 * @return a “target” or “base” branch
 	 */
-	@NonNull
 	@Override
 	public SCMHead getTarget() {
 		return target;
