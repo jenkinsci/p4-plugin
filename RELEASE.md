@@ -1,5 +1,24 @@
 ## Release notes
 
+### Release 1.7.2 (major features/fixes)
+
+[@22555](https://swarm.workshop.perforce.com/changes/22555) - Update P4Java 2017.2.1531685.  Patch for parallel sync - thread authentication on Edge/Commit servers.
+
+[@22538](https://swarm.workshop.perforce.com/changes/22538) - Added 'Force' option to 'SyncOnly'.  To get 'sync -f' set both 'have' and 'force'; for 'sync -p' just set 'force'.  JENKINS-45127
+
+[@22537](https://swarm.workshop.perforce.com/changes/22537) - Use Decoded URL path for local delete.  Local client syntax uses URL @ encoding, but the local filesystem needs the decoded path.  JENKINS-45339
+
+[@22536](https://swarm.workshop.perforce.com/changes/22536) - Modified getAction to return uppercase icon name.  JENKINS-45407 (tpeths)
+
+[@22532](https://swarm.workshop.perforce.com/changes/22532) - Return empty list on error for listRepos().  JENKINS-45420
+
+[@22514](https://swarm.workshop.perforce.com/changes/22514) - Raise Errors from StreamingCallbacks.
+
+[@22513](https://swarm.workshop.perforce.com/changes/22513) - Lock resource on P4ChangeSet.  Prevent parallel writers from getting the same file.
+
+
+### Release 1.7.1 (major features/fixes)
+
 [@22408](https://swarm.workshop.perforce.com/changes/22408) - Set SCM Environment for Jenkins 2.60+. JENKINS-37584 JENKINS-40885
 
 [@22400](https://swarm.workshop.perforce.com/changes/22400) - (tpeths) Enabling Graph support in p4sync DSL.
