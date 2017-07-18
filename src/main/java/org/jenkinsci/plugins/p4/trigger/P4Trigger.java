@@ -15,6 +15,7 @@ import hudson.util.StreamTaskListener;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.triggers.SCMTriggerItem;
 import org.apache.commons.jelly.XMLOutput;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -35,6 +36,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	}
 
 	@Extension
+	@Symbol("P4Trigger")
 	public static class DescriptorImpl extends TriggerDescriptor {
 
 		@Override
