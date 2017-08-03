@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.7.3 (major features/fixes)
+
+[@22632](https://swarm.workshop.perforce.com/changes/22632) - Update P4Java 2017.2.1535715 - Unicode buffer fixes for syncing UFT16 files.  JENKINS-45453 JENKINS-45580
+
+[@22557](https://swarm.workshop.perforce.com/changes/22557) - Downgraded due to hpi:run error in parent pom.
+
+
 ### Release 1.7.2 (major features/fixes)
 
 [@22555](https://swarm.workshop.perforce.com/changes/22555) - Update P4Java 2017.2.1531685.  Patch for parallel sync - thread authentication on Edge/Commit servers.
