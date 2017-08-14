@@ -18,9 +18,8 @@ public class FlushOnlyImpl extends Populate {
 	 * @param pin     Change or label to pin the sync
 	 */
 	@DataBoundConstructor
-	public FlushOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet,
-	                     String pin) {
-		super(true, false, false, quiet, pin, null); 
+	public FlushOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet, String pin) {
+		super(true, false, false, quiet, pin, null);
 	}
 
 	@Extension
@@ -28,7 +27,7 @@ public class FlushOnlyImpl extends Populate {
 
 		@Override
 		public String getDisplayName() {
-                    return "Flush workspace";
+			return "Flush workspace";
 		}
 	}
 }
