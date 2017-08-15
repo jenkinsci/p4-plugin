@@ -195,7 +195,7 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		} else {
-			log("P4 Task: syncing files at changes: " + buildChange);
+			log("P4 Task: syncing files at change: " + buildChange);
 		}
 
 		// Sync changes/labels
