@@ -1,8 +1,11 @@
 package org.jenkinsci.plugins.p4.scm.swarm;
 
 import java.io.File;
+import java.io.Serializable;
 
-public class P4Path {
+public class P4Path implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	private final String path;
 	private final String revision;
@@ -34,10 +37,12 @@ public class P4Path {
 		}
 
 		String r = getRevision();
-		if (r != null && r.startsWith("refs/pull/")) {
-			r = r.substring("refs/pull/".length());
+		if (r != null) {
+			if(r.startsWith("refs/pull/")) {
+				r = r.substring("refs/pull/".length());
+			}
+			r = r.replaceAll("/", ".");
 		}
-		r = r.replaceAll("/", ".");
 
 		return p + "." + r;
 	}
