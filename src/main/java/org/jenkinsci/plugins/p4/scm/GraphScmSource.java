@@ -1,20 +1,27 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import com.perforce.p4java.core.IRepo;
+import com.perforce.p4java.exception.P4JavaException;
+import com.perforce.p4java.graph.IGraphRef;
+import com.perforce.p4java.option.server.GraphShowRefOptions;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
+import jenkins.scm.api.SCMHeadCategory;
+import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
+import jenkins.scm.impl.UncategorizedSCMHeadCategory;
+import jenkins.util.NonLocalizable;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 public class GraphScmSource extends AbstractP4ScmSource {
@@ -38,34 +45,97 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception {
-		return new ArrayList<>();
+	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+
+		List<P4Head> list = new ArrayList<>();
+		List<String> includes = getIncludePaths();
+
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+			for (String inc : includes) {
+				List<IRepo> repos = p4.listRepos(inc);
+				list.addAll(getRefsFromRepos(repos, p4));
+			}
+		}
+
+		return list;
 	}
 
 	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
 
+		List<P4Head> list = new ArrayList<>();
 		List<String> includes = getIncludePaths();
-		HashSet<P4Head> list = new HashSet<P4Head>();
 
-		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener);
-		try {
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 			for (String inc : includes) {
 				List<IRepo> repos = p4.listRepos(inc);
-				for (IRepo r : repos) {
-					String path = r.getName();
-					if (path.endsWith(".git")) {
-						path = path.substring(0, path.lastIndexOf(".git"));
-					}
-					String name = path.substring(path.lastIndexOf("/") + 1);
-					P4Head head = new P4Head(name, Arrays.asList(path), false);
-					list.add(head);
-				}
+				list.addAll(getBranchesFromRepos(repos, p4));
 			}
-		} finally {
-			p4.disconnect();
 		}
-		return new ArrayList<>(list);
+
+		return list;
+	}
+
+	private List<P4Head> getBranchesFromRepos(List<IRepo> repos, ConnectionHelper p4) throws Exception {
+		List<P4Head> list = new ArrayList<>();
+
+		for (IRepo repo : repos) {
+			String repoName = getRepoName(repo);
+			List<IGraphRef> refs = getRefs(p4, repoName, "branch");
+
+			for (IGraphRef ref : refs) {
+				String branchName = ref.getName();
+				P4Path p4Path = new P4Path(repoName, branchName);
+				String name = p4Path.getName();
+
+				P4Head head = new P4Head(name, Arrays.asList(p4Path));
+				list.add(head);
+			}
+		}
+		return list;
+	}
+
+	private List<P4GraphRequestSCMHead> getRefsFromRepos(List<IRepo> repos, ConnectionHelper p4) throws Exception {
+		List<P4GraphRequestSCMHead> list = new ArrayList<>();
+
+		for (IRepo repo : repos) {
+			String repoName = getRepoName(repo);
+			List<IGraphRef> refs = getRefs(p4, repoName, "ref");
+
+			for (IGraphRef ref : refs) {
+				String branchName = ref.getName();
+
+				// only process 'merge'
+				if(!branchName.endsWith("/merge")) {
+					continue;
+				}
+
+				P4Path p4Path = new P4Path(repoName, branchName);
+				String name = p4Path.getName();
+
+				P4Head target = new P4Head(name, Arrays.asList(p4Path));
+				P4GraphRequestSCMHead tag = new P4GraphRequestSCMHead(name, repoName, branchName, Arrays.asList(p4Path), target);
+				list.add(tag);
+			}
+		}
+		return list;
+	}
+
+	private String getRepoName(IRepo repo) {
+		String repoName = repo.getName();
+		if (repoName.endsWith(".git")) {
+			repoName = repoName.substring(0, repoName.lastIndexOf(".git"));
+		}
+		return repoName;
+	}
+
+	private List<IGraphRef> getRefs(ConnectionHelper p4, String repoName, String type) throws P4JavaException {
+		GraphShowRefOptions opts = new GraphShowRefOptions();
+		opts.setType(type);
+		opts.setRepo(repoName);
+		List<IGraphRef> refs = p4.getConnection().getGraphShowRefs(opts);
+
+		return refs;
 	}
 
 	@Override
@@ -73,7 +143,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, getCharset())) {
 			long change = -1;
 
-			P4Ref ref = p4.getGraphHead(head.getPaths().get(0));
+			// TODO getGraphHead to process branch on P4Path
+			P4Ref ref = p4.getGraphHead(head.getPaths().get(0).getPath());
 			if (ref instanceof P4GraphRef) {
 				P4GraphRef graphHead = (P4GraphRef) ref;
 				change = graphHead.getDate();
@@ -89,7 +160,16 @@ public class GraphScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Graph";
+			return "Helix4Git";
+		}
+
+		@NonNull
+		@Override
+		protected SCMHeadCategory[] createCategories() {
+			return new SCMHeadCategory[]{
+					new UncategorizedSCMHeadCategory(new NonLocalizable("Branches")),
+					new ChangeRequestSCMHeadCategory(new NonLocalizable("Reviews"))
+			};
 		}
 	}
 }

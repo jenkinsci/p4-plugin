@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -79,14 +80,14 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public abstract List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception;
 
-	public abstract List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception;
+	public abstract List<P4Head> getTags(@NonNull TaskListener listener) throws Exception;
 
-	public Workspace getWorkspace(List<String> paths) {
+	public Workspace getWorkspace(List<P4Path> paths) {
 		String client = getFormat();
 
 		StringBuffer sb = new StringBuffer();
-		for (String path : paths) {
-			String view = "+" + path + "/Jenkinsfile" + " //" + client + "/Jenkinsfile";
+		for (P4Path path : paths) {
+			String view = path.getPath() + "/Jenkinsfile" + " //" + client + "/Jenkinsfile";
 			sb.append(view).append("\n");
 		}
 
@@ -99,22 +100,28 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	@Override
 	public PerforceScm build(SCMHead head, SCMRevision revision) {
-		if (head instanceof P4Head) {
-			P4Head perforceHead = (P4Head) head;
-			List<String> paths = perforceHead.getPaths();
-			Workspace workspace = getWorkspace(paths);
-			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
-			return scm;
-		}
-
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead perforceTag = (P4ChangeRequestSCMHead) head;
-			List<String> paths = perforceTag.getPaths();
+			List<P4Path> paths = perforceTag.getPaths();
 			Workspace workspace = getWorkspace(paths);
 			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
 
 			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);
 			scm.setReview(review);
+			return scm;
+		}
+		if (head instanceof P4GraphRequestSCMHead) {
+			P4GraphRequestSCMHead graphTag = (P4GraphRequestSCMHead) head;
+			List<P4Path> paths = graphTag.getPaths();
+			Workspace workspace = getWorkspace(paths);
+			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
+			return scm;
+		}
+		if (head instanceof P4Head) {
+			P4Head perforceHead = (P4Head) head;
+			List<P4Path> paths = perforceHead.getPaths();
+			Workspace workspace = getWorkspace(paths);
+			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
 			return scm;
 		}
 		throw new IllegalArgumentException("SCMHead not a Perforce instance!");
@@ -125,7 +132,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		try {
 			List<P4Head> heads = getHeads(listener);
 
-			List<P4ChangeRequestSCMHead> tags = getTags(listener);
+			List<P4Head> tags = getTags(listener);
 			heads.addAll(tags);
 
 			for (P4Head head : heads) {
@@ -159,8 +166,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
 			long change = -1;
-			for (String path : head.getPaths()) {
-				long c = p4.getHead(path + "/...");
+			for (P4Path path : head.getPaths()) {
+				long c = p4.getHead(path.getPath() + "/...");
 				change = (c > change) ? c : change;
 			}
 			P4Revision revision = new P4Revision(head, change);

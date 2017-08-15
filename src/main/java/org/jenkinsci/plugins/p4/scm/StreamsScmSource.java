@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -37,7 +38,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
 		return new ArrayList<>();
 	}
 
@@ -53,7 +54,8 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 			for (IStreamSummary s : specs) {
 				String name = s.getName();
 				String stream = s.getStream();
-				P4Head head = new P4Head(name, Arrays.asList(stream), true);
+				P4Path p4Path = new P4Path(stream);
+				P4Head head = new P4Head(name, Arrays.asList(p4Path));
 				list.add(head);
 			}
 		} finally {
@@ -63,8 +65,8 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public Workspace getWorkspace(List<String> paths) {
-		return new StreamWorkspaceImpl(getCharset(), false, paths.get(0), getFormat());
+	public Workspace getWorkspace(List<P4Path> paths) {
+		return new StreamWorkspaceImpl(getCharset(), false, paths.get(0).getPath(), getFormat());
 	}
 
 	@Extension
@@ -72,7 +74,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Streams";
+			return "Helix Streams";
 		}
 	}
 }

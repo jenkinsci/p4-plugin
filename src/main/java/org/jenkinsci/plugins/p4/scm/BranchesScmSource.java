@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -37,7 +38,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
 		return new ArrayList<>();
 	}
 
@@ -52,6 +53,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<IFileSpec> specs = p4.getDirs(paths);
 		for (IFileSpec s : specs) {
 			String branch = s.getOriginalPathString();
+			P4Path p4Path = new P4Path(branch);
 
 			// get depotPath and check for null
 			Path depotPath = Paths.get(branch);
@@ -65,7 +67,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				continue;
 			}
 
-			P4Head head = new P4Head(file.toString(), Arrays.asList(branch), false);
+			P4Head head = new P4Head(file.toString(), Arrays.asList(p4Path));
 			list.add(head);
 		}
 		p4.disconnect();
@@ -80,7 +82,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Branches";
+			return "Helix Branches";
 		}
 	}
 }

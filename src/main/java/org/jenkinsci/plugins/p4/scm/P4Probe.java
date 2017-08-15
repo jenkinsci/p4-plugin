@@ -5,9 +5,9 @@ import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class P4Probe extends SCMProbe {
@@ -16,28 +16,26 @@ public class P4Probe extends SCMProbe {
 
 	private static Logger logger = Logger.getLogger(P4Probe.class.getName());
 
-	private final String name;
-	private final List<String> paths;
+	private final P4Head head;
 
 	private transient ClientHelper p4;
 
 	public P4Probe(ClientHelper p4, P4Head head) {
-		this.name = head.getName();
-		this.paths = head.getPaths();
+		this.head = head;
 		this.p4 = p4;
 	}
 
 	@Override
 	public String name() {
-		return name;
+		return head.getName();
 	}
 
 	@Override
 	public long lastModified() {
 		long last = 0L;
 		try {
-			for(String path : paths) {
-				long change = p4.getHead(path + "/...");
+			for(P4Path path : head.getPaths()) {
+				long change = p4.getHead(path.getPathBuilder("..."));
 				if(change > last) {
 					last = change;
 				}
@@ -51,8 +49,8 @@ public class P4Probe extends SCMProbe {
 	@Override
 	public SCMProbeStat stat(@NonNull String file) throws IOException {
 		try {
-			for(String path : paths) {
-				String depotPath = path + "/" + file;
+			for(P4Path path : head.getPaths()) {
+				String depotPath = path.getPathBuilder(file);
 				if (p4.hasFile(depotPath)) {
 					return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
 				}

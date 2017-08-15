@@ -6,17 +6,19 @@ import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 
 import java.util.List;
 
-public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHead {
+public class P4GraphRequestSCMHead extends P4Head implements ChangeRequestSCMHead {
 
 	private static final long serialVersionUID = 1L;
 
 	private final SCMHead target;
-	private final String review;
+	private final String repo;
+	private final String branch;
 
-	P4ChangeRequestSCMHead(String name, String review, List<P4Path> paths, SCMHead target) {
+	P4GraphRequestSCMHead(String name, String repo, String branch, List<P4Path> paths, SCMHead target) {
 		super(name, paths);
 		this.target = target;
-		this.review = review;
+		this.repo = repo;
+		this.branch = branch;
 	}
 
 	@Override
@@ -24,8 +26,12 @@ public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHe
 		return getName();
 	}
 
-	public String getReview() {
-		return review;
+	public String getRepo() {
+		return repo;
+	}
+
+	public String getBranch() {
+		return branch;
 	}
 
 	/**

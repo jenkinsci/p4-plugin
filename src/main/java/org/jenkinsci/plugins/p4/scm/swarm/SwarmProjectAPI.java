@@ -54,13 +54,13 @@ public class SwarmProjectAPI {
 		 *
 		 * @return List of paths
 		 */
-		public List<String> getPaths() {
-			List<String> list = new ArrayList<>();
+		public List<P4Path> getPaths() {
+			List<P4Path> list = new ArrayList<>();
 			for(String path : paths) {
 				if (path.endsWith("/...")) {
 					path = path.substring(0, path.lastIndexOf("/..."));
 				}
-				list.add(path);
+				list.add(new P4Path(path));
 			}
 			return list;
 		}

@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.scm.swarm.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.scm.swarm.SwarmReviewAPI;
 import org.jenkinsci.plugins.p4.scm.swarm.SwarmReviewsAPI;
@@ -57,9 +58,9 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4ChangeRequestSCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
 
-		List<P4ChangeRequestSCMHead> list = new ArrayList<>();
+		List<P4Head> list = new ArrayList<>();
 
 		List<SwarmReviewsAPI.Reviews> reviews = getActiveReviews(project, listener);
 		for (SwarmReviewsAPI.Reviews review : reviews) {
@@ -67,10 +68,10 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 			List<String> branches = getBranchesInReview(reviewID, project, listener);
 			for (String branch : branches) {
-				List<String> paths = getPathsInBranch(branch, project, listener);
+				List<P4Path> paths = getPathsInBranch(branch, project, listener);
 				String trgName = branch + "-" + reviewID;
-				P4Head target = new P4Head(trgName, paths, false);
-				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, paths, target, false);
+				P4Head target = new P4Head(trgName, paths);
+				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, paths, target);
 				list.add(tag);
 			}
 		}
@@ -85,8 +86,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		List<SwarmProjectAPI.Branch> branches = getBranchesInProject(project, listener);
 		for(SwarmProjectAPI.Branch branch : branches) {
-			List<String> paths = branch.getPaths();
-			P4Head head = new P4Head(branch.getId(), paths, false);
+			List<P4Path> paths = branch.getPaths();
+			P4Head head = new P4Head(branch.getId(), paths);
 			list.add(head);
 		}
 
@@ -181,18 +182,18 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return lastChange;
 	}
 
-	private List<String> getPathsInBranch(String id, String project, TaskListener listener) throws Exception {
+	private List<P4Path> getPathsInBranch(String id, String project, TaskListener listener) throws Exception {
 
 		List<SwarmProjectAPI.Branch> branches = getBranchesInProject(project, listener);
 
 		for (SwarmProjectAPI.Branch branch : branches) {
 			if (id.equals(branch.getId())) {
-				List<String> paths = branch.getPaths();
+				List<P4Path> paths = branch.getPaths();
 				return paths;
 			}
 		}
 
-		return new ArrayList<String>();
+		return new ArrayList<>();
 	}
 
 	private List<SwarmProjectAPI.Branch> getBranchesInProject(String project, TaskListener listener) throws Exception {
@@ -255,7 +256,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Perforce Reviews";
+			return "Helix Swarm";
 		}
 
 		@NonNull
