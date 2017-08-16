@@ -4,6 +4,7 @@ import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -72,6 +73,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("streamSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

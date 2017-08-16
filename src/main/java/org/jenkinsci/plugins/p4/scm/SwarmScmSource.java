@@ -10,6 +10,7 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
@@ -252,6 +253,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Extension
+	@Symbol("multiSwarm")
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 
 		@Override

@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.populate;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class GraphHybridImpl extends Populate {
@@ -20,6 +21,7 @@ public class GraphHybridImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("graphClean")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override

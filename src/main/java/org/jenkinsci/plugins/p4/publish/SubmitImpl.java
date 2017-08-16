@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.publish;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -55,6 +56,7 @@ public class SubmitImpl extends Publish implements Serializable {
 	}
 
 	@Extension
+	@Symbol("submit")
 	public static final class DescriptorImpl extends PublishDescriptor {
 
 		@Override

@@ -6,6 +6,7 @@ import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -55,6 +56,7 @@ public class SwarmBrowser extends P4Browser {
 	}
 
 	@Extension
+	@Symbol("swarm")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
 		@Override

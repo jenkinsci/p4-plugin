@@ -8,6 +8,7 @@ import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -41,6 +42,7 @@ public class GetP4Step extends Step {
 	}
 
 	@Extension(optional = true)
+	@Symbol("p4groovy")
 	public static class DescriptorImpl extends StepDescriptor {
 
 		@Override

@@ -4,6 +4,7 @@ import com.perforce.p4java.option.client.ParallelSyncOptions;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -64,6 +65,7 @@ public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implemen
 	}
 
 	@Extension
+	@Symbol("parallel")
 	public static class DescriptorImpl extends Descriptor<ParallelSync> {
 
 		@Override

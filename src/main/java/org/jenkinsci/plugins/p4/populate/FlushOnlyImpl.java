@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.p4.populate;
 
 import hudson.Extension;
-
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class FlushOnlyImpl extends Populate {
@@ -23,6 +23,7 @@ public class FlushOnlyImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("flushOnly")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override

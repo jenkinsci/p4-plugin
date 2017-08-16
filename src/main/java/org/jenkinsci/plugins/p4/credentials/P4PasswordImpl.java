@@ -6,6 +6,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionConfig;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -39,6 +40,7 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 	}
 
 	@Extension
+	@Symbol("password")
 	public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
 
 		@Override

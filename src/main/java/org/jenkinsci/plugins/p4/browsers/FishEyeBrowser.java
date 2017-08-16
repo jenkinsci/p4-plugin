@@ -7,6 +7,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.browsers.QueryBuilder;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -97,6 +98,7 @@ public class FishEyeBrowser extends P4Browser {
 	}
 
 	@Extension
+	@Symbol("fishEye")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
 		private static final Pattern URL_PATTERN = Pattern

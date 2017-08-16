@@ -7,6 +7,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -88,6 +89,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	}
 
 	@Extension
+	@Symbol("clientSpec")
 	public static class DescriptorImpl extends Descriptor<WorkspaceSpec> {
 
 		@Override

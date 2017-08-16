@@ -11,6 +11,7 @@ import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
@@ -156,6 +157,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Extension
+	@Symbol("multiGraph")
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 
 		@Override

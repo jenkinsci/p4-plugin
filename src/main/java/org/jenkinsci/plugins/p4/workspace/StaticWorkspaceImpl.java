@@ -5,6 +5,7 @@ import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -55,6 +56,7 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("staticSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

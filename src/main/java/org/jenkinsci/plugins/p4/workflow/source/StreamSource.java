@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -24,6 +25,7 @@ public class StreamSource extends AbstractSource {
 	}
 
 	@Extension
+	@Symbol("streamSource")
 	public static final class DescriptorImpl extends P4SyncDescriptor {
 
 		public DescriptorImpl() {

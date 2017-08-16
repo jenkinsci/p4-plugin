@@ -1,18 +1,17 @@
 package org.jenkinsci.plugins.p4.workspace;
 
-import hudson.Extension;
-import hudson.util.FormValidation;
-
-import java.io.Serializable;
-import java.util.logging.Logger;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.SwitchClientViewOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.Extension;
+import hudson.util.FormValidation;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 
@@ -99,6 +98,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("templateSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

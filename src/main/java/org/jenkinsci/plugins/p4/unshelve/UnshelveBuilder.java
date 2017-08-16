@@ -14,6 +14,7 @@ import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.tasks.UnshelveTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -113,6 +114,7 @@ public class UnshelveBuilder extends Builder {
 	}
 
 	@Extension
+	@Symbol("unshelve")
 	public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
 		@Override

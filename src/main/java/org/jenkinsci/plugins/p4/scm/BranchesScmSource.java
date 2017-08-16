@@ -4,6 +4,7 @@ import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
@@ -78,6 +79,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 
 	@Extension
+	@Symbol("multiBranch")
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 
 		@Override

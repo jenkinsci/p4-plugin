@@ -9,6 +9,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilder;
 import org.jenkinsci.plugins.p4.unshelve.UnshelveBuilderStep;
@@ -73,6 +74,7 @@ public class P4UnshelveStep extends Step {
 	}
 
 	@Extension(optional = true)
+	@Symbol("unshelve")
 	public static final class DescriptorImpl extends StepDescriptor {
 
 		@Override

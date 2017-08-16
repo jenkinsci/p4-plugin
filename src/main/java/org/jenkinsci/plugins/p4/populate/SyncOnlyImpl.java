@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.populate;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SyncOnlyImpl extends Populate {
@@ -37,6 +38,7 @@ public class SyncOnlyImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("syncOnly")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override

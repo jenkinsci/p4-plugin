@@ -6,6 +6,7 @@ import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
@@ -153,6 +154,7 @@ public class P4Step extends SCMStep {
 	}
 
 	@Extension(optional = true)
+	@Symbol("p4sync")
 	public static final class DescriptorImpl extends SCMStepDescriptor {
 
 		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";

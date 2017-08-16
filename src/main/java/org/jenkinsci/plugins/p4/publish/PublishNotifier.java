@@ -14,6 +14,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -97,6 +98,7 @@ public class PublishNotifier extends Notifier {
 	}
 
 	@Extension
+	@Symbol("publish")
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override

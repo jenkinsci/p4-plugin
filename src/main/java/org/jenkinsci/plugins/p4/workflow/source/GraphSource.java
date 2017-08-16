@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -23,6 +24,7 @@ public class GraphSource extends DepotSource {
 	}
 
 	@Extension
+	@Symbol("graphSource")
 	public static final class DescriptorImpl extends P4SyncDescriptor {
 
 		public DescriptorImpl() {

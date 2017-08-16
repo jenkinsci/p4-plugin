@@ -1,10 +1,5 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.workspace.Expand;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -18,6 +13,11 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.p4.workspace.Expand;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.util.logging.Logger;
 
 public class TagNotifier extends Notifier {
 
@@ -121,6 +121,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	@Extension
+	@Symbol("label")
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override

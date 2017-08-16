@@ -1,8 +1,8 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class AutoCleanImpl extends Populate {
 
@@ -49,6 +49,7 @@ public class AutoCleanImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("autoClean")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override

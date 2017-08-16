@@ -4,6 +4,7 @@ import com.perforce.p4java.core.IStreamSummary;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
@@ -70,6 +71,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Extension
+	@Symbol("multiStreams")
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 
 		@Override

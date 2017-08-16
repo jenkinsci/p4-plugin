@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.p4.populate;
 
 import hudson.Extension;
-
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class CheckOnlyImpl extends Populate {
@@ -24,6 +24,7 @@ public class CheckOnlyImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("previewOnly")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override

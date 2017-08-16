@@ -1,14 +1,14 @@
 package org.jenkinsci.plugins.p4.credentials;
 
-import java.io.Serializable;
-
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.Serializable;
 
 public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> implements Serializable {
 
@@ -48,6 +48,7 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 	}
 
 	@Extension
+	@Symbol("ticketMode")
 	public static class DescriptorImpl extends Descriptor<TicketModeImpl> {
 		@Override
 		public String getDisplayName() {

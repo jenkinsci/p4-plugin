@@ -1,13 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import java.io.IOException;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.tagging.TagAction;
-import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -19,6 +11,14 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
+import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.IOException;
+import java.util.logging.Logger;
 
 public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
@@ -37,6 +37,7 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 	}
 
 	@Extension
+	@Symbol("cleanup")
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override

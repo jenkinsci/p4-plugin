@@ -1,7 +1,11 @@
 package org.jenkinsci.plugins.p4.workflow;
 
-import javax.inject.Inject;
-
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.CleanupNotifier;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -9,11 +13,7 @@ import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import javax.inject.Inject;
 
 public class P4CleanupStep extends AbstractStepImpl {
 
@@ -29,6 +29,7 @@ public class P4CleanupStep extends AbstractStepImpl {
 	}
 
 	@Extension(optional = true)
+	@Symbol("cleanup")
 	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 		public DescriptorImpl() {
 			super(P4CleanupStepExecution.class);
