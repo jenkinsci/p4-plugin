@@ -251,8 +251,9 @@ public class TagAction extends AbstractScmTagAction {
 		}
 
 		// look for action matching view
-		for (TagAction action : actions) {           //JENKINS-43877
-			if (syncID.equals(action.getSyncID()) || (action.getSyncID() != null && action.getSyncID().contains(syncID))) {
+		// (clone ID now filtered from the syncID to addresses JENKINS-43877)
+		for (TagAction action : actions) {
+			if (syncID.equals(action.getSyncID())) {
 				List<P4Ref> changes = action.getRefChanges();
 				for (P4Ref change : changes) {
 					listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
