@@ -402,7 +402,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                 jenkins.assertLogContains("P4 Task: syncing files at change: " + head, run2);
                 jenkins.assertLogContains("P4 Task: syncing files at change: 9", run2);
                 jenkins.assertLogContains("Found last change 1 on syncID jenkins-master-multiParallelSyncPoll-1", run2);
-                jenkins.assertLogContains("Found last change 8 on syncID jenkins-master-multiParallelSyncPoll-2.clone2", run2);
+                jenkins.assertLogContains("Found last change 8 on syncID jenkins-master-multiParallelSyncPoll-2", run2);
 
                 // Add a trigger
                 P4Trigger trigger = new P4Trigger();
@@ -421,7 +421,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
                 List<String> log = job.getLastBuild().getLog(1000);
                 assertTrue(log.contains("[first_branch] Found last change " + head + " on syncID jenkins-master-multiParallelSyncPoll-1"));
-                assertTrue(log.contains("[second_branch] Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2.clone2"));
+                assertTrue(log.contains("[second_branch] Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2"));
 
                 // Test trigger, no change
                 trigger.poke(job, auth.getP4port());

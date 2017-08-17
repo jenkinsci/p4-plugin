@@ -255,9 +255,7 @@ public class TagAction extends AbstractScmTagAction {
 			if (syncID.equals(action.getSyncID()) || (action.getSyncID() != null && action.getSyncID().contains(syncID))) {
 				List<P4Ref> changes = action.getRefChanges();
 				for (P4Ref change : changes) {
-					if (!change.isCommit()) {
-						listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
-					}
+					listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
 				}
 				return changes;
 			}
