@@ -1,5 +1,18 @@
 ## Release notes
 
+### Release 1.7.4 (major features/fixes)
+
+[@22702](https://swarm.workshop.perforce.com/changes/22702) - Fix polling if Jenkinsfile and project workspace names are similar.  Removes an old patch for JENKINS-43877 as concurrent build IDs are now filtered out of the syncID.
+
+[@22701](https://swarm.workshop.perforce.com/changes/22701) - SyncID to ignore clone ID in workspace name.  Tracking build history during concurrent builds.
+
+[@22684](https://swarm.workshop.perforce.com/changes/22684) - Added @Symbol to Extension classes for Pipeline Syntax.
+
+[@22683](https://swarm.workshop.perforce.com/changes/22683) - Implement a FlushOnly sync for "Populate Options" (abbec)
+
+[@22678](https://swarm.workshop.perforce.com/changes/22678) - MultiBranch support for Helix4Git (GitHub PR model).  Update MultiBranch product names to Helix.
+
+
 ### Release 1.7.3 (major features/fixes)
 
 [@22632](https://swarm.workshop.perforce.com/changes/22632) - Update P4Java 2017.2.1535715 - Unicode buffer fixes for syncing UFT16 files.  JENKINS-45453 JENKINS-45580
