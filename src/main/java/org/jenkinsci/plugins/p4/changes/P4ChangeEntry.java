@@ -106,7 +106,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			files = p4.getShelvedFiles(changeId);
 			shelved = true;
 		} else {
-			files = p4.getChangeFiles(changeId);
+			files = p4.getChangeFiles(changeId, fileCountLimit + 1);
 			shelved = false;
 		}
 		if (files != null && files.size() > fileCountLimit) {
