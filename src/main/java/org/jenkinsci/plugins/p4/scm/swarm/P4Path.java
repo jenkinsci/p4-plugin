@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.p4.scm.swarm;
 
-import java.io.File;
 import java.io.Serializable;
 
 public class P4Path implements Serializable {
@@ -21,7 +20,7 @@ public class P4Path implements Serializable {
 	}
 
 	public String getPathBuilder(String file) {
-		String filePath = path + File.separator + file;
+		String filePath = path + "/" + file;
 		if (getRevision() == null) {
 			return filePath;
 		} else {
