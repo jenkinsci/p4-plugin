@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.CheckOnlyImpl;
+import org.jenkinsci.plugins.p4.populate.FlushOnlyImpl;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.ParallelSync;
@@ -73,7 +74,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.jenkinsci.plugins.p4.populate.FlushOnlyImpl;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -846,6 +846,13 @@ public class ClientHelper extends ConnectionHelper {
 
 		String localPath = depotToLocal(file.get(0));
 		File target = new File(localPath);
+
+		// Create directories as required JENKINS-37868
+		if(target.getParentFile().mkdirs()) {
+			log("Directory created: " + target);
+		}
+
+		// Make writable if it exists
 		if (target.exists()) {
 			target.setWritable(true);
 		}
@@ -889,6 +896,7 @@ public class ClientHelper extends ConnectionHelper {
 				String msg = spec.getStatusMessage();
 				if (msg.contains("exclusive file already opened")) {
 					String rev = msg.substring(0, msg.indexOf(" - can't "));
+					// JENKINS-37868 use '@= + review' for correct file
 					printFile(rev + "@=" + review);
 				}
 			} else {
