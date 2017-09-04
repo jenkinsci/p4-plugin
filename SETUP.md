@@ -153,7 +153,7 @@ The plugin will then correctly template the workspaces as needed.
 
 Perforce can trigger Jenkins to Build based on an event, such as a submitted change.  A triggered build requires an administrator to add a Perforce trigger (Perforce documents [here](https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.scripting.html)).  
 
-The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential.
+The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential (please note that the field `change` is not currently used, but added for future compatibility).
 
 For example, a simple `change-commit` trigger might use curl:
 
@@ -162,7 +162,7 @@ For example, a simple `change-commit` trigger might use curl:
     curl --header 'Content-Type: application/json' \
          --request POST \
          --data payload="{change:$CHANGE,p4port:\"localhost:1666\"}" \
-         http://localhost:8080/jenkins/p4/change
+         http://localhost:8080/p4/change
 
 and have an entry in `p4 triggers` for changes on `//depot/...`:
 
