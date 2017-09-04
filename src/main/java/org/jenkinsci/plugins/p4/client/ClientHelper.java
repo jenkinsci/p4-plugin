@@ -889,7 +889,7 @@ public class ClientHelper extends ConnectionHelper {
 				String msg = spec.getStatusMessage();
 				if (msg.contains("exclusive file already opened")) {
 					String rev = msg.substring(0, msg.indexOf(" - can't "));
-					printFile(rev);
+					printFile(rev + "@=" + review);
 				}
 			} else {
 				log(spec.getDepotPathString());
