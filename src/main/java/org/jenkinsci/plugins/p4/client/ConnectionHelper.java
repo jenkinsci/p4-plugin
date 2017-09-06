@@ -62,7 +62,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
-import static com.perforce.p4java.server.CmdSpec.DESCRIBE;
 
 public class ConnectionHelper implements AutoCloseable {
 
@@ -550,10 +549,8 @@ public class ConnectionHelper implements AutoCloseable {
 	// Use a describe for files to avoid MAXSCANROW limits.
 	// (backed-out part of change 16390)
 	public List<IFileSpec> getChangeFiles(int id, int limit) throws Exception {
-		List<Map<String, Object>> resultMaps = connection.execMapCmdList(DESCRIBE,
-				new String[]{"-s", "-m" + limit, String.valueOf(id)}, null);
-
-		return ResultMapParser.parseCommandResultMapAsFileSpecs(id, connection, resultMaps);
+		List<IFileSpec> files = connection.getChangelistFiles(id, limit);
+		return files;
 	}
 
 	/**
