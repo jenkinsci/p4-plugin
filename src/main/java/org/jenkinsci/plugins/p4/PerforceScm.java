@@ -540,13 +540,13 @@ public class PerforceScm extends SCM {
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
 
-		TagAction tagAction = build.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(build);
 		buildEnvironment(tagAction, env);
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
 	public void buildEnvironment(Run<?, ?> run, java.util.Map<String, String> env) {
-		TagAction tagAction = run.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(run);
 		buildEnvironment(tagAction, env);
 	}
 

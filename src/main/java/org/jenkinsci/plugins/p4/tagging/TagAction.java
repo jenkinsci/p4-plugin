@@ -242,27 +242,26 @@ public class TagAction extends AbstractScmTagAction {
 	 * @return Perforce change
 	 */
 	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<P4Ref> list = new ArrayList<>();
+		List<P4Ref> changes = new ArrayList<>();
 
 		List<TagAction> actions = lastActions(run);
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");
-			return list;
+			return changes;
 		}
 
 		// look for action matching view
 		// (clone ID now filtered from the syncID to addresses JENKINS-43877)
 		for (TagAction action : actions) {
 			if (syncID.equals(action.getSyncID())) {
-				List<P4Ref> changes = action.getRefChanges();
+				changes = action.getRefChanges();
 				for (P4Ref change : changes) {
 					listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
 				}
-				return changes;
 			}
 		}
 
-		return list;
+		return changes;
 	}
 
 	/**
@@ -278,8 +277,11 @@ public class TagAction extends AbstractScmTagAction {
 		}
 
 		// #Review 21165
-		TagAction last = actions.get(actions.size() - 1);
-		return last;
+		TagAction tagAction = run.getAction(TagAction.class);
+		for (TagAction t : run.getActions(TagAction.class)) {
+			tagAction = (t != null) ? t : tagAction;
+		}
+		return tagAction;
 	}
 
 	private static List<TagAction> lastActions(Run<?, ?> run) {
