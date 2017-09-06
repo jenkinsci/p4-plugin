@@ -37,7 +37,7 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 	}
 
 	@Extension
-	@Symbol("cleanup")
+	@Symbol({"cleanup", "p4cleanup"})
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override
