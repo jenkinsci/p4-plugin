@@ -59,7 +59,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2017.2.1535715</version>
+      <version>2017.2.1560453</version>
       <exclusions>
         <exclusion>
           <groupId>com.jcraft</groupId>

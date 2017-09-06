@@ -177,7 +177,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	public void setGraphCommit(ConnectionHelper p4, String repo, String sha) throws Exception {
 
-		ICommit commit = p4.getGraphCommit(sha);
+		ICommit commit = p4.getGraphCommit(sha, repo);
 		id = new P4GraphRef(repo, commit);
 
 		// set author

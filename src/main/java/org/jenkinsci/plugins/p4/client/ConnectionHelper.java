@@ -596,8 +596,8 @@ public class ConnectionHelper implements AutoCloseable {
 		return null;
 	}
 
-	public ICommit getGraphCommit(String sha) throws P4JavaException {
-		return connection.getCommitObject(sha);
+	public ICommit getGraphCommit(String sha, String repo) throws P4JavaException {
+		return connection.getCommitObject(sha, repo);
 	}
 
 	public List<IFileSpec> getCommitFiles(String repo, String sha) throws P4JavaException {
