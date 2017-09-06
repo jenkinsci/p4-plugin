@@ -78,6 +78,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						} catch (NumberFormatException e) {
 							// leave buildChange as is
 						}
+					} else {
+						String warn = "P4: Warning label is static and cannot be used with polling!";
+						logger.warning(warn);
+						p4.log(warn);
 					}
 				}
 				if (p4.isCounter(label)) {
