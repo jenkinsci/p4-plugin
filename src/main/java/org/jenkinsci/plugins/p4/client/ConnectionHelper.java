@@ -275,7 +275,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 			case TICKETPATH:
 				String path = authorisationConfig.getTicketPath();
-				if(path == null || path.isEmpty()) {
+				if (path == null || path.isEmpty()) {
 					path = connection.getTicketsFilePath();
 				}
 				connection.setTicketsFilePath(path);
@@ -548,8 +548,8 @@ public class ConnectionHelper implements AutoCloseable {
 
 	// Use a describe for files to avoid MAXSCANROW limits.
 	// (backed-out part of change 16390)
-	public List<IFileSpec> getChangeFiles(int id) throws Exception {
-		List<IFileSpec> files = connection.getChangelistFiles(id);
+	public List<IFileSpec> getChangeFiles(int id, int limit) throws Exception {
+		List<IFileSpec> files = connection.getChangelistFiles(id, limit);
 		return files;
 	}
 
