@@ -52,7 +52,7 @@ public class P4Hook implements UnprotectedRootAction {
 			JSONObject payload = JSONObject.fromObject(body);
 
 			final String port = payload.getString("p4port");
-			final String change = payload.getString("change");
+			//final String change = payload.getString("change");
 			final List<Job> jobs = getJobs();
 
 			LOGGER.info("Received trigger event for: " + port);
@@ -83,7 +83,7 @@ public class P4Hook implements UnprotectedRootAction {
 		JSONObject formData = req.getSubmittedForm();
 		if (!formData.isEmpty()) {
 			String port = req.getParameter("_.p4port");
-			String change = req.getParameter("_.change");
+			//String change = req.getParameter("_.change");
 			List<Job> jobs = getJobs();
 
 			LOGGER.info("Manual trigger event: ");

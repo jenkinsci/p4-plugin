@@ -6,7 +6,7 @@ Jenkins plugin for a Perforce Helix Versioning Engine (P4D).
 * [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
 * [Setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md)
 * [Notes page](https://github.com/jenkinsci/p4-plugin/blob/master/NOTES.md)
-* [Jenkins page](https://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin)
+* [Jenkins page](https://plugins.jenkins.io/p4)
 
 ## Requirements
 
@@ -36,7 +36,7 @@ To build the plugin and run the tests use the following:
   
 Note: for the tests to run you must have p4d in your PATH, to skip tests use the -DskipTests flag.
 
-Lastest SNAPSHOT builds available [here](https://jenkins.ci.cloudbees.com/job/plugins/job/p4-plugin/lastBuild/org.jenkins-ci.plugins$p4/).
+Lastest SNAPSHOT builds available [here](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fp4-plugin/branches).
 
 ## Manual install
 
