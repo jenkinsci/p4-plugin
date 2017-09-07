@@ -1,5 +1,30 @@
 ## Release notes
 
+### Release 1.7.5 (major features/fixes)
+
+[@22822](https://swarm.workshop.perforce.com/changes/22822) - Pipeline trigger fixes for Graph.  Fetch JobList outside ExecutorService.
+
+[@22821](https://swarm.workshop.perforce.com/changes/22821) - Merge pull request #53 from jenkinsci/TagAction-order.  Get Last TagAction. JENKINS-37618 JENKINS-45613
+
+[@22818](https://swarm.workshop.perforce.com/changes/22818) - Remove duplicate cleanup and add alias for old name.
+
+[@22817](https://swarm.workshop.perforce.com/changes/22817) - Raise warning if a static label is used during checkout.  JENKINS-44852
+
+[@22816](https://swarm.workshop.perforce.com/changes/22816) - Merge pull request #51 from jenkinsci/limit-describe.  Limit output from describe. JENKINS-46671
+
+[@22815](https://swarm.workshop.perforce.com/changes/22815) - Provide repo with connection.getCommitObject().  The `p4 graph cat-file commit` requires `super` level access if the repo name is not provided.  JENKINS-46595
+
+[@22808](https://swarm.workshop.perforce.com/changes/22808) - Create directories as required when printing locked file.  JENKINS-37868
+
+[@22807](https://swarm.workshop.perforce.com/changes/22807) - Merge pull request #52 from jfperusse-bhvr/fix-unshelve-exclusive .  Fix unshelving of exclusively checked out files.  JENKINS-46599
+
+[@22806](https://swarm.workshop.perforce.com/changes/22806) - Remove debug `jenkins/` endpoint from sample trigger.
+
+[@22796](https://swarm.workshop.perforce.com/changes/22796) - Update plugin POM 2.33
+
+[@22758](https://swarm.workshop.perforce.com/changes/22758) - Use '/' in getPathBuilder.  Depot syntax will always be '/' only local syntax requires File.separator. JENKINS-46414
+
+
 ### Release 1.7.4 (major features/fixes)
 
 [@22702](https://swarm.workshop.perforce.com/changes/22702) - Fix polling if Jenkinsfile and project workspace names are similar.  Removes an old patch for JENKINS-43877 as concurrent build IDs are now filtered out of the syncID.
