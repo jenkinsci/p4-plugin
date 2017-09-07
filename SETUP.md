@@ -155,34 +155,52 @@ Perforce can trigger Jenkins to Build based on an event, such as a submitted cha
 
 The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential (please note that the field `change` is not currently used, but added for future compatibility).
 
-For example, a simple `change-commit` trigger might use curl:
+For example, a simple `change-commit` or `graph-push-complete` trigger might use curl:
 
     #!/bin/bash
     CHANGE=$1
+    
+    P4PORT=perforce:1666
+    JUSER=admin
+    JPASS=pass
+    JSERVER=http://localhost:8080
+    
     curl --header 'Content-Type: application/json' \
          --request POST \
-         --data payload="{change:$CHANGE,p4port:\"localhost:1666\"}" \
-         http://localhost:8080/p4/change
+         --silent \
+         --user $JUSER:$JPASS \
+         --data payload="{change:$CHANGE,p4port:\"$P4PORT\"}" \
+         $JSERVER/p4/change
 
 and have an entry in `p4 triggers` for changes on `//depot/...`:
 
-	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
+	jenkins    change-commit        //depot/...   "/p4/common/bin/triggers/jdepot.sh %change%"
+
+or for Graph content:
+
+    helix4git  graph-push-complete  //repos/...   "/p4/common/bin/triggers/jgraph.sh %depotName% %repoName% %pusher%"
 
 
 Note: If your Jenkins server needs authentication you will also need to provide a security 'CRUMB'. The following is an example of how you can get this and use to trigger a job:
 
     #!/bin/bash
     CHANGE=$1
-    USER=triggeruser
-    PASSWORD=Password
-    P4PORT=localhost:1666
-    SERVER=http://localhost:8080
+    
+    P4PORT=perforce:1666
+    JUSER=admin
+    JPASS=pass
+    JSERVER=http://localhost:8080
 
     # Get CRUMB
-    CRUMB=$(curl -s --user $USER:$PASSWORD $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+    CRUMB=$(curl --silent --user $JUSER:$JPASS $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
 
     # Trigger builds across all triggered jobs (where relevant)
-    curl -s --user $USER:$PASSWORD -H "$CRUMB" --request POST --data "payload={change:$CHANGE,p4port:\"$P4PORT\"}" $SERVER/p4/change
+    curl --header "$CRUMB" \
+         --request POST \
+         --silent \
+         --user $JUSER:$JPASS \
+         --data payload="{change:$CHANGE,p4port:\"$P4PORT\"}" \
+         $JSERVER/p4/change
 
 On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
 
