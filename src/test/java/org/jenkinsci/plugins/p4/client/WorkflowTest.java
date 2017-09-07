@@ -196,4 +196,32 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4_USER=jenkins", run);
 		jenkins.assertLogNotContains("HUDSON_CHANGELOG_FILE=null", run);
 	}
+
+	@Test
+	public void testCleanupClient() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "cleanup");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node () {\n" +
+				"    p4sync charset: 'none', \n" +
+				"      credential: '" + auth.getId() + "', \n" +
+				"      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-1', \n" +
+				"      populate: forceClean(quiet: true), \n" +
+				"      source: streamSource('//stream/main')\n" +
+				"\n" +
+				"    p4cleanup(true)\n" +
+				"\n" +
+				"    p4sync charset: 'none', \n" +
+				"      credential: '" + auth.getId() + "', \n" +
+				"      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-2', \n" +
+				"      populate: forceClean(quiet: true), \n" +
+				"      source: streamSource('//stream/main')\n" +
+				"\n" +
+				"    p4cleanup(true)\n" +
+				"}", false));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("P4 Task: cleanup client: jenkins-master-cleanup-1", run);
+		jenkins.assertLogContains("P4 Task: cleanup client: jenkins-master-cleanup-2", run);
+	}
 }

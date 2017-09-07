@@ -30,7 +30,7 @@ public class UnshelveBuilderStep extends UnshelveBuilder implements SimpleBuildS
 	public void perform(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
 
-		TagAction tagAction = run.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(run);
 		credential = (credential == null) ? tagAction.getCredential() : credential;
 		workspace = (workspace == null) ? tagAction.getWorkspace() : workspace;
 

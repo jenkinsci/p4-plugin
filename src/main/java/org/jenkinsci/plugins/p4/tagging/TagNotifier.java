@@ -67,7 +67,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	private TagAction getTagAction(EnvVars env, AbstractBuild<?, ?> build) {
-		TagAction tagAction = (TagAction) build.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(build);
 
 		// process promoted builds?
 		if (tagAction == null) {
@@ -103,7 +103,7 @@ public class TagNotifier extends Notifier {
 				return tagAction;
 			}
 
-			tagAction = (TagAction) build.getAction(TagAction.class);
+			tagAction = build.getAction(TagAction.class);
 			if (tagAction == null) {
 				logger.warning("No tag information; is it a valid Perforce job?");
 				return tagAction;

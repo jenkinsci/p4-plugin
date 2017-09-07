@@ -50,14 +50,13 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 		public String getDisplayName() {
 			return "Perforce: Cleanup";
 		}
-
 	}
 
 	@Override
 	public void perform(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
 
-		TagAction tagAction = (TagAction) run.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(run);
 
 		String credential = tagAction.getCredential();
 		Workspace workspace = tagAction.getWorkspace();
@@ -73,5 +72,4 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 		buildWorkspace.act(task);
 	}
-
 }
