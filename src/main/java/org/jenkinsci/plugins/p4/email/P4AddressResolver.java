@@ -20,7 +20,7 @@ public class P4AddressResolver extends MailAddressResolver {
 		if (prop != null) {
 			String id = user.getId();
 			String email = prop.getEmail();
-			logger.info("MailAddressResolver: " + id + ":" + email);
+			logger.fine("MailAddressResolver: " + id + ":" + email);
 			return email;
 		}
 		return null;
