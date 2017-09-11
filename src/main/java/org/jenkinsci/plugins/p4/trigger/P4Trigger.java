@@ -36,7 +36,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	}
 
 	@Extension
-	@Symbol("P4Trigger")
+	@Symbol("p4Trigger")
 	public static class DescriptorImpl extends TriggerDescriptor {
 
 		@Override
