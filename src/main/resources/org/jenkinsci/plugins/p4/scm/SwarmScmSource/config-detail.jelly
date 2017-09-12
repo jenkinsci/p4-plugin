@@ -9,10 +9,6 @@
         <c:select/>
     </f:entry>
 
-    <f:entry title="${%Swarm URL}" field="url">
-      <f:textbox/>
-    </f:entry>
-
     <f:entry title="${%Swarm Project}" field="project">
       <f:textbox/>
     </f:entry>

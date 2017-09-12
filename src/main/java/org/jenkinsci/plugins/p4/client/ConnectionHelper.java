@@ -776,6 +776,9 @@ public class ConnectionHelper implements AutoCloseable {
 		if (credentialsId == null) {
 			return null;
 		}
+		if (item == null) {
+			return findCredential(credentialsId);
+		}
 		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
 				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
 						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),

@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import com.google.gson.Gson;
+import com.perforce.p4java.exception.P4JavaException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
@@ -15,6 +16,7 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.scm.swarm.SwarmProjectAPI;
@@ -39,10 +41,12 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	private final String project;
 
 	@DataBoundConstructor
-	public SwarmScmSource(String id, String credential, String url, String project, String charset, String format) throws MalformedURLException {
+	public SwarmScmSource(String id, String credential, String project, String charset, String format) throws MalformedURLException, P4JavaException {
 		super(id, credential, charset, format);
-		this.url = url;
 		this.project = project;
+
+		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, null);
+		this.url = p4.getSwarm();
 	}
 
 	public String getUrl() {
@@ -100,7 +104,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		if(head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead changeRequest = (P4ChangeRequestSCMHead) head;
 			String review = changeRequest.getReview();
-			long change = getLastChangeInReview(review, project, listener);
+			long change = getLastChangeInReview(review, listener);
 
 			P4Revision revision = new P4Revision(head, change);
 			return revision;
@@ -143,7 +147,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return api.getReviews();
 	}
 
-	private SwarmReviewAPI getSwarmReview(String review, String project, TaskListener listener) throws Exception {
+	private SwarmReviewAPI getSwarmReview(String review, TaskListener listener) throws Exception {
 		// https://swarm.perforce.com/api/v6/reviews/1520872?fields=projects,changes,commits
 		String fields = "projects,changes,commits";
 
@@ -161,7 +165,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	private List<String> getBranchesInReview(String review, String project, TaskListener listener) throws Exception {
-		SwarmReviewAPI api = getSwarmReview(review, project, listener);
+		SwarmReviewAPI api = getSwarmReview(review, listener);
 
 		HashMap<String, List<String>> projects = api.getReview().getProjects();
 		List<String> branches = projects.get(project);
@@ -169,8 +173,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return branches;
 	}
 
-	private long getLastChangeInReview(String review, String project, TaskListener listener) throws Exception {
-		SwarmReviewAPI api = getSwarmReview(review, project, listener);
+	private long getLastChangeInReview(String review, TaskListener listener) throws Exception {
+		SwarmReviewAPI api = getSwarmReview(review, listener);
 
 		List<Long> changes = api.getReview().getChanges();
 
