@@ -46,6 +46,11 @@ public class P4UnshelveStep extends Step {
 	}
 
 	@Deprecated
+	public P4UnshelveStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
+		this(null, null, shelf, resolve, false, false, false);
+	}
+	
+	@Deprecated
 	public P4UnshelveStep(String shelf, String resolve) {
 		this(null, null, shelf, resolve, false, false);
 	}
