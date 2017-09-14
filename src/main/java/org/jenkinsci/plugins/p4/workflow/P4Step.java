@@ -8,7 +8,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -133,7 +133,7 @@ public class P4Step extends SCMStep {
 
 	@Override
 	protected SCM createSCM() {
-		P4WebBrowser browser = null;
+		P4Browser browser = PerforceScm.findBrowser(credential);
 
 		if (workspace == null) {
 			workspace = getSource().getWorkspace(charset, format);
@@ -141,7 +141,7 @@ public class P4Step extends SCMStep {
 
 		// use basic populate options if no class provided
 		if (populate == null) {
-			populate = new AutoCleanImpl(true, true, false, false, null, null);
+			populate = new AutoCleanImpl();
 		}
 
 		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);

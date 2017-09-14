@@ -233,14 +233,7 @@ public class PerforceScm extends SCM {
 		return key.toString();
 	}
 
-	@Override
-	public RepositoryBrowser<?> guessBrowser() {
-		String scmCredential = getCredential();
-		if (scmCredential == null) {
-			logger.fine("No credential for perforce");
-			return null;
-		}
-
+	public static P4Browser findBrowser(String scmCredential) {
 		// Retrieve item from request
 		StaplerRequest req = Stapler.getCurrentRequest();
 		Job job = req == null ? null : req.findAncestorObject(Job.class);
