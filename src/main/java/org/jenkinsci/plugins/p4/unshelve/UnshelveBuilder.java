@@ -39,6 +39,11 @@ public class UnshelveBuilder extends Builder {
 		this.tidy = tidy;
 		this.ignoreEmpty = ignoreEmpty;
 	}
+	
+	@Deprecated
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
+   		this(shelf, resolve, tidy, false);
+	}
 
 	@Deprecated
 	public UnshelveBuilder(String shelf, String resolve) {
