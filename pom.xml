@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.7.7-SNAPSHOT-FGOL</version>
+  <version>1.7.6-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
@@ -33,11 +33,6 @@
       <name>Paul Allen</name>
       <email>pallen@perforce.com</email>
     </developer>
-    <developer>
-	  <id>mihailogazda</id>
-	  <name>Bojan Cup </name>
-	  <email>bojan.cup@ubisoft.com</email>
-	</developer>
   </developers>
 
   <repositories>
