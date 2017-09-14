@@ -33,19 +33,21 @@ public class P4UnshelveStep extends Step {
 	private final String shelf;
 	private final String resolve;
 	private final boolean tidy;
+	private final boolean ignoreEmpty;
 
 	@DataBoundConstructor
-	public P4UnshelveStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
+	public P4UnshelveStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy, boolean ignoreEmpty) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.shelf = shelf;
 		this.resolve = resolve;
 		this.tidy = tidy;
+		this.ignoreEmpty = ignoreEmpty;
 	}
 
 	@Deprecated
 	public P4UnshelveStep(String shelf, String resolve) {
-		this(null, null, shelf, resolve, false);
+		this(null, null, shelf, resolve, false, false);
 	}
 
 	@Override
@@ -71,6 +73,10 @@ public class P4UnshelveStep extends Step {
 
 	public boolean isTidy() {
 		return tidy;
+	}
+	
+	public boolean isIgnoreEmpty(){
+		return ignoreEmpty;
 	}
 
 	@Extension(optional = true)
@@ -118,7 +124,7 @@ public class P4UnshelveStep extends Step {
 
 		@Override
 		protected Void run() throws Exception {
-			UnshelveBuilderStep unshelve = new UnshelveBuilderStep(step.getCredential(), step.getWorkspace(), step.getShelf(), step.getResolve(), step.isTidy());
+			UnshelveBuilderStep unshelve = new UnshelveBuilderStep(step.getCredential(), step.getWorkspace(), step.getShelf(), step.getResolve(), step.isTidy(), step.isIgnoreEmpty());
 			unshelve.perform(getContext().get(Run.class), getContext().get(FilePath.class), getContext().get(Launcher.class), getContext().get(TaskListener.class));
 			return null;
 		}

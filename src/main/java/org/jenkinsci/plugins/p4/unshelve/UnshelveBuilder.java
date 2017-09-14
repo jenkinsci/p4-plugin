@@ -28,19 +28,21 @@ public class UnshelveBuilder extends Builder {
 	private final String shelf;
 	private final String resolve;
 	private final boolean tidy;
+	private final boolean ignoreEmpty;
 
 	private static Logger logger = Logger.getLogger(UnshelveBuilder.class.getName());
 
 	@DataBoundConstructor
-	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy, boolean ignoreEmpty) {
 		this.shelf = shelf;
 		this.resolve = resolve;
 		this.tidy = tidy;
+		this.ignoreEmpty = ignoreEmpty;
 	}
 
 	@Deprecated
 	public UnshelveBuilder(String shelf, String resolve) {
-		this(shelf, resolve, false);
+		this(shelf, resolve, false, false);
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -57,6 +59,10 @@ public class UnshelveBuilder extends Builder {
 
 	public boolean isTidy() {
 		return tidy;
+	}
+	
+	public boolean isIgnoreEmpty(){
+		return ignoreEmpty;
 	}
 
 	@Override
@@ -99,8 +105,8 @@ public class UnshelveBuilder extends Builder {
 		// Expand shelf ${VAR} as needed and set as LABEL
 		String id = ws.getExpand().format(shelf, false);
 		
-		//	GOD BLESS FGOL AND HACKY CODE!
-		if (id == null || id.isEmpty())
+		//	If settings are set to do nothing if changelist is empty just return true.
+		if (ignoreEmpty && (id == null || id.isEmpty()))
 		{
 			logger.warning("Shelf list ID is empty or null, we will be skipping this task.");
 			return true;
