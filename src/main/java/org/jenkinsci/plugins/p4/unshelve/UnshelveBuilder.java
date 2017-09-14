@@ -98,6 +98,14 @@ public class UnshelveBuilder extends Builder {
 
 		// Expand shelf ${VAR} as needed and set as LABEL
 		String id = ws.getExpand().format(shelf, false);
+		
+		//	GOD BLESS FGOL AND HACKY CODE!
+		if (id == null || id.isEmpty())
+		{
+			logger.warning("Shelf list ID is empty or null, we will be skipping this task.");
+			return true;
+		}
+		
 		int change = Integer.parseInt(id);
 		task.setShelf(change);
 		task.setWorkspace(ws);

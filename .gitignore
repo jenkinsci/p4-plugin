@@ -33,3 +33,5 @@ vagrant/
 .p4ignore
 
 docs/ppt/
+
+tmp-JenkinsfileTest-p4root/
