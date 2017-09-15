@@ -968,13 +968,13 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return Perforce Changelist
 	 * @throws Exception push up stack
 	 */
-	public Changelist getChange(int id) throws Exception {
+	public Changelist getChange(long id) throws Exception {
 		try {
-			return (Changelist) connection.getChangelist(id);
+			return (Changelist) connection.getChangelist((int)id);
 		} catch (RequestException e) {
 			ChangelistOptions opts = new ChangelistOptions();
 			opts.setOriginalChangelist(true);
-			return (Changelist) connection.getChangelist(id, opts);
+			return (Changelist) connection.getChangelist((int)id, opts);
 		}
 	}
 

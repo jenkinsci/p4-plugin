@@ -60,8 +60,8 @@ public class P4GraphRef implements P4Ref {
 	}
 
 	@Override
-	public int getChange() {
-		return -1;
+	public long getChange() {
+		return -1L;
 	}
 
 	public long getDate() {

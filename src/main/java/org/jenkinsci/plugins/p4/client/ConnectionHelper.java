@@ -394,7 +394,7 @@ public class ConnectionHelper implements AutoCloseable {
 		return streams;
 	}
 
-	public IChangelistSummary getChangeSummary(int id) throws P4JavaException {
+	public IChangelistSummary getChangeSummary(long id) throws P4JavaException {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@" + id);
 		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
 		cngOpts.setLongDesc(true);

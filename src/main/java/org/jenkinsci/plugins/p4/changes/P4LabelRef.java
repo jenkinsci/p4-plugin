@@ -30,8 +30,8 @@ public class P4LabelRef implements P4Ref {
 	}
 
 	@Override
-	public int getChange() {
-		return -1;
+	public long getChange() {
+		return -1L;
 	}
 
 	@Override
