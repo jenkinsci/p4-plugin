@@ -15,15 +15,20 @@ public class UnshelveBuilderStep extends UnshelveBuilder implements SimpleBuildS
 	private String credential;
 	private Workspace workspace;
 
-	public UnshelveBuilderStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
-		super(shelf, resolve, tidy);
+	public UnshelveBuilderStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy, boolean ignoreEmpty) {
+		super(shelf, resolve, tidy, ignoreEmpty);
 		this.credential = credential;
 		this.workspace = workspace;
+	}
+	
+	@Deprecated
+	public UnshelveBuilderStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
+		this(null, null, shelf, resolve, tidy, false);
 	}
 
 	@Deprecated
 	public UnshelveBuilderStep(String shelf, String resolve) {
-		super(shelf, resolve, false);
+		super(shelf, resolve, false, false);
 	}
 
 	@Override
