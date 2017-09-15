@@ -24,8 +24,10 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 	@DataBoundConstructor
 	public StreamsScmSource(String id, String credential, String includes, String charset, String format) {
-		super(id, credential, charset, format);
+		super(id, credential);
 		setIncludes(includes);
+		setCharset(charset);
+		setFormat(format);
 	}
 
 	@DataBoundSetter

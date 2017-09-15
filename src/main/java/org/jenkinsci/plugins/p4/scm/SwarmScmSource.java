@@ -43,8 +43,11 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@DataBoundConstructor
 	public SwarmScmSource(String id, String credential, String project, String charset, String format) throws MalformedURLException, P4JavaException {
-		super(id, credential, charset, format);
+		super(id, credential);
+		
 		this.project = project;
+		setCharset(charset);
+		setFormat(format);
 
 		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, null);
 		this.url = p4.getSwarm();
