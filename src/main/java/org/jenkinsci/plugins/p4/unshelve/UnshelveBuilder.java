@@ -46,6 +46,11 @@ public class UnshelveBuilder extends Builder {
 	}
 
 	@Deprecated
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
+   		this(shelf, resolve, tidy, false);
+	}
+	
+	@Deprecated
 	public UnshelveBuilder(String shelf, String resolve) {
 		this(shelf, resolve, false, false);
 	}

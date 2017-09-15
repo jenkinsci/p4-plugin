@@ -20,6 +20,11 @@ public class UnshelveBuilderStep extends UnshelveBuilder implements SimpleBuildS
 		this.credential = credential;
 		this.workspace = workspace;
 	}
+	
+	@Deprecated
+	public UnshelveBuilderStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
+		this(null, null, shelf, resolve, tidy, false);
+	}
 
 	@Deprecated
 	public UnshelveBuilderStep(String shelf, String resolve) {
