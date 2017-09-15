@@ -39,17 +39,12 @@ public class UnshelveBuilder extends Builder {
 		this.tidy = tidy;
 		this.ignoreEmpty = ignoreEmpty;
 	}
-	
-	@Deprecated
-	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
-   		this(shelf, resolve, tidy, false);
-	}
 
 	@Deprecated
 	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
-   		this(shelf, resolve, tidy, false);
+		this(shelf, resolve, tidy, false);
 	}
-	
+
 	@Deprecated
 	public UnshelveBuilder(String shelf, String resolve) {
 		this(shelf, resolve, false, false);
@@ -70,8 +65,8 @@ public class UnshelveBuilder extends Builder {
 	public boolean isTidy() {
 		return tidy;
 	}
-	
-	public boolean isIgnoreEmpty(){
+
+	public boolean isIgnoreEmpty() {
 		return ignoreEmpty;
 	}
 
@@ -114,14 +109,13 @@ public class UnshelveBuilder extends Builder {
 
 		// Expand shelf ${VAR} as needed and set as LABEL
 		String id = ws.getExpand().format(shelf, false);
-		
+
 		//	If settings are set to do nothing if changelist is empty just return true.
-		if (ignoreEmpty && (id == null || id.isEmpty()))
-		{
+		if (ignoreEmpty && (id == null || id.isEmpty())) {
 			logger.warning("Shelf list ID is empty or null, we will be skipping this task.");
 			return true;
 		}
-		
+
 		int change = Integer.parseInt(id);
 		task.setShelf(change);
 		task.setWorkspace(ws);

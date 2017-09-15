@@ -22,5 +22,9 @@
 	<f:entry field="tidy">
 		<f:checkbox title="${%Clean up Review actions}" default="false"/>
 	</f:entry>
+
+	<f:entry field="ignoreEmpty">
+		<f:checkbox title="Ignore this step if ChangeList value not set." default="false"/>
+	</f:entry>
 	
 </j:jelly>
