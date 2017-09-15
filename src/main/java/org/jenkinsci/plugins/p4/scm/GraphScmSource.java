@@ -13,7 +13,6 @@ import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
-import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -142,16 +141,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	@Override
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, getCharset())) {
-			long change = -1;
-
-			// TODO getGraphHead to process branch on P4Path
 			P4Ref ref = p4.getGraphHead(head.getPaths().get(0).getPath());
-			if (ref instanceof P4GraphRef) {
-				P4GraphRef graphHead = (P4GraphRef) ref;
-				change = graphHead.getDate();
-			}
-
-			P4Revision revision = new P4Revision(head, change);
+			P4Revision revision = new P4Revision(head, ref);
 			return revision;
 		}
 	}

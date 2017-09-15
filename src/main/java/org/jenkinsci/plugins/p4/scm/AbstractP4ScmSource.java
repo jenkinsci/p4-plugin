@@ -11,6 +11,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
@@ -170,7 +171,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 				long c = p4.getHead(path.getPath() + "/...");
 				change = (c > change) ? c : change;
 			}
-			P4Revision revision = new P4Revision(head, change);
+			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
 			return revision;
 		}
 	}

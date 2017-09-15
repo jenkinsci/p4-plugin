@@ -1,13 +1,20 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMRevision;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+
+import java.util.Objects;
 
 public class P4Revision extends SCMRevision {
-	private final long change;
+	private final P4Ref ref;
 
-	P4Revision(P4Head branch, long change) {
+	P4Revision(P4Head branch, P4Ref ref) {
 		super(branch);
-		this.change = change;
+		this.ref = ref;
+	}
+
+	public P4Ref getRef() {
+		return ref;
 	}
 
 	/**
@@ -22,7 +29,7 @@ public class P4Revision extends SCMRevision {
 			return false;
 		}
 		P4Revision that = (P4Revision) o;
-		boolean c = change == that.change;
+		boolean c = ref == that.ref;
 		boolean h = getHead().equals(that.getHead());
 		return c && h;
 	}
@@ -32,11 +39,11 @@ public class P4Revision extends SCMRevision {
 	 */
 	@Override
 	public int hashCode() {
-		return (int) (change ^ (change >>> 32));
+		return Objects.hashCode(ref);
 	}
 
 	@Override
 	public String toString() {
-		return Long.toString(change);
+		return ref.toString();
 	}
 }

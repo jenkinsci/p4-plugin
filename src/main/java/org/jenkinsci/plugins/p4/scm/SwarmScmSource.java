@@ -15,6 +15,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
@@ -106,7 +107,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			String review = changeRequest.getReview();
 			long change = getLastChangeInReview(review, listener);
 
-			P4Revision revision = new P4Revision(head, change);
+			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
 			return revision;
 		}
 		return super.getRevision(head, listener);
