@@ -1,20 +1,27 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class WorkflowTest extends DefaultEnvironment {
 
@@ -223,5 +230,44 @@ public class WorkflowTest extends DefaultEnvironment {
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertLogContains("P4 Task: cleanup client: jenkins-master-cleanup-1", run);
 		jenkins.assertLogContains("P4 Task: cleanup client: jenkins-master-cleanup-2", run);
+	}
+
+	@Test
+	public void testGlobalLib() throws Exception {
+
+		// submit test library
+		String content = ""
+				+ "def call(String name = 'human') {\n" +
+				"    echo \"Hello again, ${name}.\"\n" +
+				"}";
+		submitFile(jenkins, "//depot/library/vars/sayHello.groovy", content);
+
+		// configure Global Library
+		String path = "//depot/library";
+		GlobalLibraryScmSource scm = new GlobalLibraryScmSource("p4", auth.getId(), null, path);
+		SCMSourceRetriever source = new SCMSourceRetriever(scm);
+		LibraryConfiguration config = new LibraryConfiguration("testLib", source);
+		config.setImplicit(true);
+		config.setDefaultVersion("now");
+
+		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
+		assertNotNull(globalLib);
+		globalLib.setLibraries(Arrays.asList(config));
+
+		// create job using library
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "useLib");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n" +
+				"    p4sync charset: 'none', \n" +
+				"      credential: '" + auth.getId() + "', \n" +
+				"      populate: autoClean(quiet: true), \n" +
+				"      source: streamSource('//stream/main')\n" +
+				"    sayHello 'Jenkins'\n" +
+				"}", false));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, run.getResult());
+		jenkins.assertLogContains("Hello again, Jenkins.", run);
 	}
 }

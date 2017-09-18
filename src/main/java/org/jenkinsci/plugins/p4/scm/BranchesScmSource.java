@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 public class BranchesScmSource extends AbstractP4ScmSource {
@@ -24,8 +23,10 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@DataBoundConstructor
 	public BranchesScmSource(String id, String credential, String includes, String charset, String format) {
-		super(id, credential, charset, format);
+		super(id, credential);
 		setIncludes(includes);
+		setCharset(charset);
+		setFormat(format);
 	}
 
 	@DataBoundSetter
@@ -47,7 +48,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
 
 		List<String> paths = getIncludePaths();
-		HashSet<P4Head> list = new HashSet<P4Head>();
+		List<P4Head> list = new ArrayList<>();
 
 		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
 
@@ -73,10 +74,8 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		}
 		p4.disconnect();
 
-		return new ArrayList<>(list);
+		return list;
 	}
-
-
 
 	@Extension
 	@Symbol("multiBranch")
@@ -84,7 +83,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Helix Branches";
+			return "Helix Source";
 		}
 	}
 }

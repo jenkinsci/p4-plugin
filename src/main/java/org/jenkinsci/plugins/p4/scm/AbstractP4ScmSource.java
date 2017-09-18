@@ -35,15 +35,17 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	protected final String credential;
 
 	private String includes;
-	private final String charset;
-	private final String format;
+	private String charset;
+	private String format;
 	private Populate populate;
 
-	public AbstractP4ScmSource(String id, String credential, String charset, String format) {
+	public AbstractP4ScmSource(String id, String credential) {
 		super(id);
-
 		this.credential = credential;
-		this.charset = charset;
+	}
+
+	@DataBoundSetter
+	public void setFormat(String format) {
 		this.format = format;
 	}
 
@@ -55,6 +57,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	@DataBoundSetter
 	public void setIncludes(String includes) {
 		this.includes = includes;
+	}
+
+	@DataBoundSetter
+	public void setCharset(String charset) {
+		this.charset = charset;
 	}
 
 	public String getCredential() {
@@ -92,10 +99,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			sb.append(view).append("\n");
 		}
 
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false,
-				false, false, null, "LOCAL", sb.toString(), null,
-				null, null, true);
-
+		WorkspaceSpec spec = new WorkspaceSpec(sb.toString(), null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
@@ -105,7 +109,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			P4ChangeRequestSCMHead perforceTag = (P4ChangeRequestSCMHead) head;
 			List<P4Path> paths = perforceTag.getPaths();
 			Workspace workspace = getWorkspace(paths);
-			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
+			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 
 			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);
 			scm.setReview(review);
@@ -115,14 +119,14 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			P4GraphRequestSCMHead graphTag = (P4GraphRequestSCMHead) head;
 			List<P4Path> paths = graphTag.getPaths();
 			Workspace workspace = getWorkspace(paths);
-			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
+			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 			return scm;
 		}
 		if (head instanceof P4Head) {
 			P4Head perforceHead = (P4Head) head;
 			List<P4Path> paths = perforceHead.getPaths();
 			Workspace workspace = getWorkspace(paths);
-			PerforceScm scm = new PerforceScm(credential, workspace, null, populate, getBrowser());
+			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 			return scm;
 		}
 		throw new IllegalArgumentException("SCMHead not a Perforce instance!");
@@ -166,9 +170,14 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
+
+			// TODO look for graph revisions too
+
 			long change = -1;
 			for (P4Path path : head.getPaths()) {
-				long c = p4.getHead(path.getPath() + "/...");
+				String rev = path.getRevision();
+				rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
+				long c = p4.getHead(path.getPath() + rev);
 				change = (c > change) ? c : change;
 			}
 			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));

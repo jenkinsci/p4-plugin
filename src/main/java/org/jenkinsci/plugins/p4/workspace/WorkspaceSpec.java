@@ -81,6 +81,23 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		this.backup = backup;
 	}
 
+	// Default setup for Classic Workspace
+	public WorkspaceSpec(String view, String changeView) {
+		this.allwrite = false;
+		this.clobber = false;
+		this.compress = false;
+		this.locked = false;
+		this.modtime = false;
+		this.rmdir = false;
+		this.streamName = null;
+		this.line = "LOCAL";
+		this.view = view;
+		this.changeView = changeView;
+		this.type = null;
+		this.serverID = null;
+		this.backup = true;
+	}
+
 	@Deprecated
 	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
 	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
