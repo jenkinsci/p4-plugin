@@ -170,10 +170,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
-			// TODO Use P4Ref and not long
-			long change = -1;
 
 			// TODO look for graph revisions too
+
+			long change = -1;
 			for (P4Path path : head.getPaths()) {
 				String rev = path.getRevision();
 				rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
