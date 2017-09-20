@@ -16,7 +16,6 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 

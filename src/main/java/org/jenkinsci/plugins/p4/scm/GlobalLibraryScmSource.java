@@ -10,7 +10,6 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;

@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMHead;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 
 import java.util.List;
 

@@ -7,7 +7,6 @@ import hudson.model.TaskListener;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;

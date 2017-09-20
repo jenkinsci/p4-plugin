@@ -5,7 +5,6 @@ import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 
 import java.io.IOException;
 import java.util.logging.Logger;

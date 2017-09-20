@@ -1,4 +1,6 @@
-package org.jenkinsci.plugins.p4.scm.swarm;
+package org.jenkinsci.plugins.p4.swarmAPI;
+
+import org.jenkinsci.plugins.p4.scm.P4Path;
 
 import java.util.ArrayList;
 import java.util.List;

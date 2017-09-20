@@ -15,7 +15,6 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;

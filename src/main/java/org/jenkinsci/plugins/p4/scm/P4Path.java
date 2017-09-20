@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.p4.scm.swarm;
+package org.jenkinsci.plugins.p4.scm;
 
 import java.io.Serializable;
 

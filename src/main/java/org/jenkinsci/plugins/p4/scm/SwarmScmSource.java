@@ -19,10 +19,9 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
-import org.jenkinsci.plugins.p4.scm.swarm.P4Path;
-import org.jenkinsci.plugins.p4.scm.swarm.SwarmProjectAPI;
-import org.jenkinsci.plugins.p4.scm.swarm.SwarmReviewAPI;
-import org.jenkinsci.plugins.p4.scm.swarm.SwarmReviewsAPI;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewsAPI;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.kohsuke.stapler.DataBoundConstructor;
 
