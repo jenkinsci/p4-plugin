@@ -29,7 +29,7 @@ public class P4Revision extends SCMRevision {
 			return false;
 		}
 		P4Revision that = (P4Revision) o;
-		boolean c = ref == that.ref;
+		boolean c = ref.equals(that.ref);
 		boolean h = getHead().equals(that.getHead());
 		return c && h;
 	}
@@ -44,6 +44,9 @@ public class P4Revision extends SCMRevision {
 
 	@Override
 	public String toString() {
+		if (ref == null) {
+			return "undefined";
+		}
 		return ref.toString();
 	}
 }
