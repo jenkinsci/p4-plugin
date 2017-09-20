@@ -43,7 +43,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	@DataBoundConstructor
 	public SwarmScmSource(String id, String credential, String project, String charset, String format) throws MalformedURLException, P4JavaException {
 		super(id, credential);
-		
+
 		this.project = project;
 		setCharset(charset);
 		setFormat(format);
@@ -93,7 +93,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		List<P4Head> list = new ArrayList<>();
 
 		List<SwarmProjectAPI.Branch> branches = getBranchesInProject(project, listener);
-		for(SwarmProjectAPI.Branch branch : branches) {
+		for (SwarmProjectAPI.Branch branch : branches) {
 			List<P4Path> paths = branch.getPaths();
 			P4Head head = new P4Head(branch.getId(), paths);
 			list.add(head);
@@ -104,7 +104,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-		if(head instanceof P4ChangeRequestSCMHead) {
+		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead changeRequest = (P4ChangeRequestSCMHead) head;
 			String review = changeRequest.getReview();
 			long change = getLastChangeInReview(review, listener);
@@ -234,6 +234,11 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		http.setRequestProperty("Authorization", "Basic " + auth);
 		http.connect();
 
+		int code = http.getResponseCode();
+		if (code == 401) {
+			authCache = null;
+		}
+
 		StringBuffer apiString = new StringBuffer();
 
 		String inputLine;
@@ -246,13 +251,19 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return apiString.toString();
 	}
 
+	private String authCache = null;
+
 	private String getBasicAuth(TaskListener listener) {
+		if (authCache != null) {
+			return authCache;
+		}
 		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, getCharset())) {
 			String user = p4.getUser();
 			String ticket = p4.getTicket();
 
 			byte[] message = (user + ":" + ticket).getBytes("UTF-8");
 			String encoded = javax.xml.bind.DatatypeConverter.printBase64Binary(message);
+			authCache = encoded;
 			return encoded;
 		} catch (Exception e) {
 			return null;
