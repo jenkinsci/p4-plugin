@@ -839,11 +839,14 @@ public class ClientHelper extends ConnectionHelper {
     private void deleteFile(String rev) throws Exception {
         List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
         
-        String localPath = depotToLocal(file.get(0));
-        File target = new File(localPath);
+        String local = depotToLocal(file.get(0));
+        File unlink = new File(local);
         
-        if (target.exists()) {
-            target.delete();
+        if (unlink.exists()) {
+            boolean ok = unlink.delete();
+            if (!ok) {
+                log("Not able to delete: " + local);
+            }
         }
     }
 
