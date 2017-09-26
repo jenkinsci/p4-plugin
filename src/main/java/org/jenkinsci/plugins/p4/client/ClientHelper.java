@@ -835,6 +835,17 @@ public class ClientHelper extends ConnectionHelper {
 		String path = lSpec.get(0).getLocalPathString();
 		return path;
 	}
+    
+    private void deleteFile(String rev) throws Exception {
+        List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
+        
+        String localPath = depotToLocal(file.get(0));
+        File target = new File(localPath);
+        
+        if (target.exists()) {
+            target.delete();
+        }
+    }
 
 	private void printFile(String rev) throws Exception {
 		byte[] buf = new byte[1024 * 64];
@@ -896,8 +907,16 @@ public class ClientHelper extends ConnectionHelper {
 				String msg = spec.getStatusMessage();
 				if (msg.contains("exclusive file already opened")) {
 					String rev = msg.substring(0, msg.indexOf(" - can't "));
-					// JENKINS-37868 use '@= + review' for correct file
-					printFile(rev + "@=" + review);
+					if (msg.contains("can't delete")) {
+						// JENKINS-47141 delete workspace file manually when locked
+						log("P4 Task: delete: " + rev);
+						deleteFile(rev);
+					}
+					else {
+						// JENKINS-37868 use '@= + review' for correct file
+						log("P4 Task: print: " + rev);
+						printFile(rev + "@=" + review);                        
+					}
 				}
 			} else {
 				log(spec.getDepotPathString());
