@@ -17,6 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Logger;
 
@@ -269,5 +270,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.SUCCESS, run.getResult());
 		jenkins.assertLogContains("Hello again, Jenkins.", run);
+
+		// Clear Global Libraries for other Jobs
+		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
 	}
 }
