@@ -265,7 +265,8 @@ public class ConnectionHelper implements AutoCloseable {
 		switch (authorisationConfig.getType()) {
 			case PASSWORD:
 				String pass = authorisationConfig.getPassword();
-				connection.login(pass);
+				boolean allHosts = authorisationConfig.isAllhosts();
+				connection.login(pass, allHosts);
 				break;
 
 			case TICKET:
@@ -590,7 +591,11 @@ public class ConnectionHelper implements AutoCloseable {
 		List<IProperty> values = connection.getProperty(propOpts);
 		for (IProperty prop : values) {
 			if (key.equals(prop.getName())) {
-				return prop.getValue();
+				String url = prop.getValue();
+				if (url.endsWith("/")) {
+					url = url.substring(0, url.length() - 1);
+				}
+				return url;
 			}
 		}
 		return null;
