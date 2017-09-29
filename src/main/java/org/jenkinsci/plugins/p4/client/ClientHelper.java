@@ -888,7 +888,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @param review Review number (perhaps long?)
 	 * @throws Exception push up stack
 	 */
-	public void unshelveFiles(int review) throws Exception {
+	public void unshelveFiles(long review) throws Exception {
 		// skip if review is 0 or less
 		if (review < 1) {
 			log("P4 Task: skipping review: " + review);
@@ -900,7 +900,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
-		shelveMsg = iclient.unshelveChangelist(review, null, 0, true, false);
+		shelveMsg = iclient.unshelveChangelist((int)review, null, 0, true, false);
 		validate.check(shelveMsg, false, "also opened by", "No such file(s)",
 				"exclusive file already opened", "no file(s) to unshelve");
 

@@ -20,7 +20,7 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 
 	private final String resolve;
 	private final boolean tidy;
-	private int shelf;
+	private long shelf;
 
 	public UnshelveTask(String resolve, boolean tidy) {
 		this.resolve = resolve;
@@ -32,7 +32,7 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 		this(resolve, false);
 	}
 
-	public void setShelf(int shelf) {
+	public void setShelf(long shelf) {
 		this.shelf = shelf;
 	}
 
