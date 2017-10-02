@@ -14,7 +14,6 @@ import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.Computer;
-import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
@@ -22,7 +21,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.PollingResult;
-import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import hudson.scm.SCMDescriptor;
 import hudson.scm.SCMRevisionState;
@@ -37,6 +35,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.build.P4EnvironmentContributor;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -534,57 +533,19 @@ public class PerforceScm extends SCM {
 		super.buildEnvVars(build, env);
 
 		TagAction tagAction = TagAction.getLastAction(build);
-		buildEnvironment(tagAction, env);
+		P4EnvironmentContributor.buildEnvironment(tagAction, env);
+
+		// JENKINS-37442: Make the log file name available
+		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
-	public void buildEnvironment(Run<?, ?> run, java.util.Map<String, String> env) {
+	public void buildEnvironment(Run<?, ?> run, Map<String, String> env) {
 		TagAction tagAction = TagAction.getLastAction(run);
-		buildEnvironment(tagAction, env);
-	}
+		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 
-	private void buildEnvironment(TagAction tagAction, Map<String, String> env) {
-		if (tagAction != null) {
-			// Set P4_CHANGELIST value
-			String change = tagAction.getRefChange().toString();
-			if (change != null) {
-				env.put("P4_CHANGELIST", change);
-			}
-
-			// Set P4_CLIENT workspace value
-			String client = tagAction.getClient();
-			if (client != null) {
-				env.put("P4_CLIENT", client);
-			}
-
-			// Set P4_PORT connection
-			String port = tagAction.getPort();
-			if (port != null) {
-				env.put("P4_PORT", port);
-			}
-
-			// Set P4_USER connection
-			String user = tagAction.getUser();
-			if (user != null) {
-				env.put("P4_USER", user);
-			}
-
-			// Set P4_TICKET connection
-			Jenkins j = Jenkins.getInstance();
-			if (j != null) {
-				@SuppressWarnings("unchecked")
-				Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
-				DescriptorImpl p4scm = (DescriptorImpl) scm;
-
-				String ticket = tagAction.getTicket();
-				if (ticket != null && !p4scm.isHideTicket()) {
-					env.put("P4_TICKET", ticket);
-				}
-			}
-
-			// JENKINS-37442: Make the log file name available
-			env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
-		}
+		// JENKINS-37442: Make the log file name available
+		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {

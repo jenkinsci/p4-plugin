@@ -10,10 +10,12 @@ import hudson.scm.SCM;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 @Extension()
 public class P4EnvironmentContributor extends EnvironmentContributor {
@@ -22,7 +24,22 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 	public void buildEnvironmentFor(Run run, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
 
 		TagAction tagAction = TagAction.getLastAction(run);
+		buildEnvironment(tagAction, env);
 
+		File changelogFile = getCurrentChangelogFile(run.getRootDir());
+		String changelogFilename = changelogFile.getAbsolutePath();
+		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
+	}
+
+	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {
+		// parts of Jenkins passes EnvVars as Map<String,String>
+		if (map instanceof EnvVars) {
+			EnvVars env = (EnvVars) map;
+			buildEnvironment(tagAction, env);
+		}
+	}
+
+	public static void buildEnvironment(TagAction tagAction, EnvVars env) {
 		if (tagAction == null) {
 			return;
 		}
@@ -51,6 +68,13 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			env.put("P4_USER", user);
 		}
 
+		// Set P4_REVIEW connection
+		if (tagAction.getReview() != null) {
+			P4Review review = tagAction.getReview();
+			env.put("P4_REVIEW", review.getId());
+			env.put("P4_REVIEW_STATUS", review.getStatus().toString());
+		}
+
 		// Set P4_TICKET connection
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
@@ -63,10 +87,6 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 				env.put("P4_TICKET", ticket);
 			}
 		}
-
-		File changelogFile = getCurrentChangelogFile(run.getRootDir());
-		String changelogFilename = changelogFile.getAbsolutePath();
-		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	private File getCurrentChangelogFile(File rootDir) {

@@ -15,6 +15,9 @@ import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -38,6 +41,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<P4Ref> refChanges;
 
 	private P4Revision buildChange;
+	private P4Review review;
 
 	private final String credential;
 	private final String p4port;
@@ -184,6 +188,13 @@ public class TagAction extends AbstractScmTagAction {
 		this.client = workspace.getFullName();
 		this.syncID = workspace.getSyncID();
 		this.charset = workspace.getCharset();
+
+		Expand expand = workspace.getExpand();
+		String id = expand.get(ReviewProp.REVIEW.toString());
+		if (id != null && !id.isEmpty()) {
+			String type = expand.get(ReviewProp.STATUS.toString());
+			review = new P4Review(id, CheckoutStatus.parse(type));
+		}
 	}
 
 	public String getPort() {
@@ -297,5 +308,9 @@ public class TagAction extends AbstractScmTagAction {
 		}
 
 		return actions;
+	}
+
+	public P4Review getReview() {
+		return review;
 	}
 }
