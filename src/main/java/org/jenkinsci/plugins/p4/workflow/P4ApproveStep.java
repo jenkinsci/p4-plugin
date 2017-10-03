@@ -20,6 +20,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
@@ -30,6 +31,8 @@ public class P4ApproveStep extends Step {
 	private final String credential;
 	private final String review;
 	private final String status;
+
+	private String description;
 
 	public String getCredential() {
 		return credential;
@@ -43,11 +46,20 @@ public class P4ApproveStep extends Step {
 		return status;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
 	@DataBoundConstructor
 	public P4ApproveStep(String credential, String review, String status) {
 		this.credential = credential;
 		this.review = review;
 		this.status = status;
+	}
+
+	@DataBoundSetter
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	@Override
@@ -101,6 +113,7 @@ public class P4ApproveStep extends Step {
 		@Override
 		protected Void run() throws Exception {
 			ApproveNotifierStep notifier = new ApproveNotifierStep(step.getCredential(), step.getReview(), step.getStatus());
+			notifier.setDescription(step.getDescription());
 			notifier.perform(getContext().get(Run.class), getContext().get(FilePath.class), getContext().get(Launcher.class), getContext().get(TaskListener.class));
 			return null;
 		}

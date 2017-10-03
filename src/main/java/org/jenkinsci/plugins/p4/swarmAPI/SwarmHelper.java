@@ -55,7 +55,7 @@ public class SwarmHelper {
 		return false;
 	}
 
-	public boolean approveReview(ConnectionHelper p4, EnvVars env, String id, ApproveState state) throws Exception {
+	public boolean approveReview(ConnectionHelper p4, EnvVars env, String id, ApproveState state, String description) throws Exception {
 
 		// Exit early if Swarm API version not supported
 		if(!checkVersion("4")) {
@@ -72,7 +72,6 @@ public class SwarmHelper {
 		// Expand review ID using environment
 		Expand expand = new Expand(env);
 		id = expand.format(id, false);
-
 		if("P4_REVIEW".equalsIgnoreCase(id)) {
 			p4.log("Environment for Review ID not found!");
 			return false;
@@ -82,10 +81,19 @@ public class SwarmHelper {
 
 		Map<String, Object> parameters = new HashedMap();
 		parameters.put("state", state.getId());
+
+		// If commit is used add extra commit parameter
 		if(state.isCommit()) {
 			parameters.put("commit", true);
 		}
 
+		// If defined, expand description and add parameter
+		if(description != null && !description.isEmpty()) {
+			description = expand.format(description, false);
+			parameters.put("description", description);
+		}
+
+		// Send PATCH request to Swarm
 		HttpResponse<JsonNode> res = Unirest.patch(url)
 				.basicAuth(p4.getUser(), p4.getTicket())
 				.fields(parameters)

@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ public class ApproveNotifier extends Notifier {
 	private final String credential;
 	private final String review;
 	private final String status;
+	private String description;
 
 	public String getCredential() {
 		return credential;
@@ -46,11 +48,20 @@ public class ApproveNotifier extends Notifier {
 		return status;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
 	@DataBoundConstructor
 	public ApproveNotifier(String credential, String review, String status) {
 		this.credential = credential;
 		this.review = review;
 		this.status = status;
+	}
+
+	@DataBoundSetter
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -87,7 +98,7 @@ public class ApproveNotifier extends Notifier {
 			return false;
 		}
 
-		return swarm.approveReview(p4, env, getReview(), state);
+		return swarm.approveReview(p4, env, getReview(), state, getDescription());
 	}
 
 	public static DescriptorImpl descriptor() {

@@ -8,11 +8,15 @@
 	</f:entry>
 	
 	<f:entry title="Swarm Review" field="review">
-		<f:textbox/>
+		<f:textbox default='$${P4_REVIEW}'/>
 	</f:entry>
 	
 	<f:entry title="Approve Status" field="status">
 		<f:select/>
 	</f:entry>
+
+	<f:entry title="Description" field="description">
+       	<f:textarea default='Updated by Jenkins. Build: $${BUILD_URL}'/>
+    </f:entry>
 	
 </j:jelly>

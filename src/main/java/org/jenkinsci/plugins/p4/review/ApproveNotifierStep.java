@@ -9,6 +9,7 @@ import hudson.model.TaskListener;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -18,6 +19,11 @@ public class ApproveNotifierStep extends ApproveNotifier implements SimpleBuildS
 	@DataBoundConstructor
 	public ApproveNotifierStep(String credential, String review, String status) {
 		super(credential, review, status);
+	}
+
+	@DataBoundSetter
+	public void setDescription(String description) {
+		super.setDescription(description);
 	}
 
 	@Override
