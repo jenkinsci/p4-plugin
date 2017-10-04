@@ -1,67 +1,70 @@
 package org.jenkinsci.plugins.p4.swarmAPI;
 
+import com.google.gson.Gson;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.perforce.p4java.exception.P4JavaException;
-import hudson.EnvVars;
 import org.apache.commons.collections.map.HashedMap;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.ApproveState;
-import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.json.JSONArray;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SwarmHelper {
 
 	private final ConnectionHelper p4;
-	private final String swarmUrl;
-	private String user;
-	private String ticket;
+	private final String version;
+	private final String base;
+	private final String user;
+	private final String ticket;
 
-	public SwarmHelper(ConnectionHelper p4) throws P4JavaException {
+	public SwarmHelper(ConnectionHelper p4, String version) throws Exception {
 		this.p4 = p4;
-		this.swarmUrl = p4.getSwarm();
+		this.version = version;
+		this.base = p4.getSwarm();
 		this.user = p4.getUser();
 		this.ticket = p4.getTicket();
+
+		if (!checkVersion(version)) {
+			throw new Exception("Swarm does not support API Version: " + version);
+		}
 	}
 
-	public boolean checkVersion(String ver) {
-		try {
-			String url = swarmUrl + "/api/version";
+	public String getBaseUrl() {
+		return base;
+	}
 
-			HttpResponse<JsonNode> res = Unirest.get(url)
-					.basicAuth(user, ticket)
-					.asJson();
+	private String getApiUrl() {
+		return base + "/api/v" + version;
+	}
 
-			if (res.getStatus() != 200) {
-				p4.log("Swarm error - url: " + url + " error: " + res.getStatusText());
-				return false;
-			}
-			JSONArray json = res.getBody().getObject().getJSONArray("apiVersions");
-			for (int i = 0; i < json.length(); i++) {
-				String v = String.valueOf(json.get(i));
-				if(ver.equals(v)) {
-					return true;
-				}
-			}
-		} catch (UnirestException e) {
-			p4.log("Swarm connection error: " + e.getMessage());
-			return false;
+	private boolean checkVersion(String ver) throws Exception {
+
+		String url = base + "/api/version";
+
+		HttpResponse<JsonNode> res = Unirest.get(url)
+				.basicAuth(user, ticket)
+				.asJson();
+
+		if (res.getStatus() != 200) {
+			throw new SwarmException(res);
 		}
-		p4.log("Swarm does not support API Version: " + ver);
+
+		JSONArray json = res.getBody().getObject().getJSONArray("apiVersions");
+		for (int i = 0; i < json.length(); i++) {
+			String v = String.valueOf(json.get(i));
+			if (ver.equals(v)) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
-	public boolean approveReview(ConnectionHelper p4, EnvVars env, String id, ApproveState state, String description) throws Exception {
-
-		// Exit early if Swarm API version not supported
-		if(!checkVersion("4")) {
-			p4.log( "Unable to connect to Swarm.");
-			return false;
-		}
+	public boolean approveReview(String id, ApproveState state, String description) throws Exception {
 
 		// Exit early if review ID is not valid
 		if (id == null || id.isEmpty()) {
@@ -70,44 +73,117 @@ public class SwarmHelper {
 		}
 
 		// Expand review ID using environment
-		Expand expand = new Expand(env);
-		id = expand.format(id, false);
-		if("P4_REVIEW".equalsIgnoreCase(id)) {
+		if ("P4_REVIEW".equalsIgnoreCase(id)) {
 			p4.log("Environment for Review ID not found!");
 			return false;
 		}
 
-		String url = p4.getSwarm() + "/api/v4/reviews/" + id + "/state";
+		String url = getApiUrl() + "/reviews/" + id + "/state";
 
 		Map<String, Object> parameters = new HashedMap();
 		parameters.put("state", state.getId());
 
 		// If commit is used add extra commit parameter
-		if(state.isCommit()) {
+		if (state.isCommit()) {
 			parameters.put("commit", true);
 		}
 
 		// If defined, expand description and add parameter
-		if(description != null && !description.isEmpty()) {
-			description = expand.format(description, false);
+		if (description != null && !description.isEmpty()) {
 			parameters.put("description", description);
 		}
 
 		// Send PATCH request to Swarm
 		HttpResponse<JsonNode> res = Unirest.patch(url)
-				.basicAuth(p4.getUser(), p4.getTicket())
+				.basicAuth(user, ticket)
 				.fields(parameters)
 				.asJson();
 
-		if(res.getStatus() == 200) {
+		if (res.getStatus() != 200) {
 			p4.log("Swarm review id: " + id + " updated: " + state.getDescription());
 			return true;
 		} else {
-			p4.log( "Swarm Error - url: " + url + " code: " + res.getStatus());
+			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
 			String error = res.getBody().getObject().getString("error");
 			p4.log("Swarm error message: " + error);
+			throw new SwarmException(res);
+		}
+	}
+
+	public List<SwarmReviewsAPI.Reviews> getActiveReviews(String project) throws Exception {
+
+		String url = getApiUrl() + "/reviews";
+
+		Map<String, Object> query = new HashMap<>();
+		query.put("max", "10");
+		query.put("fields", "id,state,changes");
+		query.put("project", project);
+
+		HttpResponse<String> res = Unirest.get(url)
+				.basicAuth(user, ticket)
+				.queryString(query)
+				.queryString("state[]", "needsReview")
+				.queryString("state[]", "needsRevision")
+				.asString();
+
+		if (res.getStatus() != 200) {
+			throw new SwarmException(res);
 		}
 
-		return false;
+		Gson gson = new Gson();
+		SwarmReviewsAPI api = gson.fromJson(res.getBody(), SwarmReviewsAPI.class);
+		return api.getReviews();
+	}
+
+	public SwarmReviewAPI getSwarmReview(String review) throws Exception {
+
+		String url = getApiUrl() + "/reviews/" + review;
+
+		Map<String, Object> query = new HashMap<>();
+		query.put("fields", "projects,changes,commits");
+
+		HttpResponse<String> res = Unirest.get(url)
+				.basicAuth(user, ticket)
+				.queryString(query)
+				.asString();
+
+		if (res.getStatus() != 200) {
+			throw new SwarmException(res);
+		}
+
+		Gson gson = new Gson();
+		SwarmReviewAPI api = gson.fromJson(res.getBody(), SwarmReviewAPI.class);
+		return api;
+	}
+
+	public List<SwarmProjectAPI.Branch> getBranchesInProject(String project) throws Exception {
+
+		String url = getApiUrl() + "/projects/" + project;
+
+		Map<String, Object> query = new HashMap<>();
+		query.put("fields", "branches");
+
+		HttpResponse<String> res = Unirest.get(url)
+				.basicAuth(user, ticket)
+				.queryString(query)
+				.asString();
+
+		if (res.getStatus() != 200) {
+			throw new SwarmException(res);
+		}
+
+		Gson gson = new Gson();
+		SwarmProjectAPI api = gson.fromJson(res.getBody(), SwarmProjectAPI.class);
+
+		List<SwarmProjectAPI.Branch> branches = api.getProject().getBranches();
+		return branches;
+	}
+
+	private static class SwarmException extends Exception {
+		static final long serialVersionUID = 1;
+
+		public SwarmException(HttpResponse<?> res) {
+			super("Swarm error - code: " + res.getStatus() + "\n error: " + res.getStatusText());
+		}
 	}
 }
