@@ -99,7 +99,7 @@ public class SwarmHelper {
 				.fields(parameters)
 				.asJson();
 
-		if (res.getStatus() != 200) {
+		if (res.getStatus() == 200) {
 			p4.log("Swarm review id: " + id + " updated: " + state.getDescription());
 			return true;
 		} else {

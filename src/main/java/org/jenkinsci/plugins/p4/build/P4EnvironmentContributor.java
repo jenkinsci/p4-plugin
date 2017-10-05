@@ -72,7 +72,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		if (tagAction.getReview() != null) {
 			P4Review review = tagAction.getReview();
 			env.put("P4_REVIEW", review.getId());
-			env.put("P4_REVIEW_STATUS", review.getStatus().toString());
+			env.put("P4_REVIEW_TYPE", review.getStatus().toString());
 		}
 
 		// Set P4_TICKET connection

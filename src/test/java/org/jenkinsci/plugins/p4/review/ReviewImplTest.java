@@ -75,7 +75,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 				"    stage ('Test env...') {\n" +
 				"        println \"P4_CHANGELIST=${env.P4_CHANGELIST}\"\n" +
 				"        println \"P4_REVIEW=${env.P4_REVIEW}\"\n" +
-				"        println \"P4_REVIEW_STATUS=${env.P4_REVIEW_STATUS}\"\n" +
+				"        println \"P4_REVIEW_TYPE=${env.P4_REVIEW_TYPE}\"\n" +
 				"    }\n" +
 				"}", false));
 		job.save();
@@ -88,6 +88,6 @@ public class ReviewImplTest extends DefaultEnvironment {
 		WorkflowRun run = job.scheduleBuild2(0, actions).get();
 		jenkins.assertLogContains("P4_CHANGELIST=39", run);
 		jenkins.assertLogContains("P4_REVIEW=19", run);
-		jenkins.assertLogContains("P4_REVIEW_STATUS=SHELVED", run);
+		jenkins.assertLogContains("P4_REVIEW_TYPE=SHELVED", run);
 	}
 }
