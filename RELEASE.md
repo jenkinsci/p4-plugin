@@ -1,5 +1,34 @@
 ## Release notes
 
+### Release 1.7.6 (major features/fixes)
+
+[@22952](https://swarm.workshop.perforce.com/changes/22952) - POM commons-lang3:3.5 used at runtime
+
+[@22942](https://swarm.workshop.perforce.com/changes/22942) - POM Update.  Remove dependancy on workflow-aggregator and re-add 'test' dependancies for pipeline/workflow. 
+
+[@22934](https://swarm.workshop.perforce.com/changes/22934) - Approve Step: Added description and default fields.
+
+[@22928](https://swarm.workshop.perforce.com/changes/22928) - Swarm approve step for Pipeline and FreeStyle jobs.
+
+[@22926](https://swarm.workshop.perforce.com/changes/22926) - Expose P4_REVIEW and P4_REVIEW_STATUS.  Extended test coverage and removed duplicate code for building the environment.
+
+[@22915](https://swarm.workshop.perforce.com/changes/22915) - Advanced AllHosts login option (login -a)
+
+[@22893](https://swarm.workshop.perforce.com/changes/22893) - Merge pull request #56 from jfperusse-bhvr/fix-unshelve-delete-exclusive.  Manually delete exclusively locked files for reviews.  JENKINS-47141
+
+[@22866](https://swarm.workshop.perforce.com/changes/22866) - Merge pull request #55 from jenkinsci/hth - Global Pipeline Library support. JENKINS-46121 JENKINS-46550
+
+[@22858](https://swarm.workshop.perforce.com/changes/22858) - Merge pull request #54 from mihailogazda/master.  P4Unshelve build step can now be skipped successfully if the changelist ID is not set.
+
+[@22856](https://swarm.workshop.perforce.com/changes/22856) - Remove guessBrowser() and lookup browser when used. guessBrowser() gets called a lot and each lookup opens a Perforce connection. JENKINS-46810
+
+[@22841](https://swarm.workshop.perforce.com/changes/22841) - Switch to `P4.Swarm.URL` property for Swarm url. JENKINS-45464
+
+[@22840](https://swarm.workshop.perforce.com/changes/22840) - Merge pull request #49 from aosterkamp/master - add support for "P4Trigger" declarative pipeline trigger
+
+[@22830](https://swarm.workshop.perforce.com/changes/22830) - Prevent log spam by changing log level to fine.  pr/49 @rebnridgway
+
+
 ### Release 1.7.5 (major features/fixes)
 
 [@22822](https://swarm.workshop.perforce.com/changes/22822) - Pipeline trigger fixes for Graph.  Fetch JobList outside ExecutorService.
