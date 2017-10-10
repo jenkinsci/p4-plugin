@@ -592,7 +592,7 @@ public class ConnectionHelper implements AutoCloseable {
 		for (IProperty prop : values) {
 			if (key.equals(prop.getName())) {
 				String url = prop.getValue();
-				if (url.endsWith("/")) {
+				if (url != null && url.endsWith("/")) {
 					url = url.substring(0, url.length() - 1);
 				}
 				return url;

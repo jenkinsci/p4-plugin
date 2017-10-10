@@ -70,7 +70,10 @@ public class P4ChangeParser extends ChangeLogParser {
 			this.p4 = new ConnectionHelper(run, credential, null);
 
 			if (browser == null) {
-				this.browser = new SwarmBrowser(p4.getSwarm());
+				String url = p4.getSwarm();
+				if (url != null) {
+					this.browser = new SwarmBrowser(url);
+				}
 			}
 		}
 
