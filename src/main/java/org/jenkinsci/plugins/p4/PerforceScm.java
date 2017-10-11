@@ -248,7 +248,13 @@ public class PerforceScm extends SCM {
 		}
 		try {
 			ConnectionHelper connection = new ConnectionHelper(credentials, null);
-			return new SwarmBrowser(connection.getSwarm());
+			String url = connection.getSwarm();
+			if (url != null) {
+				return new SwarmBrowser(url);                
+			}
+			else {
+				return null;
+			}
 		} catch (P4JavaException e) {
 			logger.info("Unable to access Perforce Property.");
 			return null;
