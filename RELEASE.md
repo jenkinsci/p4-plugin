@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.7.7 (major features/fixes)
+
+[@22971](https://swarm.workshop.perforce.com/changes/22971) - Update p4java 2017.2.1577651.  Server Property sequence fix (used by Swarm URL).
+
+[@22970](https://swarm.workshop.perforce.com/changes/22970) - Merge pull request #57 from jfperusse-bhvr/fix-changelog-errors. Fix changelog issues caused by NullPointerException in getSwarm. JENKINS-47336
+
+
 ### Release 1.7.6 (major features/fixes)
 
 [@22952](https://swarm.workshop.perforce.com/changes/22952) - POM commons-lang3:3.5 used at runtime
