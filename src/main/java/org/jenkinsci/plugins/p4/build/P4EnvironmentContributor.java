@@ -33,13 +33,12 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 
 	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {
 		// parts of Jenkins passes EnvVars as Map<String,String>
-		if (map instanceof EnvVars) {
-			EnvVars env = (EnvVars) map;
-			buildEnvironment(tagAction, env);
-		}
+		EnvVars env = new EnvVars(map);
+		buildEnvironment(tagAction, env);
+		map.putAll(env);
 	}
 
-	public static void buildEnvironment(TagAction tagAction, EnvVars env) {
+	private static void buildEnvironment(TagAction tagAction, EnvVars env) {
 		if (tagAction == null) {
 			return;
 		}
