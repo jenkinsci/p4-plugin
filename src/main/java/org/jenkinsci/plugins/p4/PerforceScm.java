@@ -30,7 +30,6 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
@@ -95,12 +94,6 @@ public class PerforceScm extends SCM {
 
 	public static final int DEFAULT_FILE_LIMIT = 50;
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
-
-	/**
-	 * JENKINS-37442: We need to store the changelog file name for the build so
-	 * that we can expose it to the build environment
-	 */
-	private transient String changelogFilename = null;
 
 	public String getCredential() {
 		return credential;
@@ -250,9 +243,8 @@ public class PerforceScm extends SCM {
 			ConnectionHelper connection = new ConnectionHelper(credentials, null);
 			String url = connection.getSwarm();
 			if (url != null) {
-				return new SwarmBrowser(url);                
-			}
-			else {
+				return new SwarmBrowser(url);
+			} else {
 				return null;
 			}
 		} catch (P4JavaException e) {
@@ -403,6 +395,10 @@ public class PerforceScm extends SCM {
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
 	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
+		if (changelogFile == null) {
+			throw new AbortException("Aborting build: changeLogFile not set.");
+		}
+
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
@@ -434,6 +430,8 @@ public class PerforceScm extends SCM {
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
+		// JENKINS-37442: Make the log file name available
+		tag.setChangelog(changelogFile.getAbsolutePath());
 		run.addAction(tag);
 
 		// Invoke build.
@@ -464,17 +462,11 @@ public class PerforceScm extends SCM {
 		// Only write change log if build succeeded and changeLogFile has been
 		// set.
 		if (success) {
-			if (changelogFile != null) {
-				// Calculate changes prior to build (based on last build)
-				listener.getLogger().println("P4 Task: saving built changes.");
-				List<P4ChangeEntry> changes = calculateChanges(run, task);
-				P4ChangeSet.store(changelogFile, changes);
-				listener.getLogger().println("... done\n");
-				// JENKINS-37442: Make the log file name available
-				changelogFilename = changelogFile.getAbsolutePath();
-			} else {
-				listener.getLogger().println("P4 Task: changeLogFile not set. Not saving built changes.");
-			}
+			// Calculate changes prior to build (based on last build)
+			listener.getLogger().println("P4 Task: saving built changes.");
+			List<P4ChangeEntry> changes = calculateChanges(run, task);
+			P4ChangeSet.store(changelogFile, changes);
+			listener.getLogger().println("... done\n");
 		} else {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
@@ -540,18 +532,12 @@ public class PerforceScm extends SCM {
 
 		TagAction tagAction = TagAction.getLastAction(build);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
-
-		// JENKINS-37442: Make the log file name available
-		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
 	public void buildEnvironment(Run<?, ?> run, Map<String, String> env) {
 		TagAction tagAction = TagAction.getLastAction(run);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
-
-		// JENKINS-37442: Make the log file name available
-		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	private String getChangeNumber(TagAction tagAction, Run<?, ?> run) {

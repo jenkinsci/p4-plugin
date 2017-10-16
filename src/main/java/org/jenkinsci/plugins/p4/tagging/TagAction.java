@@ -42,6 +42,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	private P4Revision buildChange;
 	private P4Review review;
+	private String changelog;
 
 	private final String credential;
 	private final String p4port;
@@ -312,5 +313,13 @@ public class TagAction extends AbstractScmTagAction {
 
 	public P4Review getReview() {
 		return review;
+	}
+
+	public void setChangelog(String changelog) {
+		this.changelog = changelog;
+	}
+
+	public String getChangelog() {
+		return changelog;
 	}
 }

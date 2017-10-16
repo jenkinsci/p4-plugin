@@ -13,7 +13,6 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -22,13 +21,8 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 
 	@Override
 	public void buildEnvironmentFor(Run run, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
-
 		TagAction tagAction = TagAction.getLastAction(run);
 		buildEnvironment(tagAction, env);
-
-		File changelogFile = getCurrentChangelogFile(run.getRootDir());
-		String changelogFilename = changelogFile.getAbsolutePath();
-		env.put("HUDSON_CHANGELOG_FILE", StringUtils.defaultIfBlank(changelogFilename, "Not-set"));
 	}
 
 	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {
@@ -86,19 +80,11 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 				env.put("P4_TICKET", ticket);
 			}
 		}
-	}
 
-	private File getCurrentChangelogFile(File rootDir) {
-		File changelogFile;
-
-		int i = 0;
-		File next = new File(rootDir, "changelog" + i + ".xml");
-		do {
-			changelogFile = next;
-			next = new File(rootDir, "changelog" + i + ".xml");
-			i++;
-		} while (next.exists());
-
-		return changelogFile;
+		// JENKINS-37442: Make the log file name available
+		if(tagAction.getChangelog() != null) {
+			String changelog = StringUtils.defaultIfBlank(tagAction.getChangelog(), "Not-set");
+			env.put("HUDSON_CHANGELOG_FILE", changelog);
+		}
 	}
 }
