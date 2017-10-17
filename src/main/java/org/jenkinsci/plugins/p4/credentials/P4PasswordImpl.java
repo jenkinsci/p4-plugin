@@ -72,12 +72,14 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		                                       @QueryParameter("trust") String trust,
 		                                       @QueryParameter("p4host") String p4host,
 		                                       @QueryParameter("username") String username,
-		                                       @QueryParameter("password") String password)
+		                                       @QueryParameter("password") String password,
+		                                       @QueryParameter("allhosts") boolean allhosts)
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
 				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, null, null, p4host, password);
+				test.setAllhosts(allhosts);
 
 				ConnectionConfig config = new ConnectionConfig(test);
 				FormValidation validation = ConnectionFactory.testConnection(config);
