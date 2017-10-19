@@ -14,6 +14,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -60,31 +61,31 @@ public class PublishNotifier extends Notifier {
 			throws InterruptedException, IOException {
 
 		// return early if publish not required
-		if (publish.isOnlyOnSuccess() && build.getResult() != Result.SUCCESS) {
+		if (getPublish().isOnlyOnSuccess() && build.getResult() != Result.SUCCESS) {
 			return true;
 		}
 
-		FilePath filePath = build.getWorkspace();
-		if (filePath == null) {
+		FilePath buildWorkspace = build.getWorkspace();
+		if (buildWorkspace == null) {
 			logger.warning("FilePath is null!");
 			return false;
 		}
 
-		Workspace ws = (Workspace) workspace.clone();
+		Workspace ws = (Workspace) getWorkspace().clone();
 
 		// Create task
-		PublishTask task = new PublishTask(publish);
+		PublishTask task = new PublishTask(getPublish());
 		task.setListener(listener);
-		task.setCredential(credential, build);
-		ws = task.setEnvironment(build, ws, filePath);
+		task.setCredential(getCredential(), build);
+		ws = task.setEnvironment(build, ws, buildWorkspace);
 		task.setWorkspace(ws);
 
 		// Expand description
-		String desc = publish.getDescription();
+		String desc = getPublish().getDescription();
 		desc = ws.getExpand().format(desc, false);
-		publish.setExpandedDesc(desc);
+		getPublish().setExpandedDesc(desc);
 
-		boolean success = filePath.act(task);
+		boolean success = buildWorkspace.act(task);
 		return success;
 	}
 
@@ -97,6 +98,7 @@ public class PublishNotifier extends Notifier {
 	}
 
 	@Extension
+	@Symbol("publish")
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override

@@ -33,7 +33,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -258,5 +260,20 @@ public class WorkspaceTest extends DefaultEnvironment {
 		List<String> log = build.getLog(LOG_LIMIT);
 		assertTrue(log.contains("P4 Task: syncing files at change: 18"));
 		assertTrue(log.contains("... totalFileCount 6"));
+	}
+
+	@Test
+	public void testSyncID() throws Exception {
+		Map<String, String> map = new HashMap<>();
+		map.put("NODE_NAME", "foo");
+		map.put("OTHER", "bar");
+
+		String stream = "//stream/main";
+		String format = "jenkins-${NODE_NAME}-${OTHER}.ws.clone2";
+
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, format);
+		workspace.setExpand(map);
+
+		assertEquals("jenkins-NODE_NAME-bar.ws", workspace.getSyncID());
 	}
 }

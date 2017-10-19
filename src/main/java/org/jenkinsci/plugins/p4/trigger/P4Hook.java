@@ -15,14 +15,14 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 @Extension
 public class P4Hook implements UnprotectedRootAction {
-
-	// https://github.com/jenkinsci/bitbucket-plugin
 
 	ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -52,11 +52,12 @@ public class P4Hook implements UnprotectedRootAction {
 			JSONObject payload = JSONObject.fromObject(body);
 
 			final String port = payload.getString("p4port");
-			final String change = payload.getString("change");
+			//final String change = payload.getString("change");
+			final List<Job> jobs = getJobs();
 
-			LOGGER.info("Received trigger event: " + body);
+			LOGGER.info("Received trigger event for: " + port);
 			if (port == null) {
-				LOGGER.fine("p4port must be specified");
+				LOGGER.warning("p4port must be specified");
 				return;
 			}
 
@@ -66,7 +67,7 @@ public class P4Hook implements UnprotectedRootAction {
 				@Override
 				public void run() {
 					try {
-						probeJobs(port, change);
+						probeJobs(port, jobs);
 					} catch (IOException e) {
 						LOGGER.severe("Error on Polling Thread.");
 						e.printStackTrace();
@@ -81,14 +82,15 @@ public class P4Hook implements UnprotectedRootAction {
 
 		JSONObject formData = req.getSubmittedForm();
 		if (!formData.isEmpty()) {
-			String change = req.getParameter("_.change");
 			String port = req.getParameter("_.p4port");
+			//String change = req.getParameter("_.change");
+			List<Job> jobs = getJobs();
 
 			LOGGER.info("Manual trigger event: ");
 			if (port != null) {
-				probeJobs(port, change);
+				probeJobs(port, jobs);
 			} else {
-				LOGGER.fine("p4port must be specified");
+				LOGGER.warning("p4port must be specified");
 			}
 
 			// send the user back.
@@ -96,14 +98,8 @@ public class P4Hook implements UnprotectedRootAction {
 		}
 	}
 
-	private void probeJobs(@CheckForNull String port, String change) throws IOException {
-		Jenkins j = Jenkins.getInstance();
-		if (j == null) {
-			LOGGER.warning("Jenkins instance is null.");
-			return;
-		}
-
-		for (Job<?, ?> job : j.getAllItems(Job.class)) {
+	private void probeJobs(@CheckForNull String port, List<Job> jobs) throws IOException {
+		for (Job<?, ?> job : jobs) {
 			P4Trigger trigger = null;
 			LOGGER.fine("P4: trying: " + job.getName());
 
@@ -124,6 +120,15 @@ public class P4Hook implements UnprotectedRootAction {
 				LOGGER.fine("P4: trigger not set: " + job.getName());
 			}
 		}
+	}
+
+	private List<Job> getJobs() {
+		Jenkins j = Jenkins.getInstance();
+		if (j == null) {
+			LOGGER.warning("Jenkins instance is null.");
+			return new ArrayList<>();
+		}
+		return j.getAllItems(Job.class);
 	}
 
 	final static Logger LOGGER = Logger.getLogger(P4Hook.class.getName());

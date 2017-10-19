@@ -2,21 +2,16 @@ package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
-import com.perforce.p4java.core.IStreamSummary;
-import com.perforce.p4java.option.server.GetStreamsOptions;
-import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
-import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Serializable {
 
@@ -86,6 +81,23 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		this.backup = backup;
 	}
 
+	// Default setup for Classic Workspace
+	public WorkspaceSpec(String view, String changeView) {
+		this.allwrite = false;
+		this.clobber = false;
+		this.compress = false;
+		this.locked = false;
+		this.modtime = false;
+		this.rmdir = false;
+		this.streamName = null;
+		this.line = "LOCAL";
+		this.view = view;
+		this.changeView = changeView;
+		this.type = null;
+		this.serverID = null;
+		this.backup = true;
+	}
+
 	@Deprecated
 	public WorkspaceSpec(boolean allwrite, boolean clobber, boolean compress,
 	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
@@ -94,6 +106,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	}
 
 	@Extension
+	@Symbol("clientSpec")
 	public static class DescriptorImpl extends Descriptor<WorkspaceSpec> {
 
 		@Override
@@ -127,24 +140,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		public AutoCompletionCandidates doAutoCompleteStreamName(
 				@QueryParameter String value) {
 
-			AutoCompletionCandidates c = new AutoCompletionCandidates();
-			try {
-				IOptionsServer iserver = ConnectionFactory.getConnection();
-				if (iserver != null && value.length() > 1) {
-					List<String> streamPaths = new ArrayList<String>();
-					streamPaths.add(value + "...");
-					GetStreamsOptions opts = new GetStreamsOptions();
-					opts.setMaxResults(10);
-					List<IStreamSummary> list = iserver.getStreams(streamPaths,
-							opts);
-					for (IStreamSummary l : list) {
-						c.add(l.getStream());
-					}
-				}
-			} catch (Exception e) {
-			}
-
-			return c;
+			return StreamDescImpl.doAutoCompleteStreamName(value);
 		}
 	}
 }

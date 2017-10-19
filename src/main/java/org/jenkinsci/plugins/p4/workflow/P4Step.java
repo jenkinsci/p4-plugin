@@ -1,28 +1,28 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.Item;
+import hudson.scm.SCM;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
+import org.jenkinsci.plugins.p4.workflow.source.DepotSource;
+import org.jenkinsci.plugins.p4.workflow.source.StreamSource;
+import org.jenkinsci.plugins.p4.workflow.source.TemplateSource;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.steps.scm.SCMStep;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
-import hudson.scm.SCM;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
 
 public class P4Step extends SCMStep {
 
@@ -39,6 +39,7 @@ public class P4Step extends SCMStep {
 
 	private Populate populate;
 	private Workspace workspace;
+	private AbstractSource source;
 
 	@DataBoundConstructor
 	public P4Step(String credential) {
@@ -52,6 +53,9 @@ public class P4Step extends SCMStep {
 	@DataBoundSetter
 	public void setStream(String stream) {
 		this.stream = stream;
+		if (stream != null && !stream.isEmpty()) {
+			source = new StreamSource(stream);
+		}
 	}
 
 	public String getDepotPath() {
@@ -61,6 +65,9 @@ public class P4Step extends SCMStep {
 	@DataBoundSetter
 	public void setDepotPath(String path) {
 		this.depotPath = path;
+		if (path != null && !path.isEmpty()) {
+			source = new DepotSource(path);
+		}
 	}
 
 	public String getTemplate() {
@@ -70,6 +77,9 @@ public class P4Step extends SCMStep {
 	@DataBoundSetter
 	public void setTemplate(String template) {
 		this.template = template;
+		if (template != null && !template.isEmpty()) {
+			source = new TemplateSource(template);
+		}
 	}
 
 	public String getCharset() {
@@ -112,35 +122,26 @@ public class P4Step extends SCMStep {
 		return populate;
 	}
 
+	public AbstractSource getSource() {
+		return this.source;
+	}
 
+	@DataBoundSetter
+	public void setSource(AbstractSource source) {
+		this.source = source;
+	}
 
 	@Override
 	protected SCM createSCM() {
-		P4WebBrowser browser = null;
+		P4Browser browser = PerforceScm.findBrowser(credential);
 
-		if ( workspace == null)
-		{
-			if (notNull(stream))
-				workspace = new StreamWorkspaceImpl(charset, false, stream, format);
-			else if (notNull(template))
-				workspace = new TemplateWorkspaceImpl(charset, false, template, format);
-			else if (notNull(depotPath)) {
-				if(depotPath.endsWith("/")) {
-					depotPath = depotPath + "...";
-				}
-				if(!depotPath.endsWith("/...")) {
-					depotPath = depotPath + "/...";
-				}
-				String view = depotPath + " " + "//" + format + "/...";
-				WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view);
-
-				workspace = new ManualWorkspaceImpl(charset, false, format, spec);
-			}
+		if (workspace == null) {
+			workspace = getSource().getWorkspace(charset, format);
 		}
 
 		// use basic populate options if no class provided
-		if(populate == null) {
-			populate = new AutoCleanImpl(true, true, false, false, null, null);
+		if (populate == null) {
+			populate = new AutoCleanImpl();
 		}
 
 		PerforceScm scm = new PerforceScm(credential, workspace, null, populate, browser);
@@ -153,6 +154,7 @@ public class P4Step extends SCMStep {
 	}
 
 	@Extension(optional = true)
+	@Symbol("p4sync")
 	public static final class DescriptorImpl extends SCMStepDescriptor {
 
 		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -166,7 +168,7 @@ public class P4Step extends SCMStep {
 		/**
 		 * A list of Perforce credential items
 		 *
-		 * @param project Jenkins Item
+		 * @param project    Jenkins Item
 		 * @param credential Perforce Credential
 		 * @return A list of Perforce credential items to populate the jelly Select list.
 		 */
@@ -208,7 +210,7 @@ public class P4Step extends SCMStep {
 		}
 
 		public FormValidation doCheckStream(@QueryParameter String value, @QueryParameter String template,
-				@QueryParameter String path) {
+		                                    @QueryParameter String path) {
 			if (P4Step.notNull(value)) {
 				if (hasMultiple(value, template, path)) {
 					return FormValidation.error("Specify only one source.");
@@ -219,7 +221,7 @@ public class P4Step extends SCMStep {
 		}
 
 		public FormValidation doCheckTemplate(@QueryParameter String value, @QueryParameter String stream,
-				@QueryParameter String path) {
+		                                      @QueryParameter String path) {
 			if (P4Step.notNull(value)) {
 				if (hasMultiple(stream, value, path)) {
 					return FormValidation.error("Specify only one source.");
@@ -230,7 +232,7 @@ public class P4Step extends SCMStep {
 		}
 
 		public FormValidation doCheckPath(@QueryParameter String value, @QueryParameter String stream,
-				@QueryParameter String template) {
+		                                  @QueryParameter String template) {
 			if (P4Step.notNull(value)) {
 				if (hasMultiple(stream, template, value)) {
 					return FormValidation.error("Specify only one source.");

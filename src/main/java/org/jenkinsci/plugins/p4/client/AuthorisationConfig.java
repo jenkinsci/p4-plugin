@@ -1,12 +1,11 @@
 package org.jenkinsci.plugins.p4.client;
 
 import hudson.util.Secret;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.credentials.P4TicketImpl;
 
 import java.io.Serializable;
-
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.credentials.P4TicketImpl;
 
 public class AuthorisationConfig implements Serializable {
 
@@ -15,6 +14,7 @@ public class AuthorisationConfig implements Serializable {
 	private String username;
 	private AuthorisationType type;
 	private Secret password;
+	private boolean allhosts;
 	private String ticketValue;
 	private String ticketPath;
 	private String client;
@@ -25,12 +25,14 @@ public class AuthorisationConfig implements Serializable {
 			this.type = AuthorisationType.PASSWORD;
 			this.username = p.getUsername();
 			this.password = p.getPassword();
+			this.allhosts = p.isAllhosts();
 		}
 
 		if (credential instanceof P4TicketImpl) {
 			P4TicketImpl t = (P4TicketImpl) credential;
 			this.type = AuthorisationType.TICKETPATH;
 			this.username = t.getUsername();
+			this.allhosts = false;
 
 			if (t.isTicketValueSet()) {
 				this.type = AuthorisationType.TICKET;
@@ -77,5 +79,9 @@ public class AuthorisationConfig implements Serializable {
 
 	public String getTicketPath() {
 		return ticketPath;
+	}
+
+	public boolean isAllhosts() {
+		return allhosts;
 	}
 }

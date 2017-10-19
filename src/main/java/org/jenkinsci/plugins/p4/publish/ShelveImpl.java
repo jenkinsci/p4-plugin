@@ -1,10 +1,10 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import java.io.Serializable;
-
+import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import hudson.Extension;
+import java.io.Serializable;
 
 public class ShelveImpl extends Publish implements Serializable {
 
@@ -23,6 +23,7 @@ public class ShelveImpl extends Publish implements Serializable {
 	}
 
 	@Extension
+	@Symbol("shelve")
 	public static final class DescriptorImpl extends PublishDescriptor {
 
 		@Override

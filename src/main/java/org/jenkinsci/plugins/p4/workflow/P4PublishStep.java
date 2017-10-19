@@ -9,6 +9,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.PublishNotifierStep;
@@ -56,6 +57,7 @@ public class P4PublishStep extends Step {
 	}
 
 	@Extension(optional = true)
+	@Symbol("publish")
 	public static final class DescriptorImpl extends StepDescriptor {
 
 		@Override

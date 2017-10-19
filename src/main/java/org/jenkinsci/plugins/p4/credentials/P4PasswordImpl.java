@@ -6,10 +6,12 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionConfig;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
@@ -25,6 +27,8 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 	@NonNull
 	private final Secret password;
 
+	private boolean allhosts;
+
 	@DataBoundConstructor
 	public P4PasswordImpl(CredentialsScope scope, String id, String description, @NonNull String p4port,
 	                      TrustImpl ssl, @NonNull String username, @CheckForNull String retry,
@@ -34,11 +38,21 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		this.password = Secret.fromString(password);
 	}
 
+	@DataBoundSetter
+	public void setAllhosts(boolean allhosts) {
+		this.allhosts = allhosts;
+	}
+
 	public Secret getPassword() {
 		return password;
 	}
 
+	public boolean isAllhosts() {
+		return allhosts;
+	}
+
 	@Extension
+	@Symbol("password")
 	public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
 
 		@Override
@@ -58,12 +72,14 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		                                       @QueryParameter("trust") String trust,
 		                                       @QueryParameter("p4host") String p4host,
 		                                       @QueryParameter("username") String username,
-		                                       @QueryParameter("password") String password)
+		                                       @QueryParameter("password") String password,
+		                                       @QueryParameter("allhosts") boolean allhosts)
 				throws IOException, ServletException {
 			try {
 				// Test connection path to Server
 				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
 				P4PasswordImpl test = new P4PasswordImpl(null, null, null, p4port, sslTrust, username, null, null, p4host, password);
+				test.setAllhosts(allhosts);
 
 				ConnectionConfig config = new ConnectionConfig(test);
 				FormValidation validation = ConnectionFactory.testConnection(config);

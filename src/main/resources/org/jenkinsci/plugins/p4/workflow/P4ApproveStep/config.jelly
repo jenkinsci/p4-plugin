@@ -1,0 +1,22 @@
+<?jelly escape-by-default='true'?>
+<j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
+			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
+			xmlns:c="/lib/credentials">
+			
+	<f:entry title="Perforce Credentials" field="credential">
+		<c:select/>
+	</f:entry>
+	
+	<f:entry title="Swarm Review" field="review">
+		<f:textbox default='$${P4_REVIEW}'/>
+	</f:entry>
+	
+	<f:entry title="Approve Status" field="status">
+		<f:select/>
+	</f:entry>
+
+	<f:entry title="Description" field="description">
+       	<f:textarea default='Updated by Jenkins. Build: $${BUILD_URL}'/>
+    </f:entry>
+	
+</j:jelly>

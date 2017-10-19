@@ -8,19 +8,31 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Extension()
 public class P4EnvironmentContributor extends EnvironmentContributor {
 
 	@Override
 	public void buildEnvironmentFor(Run run, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
-
 		TagAction tagAction = TagAction.getLastAction(run);
+		buildEnvironment(tagAction, env);
+	}
 
+	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {
+		// parts of Jenkins passes EnvVars as Map<String,String>
+		EnvVars env = new EnvVars(map);
+		buildEnvironment(tagAction, env);
+		map.putAll(env);
+	}
+
+	private static void buildEnvironment(TagAction tagAction, EnvVars env) {
 		if (tagAction == null) {
 			return;
 		}
@@ -49,6 +61,13 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			env.put("P4_USER", user);
 		}
 
+		// Set P4_REVIEW connection
+		if (tagAction.getReview() != null) {
+			P4Review review = tagAction.getReview();
+			env.put("P4_REVIEW", review.getId());
+			env.put("P4_REVIEW_TYPE", review.getStatus().toString());
+		}
+
 		// Set P4_TICKET connection
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
@@ -60,6 +79,12 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 				String ticket = tagAction.getTicket();
 				env.put("P4_TICKET", ticket);
 			}
+		}
+
+		// JENKINS-37442: Make the log file name available
+		if(tagAction.getChangelog() != null) {
+			String changelog = StringUtils.defaultIfBlank(tagAction.getChangelog(), "Not-set");
+			env.put("HUDSON_CHANGELOG_FILE", changelog);
 		}
 	}
 }

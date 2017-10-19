@@ -1,10 +1,10 @@
 package org.jenkinsci.plugins.p4.filters;
 
 import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
-
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public class FilterPerChangeImpl extends Filter implements Serializable {
 
@@ -31,6 +31,7 @@ public class FilterPerChangeImpl extends Filter implements Serializable {
 	}
 
 	@Extension
+	@Symbol("incremental")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
 		@Override

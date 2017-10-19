@@ -18,7 +18,7 @@
 		</table>
 	</f:entry>
 	
-	<f:section title="Use local 'p4' for parallel sync">
+	<f:section title="Parallel sync">
 		<f:advanced>
 			<f:entry>
 				<f:property field="parallel" />

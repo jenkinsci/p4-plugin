@@ -199,6 +199,10 @@ public class ConnectionHelper implements AutoCloseable {
 		return p4credential.getRetry();
 	}
 
+	public String getUser() {
+		return p4credential.getUsername();
+	}
+
 	public String getPort() {
 		return p4credential.getP4port();
 	}
@@ -261,7 +265,8 @@ public class ConnectionHelper implements AutoCloseable {
 		switch (authorisationConfig.getType()) {
 			case PASSWORD:
 				String pass = authorisationConfig.getPassword();
-				connection.login(pass);
+				boolean allHosts = authorisationConfig.isAllhosts();
+				connection.login(pass, allHosts);
 				break;
 
 			case TICKET:
@@ -271,7 +276,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 			case TICKETPATH:
 				String path = authorisationConfig.getTicketPath();
-				if(path == null || path.isEmpty()) {
+				if (path == null || path.isEmpty()) {
 					path = connection.getTicketsFilePath();
 				}
 				connection.setTicketsFilePath(path);
@@ -390,7 +395,7 @@ public class ConnectionHelper implements AutoCloseable {
 		return streams;
 	}
 
-	public IChangelistSummary getChangeSummary(int id) throws P4JavaException {
+	public IChangelistSummary getChangeSummary(long id) throws P4JavaException {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList("@" + id);
 		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
 		cngOpts.setLongDesc(true);
@@ -544,8 +549,8 @@ public class ConnectionHelper implements AutoCloseable {
 
 	// Use a describe for files to avoid MAXSCANROW limits.
 	// (backed-out part of change 16390)
-	public List<IFileSpec> getChangeFiles(int id) throws Exception {
-		List<IFileSpec> files = connection.getChangelistFiles(id);
+	public List<IFileSpec> getChangeFiles(int id, int limit) throws Exception {
+		List<IFileSpec> files = connection.getChangelistFiles(id, limit);
 		return files;
 	}
 
@@ -586,14 +591,18 @@ public class ConnectionHelper implements AutoCloseable {
 		List<IProperty> values = connection.getProperty(propOpts);
 		for (IProperty prop : values) {
 			if (key.equals(prop.getName())) {
-				return prop.getValue();
+				String url = prop.getValue();
+				if (url != null && url.endsWith("/")) {
+					url = url.substring(0, url.length() - 1);
+				}
+				return url;
 			}
 		}
 		return null;
 	}
 
-	public ICommit getGraphCommit(String sha) throws P4JavaException {
-		return connection.getCommitObject(sha);
+	public ICommit getGraphCommit(String sha, String repo) throws P4JavaException {
+		return connection.getCommitObject(sha, repo);
 	}
 
 	public List<IFileSpec> getCommitFiles(String repo, String sha) throws P4JavaException {
@@ -772,6 +781,9 @@ public class ConnectionHelper implements AutoCloseable {
 		if (credentialsId == null) {
 			return null;
 		}
+		if (item == null) {
+			return findCredential(credentialsId);
+		}
 		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
 				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
 						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
@@ -819,10 +831,6 @@ public class ConnectionHelper implements AutoCloseable {
 			return;
 		}
 		listener.getLogger().println(msg);
-	}
-
-	public void stop() throws Exception {
-		connection.execMapCmd("admin", new String[]{"stop"}, null);
 	}
 
 	public boolean hasAborted() {

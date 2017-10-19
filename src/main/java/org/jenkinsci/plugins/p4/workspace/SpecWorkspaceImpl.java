@@ -9,6 +9,7 @@ import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -77,6 +78,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("specFileSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

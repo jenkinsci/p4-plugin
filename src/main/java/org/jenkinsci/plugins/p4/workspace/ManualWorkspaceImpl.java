@@ -14,6 +14,7 @@ import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -152,6 +153,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("manualSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

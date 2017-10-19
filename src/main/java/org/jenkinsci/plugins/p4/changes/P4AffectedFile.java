@@ -38,7 +38,7 @@ public class P4AffectedFile implements AffectedFile {
 	}
 
 	public String getAction() {
-		return action.getName();
+		return action.getName().toUpperCase();
 	}
 
 	private EditType parseFileAction(FileAction fileAction) {

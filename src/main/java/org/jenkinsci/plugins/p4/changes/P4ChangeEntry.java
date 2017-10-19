@@ -106,7 +106,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 			files = p4.getShelvedFiles(changeId);
 			shelved = true;
 		} else {
-			files = p4.getChangeFiles(changeId);
+			files = p4.getChangeFiles(changeId, fileCountLimit + 1);
 			shelved = false;
 		}
 		if (files != null && files.size() > fileCountLimit) {
@@ -177,7 +177,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	public void setGraphCommit(ConnectionHelper p4, String repo, String sha) throws Exception {
 
-		ICommit commit = p4.getGraphCommit(sha);
+		ICommit commit = p4.getGraphCommit(sha, repo);
 		id = new P4GraphRef(repo, commit);
 
 		// set author

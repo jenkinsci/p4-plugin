@@ -1,10 +1,5 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.workspace.Expand;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -18,6 +13,11 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.p4.workspace.Expand;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.util.logging.Logger;
 
 public class TagNotifier extends Notifier {
 
@@ -67,7 +67,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	private TagAction getTagAction(EnvVars env, AbstractBuild<?, ?> build) {
-		TagAction tagAction = (TagAction) build.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(build);
 
 		// process promoted builds?
 		if (tagAction == null) {
@@ -103,7 +103,7 @@ public class TagNotifier extends Notifier {
 				return tagAction;
 			}
 
-			tagAction = (TagAction) build.getAction(TagAction.class);
+			tagAction = build.getAction(TagAction.class);
 			if (tagAction == null) {
 				logger.warning("No tag information; is it a valid Perforce job?");
 				return tagAction;
@@ -121,6 +121,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	@Extension
+	@Symbol("label")
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override

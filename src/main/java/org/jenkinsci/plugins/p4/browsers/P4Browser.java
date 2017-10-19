@@ -11,14 +11,23 @@ public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 
 	private static final long serialVersionUID = 1L;
 
-	private final URL url;
+	private String url;
 
-	P4Browser(String url) throws MalformedURLException {
-		this.url = normalizeToEndWithSlash(new URL(url));
+	public P4Browser(String url) {
+		this.url = url;
 	}
 
-	public URL getUrl() {
+	public final String getUrl() {
 		return url;
+	}
+
+	public URL getSafeUrl() {
+		try {
+			URL safe = normalizeToEndWithSlash(new URL(url));
+			return safe;
+		} catch (MalformedURLException e) {
+			return null;
+		}
 	}
 
 	/**

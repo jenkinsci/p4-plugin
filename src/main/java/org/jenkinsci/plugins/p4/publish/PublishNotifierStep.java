@@ -30,6 +30,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 	public void perform(Run<?, ?> run, FilePath buildWorkspace,
 	                    Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
+
 		// return early if publish not required
 		if (getPublish().isOnlyOnSuccess() && run.getResult() != Result.SUCCESS) {
 			return;

@@ -95,6 +95,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 		return expand;
 	}
 
+	public void addEnv(String tag, String value) {
+		expand.set(tag, value);
+	}
+
 	/**
 	 * Returns the fully expanded client workspace name.
 	 *
@@ -129,6 +133,9 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 
 		// replace restricted characters with "-" as per the old plugin
 		id = expand.clean(id);
+
+		// remove .cloneNN during concurrent builds
+		id = id.replaceAll(".clone\\d+$", "");
 
 		return id;
 	}

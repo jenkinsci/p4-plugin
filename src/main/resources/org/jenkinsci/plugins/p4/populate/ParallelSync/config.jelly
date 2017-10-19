@@ -4,11 +4,7 @@
 	<f:entry field="enable" title="${%Enabled}">
 		<f:checkbox default="false"/>
 	</f:entry>
-				
-	<f:entry field="path" title="${%P4 Path}">
-		<f:textbox default="/usr/local/bin/p4"/>
-	</f:entry>
-	
+
 	<f:entry field="threads" title="${%Threads}">
 		<f:textbox default="4"/>
 	</f:entry>

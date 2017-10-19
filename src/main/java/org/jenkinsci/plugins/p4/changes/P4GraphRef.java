@@ -22,7 +22,7 @@ public class P4GraphRef implements P4Ref {
 			if (parts.length == 2) {
 				this.repo = parts[0];
 				String sha = parts[1];
-				this.commit = p4.getGraphCommit(sha);
+				this.commit = p4.getGraphCommit(sha, repo);
 				this.date = commit.getCommitterDate().getTime();
 				this.sha = sha;
 				return;
@@ -60,8 +60,8 @@ public class P4GraphRef implements P4Ref {
 	}
 
 	@Override
-	public int getChange() {
-		return -1;
+	public long getChange() {
+		return -1L;
 	}
 
 	public long getDate() {

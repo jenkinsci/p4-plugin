@@ -12,6 +12,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Expand;
@@ -77,6 +78,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						} catch (NumberFormatException e) {
 							// leave buildChange as is
 						}
+					} else {
+						String warn = "P4: Warning label is static and cannot be used with polling!";
+						logger.warning(warn);
+						p4.log(warn);
 					}
 				}
 				if (p4.isCounter(label)) {
@@ -145,6 +150,17 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		// Unshelve review if specified
 		if (status == CheckoutStatus.SHELVED) {
 			p4.unshelveFiles(review);
+
+			if(populate instanceof AutoCleanImpl) {
+				AutoCleanImpl auto = (AutoCleanImpl) populate;
+				if(auto.isTidy()) {
+					p4.revertAllFiles(true);
+				}
+			} else {
+				if(!populate.isHave()) {
+					p4.revertAllFiles(true);
+				}
+			}
 		}
 		return true;
 	}

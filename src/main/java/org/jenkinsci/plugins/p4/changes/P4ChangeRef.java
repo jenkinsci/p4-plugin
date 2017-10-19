@@ -7,9 +7,9 @@ public class P4ChangeRef implements P4Ref {
 
 	private static final long serialVersionUID = 1L;
 
-	private final int change;
+	private final long change;
 
-	public P4ChangeRef(int change) {
+	public P4ChangeRef(long change) {
 		this.change = change;
 	}
 
@@ -32,13 +32,13 @@ public class P4ChangeRef implements P4Ref {
 	}
 
 	@Override
-	public int getChange() {
+	public long getChange() {
 		return change;
 	}
 
 	@Override
 	public String toString() {
-		return Integer.toString(change);
+		return Long.toString(change);
 	}
 
 	@Override
@@ -66,7 +66,7 @@ public class P4ChangeRef implements P4Ref {
 		}
 		if (obj instanceof P4ChangeRef) {
 			P4ChangeRef ref = (P4ChangeRef) obj;
-			return change - ref.getChange();
+			return (int)(change - ref.getChange());
 		}
 		throw new ClassCastException();
 	}

@@ -6,6 +6,7 @@ import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -14,7 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class P4WebBrowser extends P4Browser {
@@ -29,17 +29,17 @@ public class P4WebBrowser extends P4Browser {
 	public final String p4LabelEnd = "?ac=16"; // label content screen
 
 	@DataBoundConstructor
-	public P4WebBrowser(String url) throws MalformedURLException {
+	public P4WebBrowser(String url) {
 		super(url);
 	}
 
 	@Override
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(getUrl().toString() + changeSet.getId() + p4ChangeEnd);
+		return new URL(getSafeUrl().toString() + changeSet.getId() + p4ChangeEnd);
 	}
 
 	public URL getLabelSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(getUrl().toString() + changeSet.getId() + p4LabelEnd);
+		return new URL(getSafeUrl().toString() + changeSet.getId() + p4LabelEnd);
 	}
 
 	@Override
@@ -54,21 +54,22 @@ public class P4WebBrowser extends P4Browser {
 			return null;
 		}
 
-		return new URL(getUrl().toString() + file.getPath() + p4DiffEnd
+		return new URL(getSafeUrl().toString() + file.getPath() + p4DiffEnd
 				+ "&rev1=" + (rev - 1) + "&rev2=" + (rev));
 	}
 
 	@Override
 	public URL getFileLink(P4AffectedFile file) throws Exception {
-		return new URL(getUrl().toString() + file.getPath() + p4FileEnd);
+		return new URL(getSafeUrl().toString() + file.getPath() + p4FileEnd);
 	}
 
 	@Override
 	public URL getJobLink(String job) throws Exception {
-		return new URL(getUrl().toString() + job + p4JobEnd);
+		return new URL(getSafeUrl().toString() + job + p4JobEnd);
 	}
 
 	@Extension
+	@Symbol("p4Web")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
 		@Override
@@ -91,13 +92,8 @@ public class P4WebBrowser extends P4Browser {
 		}
 
 		@Override
-		public P4WebBrowser newInstance(StaplerRequest req, JSONObject formData)
-				throws FormException {
-			P4WebBrowser browser = null;
-			if (req != null) {
-				browser = req.bindParameters(P4WebBrowser.class, "p4web.");
-			}
-			return browser;
+		public P4WebBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+			return (req == null) ? null : req.bindJSON(P4WebBrowser.class, jsonObject);
 		}
 	}
 }

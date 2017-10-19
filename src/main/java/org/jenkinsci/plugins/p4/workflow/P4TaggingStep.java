@@ -3,17 +3,17 @@ package org.jenkinsci.plugins.p4.workflow;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.TaskListener;
 import hudson.model.Run;
-
-import javax.inject.Inject;
-
+import hudson.model.TaskListener;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.tagging.TagNotifierStep;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.inject.Inject;
 
 public class P4TaggingStep extends AbstractStepImpl {
 
@@ -35,6 +35,7 @@ public class P4TaggingStep extends AbstractStepImpl {
 	}
 
 	@Extension(optional = true)
+	@Symbol("label")
 	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
 
 		public DescriptorImpl() {

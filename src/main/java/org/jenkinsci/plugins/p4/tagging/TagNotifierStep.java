@@ -1,10 +1,5 @@
 package org.jenkinsci.plugins.p4.tagging;
 
-import java.io.IOException;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.workspace.Expand;
-
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -15,6 +10,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.plugins.p4.workspace.Expand;
+
+import java.io.IOException;
+import java.util.logging.Logger;
 
 public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 
@@ -52,7 +51,7 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 	}
 
 	private TagAction getTagAction(EnvVars env, Run<?, ?> run) {
-		TagAction tagAction = (TagAction) run.getAction(TagAction.class);
+		TagAction tagAction = TagAction.getLastAction(run);
 
 		// process promoted builds?
 		if (tagAction == null) {
