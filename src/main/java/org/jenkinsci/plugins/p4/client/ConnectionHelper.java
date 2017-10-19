@@ -833,10 +833,6 @@ public class ConnectionHelper implements AutoCloseable {
 		listener.getLogger().println(msg);
 	}
 
-	public void stop() throws Exception {
-		connection.execMapCmd("admin", new String[]{"stop"}, null);
-	}
-
 	public boolean hasAborted() {
 		return abort;
 	}
