@@ -9,18 +9,14 @@ public class CheckOnlyImpl extends Populate {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * No sync, check change only
+	 * No sync, check change only. (p4 sync -n ...)
 	 *
-	 * @param have    populate have list
-	 * @param force   force sync
-	 * @param modtime use MODTIME for reconcile
 	 * @param quiet   Perforce quiet option
 	 * @param pin     Change or label to pin the sync
 	 */
 	@DataBoundConstructor
-	public CheckOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet,
-	                     String pin) {
-		super(false, false, false, quiet, null, null);
+	public CheckOnlyImpl(boolean quiet, String pin) {
+		super(false, false, false, quiet, pin, null);
 	}
 
 	@Extension

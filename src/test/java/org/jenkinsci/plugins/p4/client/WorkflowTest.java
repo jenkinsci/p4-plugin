@@ -274,4 +274,40 @@ public class WorkflowTest extends DefaultEnvironment {
 		// Clear Global Libraries for other Jobs
 		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
 	}
+
+	@Test
+	public void testPreviewCheckout() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "previewCheckout");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   def workspace = [$class: 'ManualWorkspaceImpl',\n"
+				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
+				+ "   def syncOptions = [$class: 'CheckOnlyImpl', quiet:true]\n"
+				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("p4 sync -n -q", run);
+	}
+
+	@Test
+	public void testFlushCheckout() throws Exception {
+
+		String id = auth.getId();
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "flushCheckout");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   def workspace = [$class: 'ManualWorkspaceImpl',\n"
+				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
+				+ "   def syncOptions = [$class: 'FlushOnlyImpl', quiet:true]\n"
+				+ "   p4sync workspace:workspace, credential: '" + id + "', populate: syncOptions\n"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("p4 sync -k -q", run);
+	}
 }

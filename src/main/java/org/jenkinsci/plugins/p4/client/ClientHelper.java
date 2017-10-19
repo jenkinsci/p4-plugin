@@ -205,7 +205,9 @@ public class ClientHelper extends ConnectionHelper {
 			String revisions = path + "@" + buildChange;
 
 			// Sync files
-			if (populate instanceof CheckOnlyImpl || populate instanceof FlushOnlyImpl) {
+			if (populate instanceof CheckOnlyImpl) {
+				syncPreview(revisions, populate);
+			} else if (populate instanceof FlushOnlyImpl) {
 				syncHaveList(revisions, populate);
 			} else {
 				syncFiles(revisions, populate);
@@ -222,31 +224,50 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
-	 * Test to see if workspace is at the latest revision.
+	 * Preview a sync, no have list update and no files
+	 * <p>
+	 * p4 sync -n ...
 	 *
+	 * @param revisions Perforce path and revision
+	 * @param populate  Populate options
 	 * @throws Exception
 	 */
-	private boolean syncHaveList(String revisions, Populate populate) throws Exception {
-		// Preview (sync -k)
+	private void syncPreview(String revisions, Populate populate) throws Exception {
 		SyncOptions syncOpts = new SyncOptions();
-		syncOpts.setClientBypass(populate.isHave());
+		syncOpts.setNoUpdate(true);
 		syncOpts.setQuiet(populate.isQuiet());
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
 		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
-
-		for (IFileSpec fileSpec : syncMsg) {
-			if (fileSpec.getOpStatus() != FileSpecOpStatus.VALID) {
-				String msg = fileSpec.getStatusMessage();
-				if (msg.contains("file(s) up-to-date.")) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
+	/**
+	 * Populate the have list, but no files.
+	 * <p>
+	 * p4 sync -k (p4 flush)
+	 *
+	 * @param revisions Perforce path and revision
+	 * @param populate  Populate options
+	 * @throws Exception
+	 */
+	private void syncHaveList(String revisions, Populate populate) throws Exception {
+		SyncOptions syncOpts = new SyncOptions();
+		syncOpts.setClientBypass(true);
+		syncOpts.setQuiet(populate.isQuiet());
+
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
+		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
+		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+	}
+
+	/**
+	 * Sync files with various populate options.
+	 *
+	 * @param revisions Perforce path and revision
+	 * @param populate  Populate options
+	 * @throws Exception
+	 */
 	private void syncFiles(String revisions, Populate populate) throws Exception {
 
 		// set MODTIME if populate options is used only required before 15.1
@@ -835,20 +856,20 @@ public class ClientHelper extends ConnectionHelper {
 		String path = lSpec.get(0).getLocalPathString();
 		return path;
 	}
-    
-    private void deleteFile(String rev) throws Exception {
-        List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
-        
-        String local = depotToLocal(file.get(0));
-        File unlink = new File(local);
-        
-        if (unlink.exists()) {
-            boolean ok = unlink.delete();
-            if (!ok) {
-                log("Not able to delete: " + local);
-            }
-        }
-    }
+
+	private void deleteFile(String rev) throws Exception {
+		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
+
+		String local = depotToLocal(file.get(0));
+		File unlink = new File(local);
+
+		if (unlink.exists()) {
+			boolean ok = unlink.delete();
+			if (!ok) {
+				log("Not able to delete: " + local);
+			}
+		}
+	}
 
 	private void printFile(String rev) throws Exception {
 		byte[] buf = new byte[1024 * 64];
@@ -862,7 +883,7 @@ public class ClientHelper extends ConnectionHelper {
 		File target = new File(localPath);
 
 		// Create directories as required JENKINS-37868
-		if(target.getParentFile().mkdirs()) {
+		if (target.getParentFile().mkdirs()) {
 			log("Directory created: " + target);
 		}
 
@@ -900,7 +921,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
-		shelveMsg = iclient.unshelveChangelist((int)review, null, 0, true, false);
+		shelveMsg = iclient.unshelveChangelist((int) review, null, 0, true, false);
 		validate.check(shelveMsg, false, "also opened by", "No such file(s)",
 				"exclusive file already opened", "no file(s) to unshelve");
 
@@ -914,11 +935,10 @@ public class ClientHelper extends ConnectionHelper {
 						// JENKINS-47141 delete workspace file manually when locked
 						log("P4 Task: delete: " + rev);
 						deleteFile(rev);
-					}
-					else {
+					} else {
 						// JENKINS-37868 use '@= + review' for correct file
 						log("P4 Task: print: " + rev);
-						printFile(rev + "@=" + review);                        
+						printFile(rev + "@=" + review);
 					}
 				}
 			} else {
@@ -992,11 +1012,11 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public Changelist getChange(long id) throws Exception {
 		try {
-			return (Changelist) connection.getChangelist((int)id);
+			return (Changelist) connection.getChangelist((int) id);
 		} catch (RequestException e) {
 			ChangelistOptions opts = new ChangelistOptions();
 			opts.setOriginalChangelist(true);
-			return (Changelist) connection.getChangelist((int)id, opts);
+			return (Changelist) connection.getChangelist((int) id, opts);
 		}
 	}
 

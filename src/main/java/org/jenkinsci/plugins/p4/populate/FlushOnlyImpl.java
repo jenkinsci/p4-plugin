@@ -9,16 +9,13 @@ public class FlushOnlyImpl extends Populate {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * No sync, check change only
+	 * Populate the have list, but no files. (p4 sync -k ...)
 	 *
-	 * @param have    populate have list
-	 * @param force   force sync
-	 * @param modtime use MODTIME for reconcile
 	 * @param quiet   Perforce quiet option
 	 * @param pin     Change or label to pin the sync
 	 */
 	@DataBoundConstructor
-	public FlushOnlyImpl(boolean have, boolean force, boolean modtime, boolean quiet, String pin) {
+	public FlushOnlyImpl(boolean quiet, String pin) {
 		super(true, false, false, quiet, pin, null);
 	}
 
