@@ -395,10 +395,6 @@ public class PerforceScm extends SCM {
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
 	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
-		if (changelogFile == null) {
-			throw new AbortException("Aborting build: changeLogFile not set.");
-		}
-
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
@@ -431,7 +427,7 @@ public class PerforceScm extends SCM {
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
 		// JENKINS-37442: Make the log file name available
-		tag.setChangelog(changelogFile.getAbsolutePath());
+		tag.setChangelog(changelogFile);
 		run.addAction(tag);
 
 		// Invoke build.
