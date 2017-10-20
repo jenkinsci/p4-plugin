@@ -21,10 +21,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
+  	private String filter;
 
 	@DataBoundConstructor
 	public BranchesScmSource(String id, String credential, String includes, String charset, String format) {
@@ -37,6 +39,15 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	@DataBoundSetter
 	public void setBrowser(P4Browser browser) {
 		this.browser = browser;
+	}
+
+	@DataBoundSetter
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public String getFilter() {
+		return filter;
 	}
 
 	@Override
@@ -56,10 +67,20 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
 
+		String actualFilter = getFilter();
+		if(getFilter() == null || filter.trim().equals("")){
+			actualFilter = ".*";
+		}
+		Pattern filterPattern = Pattern.compile(actualFilter);
+
 		List<IFileSpec> specs = p4.getDirs(paths);
 		for (IFileSpec s : specs) {
 			String branch = s.getOriginalPathString();
-			P4Path p4Path = new P4Path(branch);
+
+			// check the filters
+			if(!filterPattern.matcher(branch).matches()){
+				continue;
+			}
 
 			// get depotPath and check for null
 			Path depotPath = Paths.get(branch);
@@ -73,6 +94,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				continue;
 			}
 
+			P4Path p4Path = new P4Path(branch);
 			P4Head head = new P4Head(file.toString(), Arrays.asList(p4Path));
 			list.add(head);
 		}
