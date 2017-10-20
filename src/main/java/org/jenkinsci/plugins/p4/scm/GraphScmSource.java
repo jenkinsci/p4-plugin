@@ -5,8 +5,11 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.graph.IGraphRef;
 import com.perforce.p4java.option.server.GraphShowRefOptions;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.DescriptorExtensionList;
 import hudson.Extension;
+import hudson.model.Descriptor;
 import hudson.model.TaskListener;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
@@ -16,6 +19,8 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.populate.PopulateDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -107,7 +112,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				String branchName = ref.getName();
 
 				// only process 'merge'
-				if(!branchName.endsWith("/merge")) {
+				if (!branchName.endsWith("/merge")) {
 					continue;
 				}
 
@@ -164,6 +169,26 @@ public class GraphScmSource extends AbstractP4ScmSource {
 					new UncategorizedSCMHeadCategory(new NonLocalizable("Branches")),
 					new ChangeRequestSCMHeadCategory(new NonLocalizable("Reviews"))
 			};
+		}
+
+		public List getGraphPopulateDescriptors() {
+			Jenkins j = Jenkins.getInstance();
+			if (j == null) {
+				return null;
+			}
+
+			DescriptorExtensionList<Populate, Descriptor<Populate>> list = j.getDescriptorList(Populate.class);
+			for (Descriptor<Populate> d : list) {
+				if (!(d instanceof PopulateDescriptor)) {
+					list.remove(d);
+				} else {
+					PopulateDescriptor p = (PopulateDescriptor) d;
+					if (!p.isGraphCompatible()) {
+						list.remove(p);
+					}
+				}
+			}
+			return list;
 		}
 	}
 }

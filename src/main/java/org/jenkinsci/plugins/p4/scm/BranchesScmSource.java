@@ -82,7 +82,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Helix Source";
+			return "Helix Branches";
 		}
 	}
 }

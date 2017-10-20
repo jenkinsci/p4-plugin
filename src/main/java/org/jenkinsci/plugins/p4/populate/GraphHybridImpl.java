@@ -28,5 +28,10 @@ public class GraphHybridImpl extends Populate {
 		public String getDisplayName() {
 			return "Graph force clean and sync";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return true;
+		}
 	}
 }

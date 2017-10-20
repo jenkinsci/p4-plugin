@@ -27,5 +27,10 @@ public class CheckOnlyImpl extends Populate {
 		public String getDisplayName() {
 			return "Preview check Only";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return true;
+		}
 	}
 }

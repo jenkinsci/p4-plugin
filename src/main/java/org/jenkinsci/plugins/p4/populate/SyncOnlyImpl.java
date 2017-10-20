@@ -45,5 +45,10 @@ public class SyncOnlyImpl extends Populate {
 		public String getDisplayName() {
 			return "Sync only";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return false;
+		}
 	}
 }
