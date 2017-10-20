@@ -83,7 +83,8 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 
 		// JENKINS-37442: Make the log file name available
 		if(tagAction.getChangelog() != null) {
-			String changelog = StringUtils.defaultIfBlank(tagAction.getChangelog(), "Not-set");
+			String changelog = tagAction.getChangelog().getAbsolutePath();
+			changelog = StringUtils.defaultIfBlank(changelog, "Not-set");
 			env.put("HUDSON_CHANGELOG_FILE", changelog);
 		}
 	}

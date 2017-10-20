@@ -29,5 +29,10 @@ public class ForceCleanImpl extends Populate {
 		public String getDisplayName() {
 			return "Forced clean and sync";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return false;
+		}
 	}
 }

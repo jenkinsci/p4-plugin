@@ -25,6 +25,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	private P4Revision buildChange;
 	private P4Review review;
-	private String changelog;
+	private File changelog;
 
 	private final String credential;
 	private final String p4port;
@@ -315,11 +316,11 @@ public class TagAction extends AbstractScmTagAction {
 		return review;
 	}
 
-	public void setChangelog(String changelog) {
+	public void setChangelog(File changelog) {
 		this.changelog = changelog;
 	}
 
-	public String getChangelog() {
+	public File getChangelog() {
 		return changelog;
 	}
 }

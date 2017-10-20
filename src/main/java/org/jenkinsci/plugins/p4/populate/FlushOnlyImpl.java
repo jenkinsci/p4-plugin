@@ -27,5 +27,10 @@ public class FlushOnlyImpl extends Populate {
 		public String getDisplayName() {
 			return "Flush workspace";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return false;
+		}
 	}
 }

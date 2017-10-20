@@ -56,5 +56,10 @@ public class AutoCleanImpl extends Populate {
 		public String getDisplayName() {
 			return "Auto cleanup and sync";
 		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return false;
+		}
 	}
 }
