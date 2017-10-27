@@ -142,7 +142,7 @@ public class ApproveNotifier extends Notifier {
 		public static ListBoxModel doFillStatusItems() {
 			ListBoxModel listBoxModel = new ListBoxModel();
 			for (ApproveState s : ApproveState.values()) {
-				listBoxModel.add(s.getDescription(), s.getId());
+				listBoxModel.add(s.getDescription(), s.name());
 			}
 			return listBoxModel;
 		}

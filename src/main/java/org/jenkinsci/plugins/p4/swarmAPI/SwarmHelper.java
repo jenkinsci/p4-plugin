@@ -85,7 +85,7 @@ public class SwarmHelper {
 
 		// If commit is used add extra commit parameter
 		if (state.isCommit()) {
-			parameters.put("commit", true);
+			parameters.put("commit", "1");
 		}
 
 		// If defined, expand description and add parameter
