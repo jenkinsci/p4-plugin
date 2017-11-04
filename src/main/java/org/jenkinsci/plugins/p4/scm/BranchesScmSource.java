@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import com.google.common.collect.Iterables;
 import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -26,7 +27,8 @@ import java.util.regex.Pattern;
 public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
-  	private String filter;
+  private String filter;
+	private String mappings;
 
 	@DataBoundConstructor
 	public BranchesScmSource(String id, String credential, String includes, String charset, String format) {
@@ -50,6 +52,13 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return filter;
 	}
 
+	public String getMappings(){ return this.mappings; }
+
+	@DataBoundSetter
+	public void setMappings(String mappings) {
+		this.mappings = mappings;
+	}
+
 	@Override
 	public P4Browser getBrowser() {
 		return browser;
@@ -62,7 +71,6 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
-
 		List<String> paths = getIncludePaths();
 		List<P4Head> list = new ArrayList<>();
 
@@ -106,16 +114,20 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public Workspace getWorkspace(List<P4Path> paths) {
-		String client = getFormat();
-
-		String scriptPath = getScriptPathOrDefault("Jenkinsfile");
-		StringBuffer sb = new StringBuffer();
-		for (P4Path path : paths) {
-			String view = String.format("%s/%s //%s/%s", path.getPath(), scriptPath, client, scriptPath);
-			sb.append(view).append("\n");
+		P4Path branchPath = Iterables.getFirst(paths, null);
+		if(branchPath == null){
+			throw new IllegalArgumentException("missing branch path");
 		}
 
-		WorkspaceSpec spec = new WorkspaceSpec(sb.toString(), null);
+		String client = getFormat();
+		String mappingFormat = String.format("%1s/%%1$s //%2$s/%%1$s", branchPath.getPath(), client);
+
+		StringBuffer workspaceView = new StringBuffer(1024);
+		workspaceView.append(String.format(mappingFormat, getScriptPathOrDefault("Jenkinsfile")));
+		for(String mapping : getViewMappings()){
+			workspaceView.append("\n").append(String.format(mappingFormat, mapping));
+		}
+		WorkspaceSpec spec = new WorkspaceSpec(workspaceView.toString(), null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
@@ -129,13 +141,21 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return defaultScriptPath;
 	}
 
+	protected List<String> getViewMappings() {
+		return toLines(getMappings());
+	}
+
 	@Extension
 	@Symbol("multiBranch")
 	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
 
+		public static final String defaultPath = "...";
+
+		public static final String defaultFilter = ".*";
+
 		@Override
 		public String getDisplayName() {
-			return "Helix Source";
+			return "Helix Branches";
 		}
 	}
 }
