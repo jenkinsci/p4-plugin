@@ -9,6 +9,7 @@ import jenkins.scm.api.SCMHeadObserver;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -19,6 +20,8 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
@@ -92,14 +95,25 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	public Workspace getWorkspace(List<P4Path> paths) {
 		String client = getFormat();
 
+		String scriptPath = getScriptPathOrDefault("Jenkinsfile");
 		StringBuffer sb = new StringBuffer();
 		for (P4Path path : paths) {
-			String view = path.getPath() + "/Jenkinsfile" + " //" + client + "/Jenkinsfile";
+			String view = String.format("%s/%s //%s/%s", path.getPath(), scriptPath, client, scriptPath);
 			sb.append(view).append("\n");
 		}
 
 		WorkspaceSpec spec = new WorkspaceSpec(sb.toString(), null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
+	}
+
+	private String getScriptPathOrDefault(String defaultScriptPath) {
+		SCMSourceOwner owner = getOwner();
+		if(owner instanceof WorkflowMultiBranchProject){
+			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
+			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+			return branchProjectFactory.getScriptPath();
+		}
+		return defaultScriptPath;
 	}
 
 	@Override

@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.7.8-SNAPSHOT</version>
+  <version>1.8.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>

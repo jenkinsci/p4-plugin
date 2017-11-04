@@ -20,7 +20,7 @@
         	<f:textbox default="${descriptor.defaultFormat}"/>
     	</f:entry>
 
-   		<f:entry title="Populate options T">
+   		<f:entry title="Populate options">
         	<f:dropdownDescriptorSelector field="populate"
         		descriptors="${descriptor.graphPopulateDescriptors}"/>
     	</f:entry>

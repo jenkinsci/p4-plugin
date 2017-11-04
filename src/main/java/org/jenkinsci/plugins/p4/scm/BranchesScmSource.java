@@ -62,6 +62,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+
 		List<String> paths = getIncludePaths();
 		List<P4Head> list = new ArrayList<>();
 

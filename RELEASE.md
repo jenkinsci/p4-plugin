@@ -1,5 +1,24 @@
 ## Release notes
 
+### Release 1.8.0 (major features/fixes)
+
+[@23042](https://swarm.workshop.perforce.com/changes/23042) - Disable BOM addition to UTF8 files.  https://github.com/p4paul/p4-jenkins/issues/32
+
+[@23024](https://swarm.workshop.perforce.com/changes/23024) - Merge pull request #59 from fbyrne/JENKINS-45657.  JENKINS-45657 Recreation of pull request
+
+[@23018](https://swarm.workshop.perforce.com/changes/23018) - Support null changelogFile if checkout sets changelog:false.  JENKINS-46352
+
+[@23017](https://swarm.workshop.perforce.com/changes/23017) - **MultiBranch** configuration cleanup.  Remove BETA, hide standard options in Advanced group and added isGraphCompatible check in Populate Descriptor.
+
+[@23016](https://swarm.workshop.perforce.com/changes/23016) - Draft docs for **Global Library** and file for MultiBranch.
+
+[@22999](https://swarm.workshop.perforce.com/changes/22999) - Fix sync options on FlushOnly and CheckOnly.  JENKINS-46352
+
+[@22987](https://swarm.workshop.perforce.com/changes/22987) - Clean up changelogFilename reporting for HUDSON\_CHANGELOG\_FILE.  JENKINS-37442
+
+[@22986](https://swarm.workshop.perforce.com/changes/22986) - Copy environment map to EnvVars.  JENKINS-37584
+
+
 ### Release 1.7.7 (major features/fixes)
 
 [@22971](https://swarm.workshop.perforce.com/changes/22971) - Update p4java 2017.2.1577651.  Server Property sequence fix (used by Swarm URL).
@@ -17,7 +36,7 @@
 
 [@22928](https://swarm.workshop.perforce.com/changes/22928) - Swarm approve step for Pipeline and FreeStyle jobs.
 
-[@22926](https://swarm.workshop.perforce.com/changes/22926) - Expose P4_REVIEW and P4_REVIEW_STATUS.  Extended test coverage and removed duplicate code for building the environment.
+[@22926](https://swarm.workshop.perforce.com/changes/22926) - Expose P4\_REVIEW and P4\_REVIEW\_STATUS.  Extended test coverage and removed duplicate code for building the environment.
 
 [@22915](https://swarm.workshop.perforce.com/changes/22915) - Advanced AllHosts login option (login -a)
 
