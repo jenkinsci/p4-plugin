@@ -163,7 +163,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected List<String> getIncludePaths() {
-		String[] array = includes.split("[\\r\\n]+");
+		return toLines(includes);
+	}
+
+	protected List<String> toLines(String value) {
+		String[] array = value.split("[\\r\\n]+");
 		return Arrays.asList(array);
 	}
 

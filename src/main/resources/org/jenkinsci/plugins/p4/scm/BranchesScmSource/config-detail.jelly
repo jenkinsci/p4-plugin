@@ -12,7 +12,7 @@
     </f:entry>
 
     <f:entry title="Include Filter" field="filter">
-      <f:textbox default=".*"/>
+      <f:textbox default="${descriptor.defaultFilter}"/>
     </f:entry>
 
 	<f:advanced>
@@ -27,6 +27,10 @@
    		<f:entry title="Populate options">
         	<f:dropdownDescriptorSelector field="populate"/>
     	</f:entry>
+
+    	<f:entry title="View Mappings" field="mappings">
+            <f:textbox default="${descriptor.defaultPath}"/>
+        </f:entry>
 
     	<t:listScmBrowsers name="p4.browser"/>
 	</f:advanced>
