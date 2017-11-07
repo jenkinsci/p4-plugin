@@ -11,8 +11,6 @@ import hudson.remoting.VirtualChannel;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
-import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.IOException;
@@ -110,18 +108,13 @@ public abstract class AbstractTask implements Serializable {
 		EnvVars envVars = run.getEnvironment(listener);
 		String node = getNodeName(buildWorkspace);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", node));
+		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
 		ws.setExpand(envVars);
 
 		// Set workspace root (check for parallel execution)
 		String root = buildWorkspace.getRemote();
 		if (root.contains("@")) {
 			root = root.replace("@", "%40");
-		}
-
-		// Template workspace for parallel execution
-		String name = buildWorkspace.getName();
-		if (name.matches(".*@[0-9]+")) {
-			ws = cloneWorkspace(ws, name, envVars);
 		}
 		ws.setRootPath(root);
 
@@ -130,39 +123,6 @@ public abstract class AbstractTask implements Serializable {
 			ws.setHostName(hostname);
 		} else {
 			ws.setHostName("");
-		}
-		return ws;
-	}
-
-	private Workspace cloneWorkspace(Workspace ws, String name, EnvVars envVars) throws AbortException {
-
-		// Skip cloning the workspace if clone option is not set
-		if(ws instanceof StaticWorkspaceImpl) {
-			StaticWorkspaceImpl staticWs = (StaticWorkspaceImpl)ws;
-			if(!staticWs.isClone()) {
-				return ws;
-			}
-		}
-
-		String[] parts = name.split("@");
-		if (parts.length == 2) {
-			String exec = parts[1];
-
-			// Update Workspace before cloning
-			setWorkspace(ws);
-
-			// Template workspace to .cloneN (where N is the @ number)
-			try {
-				int n = Integer.parseInt(exec);
-				String charset = ws.getCharset();
-				boolean pin = ws.isPinHost();
-				String fullName = ws.getFullName();
-				String template = fullName + ".clone" + n;
-				ws = new TemplateWorkspaceImpl(charset, pin, fullName, template);
-				ws.setExpand(envVars);
-			} catch (NumberFormatException e) {
-				// do not template; e.g. 'script' keeps original name
-			}
 		}
 		return ws;
 	}

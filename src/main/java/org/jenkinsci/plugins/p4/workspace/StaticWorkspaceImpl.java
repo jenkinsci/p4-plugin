@@ -16,7 +16,6 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String name;
-	private final boolean clone;
 
 	@Override
 	public String getName() {
@@ -28,22 +27,16 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 		return WorkspaceType.STATIC;
 	}
 
-	public boolean isClone() {
-		return clone;
-	}
-
-	@DataBoundConstructor
+	@Deprecated
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name, boolean clone) {
 		super(charset, pinHost);
 		this.name = name;
-		this.clone = clone;
 	}
 
-	@Deprecated
+	@DataBoundConstructor
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name) {
 		super(charset, pinHost);
 		this.name = name;
-		this.clone = true;
 	}
 
 	@Override

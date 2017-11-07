@@ -13,8 +13,4 @@
 		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
 	</f:entry>
 
-	<f:entry field="clone">
-		<f:checkbox title="${%Clone on concurrent execution}" default="true"/>
-	</f:entry>
-		  
 </j:jelly>

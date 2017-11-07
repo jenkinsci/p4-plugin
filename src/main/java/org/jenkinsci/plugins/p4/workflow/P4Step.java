@@ -157,7 +157,7 @@ public class P4Step extends SCMStep {
 	@Symbol("p4sync")
 	public static final class DescriptorImpl extends SCMStepDescriptor {
 
-		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
 
 		public DescriptorImpl() {
 			// Fail now if dependency plugin not loaded. Descriptor.<init> will

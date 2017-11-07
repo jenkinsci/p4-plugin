@@ -64,9 +64,9 @@ node {
 If you need more than one sync task in a script you **MUST** use a different workspace name.
 
 You can control this by customising the 'Workspace Name Format' field.  The default value is 
-`jenkins-${NODE_NAME}-${JOB_NAME}` and will not appear in the generated snippet, however if you change this to
-`jenkins-${NODE_NAME}-${JOB_NAME}-libs` you will see a new attribute in the snippet 
-`format: 'jenkins-${NODE_NAME}-${JOB_NAME}-libs'`.
+`jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}` and will not appear in the generated snippet, however if you change this to
+`jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-libs` you will see a new attribute in the snippet 
+`format: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-libs'`.
 
 ## Advanced Populate
 
@@ -92,7 +92,7 @@ node {
         replace: true], 
       workspace: [$class: 'ManualWorkspaceImpl', 
         charset: 'none', 
-        name: 'jenkins-${NODE_NAME}-${JOB_NAME}', 
+        name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', 
         pinHost: false, 
         spec: [allwrite: false, 
           clobber: false, 
@@ -102,8 +102,8 @@ node {
           modtime: false, 
           rmdir: false, 
           streamName: '', 
-          view: '''//depot/libs/${OS}/... //jenkins-${NODE_NAME}-${JOB_NAME}/libs/...
-                   //depot/code/... //jenkins-${NODE_NAME}-${JOB_NAME}/code/...'''
+          view: '''//depot/libs/${OS}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}/libs/...
+                   //depot/code/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}/code/...'''
         ]
       ]
     ])
@@ -127,7 +127,7 @@ p4publish(credential: 'phooey1666',
     reopen: false], 
   workspace: [$class: 'StreamWorkspaceImpl', 
     charset: 'none', 
-    format: 'jenkins-${NODE_NAME}-${JOB_NAME}-publish', 
+    format: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-publish', 
     pinHost: false, 
     streamName: '//streams/st2-rel1'])
 ```

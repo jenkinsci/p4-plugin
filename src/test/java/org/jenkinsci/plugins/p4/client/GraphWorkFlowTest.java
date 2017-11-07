@@ -195,7 +195,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	public void testParallelSync() throws Exception {
 
 		String id = auth.getId();
-		String client = "jenkins-master-parallelSync";
+		String client = "jenkins-master-parallelSync-0";
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +

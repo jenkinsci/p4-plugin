@@ -340,6 +340,7 @@ public class PerforceScm extends SCM {
 		String nodeName = node.getNodeName();
 		nodeName = (nodeName.isEmpty()) ? "master" : nodeName;
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
+		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
 
 		Workspace ws = (Workspace) workspace.clone();
 		String root = buildWorkspace.getRemote();

@@ -50,6 +50,7 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 		// Set environment
 		EnvVars envVars = run.getEnvironment(listener);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", "master"));
+		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
 		workspace.setExpand(envVars);
 		workspace.setRootPath(buildWorkspace.getRemote());
 
