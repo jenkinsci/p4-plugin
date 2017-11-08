@@ -13,7 +13,6 @@ import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
-import hudson.model.Computer;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
@@ -275,9 +274,8 @@ public class PerforceScm extends SCM {
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
 	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
-
 		PollingResult state = PollingResult.NO_CHANGES;
-		Node node = workspaceToNode(buildWorkspace);
+		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
 		// Delay polling if build is in progress
 		if (job.isBuilding()) {
@@ -336,9 +334,7 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 
 		// set NODE_NAME to Node or default "master" if not set
-		Node node = workspaceToNode(buildWorkspace);
-		String nodeName = node.getNodeName();
-		nodeName = (nodeName.isEmpty()) ? "master" : nodeName;
+		String nodeName = NodeHelper.getNodeName(buildWorkspace);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
 
@@ -852,37 +848,6 @@ public class PerforceScm extends SCM {
 	@Override
 	public boolean requiresWorkspaceForPolling() {
 		return false;
-	}
-
-	/**
-	 * Helper: find the Remote/Local Computer used for build
-	 *
-	 * @param workspace
-	 */
-	private static Computer workspaceToComputer(FilePath workspace) {
-		Jenkins jenkins = Jenkins.getInstance();
-		if (workspace != null && workspace.isRemote()) {
-			for (Computer computer : jenkins.getComputers()) {
-				if (computer.getChannel() == workspace.getChannel()) {
-					return computer;
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Helper: find the Node for slave build or return current instance.
-	 *
-	 * @param workspace
-	 */
-	private static Node workspaceToNode(FilePath workspace) {
-		Computer computer = workspaceToComputer(workspace);
-		if (computer != null) {
-			return computer.getNode();
-		}
-		Jenkins jenkins = Jenkins.getInstance();
-		return jenkins;
 	}
 
 	/**
