@@ -6,7 +6,8 @@ import hudson.FilePath;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.p4.NodeHelper;
+import org.jenkinsci.plugins.p4.build.ExecutorHelper;
+import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -103,10 +104,13 @@ public abstract class AbstractTask implements Serializable {
 
 		Workspace ws = (Workspace) wsType.clone();
 
-		// Set environment
+		// Set Node environment
 		EnvVars envVars = run.getEnvironment(listener);
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", NodeHelper.getNodeName(run)));
-		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
+		String nodeName = NodeHelper.getNodeName(buildWorkspace);
+		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
+		String executor = ExecutorHelper.getExecutorID(buildWorkspace);
+		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
+
 		ws.setExpand(envVars);
 
 		// Set workspace root (check for parallel execution)

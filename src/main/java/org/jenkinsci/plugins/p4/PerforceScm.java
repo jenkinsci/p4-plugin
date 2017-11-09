@@ -33,6 +33,8 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.build.ExecutorHelper;
+import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.build.P4EnvironmentContributor;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
@@ -336,7 +338,8 @@ public class PerforceScm extends SCM {
 		// set NODE_NAME to Node or default "master" if not set
 		String nodeName = NodeHelper.getNodeName(buildWorkspace);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
-		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", "0"));
+		String executor = ExecutorHelper.getExecutorID(buildWorkspace);
+		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
 
 		Workspace ws = (Workspace) workspace.clone();
 		String root = buildWorkspace.getRemote();
