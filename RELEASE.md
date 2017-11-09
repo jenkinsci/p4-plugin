@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.8.1 (major features/fixes)
+
+[@23192](https://swarm.workshop.perforce.com/changes/23192) - Workaround for EXECUTOR_NUMBER not being set.
+
+[@23190](https://swarm.workshop.perforce.com/changes/23190) - Merge pull request #62 from fbyrne/standardize-nodename-var.  Standardize the evaluation of what NODE_NAME in p4 workspace name generation.
+
+[@23155](https://swarm.workshop.perforce.com/changes/23155) - Remove Workspace cloning for better concurrent builds.  Remove Workspace cloning and encourage users to make use of EXECUTOR_NUMBER in the Jenkins job name.  JENKINS-41432
+
+[@23071](https://swarm.workshop.perforce.com/changes/23071) - Fix for Swarm P4Approve step; use ApproveState.name not id.
+
+
 ### Release 1.8.0 (major features/fixes)
 
 [@23042](https://swarm.workshop.perforce.com/changes/23042) - Disable BOM addition to UTF8 files.  https://github.com/p4paul/p4-jenkins/issues/32
