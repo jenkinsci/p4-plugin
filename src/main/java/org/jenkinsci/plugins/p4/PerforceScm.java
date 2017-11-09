@@ -13,6 +13,7 @@ import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
@@ -63,6 +64,7 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -279,9 +281,8 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
-		// Delay polling if build is in progress
-		if (job.isBuilding()) {
-			listener.getLogger().println("Build in progress, polling delayed.");
+		if (job.isBuilding() && !isConcurrentBuild(job)) {
+			listener.getLogger().println("Build in progress and concurrent builds disabled, polling delayed.");
 			return PollingResult.NO_CHANGES;
 		}
 
@@ -321,6 +322,11 @@ public class PerforceScm extends SCM {
 		}
 
 		return state;
+	}
+
+	private boolean isConcurrentBuild(Job<?, ?> job) {
+		return job instanceof AbstractProject ? ((AbstractProject) job).isConcurrentBuild() :
+				job.getProperty(DisableConcurrentBuildsJobProperty.class) == null;
 	}
 
 	/**
