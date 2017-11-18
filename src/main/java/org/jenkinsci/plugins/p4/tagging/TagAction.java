@@ -262,7 +262,7 @@ public class TagAction extends AbstractScmTagAction {
 		// Workaround for JENKINS-40722
 		do {
 			actions = lastActions(run);
-		} while(actions == null && run.isBuilding());
+		} while(actions == null && run != null && run.isBuilding());
 
 
 		if (actions == null || syncID == null || syncID.isEmpty()) {
