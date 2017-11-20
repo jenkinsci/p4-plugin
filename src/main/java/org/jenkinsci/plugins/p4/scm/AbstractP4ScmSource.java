@@ -106,7 +106,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
-	private String getScriptPathOrDefault(String defaultScriptPath) {
+	protected String getScriptPathOrDefault(String defaultScriptPath) {
 		SCMSourceOwner owner = getOwner();
 		if(owner instanceof WorkflowMultiBranchProject){
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
@@ -177,7 +177,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected List<String> getIncludePaths() {
-		String[] array = includes.split("[\\r\\n]+");
+		return toLines(includes);
+	}
+
+	protected List<String> toLines(String value) {
+		String[] array = value.split("[\\r\\n]+");
 		return Arrays.asList(array);
 	}
 
