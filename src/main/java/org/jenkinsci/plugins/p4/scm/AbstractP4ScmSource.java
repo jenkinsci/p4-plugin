@@ -106,7 +106,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
-	private String getScriptPathOrDefault(String defaultScriptPath) {
+	protected String getScriptPathOrDefault(String defaultScriptPath) {
 		SCMSourceOwner owner = getOwner();
 		if(owner instanceof WorkflowMultiBranchProject){
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;

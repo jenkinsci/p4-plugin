@@ -5,15 +5,12 @@ import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
-import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
-import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -130,16 +127,6 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		}
 		WorkspaceSpec spec = new WorkspaceSpec(workspaceView.toString(), null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
-	}
-
-	private String getScriptPathOrDefault(String defaultScriptPath) {
-		SCMSourceOwner owner = getOwner();
-		if(owner instanceof WorkflowMultiBranchProject){
-			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
-			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
-			return branchProjectFactory.getScriptPath();
-		}
-		return defaultScriptPath;
 	}
 
 	protected List<String> getViewMappings() {
