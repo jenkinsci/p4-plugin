@@ -286,15 +286,22 @@ public class PerforceScm extends SCM {
 			return PollingResult.NO_CHANGES;
 		}
 
-		Jenkins j = Jenkins.getInstance();
-		if (j == null) {
-			listener.getLogger().println("Warning Jenkins instance is null.");
-			return PollingResult.NO_CHANGES;
-		}
-
 		// Get last run and build workspace
 		Run<?, ?> lastRun = job.getLastBuild();
-		buildWorkspace = j.getRootPath();
+
+		// Build workspace is often null as requiresWorkspaceForPolling() returns false as a checked out workspace is
+		// not needed, but we still need a client and artificial root for the view.
+		// JENKINS-46908
+		if (buildWorkspace == null) {
+			String defaultRoot = job.getRootDir().getAbsoluteFile().getAbsolutePath();
+			if (lastRun != null) {
+				EnvVars env = lastRun.getEnvironment(listener);
+				buildWorkspace = new FilePath(new File(env.get("WORKSPACE", defaultRoot)));
+			} else {
+				listener.getLogger().println("Warning Jenkins Workspace root not defined.");
+				return PollingResult.NO_CHANGES;
+			}
+		}
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
