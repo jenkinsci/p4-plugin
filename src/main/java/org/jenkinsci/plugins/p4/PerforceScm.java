@@ -469,7 +469,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Abort if build failed
-		if(!success) {
+		if (!success) {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
 			throw new AbortException(msg);
@@ -701,6 +701,7 @@ public class PerforceScm extends SCM {
 		private String credential;
 		private String clientName;
 		private String depotPath;
+		private boolean autoSubmitOnChange;
 
 		private boolean deleteClient;
 		private boolean deleteFiles;
@@ -724,6 +725,10 @@ public class PerforceScm extends SCM {
 
 		public String getDepotPath() {
 			return depotPath;
+		}
+
+		public boolean isAutoSubmitOnChange() {
+			return autoSubmitOnChange;
 		}
 
 		public boolean isDeleteClient() {
@@ -789,6 +794,7 @@ public class PerforceScm extends SCM {
 				credential = json.getString("credential");
 				clientName = json.getString("clientName");
 				depotPath = json.getString("depotPath");
+				autoSubmitOnChange = json.getBoolean("autoSubmitOnChange");
 			} catch (JSONException e) {
 				logger.info("Unable to read Auto Version configuration.");
 				autoSave = false;

@@ -71,6 +71,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -632,7 +633,7 @@ public class ClientHelper extends ConnectionHelper {
 		validate.check(list, "not opened on this client");
 	}
 
-	public void versionFile(String file, Publish publish) throws Exception {
+	public void versionFile(String file, Publish publish, int ChangelistID, boolean submit) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
 		findChangeFiles(files, publish.isDelete());
@@ -642,11 +643,13 @@ public class ClientHelper extends ConnectionHelper {
 			return;
 		}
 
-		// create changelist with files
-		IChangelist change = createChangeList(files, publish);
+		// create/append changelist with files
+		IChangelist change = appendPendingChangeList(files, publish, ChangelistID);
 
 		// submit changelist
-		submitFiles(change, false);
+		if (submit) {
+			submitFiles(change, false);
+		}
 	}
 
 	public boolean buildChange(Publish publish) throws Exception {
@@ -706,7 +709,7 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
 		// create changelist and open files
-		IChangelist change = createChangeList(files, publish);
+		IChangelist change = appendPendingChangeList(files, publish, IChangelist.DEFAULT);
 
 		// logging
 		OpenedFilesOptions openOps = new OpenedFilesOptions();
@@ -740,19 +743,24 @@ public class ClientHelper extends ConnectionHelper {
 		log("duration: " + timer.toString() + "\n");
 	}
 
-	private IChangelist createChangeList(List<IFileSpec> files, Publish publish) throws Exception {
+	private IChangelist appendPendingChangeList(List<IFileSpec> files, Publish publish, int ChangeListID) throws Exception {
 
 		String desc = publish.getExpandedDesc();
 
-		// create new pending change and add description
-		IChangelist change = new Changelist();
-		change.setDescription(desc);
-		change = iclient.createChangelist(change);
-		log("... pending change: " + change.getId());
+		if (ChangeListID == IChangelist.UNKNOWN || ChangeListID == IChangelist.DEFAULT) {
+
+			// create new pending change and add description
+			IChangelist change = new Changelist();
+			change.setDescription(desc);
+			change = iclient.createChangelist(change);
+			ChangeListID = change.getId();
+		}
+
+		log("... pending change: " + ChangeListID);
 
 		// move files from default change
 		ReopenFilesOptions reopenOpts = new ReopenFilesOptions();
-		reopenOpts.setChangelistId(change.getId());
+		reopenOpts.setChangelistId(ChangeListID);
 
 		// set purge if required
 		if (publish instanceof SubmitImpl) {
@@ -764,7 +772,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		iclient.reopenFiles(files, reopenOpts);
 
-		return change;
+		return getChange(ChangeListID);
 	}
 
 	private void submitFiles(IChangelist change, boolean reopen) throws Exception {
@@ -1050,6 +1058,45 @@ public class ClientHelper extends ConnectionHelper {
 			log("P4: no revisions under " + ws + " using latest change: " + change);
 		}
 		return change;
+	}
+
+	public List<IChangelistSummary> getPendingChangelists(boolean includeLongDescription, String clientName) throws Exception {
+
+		// build file revision spec
+		String ws = "//" + iclient.getName() + "/...";
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setType(IChangelist.Type.PENDING);
+		opts.setMaxMostRecent(getMaxChangeLimit());
+		opts.setLongDesc(includeLongDescription);
+		opts.setClientName(clientName);
+		List<IChangelistSummary> list = connection.getChangelists(files, opts);
+
+		// In-line implementation of comparator because of course you can't sort changelists....
+		Collections.sort(list, new Comparator<IChangelistSummary>() {
+			public int compare(IChangelistSummary one, IChangelistSummary two) {
+				return Integer.compare(one.getId(), two.getId());
+			}
+		});
+		Collections.reverse(list);
+
+		return list;
+	}
+
+	public int findPendingChangelistIDByDesc(String desc, String client) throws Exception {
+		// Find the changelist if it exists
+		int changelistID = IChangelist.UNKNOWN;
+		List<IChangelistSummary> ol = getPendingChangelists(true, client);
+		for (IChangelistSummary item : ol) {
+			logger.fine("P4: Checking Changelist: " + item.getId() + " [" + item.getDescription() + "]");
+			// NOTE: For some reason when creating changelists p4java seems to spit a newline at the end of the description.
+			if (item.getDescription().replaceAll("\\r\\n|\\r|\\n", "").trim().equalsIgnoreCase(desc.trim())) {
+				changelistID = item.getId();
+				break;
+			}
+		}
+		return changelistID;
 	}
 
 	/**
