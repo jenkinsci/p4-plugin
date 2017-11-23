@@ -1,5 +1,18 @@
 ## Release notes
 
+### Release 1.8.2 (major features/fixes)
+
+[@23239](https://swarm.workshop.perforce.com/changes/23239) - Add configuration parameter for choosing whether to allow auto-submission of config changes to perforce.  This can avoid creating floods of changelists at the cost of requiring a manual changelist submit. A scheduled task may be alleviate the need to manually submit the updated changes while still reducing the number of changelists created.
+
+[@23234](https://swarm.workshop.perforce.com/changes/23234) - Avoid resetting workspace root during polling operation.  Ideally, workspaces shouldn't need to be reconfigured every poll, but adjusting the polling logic to only create-if-not-exists is beyond my scope.  JENKINS-46908
+
+[@23218](https://swarm.workshop.perforce.com/changes/23218) - Merge pull request #63 from ADTRAN/JENKINS-34052. JENKINS-34052 Poll for concurrent jobs
+
+[@23217](https://swarm.workshop.perforce.com/changes/23217) - Add the ability to provide a view spec to Helix Branches SCM Pr/61. Review Pr/64
+
+[@23216](https://swarm.workshop.perforce.com/changes/23216) - Allow expandedDesc to be used if only Description has been set. This can occur in the "Save Configuration" beta functionality.
+
+
 ### Release 1.8.1 (major features/fixes)
 
 [@23192](https://swarm.workshop.perforce.com/changes/23192) - Workaround for EXECUTOR_NUMBER not being set.
