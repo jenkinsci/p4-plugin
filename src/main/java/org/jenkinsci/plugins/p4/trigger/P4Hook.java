@@ -15,6 +15,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +43,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	public void doChange(StaplerRequest req) throws IOException {
-		String body = IOUtils.toString(req.getInputStream());
+		String body = IOUtils.toString(req.getInputStream(), Charset.forName("UTF-8"));
 		String contentType = req.getContentType();
 		if (contentType != null && contentType.startsWith("application/json")) {
 			body = URLDecoder.decode(body, "UTF-8");

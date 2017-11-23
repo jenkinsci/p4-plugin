@@ -86,7 +86,7 @@ public class ConfigurationListener extends SaveableListener {
 		view.append(" ");
 		view.append("//" + clientName + "/...");
 
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "local", view.toString());
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view.toString(), null, null, null, true);
 
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec);
 		workspace.setExpand(new HashMap<String, String>());

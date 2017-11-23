@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -123,7 +124,7 @@ public class SimpleTestServer {
 		executor.execute(cmdLine);
 
 		int version = 0;
-		for (String line : outputStream.toString().split("\\n")) {
+		for (String line : outputStream.toString(Charset.forName("UTF-8")).split("\\n")) {
 			if (line.startsWith("Rev. P4D")) {
 				Pattern p = Pattern.compile("\\d{4}\\.\\d{1}");
 				Matcher m = p.matcher(line);

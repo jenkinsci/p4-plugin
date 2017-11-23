@@ -443,7 +443,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Only use quiet populate option to insure a clean sync
 		boolean quiet = populate.isQuiet();
-		Populate clean = new AutoCleanImpl(false, false, false, quiet, null, null);
+		Populate clean = new AutoCleanImpl(false, false, false, false, quiet, null, null);
 		syncFiles(revisions, clean);
 
 		// remove all files from workspace
