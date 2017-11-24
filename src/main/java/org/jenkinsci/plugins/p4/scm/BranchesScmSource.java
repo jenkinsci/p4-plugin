@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
-  private String filter = DescriptorImpl.defaultFilter;
+	private String filter = DescriptorImpl.defaultFilter;
 	private String mappings = DescriptorImpl.defaultPath;
 
 	@DataBoundConstructor
@@ -49,7 +49,14 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return filter;
 	}
 
-	public String getMappings(){ return this.mappings; }
+	public String getMappings() {
+		// support 1.8.1 configurations that did not have any mappings
+		if(mappings == null) {
+			mappings = DescriptorImpl.defaultPath;
+		}
+
+		return mappings;
+	}
 
 	@DataBoundSetter
 	public void setMappings(String mappings) {
@@ -75,7 +82,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
 
 		String actualFilter = getFilter();
-		if(getFilter() == null || filter.trim().equals("")){
+		if (getFilter() == null || filter.trim().equals("")) {
 			actualFilter = ".*";
 		}
 		Pattern filterPattern = Pattern.compile(actualFilter);
@@ -85,7 +92,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			String branch = s.getOriginalPathString();
 
 			// check the filters
-			if(!filterPattern.matcher(branch).matches()){
+			if (!filterPattern.matcher(branch).matches()) {
 				continue;
 			}
 
@@ -113,7 +120,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	@Override
 	public Workspace getWorkspace(List<P4Path> paths) {
 		P4Path branchPath = Iterables.getFirst(paths, null);
-		if(branchPath == null){
+		if (branchPath == null) {
 			throw new IllegalArgumentException("missing branch path");
 		}
 
@@ -122,7 +129,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		StringBuffer workspaceView = new StringBuffer(1024);
 		workspaceView.append(String.format(mappingFormat, getScriptPathOrDefault("Jenkinsfile")));
-		for(String mapping : getViewMappings()){
+		for (String mapping : getViewMappings()) {
 			workspaceView.append("\n").append(String.format(mappingFormat, mapping));
 		}
 		WorkspaceSpec spec = new WorkspaceSpec(workspaceView.toString(), null);

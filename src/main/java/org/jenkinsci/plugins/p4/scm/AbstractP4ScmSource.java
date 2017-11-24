@@ -25,6 +25,7 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -181,6 +182,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected List<String> toLines(String value) {
+		if(value == null) {
+			return new ArrayList<>();
+		}
 		String[] array = value.split("[\\r\\n]+");
 		return Arrays.asList(array);
 	}
