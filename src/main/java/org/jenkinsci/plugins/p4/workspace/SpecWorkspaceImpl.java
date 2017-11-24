@@ -109,7 +109,8 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		 * @return suggestion
 		 */
 		public AutoCompletionCandidates doAutoCompleteSpecPath(@QueryParameter String value) {
-			return NavigateHelper.getPath(value);
+			NavigateHelper nav = new NavigateHelper(10);
+			return nav.getCandidates(value);
 		}
 
 		public FormValidation doCheckSpecPath(@QueryParameter String value) {

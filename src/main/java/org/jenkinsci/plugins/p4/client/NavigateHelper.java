@@ -1,96 +1,133 @@
 package org.jenkinsci.plugins.p4.client;
 
-import hudson.model.AutoCompletionCandidates;
-
-import java.util.List;
-
 import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetDirectoriesOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.model.AutoCompletionCandidates;
 
-public class NavigateHelper {
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-	public static AutoCompletionCandidates getPath(String value) {
+public class NavigateHelper implements Closeable {
 
-		if (!value.startsWith("//")) {
-			return null;
+	private final int max;
+	private final IOptionsServer p4;
+
+	private List<String> paths;
+
+	public NavigateHelper() {
+		this(0);
+	}
+
+	public NavigateHelper(int max) {
+		this.max = max;
+		paths = new ArrayList<>();
+		p4 = ConnectionFactory.getConnection();
+	}
+
+	public AutoCompletionCandidates getCandidates(String value) {
+		buildPaths(value);
+		return getCandidates();
+	}
+
+	public List<String> getPaths(String value) {
+		buildPaths(value);
+		return paths;
+	}
+
+	private void buildPaths(String value) {
+		try {
+			if (!value.startsWith("//")) {
+				value = "//" + value;
+			}
+
+			// remove leading '//' markers for depot matching
+			String depot = value.substring(2);
+			if (!depot.contains("/")) {
+				listDepots(depot);
+				return;
+			}
+
+			listDirs(value);
+			listFiles(value);
+		} catch (P4JavaException e) {
 		}
+	}
 
-		// remove leading '//' markers for depot matching
-		String depot = value.substring(2);
-		if (!depot.contains("/")) {
-			return listDepots(depot);
+	private void listDepots(String value) throws P4JavaException {
+		if (p4 != null) {
+			List<IDepot> list = p4.getDepots();
+			for (IDepot l : list) {
+				if (l.getName().startsWith(value)) {
+					paths.add("//" + l.getName());
+				}
+			}
 		}
+	}
 
+	private void listDirs(String value) throws P4JavaException {
+		if (p4 != null && value.length() > 4) {
+
+			List<IFileSpec> dirs;
+			dirs = FileSpecBuilder.makeFileSpecList(value + "*");
+			GetDirectoriesOptions opts = new GetDirectoriesOptions();
+			List<IFileSpec> list = p4.getDirectories(dirs, opts);
+
+			if (list == null) {
+				return;
+			}
+			if (max > 0 && list.size() > max) {
+				list = list.subList(0, max);
+			}
+
+			for (IFileSpec l : list) {
+				String dir = l.getOriginalPathString();
+				if (dir != null) {
+					paths.add(dir);
+				}
+			}
+		}
+	}
+
+	private void listFiles(String value) throws P4JavaException {
+		if (p4 != null && value.length() > 4) {
+
+			List<IFileSpec> files;
+			files = FileSpecBuilder.makeFileSpecList(value + "...");
+
+			GetDepotFilesOptions opts = new GetDepotFilesOptions();
+			if (max > 0) {
+				opts.setMaxResults(max);
+			}
+
+			List<IFileSpec> list = p4.getDepotFiles(files, opts);
+
+			for (IFileSpec l : list) {
+				paths.add(l.getDepotPathString());
+			}
+		}
+	}
+
+	private AutoCompletionCandidates getCandidates() {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
-		listDirs(value, c);
-		listFiles(value, c);
+		for (String path : paths) {
+			c.add(path);
+		}
 		return c;
 	}
 
-	private static AutoCompletionCandidates listDepots(String value) {
-		AutoCompletionCandidates c = new AutoCompletionCandidates();
+	@Override
+	public void close() throws IOException {
 		try {
-			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null) {
-				List<IDepot> list = iserver.getDepots();
-				for (IDepot l : list) {
-					if (l.getName().startsWith(value)) {
-						c.add("//" + l.getName());
-					}
-				}
-			}
-		} catch (Exception e) {
-		}
-		return c;
-	}
-
-	private static void listDirs(String value, AutoCompletionCandidates c) {
-		try {
-			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null && value.length() > 4) {
-
-				List<IFileSpec> dirs;
-				dirs = FileSpecBuilder.makeFileSpecList(value + "*");
-				GetDirectoriesOptions opts = new GetDirectoriesOptions();
-				List<IFileSpec> list = iserver.getDirectories(dirs, opts);
-
-				if (list == null) {
-					return;
-				}
-				if (list.size() > 10) {
-					list = list.subList(0, 10);
-				}
-				for (IFileSpec l : list) {
-					String dir = l.getOriginalPathString();
-					if (dir != null) {
-						c.add(dir);
-					}
-				}
-			}
-		} catch (Exception e) {
-		}
-	}
-
-	private static void listFiles(String value, AutoCompletionCandidates c) {
-		try {
-			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null && value.length() > 4) {
-
-				List<IFileSpec> files;
-				files = FileSpecBuilder.makeFileSpecList(value + "...");
-				GetDepotFilesOptions opts = new GetDepotFilesOptions();
-				opts.setMaxResults(10);
-				List<IFileSpec> list = iserver.getDepotFiles(files, opts);
-
-				for (IFileSpec l : list) {
-					c.add(l.getDepotPathString());
-				}
-			}
-		} catch (Exception e) {
+			p4.disconnect();
+		} catch (P4JavaException e) {
+			throw new IOException(e);
 		}
 	}
 }

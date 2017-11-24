@@ -33,9 +33,9 @@ public class FilterPathImpl extends Filter implements Serializable {
 			return "Exclude changes from Depot path";
 		}
 
-		public AutoCompletionCandidates doAutoCompletePath(
-				@QueryParameter String value) {
-			return NavigateHelper.getPath(value);
+		public AutoCompletionCandidates doAutoCompletePath(@QueryParameter String value) {
+			NavigateHelper nav = new NavigateHelper(10);
+			return nav.getCandidates(value);
 		}
 	}
 }
