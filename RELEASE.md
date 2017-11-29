@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.8.3 (major features/fixes)
+
+[@23263](https://swarm.workshop.perforce.com/changes/23263) - Update NavigateHelper for future use.
+
+[@23261](https://swarm.workshop.perforce.com/changes/23261) - Backwards compatibility for new Mappings field in MultiBranch.
+
+
 ### Release 1.8.2 (major features/fixes)
 
 [@23239](https://swarm.workshop.perforce.com/changes/23239) - Add configuration parameter for choosing whether to allow auto-submission of config changes to perforce.  This can avoid creating floods of changelists at the cost of requiring a manual changelist submit. A scheduled task may be alleviate the need to manually submit the updated changes while still reducing the number of changelists created.
