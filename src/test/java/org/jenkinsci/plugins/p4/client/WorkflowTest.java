@@ -245,7 +245,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		// configure Global Library
 		String path = "//depot/library";
-		GlobalLibraryScmSource scm = new GlobalLibraryScmSource("p4", auth.getId(), null, path);
+		GlobalLibraryScmSource scm = new GlobalLibraryScmSource(auth.getId(), null, path);
 		SCMSourceRetriever source = new SCMSourceRetriever(scm);
 		LibraryConfiguration config = new LibraryConfiguration("testLib", source);
 		config.setImplicit(true);

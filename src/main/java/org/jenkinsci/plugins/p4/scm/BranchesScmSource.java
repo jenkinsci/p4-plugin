@@ -28,8 +28,8 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	private String mappings = DescriptorImpl.defaultPath;
 
 	@DataBoundConstructor
-	public BranchesScmSource(String id, String credential, String includes, String charset, String format) {
-		super(id, credential);
+	public BranchesScmSource(String credential, String includes, String charset, String format) {
+		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
 		setFormat(format);

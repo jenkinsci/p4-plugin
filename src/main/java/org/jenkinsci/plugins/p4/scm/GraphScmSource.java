@@ -33,8 +33,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public GraphScmSource(String id, String credential, String includes, String charset, String format) {
-		super(id, credential);
+	public GraphScmSource(String credential, String includes, String charset, String format) {
+		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
 		setFormat(format);

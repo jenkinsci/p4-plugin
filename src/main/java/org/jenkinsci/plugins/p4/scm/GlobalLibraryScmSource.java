@@ -29,8 +29,8 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@DataBoundConstructor
-	public GlobalLibraryScmSource(String id, String credential, String charset, String path) {
-		super(id, credential);
+	public GlobalLibraryScmSource(String credential, String charset, String path) {
+		super(credential);
 		this.path = path;
 		setCharset(charset);
 		setFormat("jenkins-library");

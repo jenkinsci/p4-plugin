@@ -34,8 +34,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	transient private SwarmHelper swarm;
 
 	@DataBoundConstructor
-	public SwarmScmSource(String id, String credential, String project, String charset, String format) throws Exception {
-		super(id, credential);
+	public SwarmScmSource(String credential, String project, String charset, String format) throws Exception {
+		super(credential);
 
 		this.project = project;
 		setCharset(charset);

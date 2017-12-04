@@ -22,8 +22,8 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public StreamsScmSource(String id, String credential, String includes, String charset, String format) {
-		super(id, credential);
+	public StreamsScmSource(String credential, String includes, String charset, String format) {
+		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
 		setFormat(format);

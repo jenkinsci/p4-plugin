@@ -28,11 +28,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public abstract class AbstractP4ScmSource extends SCMSource {
 
-	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
 	public static final String scmSourceClient = "jenkins-master";
 
 	protected final String credential;
@@ -42,8 +40,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	private String format;
 	private Populate populate;
 
-	public AbstractP4ScmSource(String id, String credential) {
-		super(id);
+	public AbstractP4ScmSource(String credential) {
 		this.credential = credential;
 	}
 
