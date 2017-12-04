@@ -13,6 +13,12 @@ public class NodeHelper {
 	private NodeHelper() {
 	}
 
+	/**
+	 * Helper: find the node name used for the build
+	 *
+	 * @param path Jenkins workspace on build node
+	 * @return Node name
+	 */
 	public static String getNodeName(FilePath path) {
 		Node node = workspaceToNode(path);
 		String nodeName = nameOf(node);
@@ -27,6 +33,7 @@ public class NodeHelper {
 	 * Helper: find the Remote/Local Computer used for build
 	 *
 	 * @param workspace Jenkins workspace on build node
+	 * @return Computer
 	 */
 	private static Computer workspaceToComputer(FilePath workspace) {
 		if (workspace != null) {
@@ -39,6 +46,7 @@ public class NodeHelper {
 	 * Helper: find the Node for slave build or return current instance.
 	 *
 	 * @param workspace Jenkins workspace on build node
+	 * @return Node
 	 */
 	public static Node workspaceToNode(FilePath workspace) {
 		Computer computer = workspaceToComputer(workspace);
