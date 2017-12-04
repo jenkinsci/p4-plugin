@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
@@ -30,8 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public abstract class AbstractP4ScmSource extends SCMSource {
-
-	public static final String scmSourceClient = "jenkins-master";
 
 	protected final String credential;
 
@@ -106,7 +105,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	protected String getScriptPathOrDefault(String defaultScriptPath) {
 		SCMSourceOwner owner = getOwner();
-		if(owner instanceof WorkflowMultiBranchProject){
+		if (owner instanceof WorkflowMultiBranchProject) {
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
 			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
 			return branchProjectFactory.getScriptPath();
@@ -158,12 +157,13 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					SCMRevision revision = getRevision(head, listener);
 					observer.observe(head, revision);
 				} else {
-					ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset);
-					SCMSourceCriteria.Probe probe = new P4Probe(p4, head);
-					if (criteria.isHead(probe, listener)) {
-						// get revision and add observe
-						SCMRevision revision = getRevision(head, listener);
-						observer.observe(head, revision);
+					try (ClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, charset)) {
+						SCMSourceCriteria.Probe probe = new P4Probe(p4, head);
+						if (criteria.isHead(probe, listener)) {
+							// get revision and add observe
+							SCMRevision revision = getRevision(head, listener);
+							observer.observe(head, revision);
+						}
 					}
 				}
 				// check for user abort
@@ -179,7 +179,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	protected List<String> toLines(String value) {
-		if(value == null) {
+		if (value == null) {
 			return new ArrayList<>();
 		}
 		String[] array = value.split("[\\r\\n]+");
@@ -187,7 +187,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-		try (ClientHelper p4 = new ClientHelper(getOwner(), credential, listener, scmSourceClient, charset)) {
+		try (ClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, charset)) {
 
 			// TODO look for graph revisions too
 

@@ -109,7 +109,11 @@ public class ClientHelper extends ConnectionHelper {
 		clientLogin(client, charset);
 	}
 
-	private void clientLogin(String client, String charset) {
+	protected ClientHelper(Item context, String credential, TaskListener listener) {
+		super(context, credential, listener);
+	}
+
+	protected void clientLogin(String client, String charset) {
 		// Exit early if no connection
 		if (connection == null) {
 			return;
