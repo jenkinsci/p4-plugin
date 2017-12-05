@@ -4,7 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -17,9 +17,9 @@ public class P4Probe extends SCMProbe {
 
 	private final P4Head head;
 
-	private transient ClientHelper p4;
+	private transient ConnectionHelper p4;
 
-	public P4Probe(ClientHelper p4, P4Head head) {
+	public P4Probe(ConnectionHelper p4, P4Head head) {
 		this.head = head;
 		this.p4 = p4;
 	}

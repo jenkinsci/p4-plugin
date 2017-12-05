@@ -601,6 +601,33 @@ public class ConnectionHelper implements AutoCloseable {
 		return null;
 	}
 
+	/**
+	 * Get the latest change on the given path
+	 *
+	 * @param path Perforce depot path //foo/...
+	 * @return change number
+	 * @throws Exception push up stack
+	 */
+	public long getHead(String path) throws Exception {
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(1);
+
+		List<IChangelistSummary> changes = connection.getChangelists(spec, opts);
+		if (!changes.isEmpty()) {
+			return changes.get(0).getId();
+		}
+		return -1;
+	}
+
+	public boolean hasFile(String depotPath) throws Exception {
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
+		GetDepotFilesOptions opts = new GetDepotFilesOptions();
+		List<IFileSpec> specs = connection.getDepotFiles(files, opts);
+		return validate.checkCatch(specs, "");
+	}
+
 	public ICommit getGraphCommit(String sha, String repo) throws P4JavaException {
 		return connection.getCommitObject(sha, repo);
 	}

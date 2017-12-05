@@ -13,8 +13,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.TempClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
@@ -157,7 +156,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					SCMRevision revision = getRevision(head, listener);
 					observer.observe(head, revision);
 				} else {
-					try (ClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, charset)) {
+					try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 						SCMSourceCriteria.Probe probe = new P4Probe(p4, head);
 						if (criteria.isHead(probe, listener)) {
 							// get revision and add observe
@@ -187,7 +186,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
-		try (ClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, charset)) {
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
 			// TODO look for graph revisions too
 
