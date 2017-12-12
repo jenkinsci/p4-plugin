@@ -421,7 +421,7 @@ For example in a Pipeline script you can use:
 
     ${env.P4_CHANGELIST}
 
-For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/workflow-plugin/blob/master/WORKFLOW.md) section.
+For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/pipeline-plugin/blob/master/README.md) section.
 
 ## Troubleshooting
 
