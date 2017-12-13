@@ -26,7 +26,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 
 	private final String streamName;
 	private final String line;
-	private final String view;
+	private String view;
 	private final String changeView;
 	private final String type;
 
@@ -43,6 +43,10 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 
 	public String getView() {
 		return view;
+	}
+
+	public void setView(String view) {
+		this.view = view;
 	}
 
 	public String getChangeView() {

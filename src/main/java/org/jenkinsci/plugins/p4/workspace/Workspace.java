@@ -36,6 +36,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	 * @return Client name
 	 */
 	public abstract String getName();
+	public abstract void setName(String name);
 
 	public String getCharset() {
 		return charset;

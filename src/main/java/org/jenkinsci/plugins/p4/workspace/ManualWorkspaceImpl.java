@@ -27,7 +27,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String name;
+	private String name;
 	public WorkspaceSpec spec;
 
 	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
@@ -37,8 +37,17 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return name;
 	}
 
+	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	public WorkspaceSpec getSpec() {
 		return spec;
+	}
+
+	public void setSpec(WorkspaceSpec spec) {
+		this.spec = spec;
 	}
 
 	@Override

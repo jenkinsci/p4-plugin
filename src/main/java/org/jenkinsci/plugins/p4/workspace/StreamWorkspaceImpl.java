@@ -15,7 +15,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String streamName;
-	private final String format;
+	private String format;
 
 	private static Logger logger = Logger.getLogger(StreamWorkspaceImpl.class
 			.getName());
@@ -31,6 +31,11 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	@Override
 	public String getName() {
 		return format;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.format = name;
 	}
 
 	@Override

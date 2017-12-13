@@ -18,7 +18,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String templateName;
-	private final String format;
+	private String format;
 
 	private static Logger logger = Logger.getLogger(TemplateWorkspaceImpl.class
 			.getName());
@@ -34,6 +34,11 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	@Override
 	public String getName() {
 		return format;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.format = name;
 	}
 
 	@Override

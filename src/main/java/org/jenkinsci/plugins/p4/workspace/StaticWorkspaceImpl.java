@@ -15,11 +15,16 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String name;
+	private String name;
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override
