@@ -94,7 +94,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		String scriptPath = getScriptPathOrDefault("Jenkinsfile");
 		StringBuffer sb = new StringBuffer();
 		for (P4Path path : paths) {
-			String view = String.format("%s/%s //%s/%s", path.getPath(), scriptPath, client, scriptPath);
+			String view = String.format("%s/%s //%s/%s", path.getPath(), scriptPath, "${P4_CLIENT}", scriptPath);
 			sb.append(view).append("\n");
 		}
 

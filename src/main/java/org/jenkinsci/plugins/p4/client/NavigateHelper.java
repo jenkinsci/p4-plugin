@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.file.FileSpecBuilder;
+import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
@@ -18,27 +19,52 @@ public class NavigateHelper implements Closeable {
 
 	private final int max;
 	private final IOptionsServer p4;
+	private final String root;
 
-	private List<String> paths;
+	private List<Node> nodes;
 
-	public NavigateHelper() {
-		this(0);
+	public NavigateHelper(IOptionsServer p4) {
+		this.max = 0;
+		this.p4 = p4;
+
+		String client = p4.getCurrentClient().getName();
+		this.root = "//" + client + "/";
 	}
 
 	public NavigateHelper(int max) {
 		this.max = max;
-		paths = new ArrayList<>();
 		p4 = ConnectionFactory.getConnection();
+		root = "";
 	}
 
-	public AutoCompletionCandidates getCandidates(String value) {
-		buildPaths(value);
+	/**
+	 * Matches for a partial depot path
+	 *
+	 * @param depotPath a Perforce Depot path e.g. //depot/pro
+	 * @return matches for the depot path e.g. //depot/projA
+	 */
+	public AutoCompletionCandidates getCandidates(String depotPath) {
+		nodes = new ArrayList<>();
+		buildPaths(depotPath);
 		return getCandidates();
 	}
 
-	public List<String> getPaths(String value) {
-		buildPaths(value);
-		return paths;
+	/**
+	 * Get a list of path nodes.
+	 *
+	 * @param localPath a relative local path e.g. "" for root or "projA/comX"
+	 * @return list of nodes
+	 */
+	public List<Node> getNodes(String localPath) {
+		nodes = new ArrayList<>();
+
+		String path = root + localPath;
+		if (!path.isEmpty() && !path.endsWith("/")) {
+			path = path + "/";
+		}
+		buildPaths(path);
+
+		return nodes;
 	}
 
 	private void buildPaths(String value) {
@@ -50,8 +76,9 @@ public class NavigateHelper implements Closeable {
 			// remove leading '//' markers for depot matching
 			String depot = value.substring(2);
 			if (!depot.contains("/")) {
-				listDepots(depot);
-				return;
+				if (!listDepots(depot)) {
+					return;
+				}
 			}
 
 			listDirs(value);
@@ -60,22 +87,34 @@ public class NavigateHelper implements Closeable {
 		}
 	}
 
-	private void listDepots(String value) throws P4JavaException {
+	/**
+	 * @param value path to match
+	 * @return true if value is a depot, false if partial match. e.g. false is returned
+	 * for 'dep' as it is only partial match to 'depot', even thought there may be only one match.
+	 * @throws P4JavaException
+	 */
+	private boolean listDepots(String value) throws P4JavaException {
 		if (p4 != null) {
 			List<IDepot> list = p4.getDepots();
 			for (IDepot l : list) {
+				if (l.getName().equals(value)) {
+					// complete match, return early
+					nodes = new ArrayList<>();
+					return true;
+				}
 				if (l.getName().startsWith(value)) {
-					paths.add("//" + l.getName());
+					nodes.add(new Node("//" + l.getName(), true));
 				}
 			}
 		}
+		return false;
 	}
 
 	private void listDirs(String value) throws P4JavaException {
 		if (p4 != null && value.length() > 4) {
 
-			List<IFileSpec> dirs;
-			dirs = FileSpecBuilder.makeFileSpecList(value + "*");
+			List<IFileSpec> dirs = specBuilder(value);
+
 			GetDirectoriesOptions opts = new GetDirectoriesOptions();
 			List<IFileSpec> list = p4.getDirectories(dirs, opts);
 
@@ -89,7 +128,7 @@ public class NavigateHelper implements Closeable {
 			for (IFileSpec l : list) {
 				String dir = l.getOriginalPathString();
 				if (dir != null) {
-					paths.add(dir);
+					nodes.add(new Node(dir, true));
 				}
 			}
 		}
@@ -98,8 +137,7 @@ public class NavigateHelper implements Closeable {
 	private void listFiles(String value) throws P4JavaException {
 		if (p4 != null && value.length() > 4) {
 
-			List<IFileSpec> files;
-			files = FileSpecBuilder.makeFileSpecList(value + "...");
+			List<IFileSpec> files = specBuilder(value);
 
 			GetDepotFilesOptions opts = new GetDepotFilesOptions();
 			if (max > 0) {
@@ -109,15 +147,22 @@ public class NavigateHelper implements Closeable {
 			List<IFileSpec> list = p4.getDepotFiles(files, opts);
 
 			for (IFileSpec l : list) {
-				paths.add(l.getDepotPathString());
+				if (l.getOpStatus().equals(FileSpecOpStatus.VALID)) {
+					nodes.add(new Node(l.getDepotPathString(), false));
+				}
 			}
 		}
 	}
 
+	private List<IFileSpec> specBuilder(String value) {
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(value + "*");
+		return files;
+	}
+
 	private AutoCompletionCandidates getCandidates() {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
-		for (String path : paths) {
-			c.add(path);
+		for (Node node : nodes) {
+			c.add(node.getDepotPath());
 		}
 		return c;
 	}
@@ -128,6 +173,35 @@ public class NavigateHelper implements Closeable {
 			p4.disconnect();
 		} catch (P4JavaException e) {
 			throw new IOException(e);
+		}
+	}
+
+	public static final class Node {
+
+		private String name;
+		private String depotPath;
+		private boolean isDir;
+
+		protected Node(String depotPath, boolean isDir) {
+			this.isDir = isDir;
+			this.depotPath = depotPath;
+			this.name = depotPath.substring(depotPath.lastIndexOf("/") + 1);
+
+			if (isDir && !depotPath.endsWith("/")) {
+				this.depotPath = depotPath + "/";
+			}
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getDepotPath() {
+			return depotPath;
+		}
+
+		public boolean isDir() {
+			return isDir;
 		}
 	}
 }

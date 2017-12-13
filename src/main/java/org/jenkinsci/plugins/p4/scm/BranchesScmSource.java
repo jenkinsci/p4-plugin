@@ -125,7 +125,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		}
 
 		String client = getFormat();
-		String mappingFormat = String.format("%1s/%%1$s //%2$s/%%1$s", branchPath.getPath(), client);
+		String mappingFormat = String.format("%1s/%%1$s //%2$s/%%1$s", branchPath.getPath(), "${P4_CLIENT}");
 
 		StringBuffer workspaceView = new StringBuffer(1024);
 		workspaceView.append(String.format(mappingFormat, getScriptPathOrDefault("Jenkinsfile")));
