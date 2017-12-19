@@ -158,7 +158,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		// Manual workspace spec definition
 		String client = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String view = ""
-				+ "//depot/Data/... //" + client + "/data/..." + "\n"
+				+ "//depot/Data/Jenkinsfile //${P4_CLIENT}/Jenkinsfile" + "\n"
 				+ "//depot/Main/... //" + client + "/main/...";
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -192,7 +192,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		// Manual workspace spec definition
 		String client = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String view = ""
-				+ "//depot/Data/... //${P4_CLIENT}/data/..." + "\n"
+				+ "//depot/Data/Jenkinsfile //${P4_CLIENT}/Jenkinsfile" + "\n"
 				+ "//depot/Main/... //${P4_CLIENT}/main/...";
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -203,7 +203,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
 		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "lightWeightWorkflow");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "lightWeightP4_CLIENT");
 		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
