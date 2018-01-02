@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.8.4 (major features/fixes)
+
+[@23425](https://swarm.workshop.perforce.com/changes/23425) - Backwards compatibility for p4 describe.  Max limit on files for p4 describe (-m flag) was introduced in 2014.1  JENKINS-48433
+
+[@23403](https://swarm.workshop.perforce.com/changes/23403) - Update P4Java 2017.2.1601181  P4Java fix to throw p4 print warnings used during lightweight checkout.
+
+[@23373](https://swarm.workshop.perforce.com/changes/23373) - Lightweight checkout support.  Implementation for scm-api classes SCMFile and SCMFileSystem, allowing Jenkins to navigate Perforce within the scope of a workspace view.  Lightweight checkout uses a tempoary Perforce workspace to naviagete and fetch the files.  The client name and client view mapping will be modified from a template name e.g. jenkins-${NODE_NAME}-${JOB_NAME} to the tempoary name jenkinsTemp-UUID.  Alternativly if a user as used ${P4_CLIENT} in the client mapping this will remain unchanged and will be get expanded during the job run.  JENKINS-45999  JENKINS-46269
+
+[@23320](https://swarm.workshop.perforce.com/changes/23320) - Remove deprecated ID for SCMSource constructor.
+
+
 ### Release 1.8.3 (major features/fixes)
 
 [@23263](https://swarm.workshop.perforce.com/changes/23263) - Update NavigateHelper for future use.
