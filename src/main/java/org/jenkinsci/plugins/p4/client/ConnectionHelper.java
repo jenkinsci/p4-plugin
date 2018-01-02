@@ -550,7 +550,13 @@ public class ConnectionHelper implements AutoCloseable {
 	// Use a describe for files to avoid MAXSCANROW limits.
 	// (backed-out part of change 16390)
 	public List<IFileSpec> getChangeFiles(int id, int limit) throws Exception {
-		List<IFileSpec> files = connection.getChangelistFiles(id, limit);
+		List<IFileSpec> files;
+		// Avoid describe -m for old servers JENKINS-48433
+		if (!checkVersion(20141)) {
+			files = connection.getChangelistFiles(id);
+		} else {
+			files = connection.getChangelistFiles(id, limit);
+		}
 		return files;
 	}
 
