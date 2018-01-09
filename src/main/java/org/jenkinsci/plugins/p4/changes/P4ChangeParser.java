@@ -4,6 +4,7 @@ import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.exception.P4JavaException;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Fix;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
@@ -70,9 +71,16 @@ public class P4ChangeParser extends ChangeLogParser {
 			this.p4 = new ConnectionHelper(run, credential, null);
 
 			if (browser == null) {
-				String url = p4.getSwarm();
-				if (url != null) {
-					this.browser = new SwarmBrowser(url);
+				try {
+					String url = p4.getSwarm();
+					if (url != null) {
+						this.browser = new SwarmBrowser(url);
+					}
+				} catch(RequestException re) {
+					if(re.getMessage() != null && !re.getMessage().contains("Unknown command")) {
+						throw re;
+					}
+					// else : Ignore, the command is not supported by older P4 versions
 				}
 			}
 		}
