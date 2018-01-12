@@ -192,7 +192,7 @@ Note: If your Jenkins server needs authentication you will also need to provide 
     JSERVER=http://localhost:8080
 
     # Get CRUMB
-    CRUMB=$(curl --silent --user $JUSER:$JPASS $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+    CRUMB=$(curl --silent --user $JUSER:$JPASS $JSERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22":"%22,//crumb\))
 
     # Trigger builds across all triggered jobs (where relevant)
     curl --header "$CRUMB" \
