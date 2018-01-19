@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
+import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
@@ -166,6 +169,32 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 					return true;
 				}
 			}
+
+			// Scan through Pattern List filters
+			if (f instanceof FilterPatternListImpl) {
+				List<Pattern> patterns = ((FilterPatternListImpl) f).getPatternList();
+				boolean foundMatchingChange = false;
+
+				for (IFileSpec s : files) {
+					String p = s.getDepotPathString();
+					
+					for (Pattern pattern : patterns) {
+						Matcher matcher = pattern.matcher(p);
+						if(matcher.matches()) {
+							foundMatchingChange = true;
+							break;
+						}
+					}
+					
+					if (foundMatchingChange) {
+						break;
+					}
+				}
+				
+				// If we've found a change matching one of our patterns, do not filter!
+				return !foundMatchingChange;
+			}
+
 		}
 		return false;
 	}

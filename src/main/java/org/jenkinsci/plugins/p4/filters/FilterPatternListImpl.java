@@ -1,0 +1,66 @@
+package org.jenkinsci.plugins.p4.filters;
+
+import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+public class FilterPatternListImpl extends Filter implements Serializable {
+	private static Logger logger = Logger.getLogger(FilterPatternListImpl.class.getName());
+
+	private static final long serialVersionUID = 1L;
+
+	private final String patternText;
+	private final boolean caseSensitive;
+
+	@DataBoundConstructor
+	public FilterPatternListImpl(String patternText, boolean caseSensitive) {
+		this.patternText = patternText;
+		this.caseSensitive = caseSensitive;
+	}
+	
+	public boolean isCaseSensitive() {
+		return caseSensitive;
+	}
+
+	public String getRawPatternString() {
+		return patternText;
+	}
+
+	public ArrayList<Pattern> getPatternList() {
+		ArrayList<Pattern> patternList = new ArrayList<Pattern>();
+		
+		int caseFlag = 0;
+		if (!caseSensitive) {
+			caseFlag = Pattern.CASE_INSENSITIVE;
+		}
+		
+		for (String line : patternText.split("\n")) {
+			// Try compiling each line into patterns. If we can't compile a line, skip it and log.
+			try {
+				patternList.add(Pattern.compile(line, caseFlag));
+			}
+			catch(PatternSyntaxException e) {
+				logger.severe("Error processing supposed pattern \"" + line + "\", ignoring:\n" + e);
+			}
+		}
+		
+		return patternList;
+	}
+
+	@Extension
+	@Symbol("viewFilter")
+	public static final class DescriptorImpl extends FilterDescriptor {
+
+		@Override
+		public String getDisplayName() {
+			return "Exclude changes outside Java pattern";
+		}
+
+	}
+}
