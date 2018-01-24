@@ -44,7 +44,7 @@ public class SimpleTestServer {
 			p4d += "/bin.linux26x86_64/p4d";
 		}
 		this.p4d = p4d;
-		this.p4root = new File(root).getAbsoluteFile();
+		this.p4root = new File("target/" + root).getAbsoluteFile();
 		this.p4ver = version;
 	}
 
