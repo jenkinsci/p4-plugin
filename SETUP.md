@@ -58,7 +58,7 @@ In this mode the Workspace View is generated using the specified template worksp
 
 Many of the Workspace fields can include environment variables to help define their value.  Take the 'Worksapce name' often I use:
 
-    jenkins-${NODE_NAME}-${JOB_NAME}
+    jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
     
 If the job is called 'foo' and built on a slave 'linux' it expands to:
 
@@ -82,11 +82,11 @@ Jenkins provides a set of environment variable and you can also define your own.
 
 The plugin allows the use of environemnt vaiables in fields like the Workspace view and Stream path.  For example:
 
-    //depot/main/proj/... //jenkins-${NODE_NAME}-${JOB_NAME}/...
+    //depot/main/proj/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}/...
     
 or with a Matrix build you might have defined your own variables like `${OS}`.  Remember they can be used anywhere in the mapping:
 
-    //depot/main/${JOB_NAME}/bin.${OS}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${OS}/bin/${OS}/... 
+    //depot/main/${JOB_NAME}/bin.${OS}/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-${OS}/bin/${OS}/... 
 
 
 ## Populating
@@ -153,36 +153,54 @@ The plugin will then correctly template the workspaces as needed.
 
 Perforce can trigger Jenkins to Build based on an event, such as a submitted change.  A triggered build requires an administrator to add a Perforce trigger (Perforce documents [here](https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.scripting.html)).  
 
-The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential.
+The trigger will need to POST a JSON payload to the Jenkins end-point `p4/change/`.  The JSON payload must contain the `p4port` string that matchs the P4Port field specified in the Perforce Credential (please note that the field `change` is not currently used, but added for future compatibility).
 
-For example, a simple `change-commit` trigger might use curl:
+For example, a simple `change-commit` or `graph-push-complete` trigger might use curl:
 
     #!/bin/bash
     CHANGE=$1
+    
+    P4PORT=perforce:1666
+    JUSER=admin
+    JPASS=pass
+    JSERVER=http://localhost:8080
+    
     curl --header 'Content-Type: application/json' \
          --request POST \
-         --data payload="{change:$CHANGE,p4port:\"localhost:1666\"}" \
-         http://localhost:8080/jenkins/p4/change
+         --silent \
+         --user $JUSER:$JPASS \
+         --data payload="{change:$CHANGE,p4port:\"$P4PORT\"}" \
+         $JSERVER/p4/change
 
 and have an entry in `p4 triggers` for changes on `//depot/...`:
 
-	jenkins   change-commit   //depot/...   "/p4/common/bin/triggers/jenkins.sh %change%"
+	jenkins    change-commit        //depot/...   "/p4/common/bin/triggers/jdepot.sh %change%"
+
+or for Graph content:
+
+    helix4git  graph-push-complete  //repos/...   "/p4/common/bin/triggers/jgraph.sh %depotName% %repoName% %pusher%"
 
 
 Note: If your Jenkins server needs authentication you will also need to provide a security 'CRUMB'. The following is an example of how you can get this and use to trigger a job:
 
     #!/bin/bash
     CHANGE=$1
-    USER=triggeruser
-    PASSWORD=Password
-    P4PORT=localhost:1666
-    SERVER=http://localhost:8080
+    
+    P4PORT=perforce:1666
+    JUSER=admin
+    JPASS=pass
+    JSERVER=http://localhost:8080
 
     # Get CRUMB
-    CRUMB=$(curl -s --user $USER:$PASSWORD $SERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22:%22,//crumb\))
+    CRUMB=$(curl --silent --user $JUSER:$JPASS $JSERVER/crumbIssuer/api/xml?xpath=concat\(//crumbRequestField,%22":"%22,//crumb\))
 
     # Trigger builds across all triggered jobs (where relevant)
-    curl -s --user $USER:$PASSWORD -H "$CRUMB" --request POST --data "payload={change:$CHANGE,p4port:\"$P4PORT\"}" $SERVER/p4/change
+    curl --header "$CRUMB" \
+         --request POST \
+         --silent \
+         --user $JUSER:$JPASS \
+         --data payload="{change:$CHANGE,p4port:\"$P4PORT\"}" \
+         $JSERVER/p4/change
 
 On the Jenkins side you need to enable the 'Perforce triggered build' in the Job Configuration:
 
@@ -403,7 +421,7 @@ For example in a Pipeline script you can use:
 
     ${env.P4_CHANGELIST}
 
-For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/workflow-plugin/blob/master/WORKFLOW.md) section.
+For more details on using Workflow with the P4 Plugin please refer to the [Workflow](https://github.com/jenkinsci/pipeline-plugin/blob/master/README.md) section.
 
 ## Troubleshooting
 

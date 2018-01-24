@@ -3,8 +3,8 @@
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
 			xmlns:c="/lib/credentials">
 		
-	<f:section title="Perforce: Save Configuration (!BETA under development and subject to change BETA!)">
-		<f:entry field="autoSave">
+	<f:section title="Perforce: Save Configuration (BETA: Subject to change!)">
+		<f:entry title="${%Enable Configuration Versioning}" field="autoSave">
 			<f:checkbox title="${%Enabled}" default="false"/>
 		</f:entry>
 		<f:entry title="Perforce Credentials" field="credential">
@@ -15,6 +15,9 @@
 		</f:entry>
 		<f:entry title="${%Depot location }" field="depotPath">
 			<f:textbox />
+		</f:entry>
+		<f:entry title="${%Submit changes automatically}" field="autoSubmitOnChange">
+			<f:checkbox title="${%Enabled}" default="true"/>
 		</f:entry>
 	</f:section>
 	

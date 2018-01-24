@@ -1,8 +1,8 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import hudson.Extension;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class ForceCleanImpl extends Populate {
 
@@ -22,11 +22,17 @@ public class ForceCleanImpl extends Populate {
 	}
 
 	@Extension
+	@Symbol("forceClean")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
 		@Override
 		public String getDisplayName() {
 			return "Forced clean and sync";
+		}
+
+		@Override
+		public boolean isGraphCompatible() {
+			return false;
 		}
 	}
 }

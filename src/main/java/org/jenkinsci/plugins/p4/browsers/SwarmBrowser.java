@@ -6,6 +6,7 @@ import hudson.model.Descriptor;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -14,7 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class SwarmBrowser extends P4Browser {
@@ -22,17 +22,17 @@ public class SwarmBrowser extends P4Browser {
 	private static final long serialVersionUID = 1L;
 
 	@DataBoundConstructor
-	public SwarmBrowser(String url) throws MalformedURLException {
+	public SwarmBrowser(String url) {
 		super(url);
 	}
 
 	@Override
 	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(getUrl() + "change/" + changeSet.getId());
+		return new URL(getSafeUrl() + "change/" + changeSet.getId());
 	}
 
 	public URL getLabelSetLink(P4ChangeEntry changeSet) throws IOException {
-		return new URL(getUrl() + "label/" + changeSet.getId());
+		return new URL(getSafeUrl() + "label/" + changeSet.getId());
 	}
 
 	@Override
@@ -47,15 +47,16 @@ public class SwarmBrowser extends P4Browser {
 		String path = file.getPath();
 		path = path.replace("//", "files/");
 		String rev = "?v=" + r;
-		return new URL(getUrl() + path + rev);
+		return new URL(getSafeUrl() + path + rev);
 	}
 
 	@Override
 	public URL getJobLink(String job) throws Exception {
-		return new URL(getUrl() + "jobs/" + job);
+		return new URL(getSafeUrl() + "jobs/" + job);
 	}
 
 	@Extension
+	@Symbol("swarm")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
 		@Override
@@ -76,12 +77,8 @@ public class SwarmBrowser extends P4Browser {
 		}
 
 		@Override
-		public SwarmBrowser newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-			SwarmBrowser browser = null;
-			if (req != null) {
-				browser = req.bindParameters(SwarmBrowser.class, "swarm.");
-			}
-			return browser;
+		public SwarmBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+			return (req == null) ? null : req.bindJSON(SwarmBrowser.class, jsonObject);
 		}
 	}
 }

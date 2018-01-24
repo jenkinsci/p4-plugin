@@ -5,7 +5,7 @@ import hudson.MarkupText;
 import hudson.console.ConsoleAnnotationDescriptor;
 import hudson.console.ConsoleAnnotator;
 import hudson.console.ConsoleNote;
-
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class P4ConsoleNote extends ConsoleNote<Object> {
@@ -24,6 +24,7 @@ public class P4ConsoleNote extends ConsoleNote<Object> {
 	}
 
 	@Extension
+	@Symbol("note")
 	public static final class DescriptorImpl extends
 			ConsoleAnnotationDescriptor {
 		public String getDisplayName() {

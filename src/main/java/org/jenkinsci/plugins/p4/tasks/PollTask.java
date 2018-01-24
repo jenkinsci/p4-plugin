@@ -58,7 +58,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 		// filter changes...
 		List<P4Ref> remainder = new ArrayList<P4Ref>();
 		for (P4Ref c : changes) {
-			int change = c.getChange();
+			long change = c.getChange();
 			if (change > 0) {
 				Changelist changelist = p4.getChange(change);
 				// add unfiltered changes to remainder list

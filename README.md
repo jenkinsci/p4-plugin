@@ -4,16 +4,20 @@ Jenkins plugin for a Perforce Helix Versioning Engine (P4D).
 ## Contents
 
 * [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
-* [Setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md)
+* [FreeStyle setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md)
+* [Pipeline setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/WORKFLOW.md)
+* [Pipeline libraries](https://github.com/jenkinsci/p4-plugin/blob/master/LIBRARY.md)
+* [MultiBranch guide](https://github.com/jenkinsci/p4-plugin/blob/master/MULTI.md)
+* [Advanced scripting](https://github.com/jenkinsci/p4-plugin/blob/master/P4GROOVY.md)
 * [Notes page](https://github.com/jenkinsci/p4-plugin/blob/master/NOTES.md)
-* [Jenkins page](https://wiki.jenkins-ci.org/display/JENKINS/P4+Plugin)
+* [Jenkins page](https://plugins.jenkins.io/p4)
 
 ## Requirements
 
 * Jenkins 1.642.3 or greater.
-* Helix Versioning Engine 2012.1 or greater.
+* Helix Versioning Engine 2016.1 or greater.
 * Minimum Perforce Protection of `open` for the Jenkins user.
-* Review Build feature requires Swarm 2014.2 or greater.
+* Review Build feature requires Swarm 2016.2 or greater.
 
 ## Install
 
@@ -36,7 +40,7 @@ To build the plugin and run the tests use the following:
   
 Note: for the tests to run you must have p4d in your PATH, to skip tests use the -DskipTests flag.
 
-Lastest SNAPSHOT builds available [here](https://jenkins.ci.cloudbees.com/job/plugins/job/p4-plugin/lastBuild/org.jenkins-ci.plugins$p4/).
+Lastest SNAPSHOT builds available [here](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fp4-plugin/branches).
 
 ## Manual install
 

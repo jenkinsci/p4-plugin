@@ -3,12 +3,15 @@ package org.jenkinsci.plugins.p4.changes;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.core.file.FileAction;
+import com.perforce.p4java.exception.P4JavaException;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Fix;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -62,10 +65,24 @@ public class P4ChangeParser extends ChangeLogParser {
 		private RepositoryBrowser<?> browser;
 		private ConnectionHelper p4;
 
-		public ChangeLogHandler(Run<?, ?> run, RepositoryBrowser<?> browser, String credential) {
+		public ChangeLogHandler(Run<?, ?> run, RepositoryBrowser<?> browser, String credential) throws P4JavaException {
 			this.run = run;
 			this.browser = browser;
 			this.p4 = new ConnectionHelper(run, credential, null);
+
+			if (browser == null) {
+				try {
+					String url = p4.getSwarm();
+					if (url != null) {
+						this.browser = new SwarmBrowser(url);
+					}
+				} catch(RequestException re) {
+					if(re.getMessage() != null && !re.getMessage().contains("Unknown command")) {
+						throw re;
+					}
+					// else : Ignore, the command is not supported by older P4 versions
+				}
+			}
 		}
 
 		@Override

@@ -19,7 +19,7 @@ import java.util.List;
 
 public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 
-	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
+	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
 
 	public WorkspaceDescriptor(Class<? extends Workspace> clazz) {
 		super(clazz);

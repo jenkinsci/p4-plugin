@@ -1,6 +1,10 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
- 
+
+  	<f:entry>
+ 		<f:checkbox title="${%Force sync}" field="force" default="false"/>
+ 	</f:entry>
+
  	<f:entry>
 		<f:checkbox title="${%Populate have list}" field="have" default="true"/>
 	</f:entry>
@@ -25,7 +29,8 @@
 			</tr>
 		</table>
 	</f:entry>
-        <f:section title="Use local 'p4' for parallel sync">
+
+	<f:section title="Parallel sync">
 		<f:advanced>
 			<f:entry>
 				<f:property field="parallel" />

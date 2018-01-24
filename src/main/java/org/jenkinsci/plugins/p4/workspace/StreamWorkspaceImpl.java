@@ -4,6 +4,7 @@ import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.Serializable;
@@ -14,7 +15,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String streamName;
-	private final String format;
+	private String format;
 
 	private static Logger logger = Logger.getLogger(StreamWorkspaceImpl.class
 			.getName());
@@ -30,6 +31,11 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	@Override
 	public String getName() {
 		return format;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.format = name;
 	}
 
 	@Override
@@ -72,6 +78,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("streamSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

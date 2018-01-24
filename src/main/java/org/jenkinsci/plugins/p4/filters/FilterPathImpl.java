@@ -2,12 +2,12 @@ package org.jenkinsci.plugins.p4.filters;
 
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
-
-import java.io.Serializable;
-
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
+import java.io.Serializable;
 
 public class FilterPathImpl extends Filter implements Serializable {
 
@@ -25,6 +25,7 @@ public class FilterPathImpl extends Filter implements Serializable {
 	}
 
 	@Extension
+	@Symbol("pathFilter")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
 		@Override
@@ -32,9 +33,9 @@ public class FilterPathImpl extends Filter implements Serializable {
 			return "Exclude changes from Depot path";
 		}
 
-		public AutoCompletionCandidates doAutoCompletePath(
-				@QueryParameter String value) {
-			return NavigateHelper.getPath(value);
+		public AutoCompletionCandidates doAutoCompletePath(@QueryParameter String value) {
+			NavigateHelper nav = new NavigateHelper(10);
+			return nav.getCandidates(value);
 		}
 	}
 }

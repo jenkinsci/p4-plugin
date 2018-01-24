@@ -2,11 +2,11 @@ package org.jenkinsci.plugins.p4.email;
 
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.User;
 import hudson.model.UserProperty;
 import hudson.model.UserPropertyDescriptor;
-import hudson.model.User;
 import net.sf.json.JSONObject;
-
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -21,6 +21,7 @@ public class P4UserProperty extends UserProperty {
 	}
 
 	@Extension
+	@Symbol("user")
 	public static class DescriptorImpl extends UserPropertyDescriptor {
 
 		@Override

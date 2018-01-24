@@ -4,19 +4,6 @@
     <f:entry field="credential" title="Perforce Credentials">
         <c:select/>
     </f:entry>
-    
-    <f:entry title="Stream Codeline" field="stream">
-		<f:textbox />
-	</f:entry>
-
-    <f:entry title="Template Workspace" field="template">
-		<f:textbox />
-	</f:entry>
-
-    <f:entry title="Depot path" field="depotPath">
-		<f:textbox />
-	</f:entry>
-
  	<f:entry title="${%Character Set}" field="charset">
 		<f:select default="none"/>
 	</f:entry>
@@ -28,5 +15,8 @@
 	<f:entry title="Populate options">
 		<f:dropdownDescriptorSelector field="populate"/>
 	</f:entry>
-	
+
+	<f:entry title="Workspace Source">
+        <f:dropdownDescriptorSelector field="source"/>
+    </f:entry>
 </j:jelly>

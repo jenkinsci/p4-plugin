@@ -5,6 +5,7 @@ import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -14,8 +15,7 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String name;
-	private final boolean clone;
+	private String name;
 
 	@Override
 	public String getName() {
@@ -23,26 +23,25 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Override
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
 	public WorkspaceType getType() {
 		return WorkspaceType.STATIC;
 	}
 
-	public boolean isClone() {
-		return clone;
-	}
-
-	@DataBoundConstructor
+	@Deprecated
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name, boolean clone) {
 		super(charset, pinHost);
 		this.name = name;
-		this.clone = clone;
 	}
 
-	@Deprecated
+	@DataBoundConstructor
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name) {
 		super(charset, pinHost);
 		this.name = name;
-		this.clone = true;
 	}
 
 	@Override
@@ -55,6 +54,7 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@Extension
+	@Symbol("staticSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override

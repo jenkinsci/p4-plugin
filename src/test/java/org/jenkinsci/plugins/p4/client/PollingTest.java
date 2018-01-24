@@ -178,8 +178,8 @@ public class PollingTest extends DefaultEnvironment {
 		project.poll(listener);
 		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(2, buildList.size());
-		int change = buildList.get(0).getChange();
-		assertEquals(18, change);
+		long change = buildList.get(0).getChange();
+		assertEquals(18L, change);
 	}
 
 	@Test
@@ -226,8 +226,8 @@ public class PollingTest extends DefaultEnvironment {
 		project.poll(listener);
 		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(13, buildList.size());
-		int change = buildList.get(0).getChange();
-		assertEquals(16, change);
+		long change = buildList.get(0).getChange();
+		assertEquals(16L, change);
 	}
 
 	@Test

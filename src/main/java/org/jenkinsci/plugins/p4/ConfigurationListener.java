@@ -51,7 +51,13 @@ public class ConfigurationListener extends SaveableListener {
 			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
 
 			ClientHelper p4 = getClientHelper(p4scm);
-			p4.versionFile(file, publish);
+			int ChangelistID = -1;
+
+			if (!p4scm.isAutoSubmitOnChange()) {
+				ChangelistID = p4.findPendingChangelistIDByDesc(desc, p4scm.getClientName());
+			}
+			p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
+
 			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -80,7 +86,7 @@ public class ConfigurationListener extends SaveableListener {
 		view.append(" ");
 		view.append("//" + clientName + "/...");
 
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "local", view.toString());
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view.toString(), null, null, null, true);
 
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec);
 		workspace.setExpand(new HashMap<String, String>());

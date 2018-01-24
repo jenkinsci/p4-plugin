@@ -16,7 +16,11 @@
 	<f:entry field="quiet">
 		<f:checkbox title="${%QUIET Perforce messages}" default="true"/>
 	</f:entry>
-	
+
+	<f:entry field="tidy">
+    	<f:checkbox title="${%Clean up Review actions}" default="false"/>
+    </f:entry>
+
 	<f:entry field="pin">
 		<table border="0" width="100%">
 			<tr>
@@ -26,7 +30,7 @@
 		</table>
 	</f:entry>
 	
-	<f:section title="Use local 'p4' for parallel sync">
+	<f:section title="Parallel sync">
 		<f:advanced>
 			<f:entry>
 				<f:property field="parallel" />

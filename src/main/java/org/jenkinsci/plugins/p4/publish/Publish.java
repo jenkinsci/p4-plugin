@@ -52,7 +52,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 	}
 
 	public String getExpandedDesc() {
-		return expandedDesc;
+		return expandedDesc == null ? description : expandedDesc;
 	}
 
 	public void setExpandedDesc(String expandedDesc) {

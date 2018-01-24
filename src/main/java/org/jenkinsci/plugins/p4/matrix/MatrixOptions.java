@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.p4.matrix;
 
 import hudson.Extension;
-import hudson.matrix.MatrixExecutionStrategyDescriptor;
 import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
+import hudson.matrix.MatrixExecutionStrategyDescriptor;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.logging.Logger;
-
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public class MatrixOptions extends DefaultMatrixExecutionStrategyImpl {
 
@@ -27,6 +27,7 @@ public class MatrixOptions extends DefaultMatrixExecutionStrategyImpl {
 	}
 
 	@Extension
+	@Symbol("matrix")
 	public static final class DescriptorImpl extends
 			MatrixExecutionStrategyDescriptor {
 

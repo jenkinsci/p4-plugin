@@ -1,18 +1,17 @@
 package org.jenkinsci.plugins.p4.filters;
 
+import com.perforce.p4java.core.IUserSummary;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import com.perforce.p4java.core.IUserSummary;
-import com.perforce.p4java.server.IOptionsServer;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FilterUserImpl extends Filter implements Serializable {
 
@@ -30,6 +29,7 @@ public class FilterUserImpl extends Filter implements Serializable {
 	}
 
 	@Extension
+	@Symbol("userFilter")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
 		@Override

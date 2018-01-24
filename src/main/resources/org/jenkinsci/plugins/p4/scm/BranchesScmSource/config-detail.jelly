@@ -3,8 +3,6 @@
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
 			xmlns:c="/lib/credentials">
 
-	<p style="color:red;"><b>BETA - subject to change</b></p>
-
     <f:entry title="Perforce Credentials" field="credential">
         <c:select/>
     </f:entry>
@@ -13,17 +11,28 @@
       <f:textarea/>
     </f:entry>
 
-    <f:entry title="${%Character Set}" field="charset">
-    	<f:select default="none"/>
+    <f:entry title="Include Filter" field="filter">
+      <f:textbox default="${descriptor.defaultFilter}"/>
     </f:entry>
 
-    <f:entry title="Workspace Name Format" field="format">
-        <f:textbox default="${descriptor.defaultFormat}"/>
-    </f:entry>
+	<f:advanced>
+    	<f:entry title="${%Character Set}" field="charset">
+    		<f:select default="none"/>
+    	</f:entry>
 
-    <f:entry title="Populate options">
-        <f:dropdownDescriptorSelector field="populate"/>
-    </f:entry>
+    	<f:entry title="Workspace Name Format" field="format">
+        	<f:textbox default="${descriptor.defaultFormat}"/>
+    	</f:entry>
 
-    <t:listScmBrowsers name="p4.browser"/>
+   		<f:entry title="Populate options">
+        	<f:dropdownDescriptorSelector field="populate"/>
+    	</f:entry>
+
+    	<f:entry title="View Mappings" field="mappings">
+            <f:textarea default="${descriptor.defaultPath}"/>
+        </f:entry>
+
+    	<t:listScmBrowsers name="p4.browser"/>
+	</f:advanced>
+
 </j:jelly>

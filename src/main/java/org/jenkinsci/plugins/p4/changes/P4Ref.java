@@ -12,7 +12,7 @@ public interface P4Ref extends Serializable, Comparable {
 
 	boolean isCommit();
 
-	int getChange();
+	long getChange();
 
 	String toString();
 }

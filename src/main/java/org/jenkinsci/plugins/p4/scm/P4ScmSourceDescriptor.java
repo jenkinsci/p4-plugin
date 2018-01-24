@@ -17,12 +17,7 @@ import java.util.List;
 
 public abstract class P4ScmSourceDescriptor extends SCMSourceDescriptor {
 
-	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}";
-
-	@Override
-	public String getDisplayName() {
-		return "Perforce";
-	}
+	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
 
 	/**
 	 * Credentials list, a Jelly config method for a build job.

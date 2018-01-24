@@ -14,6 +14,7 @@ import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.tasks.UnshelveTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -26,13 +27,27 @@ public class UnshelveBuilder extends Builder {
 
 	private final String shelf;
 	private final String resolve;
+	private final boolean tidy;
+	private final boolean ignoreEmpty;
 
 	private static Logger logger = Logger.getLogger(UnshelveBuilder.class.getName());
 
 	@DataBoundConstructor
-	public UnshelveBuilder(String shelf, String resolve) {
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy, boolean ignoreEmpty) {
 		this.shelf = shelf;
 		this.resolve = resolve;
+		this.tidy = tidy;
+		this.ignoreEmpty = ignoreEmpty;
+	}
+
+	@Deprecated
+	public UnshelveBuilder(String shelf, String resolve, boolean tidy) {
+		this(shelf, resolve, tidy, false);
+	}
+
+	@Deprecated
+	public UnshelveBuilder(String shelf, String resolve) {
+		this(shelf, resolve, false, false);
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -45,6 +60,14 @@ public class UnshelveBuilder extends Builder {
 
 	public String getResolve() {
 		return resolve;
+	}
+
+	public boolean isTidy() {
+		return tidy;
+	}
+
+	public boolean isIgnoreEmpty() {
+		return ignoreEmpty;
 	}
 
 	@Override
@@ -77,7 +100,7 @@ public class UnshelveBuilder extends Builder {
 	                           TaskListener listener) throws IOException, InterruptedException {
 
 		// Setup Unshelve Task
-		UnshelveTask task = new UnshelveTask(resolve);
+		UnshelveTask task = new UnshelveTask(resolve, tidy);
 		task.setListener(listener);
 		task.setCredential(credential, run.getParent());
 
@@ -86,7 +109,14 @@ public class UnshelveBuilder extends Builder {
 
 		// Expand shelf ${VAR} as needed and set as LABEL
 		String id = ws.getExpand().format(shelf, false);
-		int change = Integer.parseInt(id);
+
+		//	If settings are set to do nothing if changelist is empty just return true.
+		if (ignoreEmpty && (id == null || id.isEmpty())) {
+			logger.warning("Shelf list ID is empty or null, we will be skipping this task.");
+			return true;
+		}
+
+		long change = Long.parseLong(id);
 		task.setShelf(change);
 		task.setWorkspace(ws);
 
@@ -102,6 +132,7 @@ public class UnshelveBuilder extends Builder {
 	}
 
 	@Extension
+	@Symbol("unshelve")
 	public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
 		@Override
