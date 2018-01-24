@@ -30,7 +30,7 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 	private void push(MarkupText text) {
 		text.hide(0, COMMAND.length());
 
-		String head = "<div class=\"titleDiv\">";
+		String head = "<span class=\"titleDiv\">";
 		text.addMarkup(COMMAND.length(), head);
 
 		StringBuffer sb = new StringBuffer();
@@ -43,7 +43,7 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 		sb.append("');\">");
 		sb.append("+");
 		sb.append("</a>");
-		sb.append("</div>");
+		sb.append("</span>");
 
 		sb.append("<div class=\"contentDiv\">");
 		sb.append("<div id=\"");
