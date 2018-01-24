@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
+	<f:entry title="${%Perforce Pattern List}" field="patternList">
+		<f:textarea/>
+	</f:entry>
+	
+	<f:entry field="caseSensitive">
+		<f:checkbox title="${%Case Sensitive}"/>
+	</f:entry>
+
+</j:jelly>

@@ -1,0 +1,76 @@
+<div>
+	<b>Java Pattern filter</b>
+	<p>Changes can be filtered to not trigger a build; if none of the files
+		within a change match a Java pattern (regular expression) listed, the build is filtered.</p>
+	<p style="margin-left: 30.0px;">
+		For example, with the following regular expressions:
+		<br/>
+		<code style="margin-left: 60.0px;">//depot/main/tests/.*</code>
+		<br/>
+		<code style="margin-left: 60.0px;">//depot/main/src/.*\.cpp$</code>
+		<br/>
+		<code style="margin-left: 60.0px;">//depot/main/build/.*(?:\.rb|\.py|\.bat|Jenkinsfile)$</code>
+		<br/>
+		<code style="margin-left: 60.0px;">//depot/main/lib/(?!Lib1|Lib2).*</code>
+		<br/>
+	</p>
+	<p style="margin-left: 60.0px;">
+		<strong>Case A</strong> (change will not be filtered, as these files match
+		our first pattern on "tests"):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/CONTRIUBTING.md</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/index.xml</code>
+		</li>
+
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case B</strong> (Be careful with incomplete file paths! Change will NOT be filtered, 
+		<br />as this file matches a pattern which was likely intended as describing a <strong>"tests/"</strong> directory.)
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests.doc</code>
+		</li>
+	</ul>
+		<p style="margin-left: 60.0px;">
+		<strong>Case C</strong> (change will NOT be filtered, as all files
+		match our fourth pattern looking for script files in 'build/'):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/build/rbs/deploy_server.rb</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/build/deploy/deploy.bat</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/build/Jenkinsfile</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case D</strong> (change will be filtered, as no file matches our
+		second pattern for ".cpp" files under "main/src"):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/howto.doc</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/oldmain.c</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/art/splash.bmp</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/src/bt/funnelcake.php</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case E</strong> (change will be filtered. Lib1 is included in a negative lookahead, and thus is excluded.)
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/lib/Lib1/build.xml</code>
+		</li>
+	</ul>
+
+
+</div>

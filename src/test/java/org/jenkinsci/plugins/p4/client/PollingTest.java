@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -229,7 +230,169 @@ public class PollingTest extends DefaultEnvironment {
 		long change = buildList.get(0).getChange();
 		assertEquals(16L, change);
 	}
+	
+	@Test
+	public void testPatternList() throws Exception {
 
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		
+		FreeStyleProject project = jenkins.createFreeStyleProject("PatternList");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		List<Filter> filter = new ArrayList<Filter>();
+		
+		StringBuilder sb = new StringBuilder();
+		
+		// Only poll on 0 && .dat files's
+		sb.append("//depot/main/[a-z]+-0\\.txt");
+		sb.append("\n");
+		sb.append(".*\\.dat$");
+		
+		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
+		filter.add(pList);
+		
+		/* Should result in the follow changes captured:
+		 * 8: 0
+		 * 14: 0
+		 * 17: .dat files are added
+		 * 18: //depot/Data/file-1.dat
+		 * Total: 4 changes
+		 */
+		long[] changesExpected = {18L, 17L, 14L, 8L};
+		
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+		
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		List<P4Ref> buildList = scm.getIncrementalChanges();
+		assertEquals(4, buildList.size());
+		
+		// Test all the changes that came back!
+		for(int i =0; i < buildList.size(); i++) {
+			assertEquals(changesExpected[i], buildList.get(i).getChange());
+		}
+	}
+	
+	@Test
+	public void testPatternListCaseSensitive() throws Exception {
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		
+		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListCaseSensitive");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		List<Filter> filter = new ArrayList<Filter>();
+		
+		// Only poll on a main with lower case 'm' (doesn't actually exist) -- ensure case sensitive is TRUE!
+		FilterPatternListImpl pList = new FilterPatternListImpl("//depot/main/file-.*\\.txt", true);
+		filter.add(pList);
+
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+		
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+		
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		List<P4Ref> buildList = scm.getIncrementalChanges();
+		assertEquals(0, buildList.size());
+	}
+	
+	@Test
+	public void testPatternListInvalidPattern() throws Exception {
+
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		
+		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListInvalidPattern");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		
+		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		List<Filter> filter = new ArrayList<Filter>();
+		
+		StringBuilder sb = new StringBuilder();
+		
+		// Constuct a correct regex for File-0.txt, but test a broken regex for .dat files
+		sb.append("//depot/main/[a-z]+-0\\.txt");
+		sb.append("\n");
+		sb.append("{a-z\\}+\\.dat"); // Should be using []'s, not {}'s!
+		
+		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
+		filter.add(pList);
+		
+		/* Should result in the follow changes captured:
+		 * 8: 0
+		 * 14: 0
+		 * -17-: .dat files are added, but we have a broken regex!
+		 * -18-: //depot/Data/file-1.dat, but we have a broken regex!
+		 * Total: 2 changes
+		 */
+		long[] changesExpected = {14L, 8L};
+		
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+		
+		// Poll for changes incrementally
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		project.poll(listener);
+		List<P4Ref> buildList = scm.getIncrementalChanges();
+		assertEquals(2, buildList.size());
+		
+		// Test all the changes that came back!
+		for(int i =0; i < buildList.size(); i++) {
+			assertEquals(changesExpected[i], buildList.get(i).getChange());
+		}
+	}
+	
 	@Test
 	public void shouldNotTriggerJobIfNoChange() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("NotTriggerJobIfNoChange");
