@@ -25,13 +25,17 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 		this.patternText = patternText;
 		this.caseSensitive = caseSensitive;
 	}
+
+	public String getPatternText() {
+		return patternText;
+	}
 	
-	public boolean isCaseSensitive() {
+	public boolean getCaseSensitive() {
 		return caseSensitive;
 	}
-
-	public String getRawPatternString() {
-		return patternText;
+	
+	public boolean isCaseSensitive() {
+		return getCaseSensitive();
 	}
 
 	public ArrayList<Pattern> getPatternList() {
@@ -64,7 +68,7 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 			return "Exclude changes outside Java pattern";
 		}
 		
-		public FormValidation doCheckPatternList(@QueryParameter String value) {
+		public FormValidation doCheckPatternText(@QueryParameter String value) {
 			if(value.trim().length() == 0) {
 				return FormValidation.warning("Empty pattern list found, will ignore all changes during polling.");
 			}
