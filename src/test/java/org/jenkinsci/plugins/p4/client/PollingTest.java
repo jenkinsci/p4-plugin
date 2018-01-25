@@ -357,6 +357,9 @@ public class PollingTest extends DefaultEnvironment {
 		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
 		filter.add(pList);
 		
+		// Should only be one actual regex generated
+		assertEquals(1, pList.getPatternList().size());
+		
 		/* Should result in the follow changes captured:
 		 * 8: 0
 		 * 14: 0
