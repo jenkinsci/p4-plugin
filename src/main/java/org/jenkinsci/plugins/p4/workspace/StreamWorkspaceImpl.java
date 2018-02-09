@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
@@ -45,7 +46,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public StreamWorkspaceImpl(String charset, boolean pinHost,
-			String streamName, String format) {
+	                           String streamName, String format) {
 		super(charset, pinHost);
 		this.streamName = streamName;
 		this.format = format;
@@ -66,13 +67,18 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
-		
+
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
 
 		// Expand Stream name
 		String streamFullName = getExpand().format(getStreamName(), false);
 		iclient.setStream(streamFullName);
+
+		// Set clobber on to ensure workspace is always good
+		IClientOptions options = iclient.getOptions();
+		options.setClobber(true);
+		iclient.setOptions(options);
 
 		return iclient;
 	}

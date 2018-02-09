@@ -88,7 +88,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	// Default setup for Classic Workspace
 	public WorkspaceSpec(String view, String changeView) {
 		this.allwrite = false;
-		this.clobber = false;
+		this.clobber = true;
 		this.compress = false;
 		this.locked = false;
 		this.modtime = false;
@@ -144,7 +144,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		public AutoCompletionCandidates doAutoCompleteStreamName(
 				@QueryParameter String value) {
 
-			return StreamDescImpl.doAutoCompleteStreamName(value);
+			return WorkspaceDescriptor.doAutoCompleteStreamName(value);
 		}
 	}
 }

@@ -159,11 +159,6 @@ public class ClientHelper extends ConnectionHelper {
 			iclient.setHostName(workspace.getHostName());
 		}
 
-		// Set clobber on to ensure workspace is always good
-		IClientOptions options = iclient.getOptions();
-		options.setClobber(true);
-		iclient.setOptions(options);
-
 		// Save client spec
 		iclient.update();
 
