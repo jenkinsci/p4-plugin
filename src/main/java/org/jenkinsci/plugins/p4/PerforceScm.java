@@ -708,8 +708,8 @@ public class PerforceScm extends SCM {
 
 		private boolean hideTicket;
 
-		private int maxFiles;
-		private int maxChanges;
+		private int maxFiles = DEFAULT_FILE_LIMIT;
+		private int maxChanges = DEFAULT_CHANGE_LIMIT;
 
 		public boolean isAutoSave() {
 			return autoSave;

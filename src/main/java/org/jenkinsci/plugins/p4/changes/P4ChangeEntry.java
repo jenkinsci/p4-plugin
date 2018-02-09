@@ -50,19 +50,11 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		jobs = new ArrayList<IFix>();
 		affectedFiles = new ArrayList<P4AffectedFile>();
-
-		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			Descriptor dsc = j.getDescriptor(PerforceScm.class);
-			if (dsc instanceof PerforceScm.DescriptorImpl) {
-				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
-				fileCountLimit = p4scm.getMaxFiles();
-			}
-		}
+		getFileCountLimit();
 	}
 
 	public P4ChangeEntry() {
-
+		getFileCountLimit();
 	}
 
 	public void setChange(ConnectionHelper p4, IChangelistSummary changelist) throws Exception {
@@ -351,5 +343,17 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	@Exported
 	public String getCommitId() {
 		return getChangeNumber();
+	}
+
+	private int getFileCountLimit() {
+		Jenkins j = Jenkins.getInstance();
+		if (j != null) {
+			Descriptor dsc = j.getDescriptor(PerforceScm.class);
+			if (dsc instanceof PerforceScm.DescriptorImpl) {
+				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+				fileCountLimit = p4scm.getMaxFiles();
+			}
+		}
+		return fileCountLimit;
 	}
 }
