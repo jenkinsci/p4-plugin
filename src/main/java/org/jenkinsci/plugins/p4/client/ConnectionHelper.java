@@ -629,7 +629,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 	public boolean hasFile(String depotPath) throws Exception {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
-		GetDepotFilesOptions opts = new GetDepotFilesOptions();
+		GetDepotFilesOptions opts = new GetDepotFilesOptions("-e");
 		List<IFileSpec> specs = connection.getDepotFiles(files, opts);
 		return validate.checkCatch(specs, "");
 	}
