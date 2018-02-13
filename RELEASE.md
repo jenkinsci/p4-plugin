@@ -1,5 +1,26 @@
 ## Release notes
 
+### Release 1.8.5 (major features/fixes)
+
+[@23604](https://swarm.workshop.perforce.com/changes/23604) - Merge pull request #68 from ChadiEM/deleted-jenkinsfile.  Make sure branch is not discovered when a Jenkinsfile has been removed.
+
+[@23590](https://swarm.workshop.perforce.com/changes/23590) - Fix file limits for change reporting.  JENKINS-47602
+
+[@23589](https://swarm.workshop.perforce.com/changes/23589) - Remove forced clobber and set default clobber option to true.  JENKINS-49041
+
+[@23544](https://swarm.workshop.perforce.com/changes/23544) - Update dependancies to latest supported version for Jenkins 1.642.3
+
+[@23536](https://swarm.workshop.perforce.com/changes/23536) - Merge pull request #67 from jromigh/master.  Adding UI alerts for Pattern Filter errors
+
+[@23535](https://swarm.workshop.perforce.com/changes/23535) - Change console output to use <span>. JENKINS-45611
+
+[@23534](https://swarm.workshop.perforce.com/changes/23534) - Move relative P4ROOT for tests into target/ folder. JENKINS-45612
+
+[@23533](https://swarm.workshop.perforce.com/changes/23533) - Merge pull request #66 from jromigh/master. Implementing a Java Pattern filter for polling. JENKINS-41217
+
+[@23478](https://swarm.workshop.perforce.com/changes/23478) - Merge pull request #65 from PhRX/jenkins-44845. JENKINS-48845 : Backward compatibility for pre-swarm P4 releases
+
+
 ### Release 1.8.4 (major features/fixes)
 
 [@23425](https://swarm.workshop.perforce.com/changes/23425) - Backwards compatibility for p4 describe.  Max limit on files for p4 describe (-m flag) was introduced in 2014.1  JENKINS-48433
