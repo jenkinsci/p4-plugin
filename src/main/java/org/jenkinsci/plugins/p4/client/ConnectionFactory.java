@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.PropertyDefs;
+import com.perforce.p4java.exception.ConnectionException;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.mapbased.rpc.RpcPropertyDefs;
 import com.perforce.p4java.option.UsageOptions;
 import com.perforce.p4java.server.IOptionsServer;
@@ -19,8 +21,7 @@ import java.util.logging.Logger;
  */
 public class ConnectionFactory {
 
-	private static Logger logger = Logger.getLogger(ConnectionFactory.class
-			.getName());
+	private static Logger logger = Logger.getLogger(ConnectionFactory.class.getName());
 
 	private static IOptionsServer currentP4;
 
@@ -46,21 +47,30 @@ public class ConnectionFactory {
 
 		IOptionsServer iserver = getRawConnection(config);
 
-		// Add trust for SSL connections
-		if (config.isSsl()) {
-			String serverTrust = iserver.getTrust();
-			if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
-				logger.warning("Trust mismatch! Server fingerprint: "
-						+ serverTrust);
+		// Connect and update current P4 connection
+		try {
+			iserver.connect();
+		} catch (ConnectionException e) {
+			if (config.isSsl()) {
+				addTrust(iserver, config);
+				iserver.connect();
 			} else {
-				iserver.addTrust(config.getTrust());
+				throw e;
 			}
 		}
-
-		// Connect and update current P4 connection
-		iserver.connect();
 		currentP4 = iserver;
 		return iserver;
+	}
+
+	// Add trust for SSL connections
+	private static void addTrust(IOptionsServer iserver, ConnectionConfig config) throws P4JavaException {
+		String serverTrust = iserver.getTrust();
+		if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
+			logger.warning("Trust mismatch! Server fingerprint: " + serverTrust);
+		} else {
+			iserver.addTrust(config.getTrust());
+			logger.fine("addTrust - ok: " + config.getTrust());
+		}
 	}
 
 	public static FormValidation testConnection(ConnectionConfig config) {
@@ -71,9 +81,7 @@ public class ConnectionFactory {
 			if (config.isSsl()) {
 				String serverTrust = iserver.getTrust();
 				if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
-					return FormValidation
-							.error("Trust mismatch! Server fingerprint: "
-									+ serverTrust);
+					return FormValidation.error("Trust mismatch! Server fingerprint: " + serverTrust);
 				} else {
 					iserver.addTrust(config.getTrust());
 				}
