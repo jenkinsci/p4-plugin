@@ -937,7 +937,7 @@ public class ClientHelper extends ConnectionHelper {
 				String msg = spec.getStatusMessage();
 				if (msg.contains("exclusive file already opened")) {
 					String rev = msg.substring(0, msg.indexOf(" - can't "));
-					if (msg.contains("can't delete")) {
+					if (msg.contains("can't delete") || msg.contains("can't move/delete")) {
 						// JENKINS-47141 delete workspace file manually when locked
 						log("P4 Task: delete: " + rev);
 						deleteFile(rev);
