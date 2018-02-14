@@ -33,7 +33,9 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		super(credential);
 		this.path = path;
 		setCharset(charset);
-		setFormat("jenkins-library");
+
+		String id = path.replaceAll("[/]+", ".");
+		setFormat("jenkins-library" + id);
 	}
 
 	@Override
