@@ -243,6 +243,9 @@ public class WorkflowTest extends DefaultEnvironment {
 				"}";
 		submitFile(jenkins, "//depot/library/vars/sayHello.groovy", content);
 
+		// change in source (after library)
+		submitFile(jenkins, "//depot/Data/fileA", content);
+
 		// configure Global Library
 		String path = "//depot/library";
 		GlobalLibraryScmSource scm = new GlobalLibraryScmSource(auth.getId(), null, path);
@@ -262,14 +265,15 @@ public class WorkflowTest extends DefaultEnvironment {
 				"    p4sync charset: 'none', \n" +
 				"      credential: '" + auth.getId() + "', \n" +
 				"      populate: autoClean(quiet: true), \n" +
-				"      source: streamSource('//stream/main')\n" +
+				"      source: depotSource('//depot/Data')\n" +
 				"    sayHello 'Jenkins'\n" +
+				"    println \"SYNC_CHANGELIST: ${env.P4_CHANGELIST}\"\n" +
 				"}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.SUCCESS, run.getResult());
-		jenkins.assertLogContains("Hello again, Jenkins.", run);
+		jenkins.assertLogContains("SYNC_CHANGELIST: 45", run);
 
 		// Clear Global Libraries for other Jobs
 		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
