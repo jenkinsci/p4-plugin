@@ -7,25 +7,36 @@
 	<ul>
 		<dt>Automatic Cleanup and Sync</dt>
 		<dd>
-			Efficient cleaning and syncing of file revisions. Extra (non
-			versioned files) are removed, missing and modified files re-added. </br>Best
-			for clean builds.
+			Efficient cleaning and syncing of file revisions. Extra (non versioned files) are removed, missing and modified files re-added.
+			</br>Best for clean builds.
+		</dd>
+
+		<dt>Flush Workspace</dt>
+		<dd>
+			No files Sync or cleanup attempted, but the Workspace's have list is updated.
+			</br>Effective command 'p4 sync -k'.
 		</dd>
 
 		<dt>Force Clean and Sync</dt>
-		<dd>Will remove all files from under the workspace root, then
-			force sync the required files. Inefficient and NOT RECOMENDED.</dd>
+		<dd>
+			Will remove all files from under the workspace root, then force sync the required files. Inefficient and NOT RECOMENDED.
+		</dd>
+
+		<dt>Graph Force Clean and Sync/dt>
+		<dd>
+			For Graph and Hybrid only, will remove all files from under the workspace root,	then force sync the required files.
+		</dd>
+
+		<dt>Preview Check Only</dt>
+		<dd>
+			No files Sync or cleanup attempted; the Workspace's have list is not updated.
+			</br>Effective command 'p4 sync -n'.
+		</dd>
 
 		<dt>Sync Only</dt>
 		<dd>
-			No cleanup attempted; the sync will update all files (as CLOBBER is
-			set) to the required set of revisions. </br>Best for incremental builds.
-		</dd>
-		
-		<dt>Preview Check Only</dt>
-		<dd>
-			No files Sync or cleanup attempted; the Workspace's have list is updated.
-			</br>Effective command 'p4 sync -k'.
+			No cleanup attempted; the sync will update all files (as CLOBBER is	set) to the required set of revisions.
+			</br>Best for incremental builds.
 		</dd>
 	</ul>
 </div>
