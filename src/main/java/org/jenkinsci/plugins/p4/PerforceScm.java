@@ -355,14 +355,9 @@ public class PerforceScm extends SCM {
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
 
 		Workspace ws = (Workspace) workspace.clone();
-		String root = buildWorkspace.getRemote();
-		if (root.contains("@")) {
-			root = root.replace("@", "%40");
-		}
-		ws.setRootPath(root);
+		// JENKINS-48434 by setting rootPath to null will leave client's root unchanged
+		ws.setRootPath(null);
 		ws.setExpand(envVars);
-
-		// don't call setRootPath() here, polling is often on the master
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
