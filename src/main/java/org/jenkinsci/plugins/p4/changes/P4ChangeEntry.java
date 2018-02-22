@@ -346,14 +346,16 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	private int getFileCountLimit() {
+		int max = 0;
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
 			Descriptor dsc = j.getDescriptor(PerforceScm.class);
 			if (dsc instanceof PerforceScm.DescriptorImpl) {
 				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
-				fileCountLimit = p4scm.getMaxFiles();
+				max = p4scm.getMaxFiles();
 			}
 		}
+		fileCountLimit = (max > 0) ? max : PerforceScm.DEFAULT_FILE_LIMIT;
 		return fileCountLimit;
 	}
 }

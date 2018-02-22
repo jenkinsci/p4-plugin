@@ -38,10 +38,10 @@
 
 	<f:section title="Perforce: Query limits">
     	<f:entry title="${%Maximum number of files shown in a changelist}" field="maxFiles">
-    		<f:textbox default="50"/>
+    		<f:textbox default="${descriptor.DEFAULT_FILE_LIMIT}"/>
     	</f:entry>
     	<f:entry title="${%Maximum number of changes shown in a build}" field="maxChanges">
-            <f:textbox default="20"/>
+            <f:textbox default="${descriptor.DEFAULT_CHANGE_LIMIT}"/>
         </f:entry>
     </f:section>
 	
