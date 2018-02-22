@@ -35,3 +35,6 @@ vagrant/
 docs/ppt/
 
 tmp*
+
+# vim swap files
+.*.swp
