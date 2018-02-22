@@ -107,3 +107,41 @@ If your `Jenksinfile` is located in a subdirectory or uses a different name, Jen
 option to allow customisation.
 
 ![HelixStream Config](docs/images/scriptPath.png)
+
+### Lightweight checkout vs default checkout
+
+Lightweight checkout is automatically applied by Jenkins to MultiBranch jobs; you may wish to disable the default checkout of your code
+and add your own checkout step in the Jenkinsfile.  Simply add `options { skipDefaultCheckout() }` to the agent.  
+
+For example:
+
+```groovy
+pipeline {
+    agent any
+    
+    options { skipDefaultCheckout() }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                p4sync credential: 'id', populate: forceClean(), source: streamSource('//stream/main')
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+            }
+        }
+    }
+}
+```

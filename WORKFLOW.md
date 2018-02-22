@@ -151,6 +151,75 @@ and fill out the fields as required. For example:
  * Only map the Jenkinsfile (and perhaps Pipeline libraries) in the workspace view.  Jenkins may create an '@script'
    directory on the master and you don't want to unnecessarily sync code to an area not used for the actual build.
 
+## Lightweight checkout
+
+The 'Pipeline script from SCM' would normally use a Perforce Sync to fetch the versioned Jenkinsfile, however if the 
+workspace view included more than just the Jenkinsfile the operation could be expensive.  Jenkins introduced the 
+'Lightweight checkout' option that can navigate the SCM and fetch files as required.  
+
+![Lightweight](docs/images/lightweight.png)
+
+Enabling the option will use a 'p4 print' to fetch the Jenkinsfile negating the need for syncing the script files.
+
+### Important recommendations
+
+If you are using declarative pipeline and not the old DSL, you will need to disable the automatic 'Declarative Checkout
+SCM' step.  For example, the declarative pipeline script has three steps, yet the build will show four:
+
+```groovy
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+            }
+        }
+    }
+}
+```
+
+![Declarative pipeline](docs/images/declarative.png)
+
+Simply add `options { skipDefaultCheckout() }` to the agent.  For example:
+
+```groovy
+pipeline {
+    agent any
+    
+    options { skipDefaultCheckout() }
+    
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying...'
+            }
+        }
+    }
+}
+```
+
 ## Polling
 
 Jenkins will poll for each sync step in a build script and also for the Jenkinsfile if using the 'Pipeline script from
