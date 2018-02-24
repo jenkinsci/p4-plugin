@@ -105,10 +105,10 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		ClientView clientView = new ClientView();
 		int order = 0;
-		for (String line : getSpec().getView().split("\\n")) {
+		String spec = getExpand().format(getSpec().getView(), false);
+		for (String line : spec.split("\\n")) {
 			String origName = getName();
 			line = line.replace(origName, clientName);
-			line = getExpand().format(line, false);
 
 			try {
 				ClientViewMapping entry = new ClientViewMapping(order, line);
