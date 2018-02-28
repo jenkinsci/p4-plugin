@@ -32,6 +32,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
+	private static String InitialViewExpandKey = "P4_INITIAL_VIEW";
+
 	@Override
 	public String getName() {
 		return name;
@@ -62,6 +64,28 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		this.spec = spec;
 	}
 
+	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception{
+		String clientName = getFullName();
+		ClientView clientView = new ClientView();
+		int order = 0;
+		String specString = getExpand().format(workspaceSpec.getView(), false);
+		for (String line : specString.split("\\n")) {
+			String origName = getName();
+			line = line.replace(origName, clientName);
+
+			try {
+				ClientViewMapping entry = new ClientViewMapping(order, line);
+				order++;
+				clientView.addEntry(entry);
+			} catch (Exception e) {
+				String msg = "P4: invalid client view: " + line;
+				logger.warning(msg);
+				throw new AbortException(msg);
+			}
+		}
+		return clientView;
+	}
+
 	@Override
 	public IClient setClient(IOptionsServer connection, String user) throws Exception {
 		// expands Workspace name if formatters are used.
@@ -77,6 +101,15 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			if (connection.getServerVersionNumber() >= 20171) {
 				WorkspaceSpecType type = parseClientType(getSpec().getType());
 				implClient.setType(type.getId());
+			}
+
+			String view = getExpand().get(InitialViewExpandKey);
+			if (null != view) {
+				logger.info("Setting initial workspace spec: " + view);
+				WorkspaceSpec initialWorkspaceSpec = new WorkspaceSpec(
+						view, null);
+				ClientView clientView = getClientView(initialWorkspaceSpec);
+				implClient.setClientView(clientView);
 			}
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
@@ -103,24 +136,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		iclient.setLineEnd(parseLineEnd(getSpec().getLine()));
 
-		ClientView clientView = new ClientView();
-		int order = 0;
-		String spec = getExpand().format(getSpec().getView(), false);
-		for (String line : spec.split("\\n")) {
-			String origName = getName();
-			line = line.replace(origName, clientName);
-
-			try {
-				ClientViewMapping entry = new ClientViewMapping(order, line);
-				order++;
-				clientView.addEntry(entry);
-			} catch (Exception e) {
-				String msg = "P4: invalid client view: " + line;
-				logger.warning(msg);
-				throw new AbortException(msg);
-			}
-		}
-		iclient.setClientView(clientView);
+		iclient.setClientView(getClientView(getSpec()));
 
 		// TODO (p4java 17.2) changeView
 
