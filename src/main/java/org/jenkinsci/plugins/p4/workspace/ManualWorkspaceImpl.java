@@ -86,6 +86,17 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return clientView;
 	}
 
+        private ClientOptions getClientOptions(WorkspaceSpec spec) {
+		ClientOptions options = new ClientOptions();
+		options.setAllWrite(spec.allwrite);
+		options.setClobber(spec.clobber);
+		options.setCompress(spec.compress);
+		options.setLocked(spec.locked);
+		options.setModtime(spec.modtime);
+		options.setRmdir(spec.rmdir);
+                return options;
+        }
+
 	@Override
 	public IClient setClient(IOptionsServer connection, String user) throws Exception {
 		// expands Workspace name if formatters are used.
@@ -110,6 +121,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 						view, null);
 				ClientView clientView = getClientView(initialWorkspaceSpec);
 				implClient.setClientView(clientView);
+                                implClient.setOptions(getClientOptions(getSpec()));
 			}
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
@@ -118,14 +130,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
 
-		ClientOptions options = new ClientOptions();
-		options.setAllWrite(getSpec().allwrite);
-		options.setClobber(getSpec().clobber);
-		options.setCompress(getSpec().compress);
-		options.setLocked(getSpec().locked);
-		options.setModtime(getSpec().modtime);
-		options.setRmdir(getSpec().rmdir);
-		iclient.setOptions(options);
+                iclient.setOptions(getClientOptions(getSpec()));
 
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
