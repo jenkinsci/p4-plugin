@@ -1,5 +1,30 @@
 ## Release notes
 
+### Release 1.8.6 (major features/fixes)
+
+[@23652](https://swarm.workshop.perforce.com/changes/23652) - Use getPreviousCompletedBuild().  The lastBuild from getPreviousBuild() may be in progress or blocked.  Case#00319764
+
+[@23649](https://swarm.workshop.perforce.com/changes/23649) - Document HUDSON_CHANGELOG_FILE environment variable.  JENKINS-49383
+
+[@23648](https://swarm.workshop.perforce.com/changes/23648) - Document lightweight checkout for Pipeline and MultiBranch.  JENKINS-49048 JENKINS-49678
+
+[@23645](https://swarm.workshop.perforce.com/changes/23645) - Use DEFAULT_FILE_LIMIT if max file limit is set to 0.  JENKINS-49633
+
+[@23629](https://swarm.workshop.perforce.com/changes/23629) - Fix helper text for Environment.  JENKINS-31664
+
+[@23626](https://swarm.workshop.perforce.com/changes/23626) - Do not change the workspace root during polling.  JENKINS-48434
+
+[@23625](https://swarm.workshop.perforce.com/changes/23625) - Tidy up Populate documentation.  JENKINS-49283
+
+[@23624](https://swarm.workshop.perforce.com/changes/23624) - Extended test to cover issues when using global libraries.  JENKINS-44800
+
+[@23622](https://swarm.workshop.perforce.com/changes/23622) - Add Library path to client name for a unique SyncID.  JENKINS-49047
+
+[@23621](https://swarm.workshop.perforce.com/changes/23621) - Performance - Only add trust when needed.  May fix issue JENKINS-44430
+
+[@23620](https://swarm.workshop.perforce.com/changes/23620) - Merge pull request #69 from jfperusse-bhvr/master.  Fix issue unshelving move/delete of locked files.
+
+
 ### Release 1.8.5 (major features/fixes)
 
 [@23604](https://swarm.workshop.perforce.com/changes/23604) - Merge pull request #68 from ChadiEM/deleted-jenkinsfile.  Make sure branch is not discovered when a Jenkinsfile has been removed.
