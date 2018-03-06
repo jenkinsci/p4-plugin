@@ -505,8 +505,9 @@ public class PerforceScm extends SCM {
 	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
 
-		// Look for all changes since the last build
-		Run<?, ?> lastBuild = run.getPreviousBuild();
+		// Look for all changes since the last (completed) build.
+		// The lastBuild from getPreviousBuild() may be in progress or blocked.
+		Run<?, ?> lastBuild = run.getPreviousCompletedBuild();
 
 		String syncID = task.getSyncID();
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
