@@ -32,6 +32,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
+	private static String InitialViewExpandKey = "P4_INITIAL_VIEW";
+
 	@Override
 	public String getName() {
 		return name;
@@ -62,6 +64,39 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		this.spec = spec;
 	}
 
+	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception{
+		String clientName = getFullName();
+		ClientView clientView = new ClientView();
+		int order = 0;
+		String specString = getExpand().format(workspaceSpec.getView(), false);
+		for (String line : specString.split("\\n")) {
+			String origName = getName();
+			line = line.replace(origName, clientName);
+
+			try {
+				ClientViewMapping entry = new ClientViewMapping(order, line);
+				order++;
+				clientView.addEntry(entry);
+			} catch (Exception e) {
+				String msg = "P4: invalid client view: " + line;
+				logger.warning(msg);
+				throw new AbortException(msg);
+			}
+		}
+		return clientView;
+	}
+
+        private ClientOptions getClientOptions(WorkspaceSpec spec) {
+		ClientOptions options = new ClientOptions();
+		options.setAllWrite(spec.allwrite);
+		options.setClobber(spec.clobber);
+		options.setCompress(spec.compress);
+		options.setLocked(spec.locked);
+		options.setModtime(spec.modtime);
+		options.setRmdir(spec.rmdir);
+                return options;
+        }
+
 	@Override
 	public IClient setClient(IOptionsServer connection, String user) throws Exception {
 		// expands Workspace name if formatters are used.
@@ -78,6 +113,16 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 				WorkspaceSpecType type = parseClientType(getSpec().getType());
 				implClient.setType(type.getId());
 			}
+
+			String view = getExpand().get(InitialViewExpandKey);
+			if (null != view) {
+				logger.info("Setting initial workspace spec: " + view);
+				WorkspaceSpec initialWorkspaceSpec = new WorkspaceSpec(
+						view, null);
+				ClientView clientView = getClientView(initialWorkspaceSpec);
+				implClient.setClientView(clientView);
+                                implClient.setOptions(getClientOptions(getSpec()));
+			}
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
 		}
@@ -85,14 +130,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
 
-		ClientOptions options = new ClientOptions();
-		options.setAllWrite(getSpec().allwrite);
-		options.setClobber(getSpec().clobber);
-		options.setCompress(getSpec().compress);
-		options.setLocked(getSpec().locked);
-		options.setModtime(getSpec().modtime);
-		options.setRmdir(getSpec().rmdir);
-		iclient.setOptions(options);
+                iclient.setOptions(getClientOptions(getSpec()));
 
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
@@ -103,24 +141,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		iclient.setLineEnd(parseLineEnd(getSpec().getLine()));
 
-		ClientView clientView = new ClientView();
-		int order = 0;
-		for (String line : getSpec().getView().split("\\n")) {
-			String origName = getName();
-			line = line.replace(origName, clientName);
-			line = getExpand().format(line, false);
-
-			try {
-				ClientViewMapping entry = new ClientViewMapping(order, line);
-				order++;
-				clientView.addEntry(entry);
-			} catch (Exception e) {
-				String msg = "P4: invalid client view: " + line;
-				logger.warning(msg);
-				throw new AbortException(msg);
-			}
-		}
-		iclient.setClientView(clientView);
+		iclient.setClientView(getClientView(getSpec()));
 
 		// TODO (p4java 17.2) changeView
 
