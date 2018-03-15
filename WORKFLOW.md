@@ -241,5 +241,12 @@ their values will be ignored when determining the `syncID`:
 In very rare circumstances a user may want to override the `syncID`, this can be done by specifying the attribute on
 a `workspace:` class.
 
-## Environment
+## Limitations
+
+### Changelist reporting
+
+Core Jenkins ties changelist reporting to individual 'p4 sync' commands. If the same job has multiple 'checkout' or
+'p4sync' steps that sync the same changelist it will be reported once for each individual sync on the 'Status'
+and 'Changes' pages. The P4Jenkins plugin is not able to override this behavior.
+
 
