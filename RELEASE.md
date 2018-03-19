@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.8.7 (major features/fixes)
+
+[@23744](https://swarm.workshop.perforce.com/changes/23744) - Update P4Java to 2017.2.1635107 - Fix for ShiftJIS charset JENKINS-49916 and reconcile -w cleanup of symlinks JENKINS-49393 
+
+[@23696](https://swarm.workshop.perforce.com/changes/23696) - Document changelist reporting behavior when using multiple p4sync steps.  JENKINS-48854 #review-23697
+
+[@23684](https://swarm.workshop.perforce.com/changes/23684) - Merge pull request #70 from PaSaSaP/master.  Expand view mappings.
+
+
 ### Release 1.8.6 (major features/fixes)
 
 [@23652](https://swarm.workshop.perforce.com/changes/23652) - Use getPreviousCompletedBuild().  The lastBuild from getPreviousBuild() may be in progress or blocked.  Case#00319764
