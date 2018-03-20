@@ -118,9 +118,6 @@ public class ConnectionFactory {
 		props.put(PropertyDefs.ENABLE_GRAPH_SHORT_FORM, "true");
 		props.put(PropertyDefs.ENABLE_ANDMAPS_SHORT_FORM, "true");
 
-		// disable BOM addition to UTF8 files
-		props.put(PropertyDefs.FILESYS_UTF8BOM_SHORT_FORM, "0");
-
 		// Set P4HOST if defined
 		UsageOptions opts = new UsageOptions(props);
 		String p4host = config.getP4Host();
