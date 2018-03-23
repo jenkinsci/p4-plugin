@@ -7,7 +7,9 @@ public enum ApproveState {
 	APPROVED("approved", "Approve", false),
 	COMMIT("approved", "Approve and Commit", true),
 	REJECTED("rejected", "Reject", false),
-	ARCHIVED("Archived", "Archive", false);
+	ARCHIVED("Archived", "Archive", false),
+	VOTE_UP("up", "Vote Up", false),
+	VOTE_DOWN("down", "Vote Down", false);
 
 	private final String id;
 	private final String description;

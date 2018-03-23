@@ -78,6 +78,17 @@ public class SwarmHelper {
 			return false;
 		}
 
+		switch (state) {
+			case VOTE_UP:
+			case VOTE_DOWN:
+				return postVote(id, state);
+			default:
+				return patchReview(id, state, description);
+		}
+	}
+
+	private boolean patchReview(String id, ApproveState state, String description) throws Exception {
+
 		String url = getApiUrl() + "/reviews/" + id + "/state";
 
 		Map<String, Object> parameters = new HashedMap();
@@ -101,6 +112,27 @@ public class SwarmHelper {
 
 		if (res.getStatus() == 200) {
 			p4.log("Swarm review id: " + id + " updated: " + state.getDescription());
+			return true;
+		} else {
+			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
+			String error = res.getBody().getObject().getString("error");
+			p4.log("Swarm error message: " + error);
+			throw new SwarmException(res);
+		}
+	}
+
+	private boolean postVote(String id, ApproveState state) throws Exception {
+
+		String vote = state.getId();
+		String url = getBaseUrl() + "/reviews/" + id + "/vote/" + vote;
+
+		// Send PATCH request to Swarm
+		HttpResponse<JsonNode> res = Unirest.post(url)
+				.basicAuth(user, ticket)
+				.asJson();
+
+		if (res.getStatus() == 200) {
+			p4.log("Swarm review id: " + id + " voted: " + vote);
 			return true;
 		} else {
 			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
