@@ -276,4 +276,25 @@ public class WorkspaceTest extends DefaultEnvironment {
 
 		assertEquals("jenkins-NODE_NAME-bar.ws", workspace.getSyncID());
 	}
+
+	@Test
+	public void testFolderProject_StreamWs() throws Exception {
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
+		String view = "//depot/Data/... //" + format + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec);
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Folder/test");
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+	}
 }

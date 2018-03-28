@@ -70,7 +70,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		int order = 0;
 		String specString = getExpand().format(workspaceSpec.getView(), false);
 		for (String line : specString.split("\\n")) {
-			String origName = getName();
+			String origName = getExpand().format(getName(), false);
 			line = line.replace(origName, clientName);
 
 			try {
