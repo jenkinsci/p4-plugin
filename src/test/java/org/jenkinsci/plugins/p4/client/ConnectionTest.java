@@ -61,7 +61,7 @@ public class ConnectionTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		auth = createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test

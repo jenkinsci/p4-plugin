@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.p4.client;
 
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -27,7 +26,6 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
 	private static final String P4ROOT = "tmp-GraphWorkflowTest-p4root";
-	private static P4PasswordImpl auth;
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -37,17 +35,16 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "Password", p4d);
+		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	// Test for syncing a graph source using script with source specified
 	@Test
 	public void testSyncGraphSources() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
 				"//graph/scm-api-plugin''']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
@@ -62,10 +59,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testSyncGraphSource() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', source: [$class: 'GraphSource', graph: '//graph/scm-api-plugin']," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '//graph/scm-api-plugin']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -80,10 +76,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testSyncGraphSourceWithLegacyScript() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', depotPath: '//graph/scm-api-plugin'," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin'," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -98,10 +93,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testSyncDepotSource() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', source: [$class: 'DepotSource', depot: '//depot/...']," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'DepotSource', depot: '//depot/...']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -116,10 +110,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testSyncDepotSourceWithLegacyScript() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', depotPath: '//depot/...'," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//depot/...'," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -134,10 +127,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testSyncDepotSourceJava() throws Exception {
 
-		String id = auth.getId();
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', depotPath: '//graph/scm-api-plugin/....java'," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin/....java'," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -194,12 +186,11 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	@Test
 	public void testParallelSync() throws Exception {
 
-		String id = auth.getId();
 		String client = "jenkins-master-parallelSync-0";
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + id + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
 				"//graph/scm-api-plugin''']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: true, minbytes: '2', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
@@ -213,7 +204,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: //graph/scm-api-plugin.git@81dcf18bca038604c4fc784de42e6069feef8bd1", run);
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(job.asItem(), id, null, client, "none");
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, client, "none");
 		p4.login();
 
 		// Test file exists in workspace root

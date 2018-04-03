@@ -13,7 +13,6 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -39,7 +38,6 @@ public class GraphTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(GraphTest.class.getName());
 	private static final String P4ROOT = "tmp-GraphTest-p4root";
-	private static P4PasswordImpl auth;
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -49,18 +47,16 @@ public class GraphTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "Password", p4d);
+		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
 	public void testFreeStyleForceSync() throws Exception {
 
 		String client = "graph.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/jam/... //" + client + "/jam/...\n";
 		view += "//graph/scm-api-plugin/... //" + client + "/scm-api/...\n";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("FreeGraph");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
@@ -91,11 +87,9 @@ public class GraphTest extends DefaultEnvironment {
 	public void testPollingPin() throws Exception {
 
 		String client = "graph.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/jam/... //" + client + "/jam/...\n";
 		view += "//graph/scm-api-plugin/... //" + client + "/scm-api/...\n";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("FreeGraphPolling");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);

@@ -11,7 +11,6 @@ import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -41,7 +40,6 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-ScmFileSystemTest-p4root";
 
-	private static P4PasswordImpl auth;
 	private static ManualWorkspaceImpl workspace;
 
 	@ClassRule
@@ -52,7 +50,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 
 		String client = "testNavigation.ws";
 		String view = "//depot/... //${P4_CLIENT}/...";
@@ -63,7 +61,8 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	@Test
 	public void testAutoComplete() {
-		new ConnectionHelper(auth); // Initialise default connection
+
+		new ConnectionHelper(CREDENTIAL, null); // Initialise default connection
 		NavigateHelper nav = new NavigateHelper(5);
 
 		AutoCompletionCandidates results = nav.getCandidates("//");
@@ -85,8 +84,8 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	@Test
 	public void testNodes() throws Exception {
-		String credential = auth.getId();
-		TempClientHelper p4 = new TempClientHelper(null, credential, null, workspace);
+
+		TempClientHelper p4 = new TempClientHelper(null, CREDENTIAL, null, workspace);
 		p4.setClient(workspace);
 		NavigateHelper nav = new NavigateHelper(p4.getConnection());
 
@@ -105,10 +104,9 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	@Test
 	public void ofSource_Smokes() throws Exception {
 
-		String id = auth.getId();
 		String format = workspace.getName();
 
-		BranchesScmSource source = new BranchesScmSource(id, "//depot/...", null, format);
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
 		source.setFilter(BranchesScmSource.DescriptorImpl.defaultFilter);
 		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
 

@@ -22,7 +22,6 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -31,7 +30,6 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +47,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
 	private static final String P4ROOT = "tmp-FreeStyleTest-p4root";
-	private static P4PasswordImpl auth;
+	private static final String SUPER = "super";
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -57,15 +55,10 @@ public class FreeStyleTest extends DefaultEnvironment {
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
-	@BeforeClass
-	public static void startWebServer() throws Exception {
-		// start pseudo web server
-		// TODO startHttpServer(HTTP_PORT);
-	}
-
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
+		createCredentials("admin", "Password", p4d.getRshPort(), SUPER);
 	}
 
 	@Test
@@ -108,7 +101,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		assertTrue(charsets.size() > 1);
 
 		// Log in for next set of tests...
-		ConnectionHelper p4 = new ConnectionHelper(auth);
+		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
 		p4.login();
 
 		StaticWorkspaceImpl.DescriptorImpl impl = (StaticWorkspaceImpl.DescriptorImpl) desc;
@@ -187,8 +180,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		// Log in and create counter for test
-		P4PasswordImpl admin = createCredentials("admin", "Password", p4d);
-		ClientHelper p4 = new ClientHelper(admin, null, "manual.ws", "utf8");
+		ClientHelper p4 = new ClientHelper(project, SUPER, null, "manual.ws", "utf8");
 		IOptionsServer iserver = p4.getConnection();
 		CounterOptions opts = new CounterOptions();
 		iserver.setCounter("testCounter", "9", opts);

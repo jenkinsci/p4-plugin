@@ -9,7 +9,6 @@ import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -31,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 public class ReviewImplTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-ReviewImplTest-p4root";
-	private static P4PasswordImpl auth;
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -41,7 +39,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
@@ -50,7 +48,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("StaticReview");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, client);
 		Populate populate = new AutoCleanImpl();
-		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();
 
@@ -66,7 +64,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 				+ "node() {\n" +
 				"    stage('Sync files...') {\n" +
 				"        checkout([$class: 'PerforceScm', " +
-				"           credential: '" + auth.getId() + "', " +
+				"           credential: '" + CREDENTIAL + "', " +
 				"           populate: [$class: 'ForceCleanImpl', have: false, pin: '', quiet: true], " +
 				"           workspace: [$class: 'StreamWorkspaceImpl', charset: 'none', " +
 				"              format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, " +

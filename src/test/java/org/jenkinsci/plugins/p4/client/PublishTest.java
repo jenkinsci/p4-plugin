@@ -41,7 +41,7 @@ public class PublishTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test

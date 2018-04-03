@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.client;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
@@ -16,8 +15,8 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,6 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(JenkinsfileTest.class.getName());
 	private static final String P4ROOT = "tmp-JenkinsfileTest-p4root";
-	private static P4PasswordImpl auth;
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -40,7 +38,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
@@ -91,7 +89,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		job.save();
 
 		// Test trigger
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
@@ -156,7 +154,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(1, job.getLastBuild().getNumber());
 
 		// Test trigger
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
@@ -308,7 +306,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/new01", "Content");
 
 		// Test trigger, build 3
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 		assertEquals(3, job.getLastBuild().getNumber());
@@ -318,7 +316,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertTrue(log.contains("Found last change 14 on syncID jenkins-NODE_NAME-multiSyncPoll-2"));
 
 		// Test trigger, no change
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 		assertEquals(3, job.getLastBuild().getNumber());
@@ -414,7 +412,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                 submitFile(jenkins, "//depot/Data/new01", "Content");
 
                 // Test trigger, build 3
-                trigger.poke(job, auth.getP4port());
+                trigger.poke(job, p4d.getRshPort());
                 TimeUnit.SECONDS.sleep(job.getQuietPeriod());
                 jenkins.waitUntilNoActivity();
                 assertEquals(3, job.getLastBuild().getNumber());
@@ -424,7 +422,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                 assertTrue(log.contains("[second_branch] Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2"));
 
                 // Test trigger, no change
-                trigger.poke(job, auth.getP4port());
+                trigger.poke(job, p4d.getRshPort());
                 TimeUnit.SECONDS.sleep(job.getQuietPeriod());
                 jenkins.waitUntilNoActivity();
                 assertEquals(3, job.getLastBuild().getNumber());

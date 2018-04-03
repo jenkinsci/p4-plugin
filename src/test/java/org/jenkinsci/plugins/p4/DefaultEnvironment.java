@@ -30,11 +30,9 @@ abstract public class DefaultEnvironment {
 	protected final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
 	protected final int LOG_LIMIT = 1000;
 
-	protected P4PasswordImpl createCredentials(String user, String password, SampleServerRule p4d) throws IOException {
-		String p4port = p4d.getRshPort();
+	protected P4PasswordImpl createCredentials(String user, String password, String p4port, String id) throws IOException {
 		CredentialsScope scope = CredentialsScope.GLOBAL;
-		P4PasswordImpl auth = new P4PasswordImpl(scope, CREDENTIAL, "desc", p4port, null, user, "0", "0", null, password);
-		SystemCredentialsProvider.getInstance().getCredentials().clear();
+		P4PasswordImpl auth = new P4PasswordImpl(scope, id, "desc", p4port, null, user, "0", "0", null, password);
 		SystemCredentialsProvider.getInstance().getCredentials().add(auth);
 		SystemCredentialsProvider.getInstance().save();
 		return auth;

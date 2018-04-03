@@ -14,7 +14,6 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
-import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -49,7 +48,6 @@ public class PollingTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
-	private static P4PasswordImpl auth;
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -59,7 +57,7 @@ public class PollingTest extends DefaultEnvironment {
 
 	@Before
 	public void buildCredentials() throws Exception {
-		auth = createCredentials("jenkins", "jenkins", p4d);
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
@@ -401,7 +399,7 @@ public class PollingTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("NotTriggerJobIfNoChange");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
-		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		P4Trigger trigger = new P4Trigger();
 		trigger.start(project, false);
@@ -412,7 +410,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause()));
 
 		// Test trigger
-		trigger.poke(project, auth.getP4port());
+		trigger.poke(project, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
@@ -431,7 +429,7 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
-		PerforceScm scm = new PerforceScm(auth.getId(), workspace, populate);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		P4Trigger trigger = new P4Trigger();
 		trigger.start(project, false);
@@ -450,7 +448,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
 		// Test trigger
-		trigger.poke(project, auth.getP4port());
+		trigger.poke(project, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
@@ -464,7 +462,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "TriggerPipelineJobIfChanges");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
-				+ "   p4sync credential: '" + auth.getId() + "',"
+				+ "   p4sync credential: '" + CREDENTIAL + "',"
 				+ "      depotPath: '//depot', format: 'test.ws'\n"
 				+ "}"));
 
@@ -486,7 +484,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
 
 		// Test trigger
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
@@ -499,7 +497,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "NotTriggerPipelineIfNoChanges");
 		job.setDefinition(new CpsFlowDefinition(
-				"" + "node {\n" + "   p4sync credential: '" + auth.getId() + "', template: 'test.ws'" + "\n" + "}"));
+				"" + "node {\n" + "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'" + "\n" + "}"));
 
 		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
@@ -513,7 +511,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
 		// Test trigger
-		trigger.poke(job, auth.getP4port());
+		trigger.poke(job, p4d.getRshPort());
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
