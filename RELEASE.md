@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.8.8 (major features/fixes)
+
+[@23806](https://swarm.workshop.perforce.com/changes/23806) - Update P4Java 2018.1.1638495; digest calculation for UTF8 files. JENKINS-49955
+
+[@23796](https://swarm.workshop.perforce.com/changes/23796) - Look for the expanded original name when updating the view.  Added test case for Job names with a '/' restricted character.  JENKINS-50393
+
+[@23780](https://swarm.workshop.perforce.com/changes/23780) - Add vote up/down support to p4review step.  JENKINS-46755
+
+[@23756](https://swarm.workshop.perforce.com/changes/23756) - Leave the filesys.utf8bom property unset.  Updated docs to explain how to set the undoc configurable for builds slaves.  JENKINS-49141
+
+
 ### Release 1.8.7 (major features/fixes)
 
 [@23744](https://swarm.workshop.perforce.com/changes/23744) - Update P4Java to 2017.2.1635107 - Fix for ShiftJIS charset JENKINS-49916 and reconcile -w cleanup of symlinks JENKINS-49393 
