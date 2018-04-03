@@ -788,6 +788,10 @@ public class ClientHelper extends ConnectionHelper {
 			}
 		}
 
+		if (callback.isFail()) {
+			throw new P4JavaException(callback.getException());
+		}
+
 		long cngNumber = callback.getChange();
 		if (cngNumber > 0) {
 			log("... submitted in change: " + cngNumber);

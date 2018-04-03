@@ -1,8 +1,10 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.admin.ITriggerEntry;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IExtendedFileSpec;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.impl.generic.admin.TriggerEntry;
 import com.perforce.p4java.option.server.GetExtendedFilesOptions;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -23,15 +25,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class PublishTest extends DefaultEnvironment {
 
 	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
 	private static final String P4ROOT = "tmp-PublishTest-p4root";
+	private static final String SUPER = "super";
 
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
@@ -42,6 +47,7 @@ public class PublishTest extends DefaultEnvironment {
 	@Before
 	public void buildCredentials() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
+		createCredentials("admin", "Password", p4d.getRshPort(), SUPER);
 	}
 
 	@Test
@@ -82,5 +88,49 @@ public class PublishTest extends DefaultEnvironment {
 		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
 		List<IExtendedFileSpec> eSpec = p4.connection.getExtendedFiles(fileSpec, opts);
 		assertEquals(eSpec.get(0).getHeadType(), "text+S3");
+	}
+
+	@Test
+	public void testPublishWithFail() throws Exception {
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-fail");
+
+		// Create workspace
+		String client = "manual-publish-fail.ws";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// Populate with P4 scm
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+
+		// Create artifact files
+		project.getBuildersList().add(new CreateArtifact("artifact.1", "content"));
+		project.getBuildersList().add(new CreateArtifact("artifact.2", "content"));
+
+		// Add trigger to fail submit
+		ClientHelper p4 = new ClientHelper(project, SUPER, null, client, "none");
+		List<ITriggerEntry> triggers = new ArrayList<>();
+		ITriggerEntry entry1 = new TriggerEntry(0, "fail",
+				ITriggerEntry.TriggerType.CHANGE_SUBMIT,
+				"//...", "\"exit 1\""
+		);
+		triggers.add(entry1);
+		String message = p4.getConnection().createTriggerEntries(triggers);
+		assertNotNull(message);
+		assertNotNull("Triggers saved.");
+
+		// Submit artifacts
+		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
+		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
+		project.getPublishersList().add(publish);
+		project.save();
+
+		// Start build
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.FAILURE, build.getResult());
+		jenkins.assertLogContains("'fail' validation failed: ", build);
 	}
 }
