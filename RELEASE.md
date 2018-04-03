@@ -22,7 +22,7 @@
 
 ### Release 1.8.6 (major features/fixes)
 
-[@23652](https://swarm.workshop.perforce.com/changes/23652) - Use getPreviousCompletedBuild().  The lastBuild from getPreviousBuild() may be in progress or blocked.  Case#00319764
+[@23652](https://swarm.workshop.perforce.com/changes/23652) - Use getPreviousCompletedBuild().  The lastBuild from getPreviousBuild() may be in progress or blocked.  JENKINS-49617
 
 [@23649](https://swarm.workshop.perforce.com/changes/23649) - Document HUDSON_CHANGELOG_FILE environment variable.  JENKINS-49383
 
