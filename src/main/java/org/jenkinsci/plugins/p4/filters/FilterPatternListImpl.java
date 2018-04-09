@@ -60,7 +60,7 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 	}
 
 	@Extension
-	@Symbol("viewFilter")
+	@Symbol("viewPattern")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
 		@Override
