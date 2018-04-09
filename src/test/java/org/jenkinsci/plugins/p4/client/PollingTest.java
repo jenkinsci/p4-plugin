@@ -38,10 +38,14 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class PollingTest extends DefaultEnvironment {
@@ -228,7 +232,7 @@ public class PollingTest extends DefaultEnvironment {
 		long change = buildList.get(0).getChange();
 		assertEquals(16L, change);
 	}
-	
+
 	@Test
 	public void testPatternList() throws Exception {
 
@@ -237,20 +241,20 @@ public class PollingTest extends DefaultEnvironment {
 		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		
+
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternList");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
-		
+
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		List<Filter> filter = new ArrayList<Filter>();
-		
+
 		StringBuilder sb = new StringBuilder();
-		
+
 		// Only poll on 0 && .dat files's
 		sb.append("//depot/main/[a-z]+-0\\.txt");
 		sb.append("\n");
 		sb.append(".*\\.dat$");
-		
+
 		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
 		filter.add(pList);
 		
@@ -262,7 +266,7 @@ public class PollingTest extends DefaultEnvironment {
 		 * Total: 4 changes
 		 */
 		long[] changesExpected = {18L, 17L, 14L, 8L};
-		
+
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
 		project.setScm(scm);
 		project.save();
@@ -277,19 +281,19 @@ public class PollingTest extends DefaultEnvironment {
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
-		
+
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
 		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(4, buildList.size());
-		
+
 		// Test all the changes that came back!
-		for(int i =0; i < buildList.size(); i++) {
+		for (int i = 0; i < buildList.size(); i++) {
 			assertEquals(changesExpected[i], buildList.get(i).getChange());
 		}
 	}
-	
+
 	@Test
 	public void testPatternListCaseSensitive() throws Exception {
 		String client = "manual.ws";
@@ -297,13 +301,13 @@ public class PollingTest extends DefaultEnvironment {
 		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		
+
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListCaseSensitive");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
-		
+
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		List<Filter> filter = new ArrayList<Filter>();
-		
+
 		// Only poll on a main with lower case 'm' (doesn't actually exist) -- ensure case sensitive is TRUE!
 		FilterPatternListImpl pList = new FilterPatternListImpl("//depot/main/file-.*\\.txt", true);
 		filter.add(pList);
@@ -311,7 +315,7 @@ public class PollingTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
 		project.setScm(scm);
 		project.save();
-		
+
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
@@ -322,14 +326,53 @@ public class PollingTest extends DefaultEnvironment {
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
-		
+
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
 		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(0, buildList.size());
 	}
-	
+
+	@Test
+	public void testPatternListPipeline() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "patternListPipeline");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "    checkout perforce(\n" +
+				"        credential: '" + CREDENTIAL + "', \n" +
+				"        filter: [viewPattern(caseSensitive: false, patternText: '//depot/main/foo.*')], \n" +
+				"        populate: forceClean(quiet: true),\n" +
+				"        workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n" +
+				"           spec: clientSpec(view: '//depot/main/... //${P4_CLIENT}/...')))"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run);
+
+		// Submit a change viable polling...
+		submitFile(jenkins, "//depot/main/foo.001", "content");
+
+		Logger polling = Logger.getLogger("Polling Test1");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		PollingResult poll1 = job.poll(listener);
+		assertEquals(PollingResult.BUILD_NOW, poll1);
+
+		assertThat(pollHandler.getLogBuffer().toString(), containsString("found change: 44"));
+
+		// Build to clear last change
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		// Submit a change hidden from polling...
+		submitFile(jenkins, "//depot/main/bar.002", "content");
+
+		PollingResult poll2 = job.poll(listener);
+		assertEquals(PollingResult.NO_CHANGES, poll2);
+	}
+
 	@Test
 	public void testPatternListInvalidPattern() throws Exception {
 
@@ -338,23 +381,23 @@ public class PollingTest extends DefaultEnvironment {
 		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		
+
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListInvalidPattern");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
-		
+
 		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
 		List<Filter> filter = new ArrayList<Filter>();
-		
+
 		StringBuilder sb = new StringBuilder();
-		
+
 		// Constuct a correct regex for File-0.txt, but test a broken regex for .dat files
 		sb.append("//depot/main/[a-z]+-0\\.txt");
 		sb.append("\n");
 		sb.append("{a-z\\}+\\.dat"); // Should be using []'s, not {}'s!
-		
+
 		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
 		filter.add(pList);
-		
+
 		// Should only be one actual regex generated
 		assertEquals(1, pList.getPatternList().size());
 		
@@ -366,7 +409,7 @@ public class PollingTest extends DefaultEnvironment {
 		 * Total: 2 changes
 		 */
 		long[] changesExpected = {14L, 8L};
-		
+
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
 		project.setScm(scm);
 		project.save();
@@ -381,19 +424,19 @@ public class PollingTest extends DefaultEnvironment {
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
-		
+
 		// Poll for changes incrementally
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		project.poll(listener);
 		List<P4Ref> buildList = scm.getIncrementalChanges();
 		assertEquals(2, buildList.size());
-		
+
 		// Test all the changes that came back!
-		for(int i =0; i < buildList.size(); i++) {
+		for (int i = 0; i < buildList.size(); i++) {
 			assertEquals(changesExpected[i], buildList.get(i).getChange());
 		}
 	}
-	
+
 	@Test
 	public void shouldNotTriggerJobIfNoChange() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("NotTriggerJobIfNoChange");
@@ -517,5 +560,29 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertEquals("Shouldn't have triggered a build as no changes", 1, job.getLastBuild().getNumber());
+	}
+
+
+	private class TestHandler extends Handler {
+
+		private StringBuffer sb = new StringBuffer();
+
+		@Override
+		public void publish(LogRecord record) {
+			sb.append(record.getMessage());
+			sb.append("\n");
+		}
+
+		@Override
+		public void flush() {
+		}
+
+		@Override
+		public void close() throws SecurityException {
+		}
+
+		public StringBuffer getLogBuffer() {
+			return sb;
+		}
 	}
 }
