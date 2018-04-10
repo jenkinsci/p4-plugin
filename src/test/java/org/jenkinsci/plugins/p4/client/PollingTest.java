@@ -38,9 +38,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsString;
@@ -68,16 +66,14 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPollingPin() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingPin");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
+		Populate populate = new AutoCleanImpl(true, true, false, false, false, "auto15", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();
@@ -104,16 +100,14 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPollingInc() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingInc");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, "auto15", null);
+		Populate populate = new AutoCleanImpl(true, true, false,false, false, "auto15", null);
 		List<Filter> filter = new ArrayList<Filter>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
@@ -147,15 +141,13 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPollingMask() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingMask");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
 
 		// Filter changes outside of //depot/Data path
@@ -189,15 +181,13 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPollingMaskExcl() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingMaskExcl");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
 
 		// Filter changes outside of //depot/Main and also under //depot/Main/TPI-83
@@ -237,15 +227,13 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPatternList() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternList");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
 
 		StringBuilder sb = new StringBuilder();
@@ -297,15 +285,13 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPatternListCaseSensitive() throws Exception {
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListCaseSensitive");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
 
 		// Only poll on a main with lower case 'm' (doesn't actually exist) -- ensure case sensitive is TRUE!
@@ -377,15 +363,13 @@ public class PollingTest extends DefaultEnvironment {
 	public void testPatternListInvalidPattern() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListInvalidPattern");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
 
 		StringBuilder sb = new StringBuilder();
@@ -441,7 +425,7 @@ public class PollingTest extends DefaultEnvironment {
 	public void shouldNotTriggerJobIfNoChange() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("NotTriggerJobIfNoChange");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		P4Trigger trigger = new P4Trigger();
@@ -464,14 +448,12 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void shouldTriggerJobIfChanges() throws Exception {
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		FreeStyleProject project = jenkins.createFreeStyleProject("TriggerJobIfChanges");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false, false, null, null);
+		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		P4Trigger trigger = new P4Trigger();
@@ -507,7 +489,7 @@ public class PollingTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "',"
 				+ "      depotPath: '//depot', format: 'test.ws'\n"
-				+ "}"));
+				+ "}", false));
 
 		// Set review to build change 9
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
@@ -539,8 +521,10 @@ public class PollingTest extends DefaultEnvironment {
 	public void testShouldNotTriggerPipelineIfNoChanges() throws Exception {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "NotTriggerPipelineIfNoChanges");
-		job.setDefinition(new CpsFlowDefinition(
-				"" + "node {\n" + "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'" + "\n" + "}"));
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'" + "\n"
+				+ "}", false));
 
 		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
@@ -560,29 +544,5 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertEquals("Shouldn't have triggered a build as no changes", 1, job.getLastBuild().getNumber());
-	}
-
-
-	private class TestHandler extends Handler {
-
-		private StringBuffer sb = new StringBuffer();
-
-		@Override
-		public void publish(LogRecord record) {
-			sb.append(record.getMessage());
-			sb.append("\n");
-		}
-
-		@Override
-		public void flush() {
-		}
-
-		@Override
-		public void close() throws SecurityException {
-		}
-
-		public StringBuffer getLogBuffer() {
-			return sb;
-		}
 	}
 }

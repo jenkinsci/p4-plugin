@@ -101,9 +101,12 @@ public class P4Hook implements UnprotectedRootAction {
 
 	private void probeJobs(@CheckForNull String port, List<Job> jobs) throws IOException {
 		for (Job<?, ?> job : jobs) {
-			P4Trigger trigger = null;
+			if(!job.isBuildable()) {
+				continue;
+			}
 			LOGGER.fine("P4: trying: " + job.getName());
 
+			P4Trigger trigger = null;
 			if (job instanceof ParameterizedJobMixIn.ParameterizedJob) {
 				ParameterizedJobMixIn.ParameterizedJob pJob = (ParameterizedJobMixIn.ParameterizedJob) job;
 				for (Trigger<?> t : pJob.getTriggers().values()) {

@@ -17,6 +17,8 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 import static org.junit.Assert.assertEquals;
 
@@ -76,7 +78,7 @@ abstract public class DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = path + " //" + client + "/" + filename;
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
 		// Populate with P4 scm
@@ -135,5 +137,28 @@ abstract public class DefaultEnvironment {
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.SUCCESS, build.getResult());
+	}
+
+	public class TestHandler extends Handler {
+
+		private StringBuffer sb = new StringBuffer();
+
+		@Override
+		public void publish(LogRecord record) {
+			sb.append(record.getMessage());
+			sb.append("\n");
+		}
+
+		@Override
+		public void flush() {
+		}
+
+		@Override
+		public void close() throws SecurityException {
+		}
+
+		public StringBuffer getLogBuffer() {
+			return sb;
+		}
 	}
 }
