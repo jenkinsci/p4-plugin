@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.8.9 (major features/fixes)
+
+[@23858](https://swarm.workshop.perforce.com/changes/23858) - Skip probing disabled Jobs.  Includes minor updates to Polling tests. JENKINS-50634
+
+[@23850](https://swarm.workshop.perforce.com/changes/23850) - Change Java Pattern polling filter name.  The @Symbol name for the Java Pattern filter clashed with the View Mask filter.  JENKINS-50027
+
+[@23821](https://swarm.workshop.perforce.com/changes/23821) - Raise Submit errors in Publish step.  JENKINS-49825
+
+
 ### Release 1.8.8 (major features/fixes)
 
 [@23806](https://swarm.workshop.perforce.com/changes/23806) - Update P4Java 2018.1.1638495; digest calculation for UTF8 files. JENKINS-49955
