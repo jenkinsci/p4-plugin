@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -14,16 +15,23 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 
 	private static final long serialVersionUID = 1L;
 
-	@NonNull private final String value;
+	@NonNull
+	private final String value;
 
-	@NonNull private final String ticketValue;
+	@NonNull
+	private final Secret ticketSecret;
 
-	@NonNull private final String ticketPath;
+	@Deprecated
+	private final String ticketValue;
+
+	@NonNull
+	private final String ticketPath;
 
 	@DataBoundConstructor
 	public TicketModeImpl(String value, String ticketValue, String ticketPath) {
 		this.value = value;
-		this.ticketValue = (ticketValue != null) ? ticketValue : "";
+		this.ticketValue = "";
+		this.ticketSecret = Secret.fromString(ticketValue);
 		this.ticketPath = (ticketPath != null) ? ticketPath : "";
 	}
 
@@ -32,7 +40,14 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 	}
 
 	public String getTicketValue() {
+		if (ticketSecret != null && !getTicketSecret().isEmpty()) {
+			return getTicketSecret();
+		}
 		return ticketValue;
+	}
+
+	public String getTicketSecret() {
+		return ticketSecret.getPlainText();
 	}
 
 	public String getTicketPath() {
