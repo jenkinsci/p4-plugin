@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
@@ -410,6 +411,9 @@ public class PerforceScm extends SCM {
 		CheckoutTask task = new CheckoutTask(populate);
 		task.setListener(listener);
 		task.setCredential(credential, run);
+
+		// Update credential tracking
+		CredentialsProvider.track(run, task.getCredential());
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);

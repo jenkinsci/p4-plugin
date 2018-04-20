@@ -823,7 +823,6 @@ public class ConnectionHelper implements AutoCloseable {
 				CredentialsMatchers.allOf(
 						CredentialsMatchers.withId(credentialsId),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
-		CredentialsProvider.track(item, credentials);
 		return credentials;
 	}
 
@@ -841,7 +840,6 @@ public class ConnectionHelper implements AutoCloseable {
 		}
 		P4BaseCredentials credentials = CredentialsProvider.findCredentialById(credentialsId,
 				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
-		CredentialsProvider.track(run, credentials);
 		return credentials;
 	}
 
