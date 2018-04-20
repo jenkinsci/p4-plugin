@@ -13,7 +13,6 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -42,6 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -79,7 +79,7 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
@@ -90,10 +90,13 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(12, buildList.size());
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 4"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 15"));
 	}
 
 	@Test
@@ -108,7 +111,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false,false, false, "auto15", null);
-		List<Filter> filter = new ArrayList<Filter>();
+		List<Filter> filter = new ArrayList<>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
@@ -116,14 +119,13 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
-		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
-		build = project.scheduleBuild2(0, cause, actions).get();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes incrementally
@@ -169,12 +171,13 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes incrementally
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(2, buildList.size());
-		long change = buildList.get(0).getChange();
-		assertEquals(18L, change);
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 18"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 17"));
 	}
 
 	@Test
@@ -213,14 +216,14 @@ public class PollingTest extends DefaultEnvironment {
 		build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
 
-		// TODO: determine the CL our mask should poll us at
 		// Poll for changes incrementally
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(13, buildList.size());
-		long change = buildList.get(0).getChange();
-		assertEquals(16L, change);
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 16"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 4"));
 	}
 
 	@Test
@@ -271,14 +274,15 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes incrementally
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(4, buildList.size());
 
-		// Test all the changes that came back!
-		for (int i = 0; i < buildList.size(); i++) {
-			assertEquals(changesExpected[i], buildList.get(i).getChange());
+		// Test all expected changes
+		for (long c : changesExpected) {
+			assertThat(pollHandler.getLogBuffer(), containsString("found change: " + c));
 		}
 	}
 
@@ -314,10 +318,12 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes incrementally
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(0, buildList.size());
+		assertThat(pollHandler.getLogBuffer(), not(containsString("found change")));
 	}
 
 	@Test
@@ -347,7 +353,7 @@ public class PollingTest extends DefaultEnvironment {
 		PollingResult poll1 = job.poll(listener);
 		assertEquals(PollingResult.BUILD_NOW, poll1);
 
-		assertThat(pollHandler.getLogBuffer().toString(), containsString("found change: 44"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 44"));
 
 		// Build to clear last change
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -410,14 +416,15 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Poll for changes incrementally
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(2, buildList.size());
 
-		// Test all the changes that came back!
-		for (int i = 0; i < buildList.size(); i++) {
-			assertEquals(changesExpected[i], buildList.get(i).getChange());
+		// Test all expected changes
+		for (long c : changesExpected) {
+			assertThat(pollHandler.getLogBuffer(), containsString("found change: " + c));
 		}
 	}
 
@@ -544,5 +551,49 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertEquals("Shouldn't have triggered a build as no changes", 1, job.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void testPipelinePollingInc() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelinePollingInc");
+		job.setDefinition(new CpsFlowDefinition("node {\n"
+				+ "checkout perforce(\n"
+				+ "  credential: '" + CREDENTIAL + "', \n"
+				+ "  filter: [incremental(true)], \n"
+				+ "  populate: forceClean(have: false, pin: '', quiet: true), \n"
+				+ "  workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "    pinHost: false, \n"
+				+ "    spec: clientSpec(view: '//depot/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		WorkflowRun run1 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
+
+		// Change 1
+		submitFile(jenkins, "//depot/main/inc.001", "content");
+
+		// Change 2
+		submitFile(jenkins, "//depot/main/inc.002", "content");
+
+		// add handler to read polling log
+		Logger polling = Logger.getLogger("IncPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+
+		// poll for changes
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		job.poll(listener);
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 44"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 45"));
+
+		WorkflowRun run2 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change: 44", run2);
+
+		// Change 3
+		submitFile(jenkins, "//depot/main/inc.003", "content");
+
+		WorkflowRun run3 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change: 45", run3);
 	}
 }

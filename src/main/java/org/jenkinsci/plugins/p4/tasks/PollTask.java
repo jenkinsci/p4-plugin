@@ -80,6 +80,10 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 				P4Ref graphHead = p4.getGraphHead(repo.getName());
 				List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
 				changes.addAll(commits);
+				for(P4Ref commit : commits) {
+					p4.log("... found commit: " + commit.toString());
+				}
+
 			}
 		}
 

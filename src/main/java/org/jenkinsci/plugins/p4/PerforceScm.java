@@ -92,7 +92,6 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 
-	private transient List<P4Ref> incrementalChanges;
 	private transient P4Ref parentChange;
 	private transient P4Review review;
 
@@ -118,10 +117,6 @@ public class PerforceScm extends SCM {
 	@Override
 	public P4Browser getBrowser() {
 		return browser;
-	}
-
-	public List<P4Ref> getIncrementalChanges() {
-		return incrementalChanges;
 	}
 
 	public P4Review getReview() {
@@ -365,6 +360,30 @@ public class PerforceScm extends SCM {
 		String syncID = ws.getSyncID();
 		log.println("P4: Polling on: " + nodeName + " with:" + client);
 
+		List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
+
+		// Build if null (un-built) or if changes are found
+		if (changes == null || !changes.isEmpty()) {
+			return PollingResult.BUILD_NOW;
+		}
+		return PollingResult.NO_CHANGES;
+	}
+
+	/**
+	 * Look for un-built for changes
+	 *
+	 * @param ws
+	 * @param lastRun
+	 * @param listener
+	 * @return A list of changes found during polling, empty list if no changes (up-to-date).
+	 * Will return 'null' if no previous build.
+	 */
+	private List<P4Ref> lookForChanges(FilePath buildWorkspace, Workspace ws, Run<?, ?> lastRun, TaskListener listener)
+			throws IOException, InterruptedException {
+
+		// Set EXPANDED client
+		String syncID = ws.getSyncID();
+
 		// Set EXPANDED pinned label/change
 		String pin = populate.getPin();
 		if (pin != null && !pin.isEmpty()) {
@@ -375,7 +394,8 @@ public class PerforceScm extends SCM {
 		// Calculate last change, build if null (JENKINS-40356)
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
-			return PollingResult.BUILD_NOW;
+			// no previous build, return null.
+			return null;
 		}
 
 		// Create task
@@ -386,13 +406,8 @@ public class PerforceScm extends SCM {
 		task.setLimit(pin);
 
 		// Execute remote task
-		incrementalChanges = buildWorkspace.act(task);
-
-		// Report changes
-		if (!incrementalChanges.isEmpty()) {
-			return PollingResult.BUILD_NOW;
-		}
-		return PollingResult.NO_CHANGES;
+		List<P4Ref> changes = buildWorkspace.act(task);
+		return changes;
 	}
 
 	/**
@@ -428,11 +443,12 @@ public class PerforceScm extends SCM {
 		task.setWorkspace(ws);
 		task.initialise();
 
-		// Override build change if polling per change, MUST clear after use.
+		// Override build change if polling per change.
 		if (isIncremental()) {
-			task.setIncrementalChanges(incrementalChanges);
+			Run<?, ?>lastRun = run.getPreviousBuiltBuild();
+			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
+			task.setIncrementalChanges(changes);
 		}
-		incrementalChanges = new ArrayList<P4Ref>();
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);

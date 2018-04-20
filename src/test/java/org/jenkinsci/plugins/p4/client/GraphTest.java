@@ -11,8 +11,6 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.changes.P4GraphRef;
-import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -30,8 +28,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class GraphTest extends DefaultEnvironment {
@@ -111,14 +111,11 @@ public class GraphTest extends DefaultEnvironment {
 		commitFile(jenkins, "//graph/scm-api-plugin/test.add", "Content");
 
 		// Poll for changes
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		project.poll(listener);
-		List<P4Ref> buildList = scm.getIncrementalChanges();
-		assertEquals(1, buildList.size());
-
-		P4Ref ref = buildList.get(0);
-		assertTrue(ref instanceof P4GraphRef);
-		P4GraphRef commit = (P4GraphRef) ref;
-		assertEquals("//graph/scm-api-plugin.git", commit.getRepo());
+		assertThat(pollHandler.getLogBuffer(), containsString("found commit: //graph/scm-api-plugin.git"));
 	}
 }

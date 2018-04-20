@@ -157,8 +157,8 @@ abstract public class DefaultEnvironment {
 		public void close() throws SecurityException {
 		}
 
-		public StringBuffer getLogBuffer() {
-			return sb;
+		public String getLogBuffer() {
+			return sb.toString();
 		}
 	}
 }
