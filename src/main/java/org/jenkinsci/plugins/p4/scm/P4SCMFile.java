@@ -34,7 +34,6 @@ public class P4SCMFile extends SCMFile {
 		this.isDir = isDir;
 	}
 
-	@NonNull
 	@Override
 	protected SCMFile newChild(@NonNull String name, boolean assumeIsDirectory) {
 		return new P4SCMFile(fs, this, name, assumeIsDirectory);
@@ -48,7 +47,6 @@ public class P4SCMFile extends SCMFile {
 	 * @throws IOException          if an error occurs while performing the operation.
 	 * @throws InterruptedException if interrupted while performing the operation.
 	 */
-	@NonNull
 	@Override
 	public Iterable<SCMFile> children() throws IOException, InterruptedException {
 		String path = getPath();
@@ -101,7 +99,6 @@ public class P4SCMFile extends SCMFile {
 	 * @throws InterruptedException if interrupted while performing the operation.
 	 * @since 2.0
 	 */
-	@NonNull
 	@Override
 	protected Type type() throws IOException, InterruptedException {
 		if(isDir) {
@@ -136,7 +133,6 @@ public class P4SCMFile extends SCMFile {
 	 *                              operation.
 	 * @throws InterruptedException if interrupted while performing the operation.
 	 */
-	@NonNull
 	@Override
 	public InputStream content() throws IOException, InterruptedException {
 		ConnectionHelper p4 = fs.getConnection();

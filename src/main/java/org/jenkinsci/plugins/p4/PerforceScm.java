@@ -357,7 +357,6 @@ public class PerforceScm extends SCM {
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
-		String syncID = ws.getSyncID();
 		log.println("P4: Polling on: " + nodeName + " with:" + client);
 
 		List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
