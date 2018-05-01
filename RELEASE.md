@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.8.10 (major features/fixes)
+
+[@24029](https://swarm.workshop.perforce.com/changes/24029) - CRUMB entry no longer required for the Perforce curl script trigger.  Merge pull request #71 from AllegorithmicSAS/CrumbExclusion.  Add CrumbExclusion for /p4/change
+
+[@23943](https://swarm.workshop.perforce.com/changes/23943) - Poll per change for Pipeline.  JENKINS-47427
+
+[@23941](https://swarm.workshop.perforce.com/changes/23941) - Track Credentials at build time.  Unable to track when the Job is configured as Pipeline Jobs may use one or more credentials in the Jenkinsfile.  JENKINS-44706
+
+[@23935](https://swarm.workshop.perforce.com/changes/23935) - Store Perforce Ticket as a Secret, but support old clear text ticket credentials.  JENKINS-49474
+
+
 ### Release 1.8.9 (major features/fixes)
 
 [@23858](https://swarm.workshop.perforce.com/changes/23858) - Skip probing disabled Jobs.  Includes minor updates to Polling tests. JENKINS-50634
