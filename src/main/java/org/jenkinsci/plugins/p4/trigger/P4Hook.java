@@ -27,6 +27,8 @@ public class P4Hook implements UnprotectedRootAction {
 
 	ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+	public static final String URLNAME = "p4";
+
 	@Override
 	public String getIconFileName() {
 		return "/plugin/p4/icons/helix-24px.png";
@@ -39,7 +41,7 @@ public class P4Hook implements UnprotectedRootAction {
 
 	@Override
 	public String getUrlName() {
-		return "p4";
+		return URLNAME;
 	}
 
 	public void doChange(StaplerRequest req) throws IOException {
