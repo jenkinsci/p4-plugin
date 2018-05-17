@@ -59,7 +59,9 @@ Click the **Add a new build filter** button and select a filter from the dropdow
 ### Repository browser
 Repository browsing allows Jenkins to use an external browser, to navigate files and changes associated with a Jenkins build. The Helix Swam browser is recommended.  
 To enable the feature select the browser from the **Repository browser** dropdown list, and provide the full URL to the browser.
+
 ![Repository Browser](images/repos.png)
+
 Example of a link to a change in Swarm:
 ![Example Change in Swarm](images/swarm.png)
 
