@@ -4,7 +4,7 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 ## Contents
 
 * [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
-* [FreeStyle setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/docs/SETUP.md)
+* [FreeStyle setup guide](docs/SETUP.md)
 * [Pipeline setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/docs/WORKFLOW.md)
 * [Pipeline libraries](https://github.com/jenkinsci/p4-plugin/blob/master/docs/LIBRARY.md)
 * [MultiBranch guide](https://github.com/jenkinsci/p4-plugin/blob/master/docs/MULTI.md)
