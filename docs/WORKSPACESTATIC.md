@@ -1,6 +1,7 @@
 ﻿# Static Workspace
-Uses a predefined workspace, the workspace must have a valid view and must already exist. The plugin user must either own the workspace or the spec must be unlocked allowing the plugin user to make edits. The workspace view remains static, but Jenkins will update other fields such as the workspace root and `CLOBBER` option. 
-![Static Workspace Configuration](docs/images/staticworkspace.png)
+Uses a predefined workspace, the workspace must have a valid view and must already exist. The plugin user must either own the workspace or the spec must be unlocked allowing the plugin user to make edits. The workspace view remains static, but Jenkins will update other fields such as the workspace root and `CLOBBER` option.
+
+![Static Workspace Configuration](images/staticworkspace.png)
 
 1. **Workspace behaviour:** select **Spec File (load workspace spec from file in Perforce)** from the dropdown list. 
 2. **Character Set:** sets the character set used by Jenkins when syncing files from the Perforce Helix Core Server. This should be set to **none** unless the workspace is connected to a Unicode enabled Helix Server. 
