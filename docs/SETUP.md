@@ -3,7 +3,7 @@ Freestyle projects are configured using the Jenkins graphical user interface. On
 
 ## Add Credentials
 The plugin makes use of the Jenkins Credential store, making it easier to manage the Helix Core Server (P4D) connection for multiple Jenkins jobs. 
-For details about creating a **Perforce Password Credential** or **Perforce Ticket Credential**, see [Add a credential](https://github.com/jenkinsci/p4-plugin/blob/master/CREDENTIALS.md). 
+For details about creating a **Perforce Password Credential** or **Perforce Ticket Credential**, see [Add a credential](docs/CREDENTIALS.md). 
 
 ## Add a new Freestyle project
  1. From the Jenkins dashboard, click **New item** from the sidebar menu.
