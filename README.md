@@ -5,13 +5,13 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 
 * [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
 * [FreeStyle setup guide](docs/SETUP.md)
-* [Pipeline setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/docs/WORKFLOW.md)
-* [Pipeline libraries](https://github.com/jenkinsci/p4-plugin/blob/master/docs/LIBRARY.md)
-* [MultiBranch guide](https://github.com/jenkinsci/p4-plugin/blob/master/docs/MULTI.md)
-* [Building Jobs](https://github.com/jenkinsci/p4-plugin/blob/master/docs/BUILDINGJOBS.md) 
-* [Post Build Actions](https://github.com/jenkinsci/p4-plugin/blob/master/docs/POSTBUILD.md) 
-* [Advanced scripting](https://github.com/jenkinsci/p4-plugin/blob/master/docs/P4GROOVY.md)
-* [Notes page](https://github.com/jenkinsci/p4-plugin/blob/master/docs/NOTES.md)
+* [Pipeline setup guide](docs/WORKFLOW.md)
+* [Pipeline libraries](docs/LIBRARY.md)
+* [MultiBranch guide](docs/MULTI.md)
+* [Building Jobs](docs/BUILDINGJOBS.md) 
+* [Post Build Actions](docs/POSTBUILD.md) 
+* [Advanced scripting](docs/P4GROOVY.md)
+* [Notes page](docs/NOTES.md)
 * [Jenkins page](https://plugins.jenkins.io/p4)
 
 ## Requirements
