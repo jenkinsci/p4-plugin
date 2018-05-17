@@ -1,6 +1,6 @@
 ﻿# Manual Workspace
 Manually define the workspace view and sync options. Creates the workspace if it does not already exist or updates the workspace spec by setting the various options if it already exists. Jenkins will fill out the workspace root and may override the `CLOBBER` option.  
-![Manual Workspace Configuration](docs/images/manualworkspace.png)
+![Manual Workspace Configuration](images/manualworkspace.png)
 
 1. **Workspace behaviour:** select **Manual (Custom View)** from the dropdown list. 
 2. **Character Set:** sets the character set used by Jenkins when syncing files from the Perforce Helix Core Server. This should be set to **none** unless the workspace is connected to a Unicode enabled Helix Server. 
@@ -8,7 +8,7 @@ Manually define the workspace view and sync options. Creates the workspace if it
 ```
 jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
-For more information about variables, see [Variable Expansion](https://github.com/jenkinsci/p4-plugin/blob/master/VARIABLEEXPANSION.md):
+For more information about variables, see [Variable Expansion](VARIABLEEXPANSION.md):
 4. **Pin the workspace to the build host:** usually left unselected because the `${NODE_NAME}` variable in the **Workspace name** field does this for you.  
 5.  **Options** there are a number of options that can be set to configure client behaviour: 
 - **ALL WRITE:** select to leave all files writable on the client. By default, only files opened by `p4 edit` are writable. If set, files might be clobbered as a result of ignoring the `CLOBBER` option (see below).
