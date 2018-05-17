@@ -1,6 +1,6 @@
 ﻿# Template Workspace
 Uses a specified template to generate the workspace view. The name of the workspace is generated using the **Workspace Name Format** field. This makes it an ideal choice for Matrix builds. 
-![Template Workspace Configuration](docs/images/templateworkspace.png)
+![Template Workspace Configuration](images/templateworkspace.png)
 
 1. **Workspace behaviour:** select **Template (view generated for each node)** from the dropdown list. 
 2. **Character Set:** sets the character set used by Jenkins when syncing files from the Perforce Helix Core Server. This should be set to **none** unless the workspace is connected to a Unicode enabled Helix Server. 
@@ -10,6 +10,6 @@ Uses a specified template to generate the workspace view. The name of the worksp
 ```
 jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
-For more information about variables, see [Variable Expansion](https://github.com/jenkinsci/p4-plugin/blob/master/VARIABLEEXPANSION.md).  
+For more information about variables, see [Variable Expansion](VARIABLEEXPANSION.md).  
 
 6. Click the browser **Back** button to go back to the previous page. 
