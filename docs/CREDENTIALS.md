@@ -1,6 +1,5 @@
 ﻿# Credentials
 The plugin makes use of the Jenkins Credential store, making it easier to manage the Helix Core Server (P4d) connection for multiple Jenkins jobs. P4 Plugin credentials must be added to a **Global** or **User defined domain**, using one of the two supported plugin Credentials: **Perforce Password Credential** or **Perforce Ticket Credential**.
-![Global credentials](docs/images/credential.png)
 
 ## Add a credential
 1. Navigate to the Jenkins Credentials page by clicking **Credentials** in the sidebar menu. 
@@ -12,7 +11,7 @@ The plugin makes use of the Jenkins Credential store, making it easier to manage
 - [Add a Perforce Ticket Credential](#add-a-perforce-ticket-credential). 
 
 ### Add a Perforce Password Credential
- ![Password credentials](docs/images/passwordcredential.png)
+ ![Password credentials](images/passwordcredential.png)
  1. Select **Perforce Password Credential** from the **Kind** dropdown. 
  2. Select the scope for the credential from the **Scope** dropdown. 
  3. If you are using Freestyle to configure jobs, the **ID** field can be left blank. If you are using Pipeline or MultiBranch to configure jobs, enter a unique ID for the credentials in the **ID** field. 
@@ -32,7 +31,7 @@ The plugin makes use of the Jenkins Credential store, making it easier to manage
  
 ### Add a Perforce Ticket Credential
 The **Perforce Ticket Credential** supports using a ticket file such as the default P4TICKETS file or a ticket value returned by the command `p4 login -p`. 
- ![Password credentials](docs/images/ticketcredential.png)
+ ![Password credentials](images/ticketcredential.png)
  1. Select **Perforce Ticket Credential** from the **Kind** dropdown. 
  2. Select the scope for the credential from the **Scope** dropdown. 
  3. If you are using Freestyle to configure jobs the **ID** field can be left blank. If you are using Pipeline or MultiBranch to configure jobs enter a unique ID for the credentials in the **ID** field. 
