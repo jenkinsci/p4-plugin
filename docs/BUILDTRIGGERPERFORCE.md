@@ -3,6 +3,7 @@ Perforce can trigger Jenkins to build based on an event, such as a submitted cha
 To enable builds to be triggered by Perforce, select **Perforce triggered build** in the Freestyle job page. 
 A triggered build also requires an administrator to add a Perforce trigger to the Perforce server. For information about adding a trigger, see [Using triggers to customize behavior](https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.scripting.html) in [Helix Core Server Administrator Guide: Fundamentals](https://www.perforce.com/perforce/doc.current/manuals/p4sag/index.html#P4SAG/about.html).
 The trigger needs to POST a JSON payload to the Jenkins end-point  `p4/change/`. The JSON payload must contain the  `p4port`  string that matchs the P4Port field specified in the **Perforce Credential** (please note that the field  `change`  is not currently used, it has been added for future compatibility).
+
 **For example:**
 - A simple  `change-commit`  or  `graph-push-complete`  trigger can use curl:
 ```
