@@ -12,4 +12,5 @@ jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
 For more information about variables, see [Variable Expansion](VARIABLEEXPANSION.md).  
 
-6. Click the browser **Back** button to go back to the previous page. 
+
+Click the browser **Back** button to go back to the previous page. 
