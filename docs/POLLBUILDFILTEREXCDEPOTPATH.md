@@ -1,6 +1,7 @@
 ﻿# Exclude Changes From Depot Path
 Changes can be filtered to not trigger a build if all of the files within a change match the specified path.  
-![Exclude Changes From Depot Path](docs/images/pollbuildfilterexcdepotpath.png)
+![Exclude Changes From Depot Path](images/pollbuildfilterexcdepotpath.png)
+
 **For example, with a filter of:**
 `//depot/main/tests`:
 - The change below is filtered because all of the files within the the change match the filter path:
