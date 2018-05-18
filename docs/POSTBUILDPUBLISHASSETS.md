@@ -29,6 +29,8 @@ Now complete the configuration by selecting one of the following change types:
    - **Propagate deletes:** Select to enable files to be deleted when the asset is published.   
    - **Revert opened file list:** Reverts open files in the pending changelist, but leaves the content in the workspace unchanged. Equivalent to `p4 revert -k`.   
 
+Click the browser **Back** button to go back to the previous page. 
+
 ### Submit Change
 ![Submit Assets](images/SubmitAsset.png)
 1. **Publish options:** Select **Submit change** from the dropdown list. 
