@@ -1,6 +1,6 @@
 ﻿# Preview Check Only 
 No file sync or cleanup is attempted, and the Workspace "have list" is not updated. This is effectively the same as using the `p4 sync -n` command. 
-![Auto Cleanup and Sync](docs/images/populatepreviewcheckonly.png)
+![Preview Check Only](images/populatepreviewcheckonly.png)
 
 ## Option:
 You can select the following option:  
