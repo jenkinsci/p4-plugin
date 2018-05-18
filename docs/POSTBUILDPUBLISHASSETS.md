@@ -23,7 +23,7 @@ Now complete the configuration by selecting one of the following change types:
 ### Shelve Change
 ![Shelve Assets](images/ShelveAsset.png)
 1. **Publish options:** Select **Shelve change** from the dropdown list. 
-2. **Description:** The change description used to shelve the assets to the Perforce Helix Server. `${VAR}` variables are expanded base on the system environment. For more information about environment variables, see [Variable Expansion](https://github.com/jenkinsci/p4-plugin/blob/master/VARIABLEEXPANSION.md).  
+2. **Description:** The change description used to shelve the assets to the Perforce Helix Server. `${VAR}` variables are expanded base on the system environment. For more information about environment variables, see [Variable Expansion](VARIABLEEXPANSION.md).  
 3. **Options** there are a number of options that can be set to configure client behaviour: 
    - **Only publish on build success:** The assets will only be shelved when the build is successful.   
    - **Propagate deletes:** Select to enable files to be deleted when the asset is published.   
@@ -32,7 +32,7 @@ Now complete the configuration by selecting one of the following change types:
 ### Submit Change
 ![Submit Assets](images/SubmitAsset.png)
 1. **Publish options:** Select **Submit change** from the dropdown list. 
-2. **Description:** The change description used to submit the assets to the Perforce Helix Server. `${VAR}` variables are expanded base on the system environment. For more information about environment variables, see [Variable Expansion](https://github.com/jenkinsci/p4-plugin/blob/master/VARIABLEEXPANSION.md).  
+2. **Description:** The change description used to submit the assets to the Perforce Helix Server. `${VAR}` variables are expanded base on the system environment. For more information about environment variables, see [Variable Expansion](VARIABLEEXPANSION.md).  
 3. **Options** there are a number of options that can be set to configure client behavior: 
    - **Only publish on build success:** The assets will only be shelved when the build is successful.   
    - **Propagate deletes:** Select to enable files to be deleted when the asset is published.   
