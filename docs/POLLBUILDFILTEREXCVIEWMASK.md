@@ -11,9 +11,9 @@ Changes can be filtered to not trigger a build if none of the files within a cha
 - The change below is not filtered for the files below because `index.xml` is in the view mask:
    `//depot/main/test/index.xml`   
    `//depot/main/src/build.xml`   
-- The change below is filtered because `build.xml` is not in the view mask:
+- The change below is filtered because `build.xml` is not in the view mask:  
    `//depot/main/src/build.xml`   
-- The change below is filtered because no file is in the view mask:
+- The change below is filtered because no file is in the view mask:  
    `//depot/main/src/build.xml`   
    `//depot/main/tests/001/test.xml`   
 
