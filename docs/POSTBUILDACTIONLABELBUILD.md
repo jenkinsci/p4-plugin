@@ -1,6 +1,6 @@
 ﻿# Perforce: Label Build
 Jenkins can tag builds automatically when the build completes. The Tags are stored in the Perforce Helix Core Server as Automatic Labels with the label view based on the workspace at the time of tagging. 
-![Perforce: Label Build](docs/images/postbuildlabelbuild.png)
+![Perforce: Label Build](images/postbuildlabelbuild.png)
 
 - **Label Name:** Enter the label name in the field.  
 - **Description:** Enter a description for the label,  
