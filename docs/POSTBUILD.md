@@ -28,7 +28,9 @@ For information about tagging a build with a with Post Build Action, see [Perfor
 1. From the Jenkins dashboard, click the job link name from the table. 
 2. Click the build number in the **Build History** table in the sidebar. 
 3. Click **Label This Build** in the sidebar menu. If the build has already been tagged the link will be **Perforce Label**.
+
 ![Label Details](images/labelT.png)
+
 4. Update the label name and description as required. Click **Label Build** to add the label to Perforce Helix Server. The label details are displayed for the build. New labels can be added to the same build or labels can be updated by using the same label name.
 
 ![Label Details](images/updateT.png)
