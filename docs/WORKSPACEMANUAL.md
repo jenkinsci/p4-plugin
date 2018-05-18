@@ -31,4 +31,5 @@ For more information about variables, see [Variable Expansion](VARIABLEEXPANSION
 8. **Stream:** if using streams, specify the full Perforce depot path for the stream that will be used to create or update the Jenkins build workspace. If you are connected to a Helix Server, streams will be auto suggested as you type. 
 9. **View Mappings:** displays the mapping of the depot files to your client workspace. This defines the files that you want in your client workspace and specifies where you want them to reside. The default view maps all depot files onto the client. For information about the view syntax, see [Client Views](https://www.perforce.com/perforce/doc.current/manuals/cmdref/index.html#CmdRef/views.html) in the [P4 Command Reference Guide](https://www.perforce.com/perforce/doc.current/manuals/cmdref/index.html#CmdRef/about.html). A new view takes effect on the next `p4 sync`. 
 10. **Server ID:** if set, restricts usage to the named server. If unset, usage is allowed on the master Helix Server and on any replicas of the master other than Edge Servers. 
-11. Click the browser **Back** button to go back to the previous page. 
+
+Click the browser **Back** button to go back to the previous page. 
