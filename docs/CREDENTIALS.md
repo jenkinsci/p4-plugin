@@ -27,7 +27,8 @@ The plugin makes use of the Jenkins Credential store, making it easier to manage
  8. Enter a valid password in the **Password** field.
  9. To check that you have configured the credentials correctly, click **Test Connection**.  The credentials are tested against the Perforce Helix Server and if they are configured correctly **Success** is displayed. 
  10. Click **Save** to save the credentials.  
- 11. Click the browser **Back** button to go back to the previous page. 
+ 
+ Click the browser **Back** button to go back to the previous page. 
  
 ### Add a Perforce Ticket Credential
 The **Perforce Ticket Credential** supports using a ticket file such as the default P4TICKETS file or a ticket value returned by the command `p4 login -p`. 
@@ -49,7 +50,8 @@ The **Perforce Ticket Credential** supports using a ticket file such as the defa
  **P4TICKETS file:** Select the **Use P4TICKETS file** checkbox and enter the full path to the Perforce tickets file. Typically */[HOME]/.p4tickets* or *c:\[HOME]\p4tickets.txt*. 
 9. To check that you have configured the credentials correctly, click **Test Connection**.  The credentials are tested against the Perforce Helix Server and if they are configured correctly **Success** is displayed. 
  10. Click **Save** to save the credentials.
- 11. Click the browser **Back** button to go back to the previous page. 
+ 
+ Click the browser **Back** button to go back to the previous page. 
 
 ## Connection Issues
 ### Error using SSL
