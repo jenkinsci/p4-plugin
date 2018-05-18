@@ -14,7 +14,7 @@ different uses the p4-plugin uses four implementations of `SCMSource`:
 To create a MulitBranch Pipeline choose _New Item_ from the main menu, provide a name and select _Multibranch Pipeline_
 from the list.
 
-![MulitBranch Pipeline](docs/images/mulitItem.png)
+![MulitBranch Pipeline](images/mulitItem.png)
 
 In the configuration you will need to add one of the Helix `SCMSource` implementations; under the _Branch Source_ group
 select the appropriate implementation from the drop-down _Add source_ menu.
@@ -30,7 +30,7 @@ Example configuration for each of the MultiBranch `SCMSource` Implementations su
 
 A simple example configuration for Helix Streams:
 
-![HelixStream Config](docs/images/helixStreamConfig.png)
+![HelixStream Config](images/helixStreamConfig.png)
 
 Jenkins will now probe each child stream associated with the _Include streams_ path `//streams/...` 
 (effectively all the streams returned by the command `p4 streams //streams/...`), if the probe finds a `Jenkinsfile` 
@@ -44,7 +44,7 @@ the search.
 The MultiBranch configuration for Swarm requires the Credential and the Swarm project name `multiswarmtest` for this
 example:
 
-![HelixSwarm Config](docs/images/helixSwarm.png)
+![HelixSwarm Config](images/helixSwarm.png)
 
 The p4-plugin will use the Swarm API to query what branches are used in the Swarm Project and then probe for the 
 `Jenkinsfile` to create the Pipeline build.  
@@ -53,7 +53,7 @@ In addition to finding the branches in a Swarm project the p4-plugin will query 
 The p4-plugin will create Pipeline Job for each open review and gather the pipelines in a _Reviews_ tab separate to
 the default _Branches_ tab.
 
-![Swarm Review Tab](docs/images/swarmReview.png)
+![Swarm Review Tab](images/swarmReview.png)
 
 ### Helix4Git
 
@@ -64,13 +64,13 @@ For example; include a graph depot called `//plugins` with a Git Repository call
 option has been expanded to show that Graph based syncs have a limited set of Populate options, where 
 _Graph force clean and sync_ is the recommended default:
 
-![Helix4Git Config](docs/images/helix4git.png)
+![Helix4Git Config](images/helix4git.png)
 
 The p4-plugin will than scan all Git Branches and open Pull Requests,
 building Pipeline Jobs as required.  Due to the multi-multi relationship with repositories and branches the Job naming 
 convention is `{depot}.{repo}.{branch}` for branches and `{depot}.{repo}.{branch}.{ref}` for pull requests.
 
-![Helix4Git PullRequests](docs/images/helix4gitPR.png)
+![Helix4Git PullRequests](images/helix4gitPR.png)
 
 ### Helix Branches
 
@@ -91,11 +91,11 @@ For example, a depot my contain the following branches, but you only want to bui
 //depot/projA/resB
 ```
 
-![HelixBranches Config](docs/images/helixBranchesConfig.png)
+![HelixBranches Config](images/helixBranchesConfig.png)
 
 If the `Jenkinsfile` is found in each branch you will get the following Multi Pipeline branches:
  
-![HelixBranches](docs/images/helixBranches.png)
+![HelixBranches](images/helixBranches.png)
 
 ## Build Configuration options
 
@@ -106,7 +106,7 @@ Extra options and customisations.
 If your `Jenksinfile` is located in a subdirectory or uses a different name, Jenkins provide a Build Configuration
 option to allow customisation.
 
-![HelixStream Config](docs/images/scriptPath.png)
+![HelixStream Config](images/scriptPath.png)
 
 ### Lightweight checkout vs default checkout
 
