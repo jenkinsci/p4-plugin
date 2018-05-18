@@ -1,7 +1,7 @@
 ﻿
 # Perforce: Cleanup
 Used to cleanup the workspace after the build. 
-![Perforce: Cleanup Review](docs/images/postbuildcleanup.png)
+![Perforce: Cleanup](images/postbuildcleanup.png)
 
 - **Delete Client:** Select  to delete the client after the build.  
 
