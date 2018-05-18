@@ -1,6 +1,6 @@
 ﻿# Flush Workspace
 This option is used when files in the workspace are not added by the Perforce Helix Core Server. No file Sync or cleanup is attempted and no files are removed, but the workspace "have list" is updated. This is effectively the same as using the `p4 sync -k` command.
-![Auto Cleanup and Sync](images/populateflush.png)
+![Flush Workspace](images/populateflush.png)
 
 ## Options:
 You can select a number of options:
