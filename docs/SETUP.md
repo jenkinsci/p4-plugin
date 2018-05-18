@@ -43,9 +43,9 @@ Parallel sync is disabled by default, to enable parallel sync:
 1. Click the **Advanced** button. 
 2. Select **Enabled**.
 3. The parallel sync settings will depend on the capabilities of the Jenkins build machine and the Helix Server:
-- **Threads:**  Set the number of threads available for parallel sync. 
-- **Minimum Files:** If the number of files being sync'ed is less than this value, parallel sync is not used. 
-- **Minimum Bytes:** If the total size of files being sync'ed is less than this value, parallel sync is not used. 
+   - **Threads:**  Set the number of threads available for parallel sync.   
+   - **Minimum Files:** If the number of files being sync'ed is less than this value, parallel sync is not used.   
+   - **Minimum Bytes:** If the total size of files being sync'ed is less than this value, parallel sync is not used.   
 
 ### Polling build filters
 When polling is used, changes can be filtered to not trigger a build. If the build has more than one filter, the filters are processed starting from the top of the list of filters. Filters can be dragged up or down the list to change the order they are processed in. 
