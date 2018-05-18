@@ -4,7 +4,7 @@
 
 Take a sample Perforce configuration:
 
-![configuration](docs/images/dsl-config.png)
+![configuration](images/dsl-config.png)
 
 The underlying Jenkins XML representation for this can be found by browsing to the Jenkins project and appending
 the string '/config.xml' to the URL.  For this project, it looks like this:
