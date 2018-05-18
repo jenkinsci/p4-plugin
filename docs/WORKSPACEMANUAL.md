@@ -8,15 +8,16 @@ Manually define the workspace view and sync options. Creates the workspace if it
 ```
 jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
-For more information about variables, see [Variable Expansion](VARIABLEEXPANSION.md):
+For more information about variables, see [Variable Expansion](VARIABLEEXPANSION.md):  
 4. **Pin the workspace to the build host:** usually left unselected because the `${NODE_NAME}` variable in the **Workspace name** field does this for you.  
-5.  **Options** there are a number of options that can be set to configure client behaviour: 
+5. **Options** there are a number of options that can be set to configure client behaviour: 
 - **ALL WRITE:** select to leave all files writable on the client. By default, only files opened by `p4 edit` are writable. If set, files might be clobbered as a result of ignoring the `CLOBBER` option (see below).
 - **CLOBBER:** select to permit `p4 sync` to overwrite writable files on the client. `noclobber` is ignored if `allwrite` is set.
 - **COMPRESS:** select to compress data sent between the client and Helix Server. This is used to speed up slow connections. 
 - **LOCKED:** select to allow only the client owner to use or change the client spec. Prevents the client spec from being deleted or unloaded. 
 - **MODTIME:** select to make `p4 sync` and `p4 submit` preserve file modification times, as with files with the `+m` type modifier. For more information about MODTIME, see `p4 help filetypes`. With `nomodtime`, file timestamps are updated by sync and submit operations.  
-6. **Line Endings:** there are a number of options to set line-ending characters for client text files: 
+
+6. **Line Endings:** there are a number of options to set line-ending characters for client text files:
 - **Local:** line endings are automatically set to match the build machine operating system style. 
 - **UNIX:** linefeed, UNIX style.
 - **MAC:** carriage return, Macintosh style. (obsolete). 
