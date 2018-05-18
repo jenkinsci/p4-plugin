@@ -1,6 +1,7 @@
 ﻿# Exclude Changes From Outside Java Pattern
 Changes can be filtered to not trigger a build if none of the files within a change match the Java patterns (regular expression) listed.
-![Exclude Changes From Outside Java Pattern](docs/images/pollbuildfilterexcjavapattern.png)
+![Exclude Changes From Outside Java Pattern](images/pollbuildfilterexcjavapattern.png)
+
 **For example, with the following regular expressions:**  
 `//depot/main/tests.*`  
 `//depot/main/src/.*\.cpp`  
