@@ -1,6 +1,6 @@
 ﻿# Forced Clean and Sync
 This option is Not recommended because it is very inefficient. Used if you do not trust the content of your workspace. Removes all of the files in the workspace root, including the build history, and then force syncs the required files. 
-![Auto Cleanup and Sync](images/populateforcedcleansync.png)
+![Forced Clean and Sync](images/populateforcedcleansync.png)
 
 ## Options:
 You can select a number of options:
