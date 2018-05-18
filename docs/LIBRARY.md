@@ -6,7 +6,7 @@ A guide on how to access Pipeline libraries versioned in Perforce Helix.
 
 Open the Jenkins Configuration (`Manage Jenkins`> `Configure System`) and scroll down to `Global Pipeline Libraries`:
 
-![Global Libraries](docs/images/global_lib.png)
+![Global Libraries](images/global_lib.png)
 
 ## Sample library structure
 

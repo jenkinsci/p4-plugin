@@ -34,8 +34,8 @@ For most use-cases you will need set the JVM option for the slave build node:
  
  - Select `Advanced`
  
-  ![configuration](docs/images/node-advanced.png)
+  ![configuration](images/node-advanced.png)
   
  - Add the `-D` property to the `JVM Options`.
  
-  ![configuration](docs/images/node-jvmoptions.png)
+  ![configuration](images/node-jvmoptions.png)

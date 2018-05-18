@@ -10,9 +10,8 @@ documentation:
 ## Basic Populate
 
 Almost all Perforce operations require a Perforce Credential, as in Freestyle Jobs the plugin for Pipeline requires
-either a Perforce Password Credential or Perforce Ticket Credential.  Please refer to the initial 
-[Setup guide](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md) for details on creating a 
-Perforce Credential.
+either a Perforce Password Credential or Perforce Ticket Credential.  For information about creating a Perforce credential, see 
+[Credentials](CREDENTIALS.md).
 
 When using a Perforce Credential with Pipeline it is recommended to set the ID field to a short user friendly name.
 This might be hidden in the Advanced options depending on the version of your Jenkins server.
@@ -25,7 +24,7 @@ fields as required.
 You only need to provide one codeline: 'Stream Codeline' for streams paths, 'Template Workspace' if you have defined
 the path in another Workspaces View, or 'Depot path' to refer to a classic depot location in Perforce.
 
-![P4Sync](docs/images/p4sync.png)
+![P4Sync](images/p4sync.png)
 
 This generated the following snippet...
 
@@ -73,7 +72,7 @@ You can control this by customising the 'Workspace Name Format' field.  The defa
 If you require full access to the Populate options available with Freestyle Jobs you can use the General SCM checkout
 option.  Select `checkout: General SCM` from the dropdown and choose `Perforce Software` from the SCM dropdown.
 
-![P4Sync](docs/images/checkout.png)
+![P4Sync](images/checkout.png)
 
 This allows full customisation of the Workspace View Mappings, for example:
 
@@ -115,7 +114,7 @@ node {
 
 You can use the Publish, Tag, Unshelve and Cleanup steps from Freestyle.  The are available from the dropdown menu
 and use the same Configuration dialogs as Freestyle. 
-For example: [P4 Publish](https://github.com/jenkinsci/p4-plugin/blob/master/SETUP.md#publishing-build-assets)
+For example: [P4 Publish](POSTBUILDPUBLISHASSETS.md)
 
 ```groovy
 p4publish(credential: 'phooey1666', 
@@ -141,7 +140,7 @@ mapping the location of the Jenkinsfile.
 To do this; create a Pipeline project and select 'Pipeline script from SCM', choose 'Perforce Software' for the SCM
 and fill out the fields as required. For example:
 
-![P4Sync](docs/images/jenkinsfile.png)
+![P4Sync](images/jenkinsfile.png)
 
 ### Important recommendations
 
@@ -157,7 +156,7 @@ The 'Pipeline script from SCM' would normally use a Perforce Sync to fetch the v
 workspace view included more than just the Jenkinsfile the operation could be expensive.  Jenkins introduced the 
 'Lightweight checkout' option that can navigate the SCM and fetch files as required.  
 
-![Lightweight](docs/images/lightweight.png)
+![Lightweight](images/lightweight.png)
 
 Enabling the option will use a 'p4 print' to fetch the Jenkinsfile negating the need for syncing the script files.
 
@@ -190,7 +189,7 @@ pipeline {
 }
 ```
 
-![Declarative pipeline](docs/images/declarative.png)
+![Declarative pipeline](images/declarative.png)
 
 Simply add `options { skipDefaultCheckout() }` to the agent.  For example:
 
