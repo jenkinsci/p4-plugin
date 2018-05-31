@@ -1,5 +1,5 @@
 ﻿# Freestyle Project Setup Guide
-Freestyle projects are configured using the Jenkins graphical user interface. Once the job is complete you can view the script that Jenkins generate. This is a good way to learn what the scripts contain.  
+Freestyle projects are configured using the Jenkins graphical user interface. Once the job is complete you can view the script that Jenkins generates. This is a good way to learn what the scripts contain.  
 
 ## Add Credentials
 The plugin makes use of the Jenkins Credential store, making it easier to manage the Helix Core Server (P4D) connection for multiple Jenkins jobs. 
