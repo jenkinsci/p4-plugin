@@ -23,6 +23,7 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 
 ## Known Limitations
 - One Jenkins job per Helix Swarm branch. 
+- Helix 'Build Farm' servers are not supported, they were superseded by Helix Commit-Edge servers back in 2013.2
 
 ## Install
 
