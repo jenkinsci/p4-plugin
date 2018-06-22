@@ -28,8 +28,8 @@ public class WorkflowTest extends DefaultEnvironment {
 	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
 	private static final String P4ROOT = "tmp-WorkflowTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	@Rule
+	public JenkinsRule jenkins = new JenkinsRule();
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
