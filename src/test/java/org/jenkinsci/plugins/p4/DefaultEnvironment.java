@@ -2,21 +2,30 @@ package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.Cause;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.tasks.Builder;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
-import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.CommitImpl;
+import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
@@ -73,35 +82,33 @@ abstract public class DefaultEnvironment {
 	protected void submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
+		ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, "submit.ws", null);
+
 		// Create workspace
-		String client = "manual.ws";
+		String client = "submit.ws";
 		String stream = null;
 		String line = "LOCAL";
 		String view = path + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
-		// Populate with P4 scm
-		Populate populate = new AutoCleanImpl();
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		workspace.setExpand(new HashMap<String, String>());
 
-		// Freestyle job
-		FreeStyleProject project = jenkins.createFreeStyleProject();
-		project.setScm(scm);
+		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
+		workspace.setRootPath(wsRoot.toString());
+		p4.setClient(workspace);
 
-		// Create artifact files
-		project.getBuildersList().add(new CreateArtifact(filename, content));
+		File file = new File(wsRoot + File.separator + filename).getAbsoluteFile();
+		FilePath filePath = new FilePath(file);
+		filePath.delete();
+		filePath.write(content, "UTF-8");
 
-		// Submit artifacts
-		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
-		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
-		project.getPublishersList().add(publish);
-		project.save();
-
-		// Start build
-		Cause.UserIdCause cause = new Cause.UserIdCause();
-		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
-		assertEquals(Result.SUCCESS, build.getResult());
+		Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
+		boolean open = p4.buildChange(publish);
+		if (open) {
+			p4.publishChange(publish);
+		}
+		filePath.delete();
 	}
 
 	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {

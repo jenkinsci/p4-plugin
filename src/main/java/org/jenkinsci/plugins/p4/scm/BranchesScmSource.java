@@ -14,8 +14,6 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +49,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	public String getMappings() {
 		// support 1.8.1 configurations that did not have any mappings
-		if(mappings == null) {
+		if (mappings == null) {
 			mappings = DescriptorImpl.defaultPath;
 		}
 
@@ -91,25 +89,24 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		for (IFileSpec s : specs) {
 			String branch = s.getOriginalPathString();
 
+			// check the branch is not empty
+			if (branch == null || branch.isEmpty()) {
+				continue;
+			}
+
 			// check the filters
 			if (!filterPattern.matcher(branch).matches()) {
 				continue;
 			}
 
-			// get depotPath and check for null
-			Path depotPath = Paths.get(branch);
-			if (depotPath == null) {
-				continue;
-			}
-
 			// get filename and check for null
-			Path file = depotPath.getFileName();
-			if (file == null) {
+			String file = branch.substring(branch.lastIndexOf("/") + 1);
+			if (file == null || file.isEmpty()) {
 				continue;
 			}
 
 			P4Path p4Path = new P4Path(branch);
-			P4Head head = new P4Head(file.toString(), Arrays.asList(p4Path));
+			P4Head head = new P4Head(file, Arrays.asList(p4Path));
 			list.add(head);
 		}
 		p4.disconnect();
