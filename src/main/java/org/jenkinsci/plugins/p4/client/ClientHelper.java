@@ -9,6 +9,8 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
@@ -162,10 +164,11 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Set client Server ID if not already defined in the client spec.
 		String serverId = iclient.getServerId();
-		if(serverId == null || serverId.isEmpty()) {
+		if (serverId == null || serverId.isEmpty()) {
 			IServerInfo info = connection.getServerInfo();
+			String services = getServerServices();
 			serverId = info.getServerId();
-			if (serverId != null && !serverId.isEmpty()) {
+			if (serverId != null && !serverId.isEmpty() && isEdgeType(services)) {
 				iclient.setServerId(serverId);
 			}
 		}
@@ -176,6 +179,33 @@ public class ClientHelper extends ConnectionHelper {
 		// Set active client for this connection
 		connection.setCurrentClient(iclient);
 		return;
+	}
+
+	private boolean isEdgeType(String services) {
+		if(services == null || services.isEmpty()) {
+			return false;
+		}
+		if(services.contains("edge-server")) {
+			return true;
+		}
+		if(services.contains("workspace-server")) {
+			return true;
+		}
+		if(services.contains("build-server")) {
+			return true;
+		}
+		return false;
+	}
+
+	// TODO remove when P4Java has support for 'serverServices'
+	private String getServerServices() throws ConnectionException, AccessException {
+		List<Map<String, Object>> mapList = connection.execMapCmdList(CmdSpec.INFO, new String[]{}, null);
+		for (Map<String, Object> map : mapList) {
+			if (map.containsKey("serverServices")) {
+				return (String) map.get("serverServices");
+			}
+		}
+		return "";
 	}
 
 	/**
@@ -486,7 +516,7 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		validate.check(list, "not opened on this client");
+		validate.check(list, "not opened on this client", "Replica does not support this command");
 
 		// check for added files and remove...
 		log("... rm [abandoned files]");
@@ -639,7 +669,7 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		rOpts.setNoClientRefresh(virtual);
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		validate.check(list, "not opened on this client");
+		validate.check(list, "not opened on this client", "Replica does not support this command");
 	}
 
 	public void versionFile(String file, Publish publish, int ChangelistID, boolean submit) throws Exception {
