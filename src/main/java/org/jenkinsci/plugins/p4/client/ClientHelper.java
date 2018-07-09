@@ -28,6 +28,7 @@ import com.perforce.p4java.option.server.GetChangelistsOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.option.server.OpenedFilesOptions;
 import com.perforce.p4java.server.CmdSpec;
+import com.perforce.p4java.server.IServerInfo;
 import hudson.AbortException;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -157,6 +158,16 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		if (workspace.getHostName() != null) {
 			iclient.setHostName(workspace.getHostName());
+		}
+
+		// Set client Server ID if not already defined in the client spec.
+		String serverId = iclient.getServerId();
+		if(serverId == null || serverId.isEmpty()) {
+			IServerInfo info = connection.getServerInfo();
+			serverId = info.getServerId();
+			if (serverId != null && !serverId.isEmpty()) {
+				iclient.setServerId(serverId);
+			}
 		}
 
 		// Save client spec
