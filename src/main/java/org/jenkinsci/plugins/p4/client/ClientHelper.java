@@ -182,16 +182,16 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private boolean isEdgeType(String services) {
-		if(services == null || services.isEmpty()) {
+		if (services == null || services.isEmpty()) {
 			return false;
 		}
-		if(services.contains("edge-server")) {
+		if (services.contains("edge-server")) {
 			return true;
 		}
-		if(services.contains("workspace-server")) {
+		if (services.contains("workspace-server")) {
 			return true;
 		}
-		if(services.contains("build-server")) {
+		if (services.contains("build-server")) {
 			return true;
 		}
 		return false;
