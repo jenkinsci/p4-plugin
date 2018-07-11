@@ -1,5 +1,21 @@
 ## Release notes
 
+### Release 1.8.12 (major features/fixes)
+
+[@24359](https://swarm.workshop.perforce.com/changes/24359) - Support ServerID on client for Edge type serves.
+
+[@24267](https://swarm.workshop.perforce.com/changes/24267) - Use JOB_NAME in the Global Library Workspace name.  Global Library workspaces must be unique.  JENKINS-49525 JENKINS-50975
+
+[@24266](https://swarm.workshop.perforce.com/changes/24266) - Enable Windows tests.
+
+[@24233](https://swarm.workshop.perforce.com/changes/24233) - Merge pull request #74 from msmeeth56/master.  Updated tests to work against Windows, and lower spec computers.  JENKINS-52145
+
+[@24174](https://swarm.workshop.perforce.com/changes/24174) - Deprecated Helix 'Build Farm' servers.
+
+
+### ~~Release 1.8.11~~ (broken deployment)
+
+
 ### Release 1.8.10 (major features/fixes)
 
 [@24029](https://swarm.workshop.perforce.com/changes/24029) - CRUMB entry no longer required for the Perforce curl script trigger.  Merge pull request #71 from AllegorithmicSAS/CrumbExclusion.  Add CrumbExclusion for /p4/change
