@@ -36,7 +36,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 				return FormValidation.ok();
 			}
 			IClient client = p4.getClient(value);
-			if (client != null) {
+			if (client != null && client.getAccessed() != null) {
 				return FormValidation.ok();
 			}
 			return FormValidation.warning("Unknown Client: " + value);
@@ -137,7 +137,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 		try {
 			IOptionsServer p4 = ConnectionFactory.getConnection();
 			IStream stream = p4.getStream(value);
-			if (stream != null) {
+			if (stream != null && stream.getAccessed() != null) {
 				return FormValidation.ok();
 			}
 			return FormValidation.warning("Unknown Stream: " + value);
@@ -148,12 +148,15 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 
 	static public FormValidation doCheckFormat(
 			@QueryParameter final String value) {
-		if (value == null || value.isEmpty())
+		if (value == null || value.isEmpty()) {
 			return FormValidation.error("Workspace Name format is mandatory.");
+		}
 
 		if (value.contains("${") && value.contains("}")) {
 			return FormValidation.ok();
 		}
-		return FormValidation.error("Workspace Name format error.");
+		else {
+			return checkClientName(value);
+		}
 	}
 }

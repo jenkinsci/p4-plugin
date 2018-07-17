@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
 import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 public class StreamSource extends AbstractSource {
 
@@ -34,6 +38,14 @@ public class StreamSource extends AbstractSource {
 		@Override
 		public String getDisplayName() {
 			return "Stream Codeline";
+		}
+
+		public AutoCompletionCandidates doAutoCompleteStream(@QueryParameter String value) {
+			return WorkspaceDescriptor.doAutoCompleteStreamName(value);
+		}
+
+		public FormValidation doCheckStream(@QueryParameter String value) {
+			return WorkspaceDescriptor.doCheckStreamName(value);
 		}
 	}
 }

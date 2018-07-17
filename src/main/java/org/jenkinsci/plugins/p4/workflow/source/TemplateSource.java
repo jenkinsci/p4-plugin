@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
 import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
+import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 public class TemplateSource extends AbstractSource {
 
@@ -34,6 +38,14 @@ public class TemplateSource extends AbstractSource {
 		@Override
 		public String getDisplayName() {
 			return "Template Workspace";
+		}
+
+		public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter String value) {
+			return WorkspaceDescriptor.doAutoCompleteTemplateName(value);
+		}
+
+		public FormValidation doCheckTemplate(@QueryParameter String value) {
+			return WorkspaceDescriptor.checkClientName(value);
 		}
 	}
 }

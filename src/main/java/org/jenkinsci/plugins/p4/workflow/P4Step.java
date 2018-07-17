@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow;
 
 import hudson.Extension;
-import hudson.model.AutoCompletionCandidates;
 import hudson.model.Item;
 import hudson.scm.SCM;
 import hudson.util.FormValidation;
@@ -178,68 +177,6 @@ public class P4Step extends SCMStep {
 
 		public FormValidation doCheckCredential(@AncestorInPath Item project, @QueryParameter String value) {
 			return P4CredentialsImpl.doCheckCredential(project, value);
-		}
-
-		public AutoCompletionCandidates doAutoCompleteStream(@QueryParameter String value) {
-			return WorkspaceDescriptor.doAutoCompleteStreamName(value);
-		}
-
-		public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter String value) {
-			return WorkspaceDescriptor.doAutoCompleteTemplateName(value);
-		}
-
-		// check there is only one source
-		private static boolean hasMultiple(String stream, String template, String path) {
-			if (P4Step.notNull(stream)) {
-				if (P4Step.notNull(template) || P4Step.notNull(path)) {
-					return true;
-				}
-			}
-			if (P4Step.notNull(template)) {
-				if (P4Step.notNull(stream) || P4Step.notNull(path)) {
-					return true;
-				}
-			}
-			if (P4Step.notNull(path)) {
-				if (P4Step.notNull(template) || P4Step.notNull(stream)) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		public FormValidation doCheckStream(@QueryParameter String value, @QueryParameter String template,
-		                                    @QueryParameter String path) {
-			if (P4Step.notNull(value)) {
-				if (hasMultiple(value, template, path)) {
-					return FormValidation.error("Specify only one source.");
-				}
-				return WorkspaceDescriptor.doCheckStreamName(value);
-			}
-			return FormValidation.ok();
-		}
-
-		public FormValidation doCheckTemplate(@QueryParameter String value, @QueryParameter String stream,
-		                                      @QueryParameter String path) {
-			if (P4Step.notNull(value)) {
-				if (hasMultiple(stream, value, path)) {
-					return FormValidation.error("Specify only one source.");
-				}
-				return WorkspaceDescriptor.checkClientName(value);
-			}
-			return FormValidation.ok();
-		}
-
-		public FormValidation doCheckPath(@QueryParameter String value, @QueryParameter String stream,
-		                                  @QueryParameter String template) {
-			if (P4Step.notNull(value)) {
-				if (hasMultiple(stream, template, value)) {
-					return FormValidation.error("Specify only one source.");
-				}
-				return FormValidation.ok();
-			}
-			return FormValidation.ok();
 		}
 
 		public ListBoxModel doFillCharsetItems() {
