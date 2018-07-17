@@ -39,6 +39,8 @@ public abstract class AbstractSource implements ExtensionPoint, Describable<Abst
  */
 class ClientViewMappingGenerator {
 
+	private static final String ELLIPSIS = "...";
+
 	/**
 	 * Generates client view mapping string.
 	 * e.g  //depot/src/...  //ws/src/...
@@ -83,7 +85,7 @@ class ClientViewMappingGenerator {
 
 				if (srcSplit != null && srcSplit.length > 0) {
 					String lastSrc = srcSplit[srcSplit.length - 1];
-					boolean containsDots = lastSrc.contains(".");
+					boolean containsDots = lastSrc.contains(ELLIPSIS);
 
 					int count = 0;
 					for (String srcItem : srcSplit) {
@@ -101,7 +103,7 @@ class ClientViewMappingGenerator {
 						String[] destsrcSplit = destination.split("/");
 						int dcount = 0;
 						for (String destItem : destsrcSplit) {
-							if (!destItem.contains(".")) {
+							if (!destItem.contains(ELLIPSIS)) {
 								if (dcount > 0) {
 									tmpDestination.append("/");
 								}
@@ -115,8 +117,8 @@ class ClientViewMappingGenerator {
 					if (containsDots) {
 						formattedDest.append(destination + "/" + lastSrc);
 					} else {
-						formattedSrc.append("/...");
-						formattedDest.append(destination + "/...");
+						formattedSrc.append("/" + ELLIPSIS);
+						formattedDest.append(destination + "/" + ELLIPSIS);
 					}
 				}
 				view.append(formattedSrc.toString().replaceAll("\n", "") + " " + formattedDest.toString());
