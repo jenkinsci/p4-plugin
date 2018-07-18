@@ -74,10 +74,20 @@ class ClientViewMappingGenerator {
 
 			for (String source : sources) {
 
+				boolean spaces = source.contains(" ");
+
 				String sourceWithNoInitSlashes = source.substring(2);
 				String[] srcSplit = sourceWithNoInitSlashes.split("/");
-				StringBuffer formattedSrc = new StringBuffer("//");
-				StringBuffer formattedDest = new StringBuffer("//");
+				StringBuffer formattedSrc = new StringBuffer();
+				StringBuffer formattedDest = new StringBuffer();
+
+				if(spaces) {
+					formattedSrc.append("\"//");
+					formattedDest.append("\"//");
+				} else {
+					formattedSrc.append("//");
+					formattedDest.append("//");
+				}
 
 				if (viewCount > 0) {
 					view.append("\n");
@@ -121,7 +131,15 @@ class ClientViewMappingGenerator {
 						formattedDest.append(destination + "/" + ELLIPSIS);
 					}
 				}
-				view.append(formattedSrc.toString().replaceAll("\n", "") + " " + formattedDest.toString());
+
+				if(spaces) {
+					formattedSrc.append("\"");
+					formattedDest.append("\"");
+				}
+
+				view.append(formattedSrc.toString().replaceAll("\n", ""));
+				view.append(" ");
+				view.append(formattedDest.toString());
 				viewCount++;
 			}
 		}

@@ -333,4 +333,31 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		p4.disconnect();
 	}
+
+	@Test
+	public void testP4SyncSpaceInPath() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowSpace");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + CREDENTIAL + "', "
+				+ "      source: depotSource('''//depot/test/proj A/...\n//depot/test/proj B/...''')"
+				+ "}", false));
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		String name = "jenkins-master-workflowSpace-0";
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		p4.login();
+
+		IClient client = p4.getConnection().getCurrentClient();
+		assertNotNull(client);
+
+		ClientView view = client.getClientView();
+		assertNotNull(view);
+
+		assertEquals("//jenkins-master-workflowSpace-0/depot/test/proj A/...", view.getEntry(0).getRight());
+		assertEquals("//jenkins-master-workflowSpace-0/depot/test/proj B/...", view.getEntry(1).getRight());
+
+		p4.disconnect();
+	}
 }
