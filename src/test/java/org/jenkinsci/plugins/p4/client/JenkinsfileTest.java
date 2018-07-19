@@ -12,7 +12,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -172,11 +171,11 @@ public class JenkinsfileTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-1',\n"
-				+ "      depotPath: '//depot/Data',\n"
+				+ "      depotPath: '//depot/Data/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '17', quiet: true]\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-2',\n"
-				+ "      depotPath: '//depot/Main',\n"
+				+ "      depotPath: '//depot/Main/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '13', quiet: true]\n"
 				+ "}";
 
@@ -209,11 +208,11 @@ public class JenkinsfileTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-1',\n"
-				+ "      depotPath: '//depot/Data',\n"
+				+ "      depotPath: '//depot/Data/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '18', quiet: true]\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-2',\n"
-				+ "      depotPath: '//depot/Main',\n"
+				+ "      depotPath: '//depot/Main/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '40', quiet: true]\n"
 				+ "}";
 
@@ -236,11 +235,11 @@ public class JenkinsfileTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-1',\n"
-				+ "      depotPath: '//depot/Data',\n"
+				+ "      depotPath: '//depot/Data/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '17', quiet: true]\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-2',\n"
-				+ "      depotPath: '//depot/Main',\n"
+				+ "      depotPath: '//depot/Main/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '13', quiet: true]\n"
 				+ "}";
 
@@ -273,11 +272,11 @@ public class JenkinsfileTest extends DefaultEnvironment {
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-1',\n"
-				+ "      depotPath: '//depot/Data',\n"
+				+ "      depotPath: '//depot/Data/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '', quiet: true]\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
 				+ "      format: 'jenkins-${NODE_NAME}-${JOB_NAME}-2',\n"
-				+ "      depotPath: '//depot/Main',\n"
+				+ "      depotPath: '//depot/Main/...',\n"
 				+ "      populate: [$class: 'AutoCleanImpl', pin: '14', quiet: true]\n"
 				+ "}";
 
@@ -331,7 +330,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                                 + "    node {\n"
                                 + "        p4sync credential: '" + CREDENTIAL + "',\n"
                                 + "           format: 'jenkins-master-${JOB_NAME}-1',\n"
-                                + "           depotPath: '//depot/Data',\n"
+                                + "           depotPath: '//depot/Data/...',\n"
                                 + "           populate: [$class: 'AutoCleanImpl', pin: '1', quiet: true]\n"
                                 + "    }\n"
                                 + "},\n"
@@ -339,7 +338,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                                 + "    node {\n"
                                 + "        p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
                                 + "           format: 'jenkins-master-${JOB_NAME}-2',\n"
-                                + "           depotPath: '//depot/Main',\n"
+                                + "           depotPath: '//depot/Main/...',\n"
                                 + "           populate: [$class: 'AutoCleanImpl', pin: '8', quiet: true]\n"
                                 + "    }\n"
                                 + "}";
@@ -374,7 +373,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                                 + "    node {\n"
                                 + "        p4sync credential: '" + CREDENTIAL + "',\n"
                                 + "           format: 'jenkins-master-${JOB_NAME}-1',\n"
-                                + "           depotPath: '//depot/Data',\n"
+                                + "           depotPath: '//depot/Data/...',\n"
                                 + "           populate: [$class: 'AutoCleanImpl', pin: '', quiet: true]\n"
                                 + "    }\n"
                                 + "},\n"
@@ -382,7 +381,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                                 + "    node {\n"
                                 + "        p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
                                 + "           format: 'jenkins-master-${JOB_NAME}-2',\n"
-                                + "           depotPath: '//depot/Main',\n"
+                                + "           depotPath: '//depot/Main/...',\n"
                                 + "           populate: [$class: 'AutoCleanImpl', pin: '9', quiet: true]\n"
                                 + "    }\n"
                                 + "}";

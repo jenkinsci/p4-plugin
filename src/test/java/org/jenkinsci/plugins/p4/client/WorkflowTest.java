@@ -261,7 +261,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				"    p4sync charset: 'none', \n" +
 				"      credential: '" + CREDENTIAL + "', \n" +
 				"      populate: autoClean(quiet: true), \n" +
-				"      source: depotSource('//depot/Data')\n" +
+				"      source: depotSource('//depot/Data/...')\n" +
 				"    sayHello 'Jenkins'\n" +
 				"    println \"SYNC_CHANGELIST: ${env.P4_CHANGELIST}\"\n" +
 				"}", false));
@@ -357,6 +357,33 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		assertEquals("//jenkins-master-workflowSpace-0/depot/test/proj A/...", view.getEntry(0).getRight());
 		assertEquals("//jenkins-master-workflowSpace-0/depot/test/proj B/...", view.getEntry(1).getRight());
+
+		p4.disconnect();
+	}
+
+	@Test
+	public void testP4SyncFileOnly() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowFile");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + CREDENTIAL + "', "
+				+ "      source: depotSource('''//depot/Main/file-4.txt\n//depot/Main/file-5.txt''')"
+				+ "}", false));
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		String name = "jenkins-master-workflowFile-0";
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		p4.login();
+
+		IClient client = p4.getConnection().getCurrentClient();
+		assertNotNull(client);
+
+		ClientView view = client.getClientView();
+		assertNotNull(view);
+
+		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-4.txt", view.getEntry(0).getRight());
+		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-5.txt", view.getEntry(1).getRight());
 
 		p4.disconnect();
 	}
