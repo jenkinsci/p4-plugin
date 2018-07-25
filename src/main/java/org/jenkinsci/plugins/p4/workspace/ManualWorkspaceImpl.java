@@ -21,6 +21,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class ManualWorkspaceImpl extends Workspace implements Serializable {
@@ -86,6 +87,18 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return clientView;
 	}
 
+	private ArrayList<String> getChangeView(WorkspaceSpec workspaceSpec) {
+		ArrayList<String> changeView = new ArrayList<>();
+
+		String view = workspaceSpec.getChangeView();
+		if(view != null) {
+			String specString = getExpand().format(view, false);
+			for (String line : specString.split("\\n")) {
+				changeView.add(line);
+			}
+		}
+		return changeView;
+	}
 
 	private ClientOptions getClientOptions(WorkspaceSpec spec) {
 		ClientOptions options = new ClientOptions();
@@ -137,7 +150,9 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		iclient.setClientView(getClientView(getSpec()));
 
 		// Set Change view
-		// TODO (p4java 17.2) changeView
+		if (connection.getServerVersionNumber() >= 20172) {
+			iclient.setChangeView(getChangeView(getSpec()));
+		}
 
 		// Allow change between GRAPH and WRITEABLE
 		if (connection.getServerVersionNumber() >= 20171) {
@@ -153,11 +168,14 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		iclient.setServerId(getSpec().getServerID());
 
-		// TODO (p4java 17.2) backup
-
-		// Save new/updated changes
-	//	connection.createClient(iclient);
-	//	iclient = connection.getClient(clientName);
+		// Set Backup option, defaults to enable (enable/disable)
+		if (connection.getServerVersionNumber() >= 20172) {
+			if(getSpec().isBackup()) {
+				iclient.setBackup("enable");
+			} else {
+				iclient.setBackup("disable");
+			}
+		}
 
 		return iclient;
 	}

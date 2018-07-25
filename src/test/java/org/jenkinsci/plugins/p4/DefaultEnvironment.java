@@ -35,6 +35,7 @@ abstract public class DefaultEnvironment {
 
 	protected final static String R15_1 = "r15.1";
 	protected final static String R17_1 = "r17.1";
+	protected final static String R18_1 = "r18.1";
 
 	protected final static String CREDENTIAL = "id";
 	protected final static int HTTP_PORT = 1888;
