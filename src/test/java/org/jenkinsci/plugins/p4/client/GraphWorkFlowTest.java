@@ -44,8 +44,8 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
-				"//graph/scm-api-plugin''']," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin/...\n" +
+				"//graph/scm-api-plugin/...''']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -61,7 +61,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '//graph/scm-api-plugin']," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '//graph/scm-api-plugin/...']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -78,7 +78,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin'," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin/...'," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 
@@ -142,44 +142,57 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 	@Test
 	public void testGetClientView() {
-		String clientView = AbstractSource.getClientView("//depot", "job1");
+		String clientView = AbstractSource.getClientView("//depot/...", "job1");
 		Assert.assertEquals("//depot/... //job1/...", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/", "job1");
-		Assert.assertEquals("//depot/... //job1/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/*", "job1");
+		Assert.assertEquals("//depot/* //job1/*", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src", "job1");
-		Assert.assertEquals("//depot/src/... //job1/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/file", "job1");
+		Assert.assertEquals("//depot/file //job1/file", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src/", "job1");
-		Assert.assertEquals("//depot/src/... //job1/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/file space", "job1");
+		Assert.assertEquals("\"//depot/file space\" \"//job1/file space\"", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...", "job1");
 		Assert.assertEquals("//depot/src/... //job1/...", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src/....", "job1");
-		Assert.assertEquals("//depot/src/.... //job1/....", clientView);
-
 		clientView = AbstractSource.getClientView("//depot/src/....java", "job1");
 		Assert.assertEquals("//depot/src/....java //job1/....java", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src\n//depot/tgt", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/src/*.java", "job1");
+		Assert.assertEquals("//depot/src/*.java //job1/*.java", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
-
-		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt/", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/file\n//depot2/file", "job1");
+		Assert.assertEquals("//depot/file //job1/depot/file\n//depot2/file //job1/depot2/file", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...\n//depot/tgt/...", "job1");
 		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src/...\n//depot/tgt/", "job1");
+		clientView = AbstractSource.getClientView("//depot/src/...\n  //depot/tgt/...", "job1");
 		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
 
-		clientView = AbstractSource.getClientView("//depot/src/....java\n//depot/tgt/", "job1");
-		Assert.assertEquals("//depot/src/....java //job1/depot/src/....java\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		clientView = AbstractSource.getClientView("//depot/src/...\n\t//depot/tgt/...", "job1");
+		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+
+		clientView = AbstractSource.getClientView("//depot/src/....java\n//depot/tgt/....java", "job1");
+		Assert.assertEquals("//depot/src/....java //job1/depot/src/....java\n//depot/tgt/....java //job1/depot/tgt/....java", clientView);
+
+		// BAD INPUT (treated as file)
+		clientView = AbstractSource.getClientView("//depot/src/", "job1"); //BAD
+		Assert.assertEquals("//depot/src //job1/src", clientView);
+
+		// BAD INPUT (four '....' will slip through)
+		clientView = AbstractSource.getClientView("//depot/src/....", "job1"); //BAD
+		Assert.assertEquals("//depot/src/.... //job1/....", clientView);
+
+		// BAD INPUT (treated as file)
+		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt", "job1");
+		Assert.assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
+
+		// BAD INPUT (treated as file)
+		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt/", "job1");
+		Assert.assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
 	}
 
 
@@ -190,8 +203,8 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
-				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin\n" +
-				"//graph/scm-api-plugin''']," +
+				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin/...\n" +
+				"//graph/scm-api-plugin/...''']," +
 				"populate: [$class: 'GraphHybridImpl', parallel: [enable: true, minbytes: '2', minfiles: '1', threads: '4'], pin: '', quiet: false]" +
 				"\n}\n}\n}\n}";
 

@@ -35,6 +35,7 @@ abstract public class DefaultEnvironment {
 
 	protected final static String R15_1 = "r15.1";
 	protected final static String R17_1 = "r17.1";
+	protected final static String R18_1 = "r18.1";
 
 	protected final static String CREDENTIAL = "id";
 	protected final static int HTTP_PORT = 1888;
@@ -88,7 +89,7 @@ abstract public class DefaultEnvironment {
 		String client = "submit.ws";
 		String stream = null;
 		String line = "LOCAL";
-		String view = path + " //" + client + "/" + filename;
+		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 
@@ -118,7 +119,7 @@ abstract public class DefaultEnvironment {
 		String client = "graphCommit.ws";
 		String stream = null;
 		String line = "LOCAL";
-		String view = path + " //" + client + "/" + filename;
+		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, "graph", null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
 

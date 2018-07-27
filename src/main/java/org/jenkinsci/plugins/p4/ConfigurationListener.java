@@ -72,7 +72,16 @@ public class ConfigurationListener extends SaveableListener {
 		String credential = p4scm.getCredential();
 		String clientName = p4scm.getClientName();
 		String depotPath = p4scm.getDepotPath();
-		depotPath = depotPath.endsWith("/") ? depotPath : depotPath + "/";
+
+		// check path ends with '/...'
+		if(!depotPath.endsWith("/...")) {
+			depotPath = depotPath.endsWith("/") ? depotPath + "..." : depotPath + "/...";
+		}
+
+		// quote path it it has spaces
+		if(depotPath.contains(" ")) {
+			depotPath = "\"" + depotPath + "\"";
+		}
 
 		Jenkins j = Jenkins.getInstance();
 		if (j == null) {
@@ -82,7 +91,7 @@ public class ConfigurationListener extends SaveableListener {
 		String rootPath = j.getRootDir().getCanonicalPath();
 
 		StringBuffer view = new StringBuffer();
-		view.append(depotPath + "...");
+		view.append(depotPath);
 		view.append(" ");
 		view.append("//" + clientName + "/...");
 

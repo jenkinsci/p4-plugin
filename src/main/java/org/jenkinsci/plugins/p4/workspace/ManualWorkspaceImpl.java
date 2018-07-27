@@ -21,6 +21,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class ManualWorkspaceImpl extends Workspace implements Serializable {
@@ -64,7 +65,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		this.spec = spec;
 	}
 
-	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception{
+	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception {
 		String clientName = getFullName();
 		ClientView clientView = new ClientView();
 		int order = 0;
@@ -86,7 +87,20 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return clientView;
 	}
 
-        private ClientOptions getClientOptions(WorkspaceSpec spec) {
+	private ArrayList<String> getChangeView(WorkspaceSpec workspaceSpec) {
+		ArrayList<String> changeView = new ArrayList<>();
+
+		String view = workspaceSpec.getChangeView();
+		if(view != null) {
+			String specString = getExpand().format(view, false);
+			for (String line : specString.split("\\n")) {
+				changeView.add(line);
+			}
+		}
+		return changeView;
+	}
+
+	private ClientOptions getClientOptions(WorkspaceSpec spec) {
 		ClientOptions options = new ClientOptions();
 		options.setAllWrite(spec.allwrite);
 		options.setClobber(spec.clobber);
@@ -94,8 +108,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		options.setLocked(spec.locked);
 		options.setModtime(spec.modtime);
 		options.setRmdir(spec.rmdir);
-                return options;
-        }
+		return options;
+	}
 
 	@Override
 	public IClient setClient(IOptionsServer connection, String user) throws Exception {
@@ -103,34 +117,27 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		String clientName = getFullName();
 
 		IClient iclient = connection.getClient(clientName);
+
+		// If a new client then initialise
 		if (iclient == null) {
 			logger.info("P4: Creating manual client: " + clientName);
-			Client implClient = new Client(connection);
-			implClient.setName(clientName);
-			implClient.setOwnerName(user);
+			iclient = new Client(connection);
+			iclient.setName(clientName);
+			iclient.setOwnerName(user);
+			iclient.setRoot(getRootPath());
 
 			if (connection.getServerVersionNumber() >= 20171) {
 				WorkspaceSpecType type = parseClientType(getSpec().getType());
-				implClient.setType(type.getId());
+				iclient.setType(type.getId());
 			}
-
-			String view = getExpand().get(InitialViewExpandKey);
-			if (null != view) {
-				logger.info("Setting initial workspace spec: " + view);
-				WorkspaceSpec initialWorkspaceSpec = new WorkspaceSpec(
-						view, null);
-				ClientView clientView = getClientView(initialWorkspaceSpec);
-				implClient.setClientView(clientView);
-                                implClient.setOptions(getClientOptions(getSpec()));
-			}
-			connection.createClient(implClient);
-			iclient = connection.getClient(clientName);
 		}
 
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
 
-                iclient.setOptions(getClientOptions(getSpec()));
+		// Set options
+		iclient.setOptions(getClientOptions(getSpec()));
+		iclient.setLineEnd(parseLineEnd(getSpec().getLine()));
 
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
@@ -139,11 +146,13 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 		iclient.setStream(streamFullName);
 
-		iclient.setLineEnd(parseLineEnd(getSpec().getLine()));
-
+		// Set Client view
 		iclient.setClientView(getClientView(getSpec()));
 
-		// TODO (p4java 17.2) changeView
+		// Set Change view
+		if (connection.getServerVersionNumber() >= 20172) {
+			iclient.setChangeView(getChangeView(getSpec()));
+		}
 
 		// Allow change between GRAPH and WRITEABLE
 		if (connection.getServerVersionNumber() >= 20171) {
@@ -159,7 +168,14 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		iclient.setServerId(getSpec().getServerID());
 
-		// TODO (p4java 17.2) backup
+		// Set Backup option, defaults to enable (enable/disable)
+		if (connection.getServerVersionNumber() >= 20172) {
+			if(getSpec().isBackup()) {
+				iclient.setBackup("enable");
+			} else {
+				iclient.setBackup("disable");
+			}
+		}
 
 		return iclient;
 	}

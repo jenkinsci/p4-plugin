@@ -29,7 +29,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -495,7 +494,7 @@ public class PollingTest extends DefaultEnvironment {
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "',"
-				+ "      depotPath: '//depot', format: 'test.ws'\n"
+				+ "      depotPath: '//depot/...', format: 'test.ws'\n"
 				+ "}", false));
 
 		// Set review to build change 9

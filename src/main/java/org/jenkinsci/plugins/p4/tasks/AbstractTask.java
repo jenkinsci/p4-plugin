@@ -77,20 +77,13 @@ public abstract class AbstractTask implements Serializable {
 		// setup the client workspace to use for the build.
 		ClientHelper p4 = getConnection();
 
-		// Check connection (might be on remote slave)
-//		if (!checkConnection(p4)) {
-//			String err = "P4: Abort, no server connection.\n";
-//			logger.severe(err);
-//			p4.log(err);
-//			throw new AbortException(err);
-//		}
-
 		// Set the client
 		try {
 			p4.setClient(workspace);
 			p4.log("... client: " + getClient());
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
+			e.printStackTrace();
 			logger.severe(err);
 			p4.log(err);
 			throw new AbortException(err);

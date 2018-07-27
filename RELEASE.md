@@ -1,5 +1,23 @@
 ## Release notes
 
+### Release 1.8.14 (major features/fixes)
+
+[@24409](https://swarm.workshop.perforce.com/changes/24409) - Added ChangeView and Client Backup support.
+
+[@24406](https://swarm.workshop.perforce.com/changes/24406) - Cleanup client setup.  Should reduce 'null' root and views and work with replica Perforce Servers.
+
+[@24404](https://swarm.workshop.perforce.com/changes/24404) - Support spaces in depot path for MultiBranch and DepotSource.  Includes filters for leading white space (spaces/tabs).  JENKINS-52652
+
+[@24403](https://swarm.workshop.perforce.com/changes/24403) - Support spaces in depot path for MultiBranch and DepotSource.  JENKINS-52604
+
+[@24402](https://swarm.workshop.perforce.com/changes/24402) - Fix Ellipsis detection in ClientViewMappingGenerator.  'p4sync' was mistaking a single '.' for '...' when building the view.  JENKINS-52572
+
+[@24401](https://swarm.workshop.perforce.com/changes/24401) - Fix 'p4sync' auto complete and validate checks.
+
+
+### ~~Release 1.8.13~~ (broken deployment)
+
+
 ### Release 1.8.12 (major features/fixes)
 
 [@24359](https://swarm.workshop.perforce.com/changes/24359) - Support ServerID on client for Edge type serves.

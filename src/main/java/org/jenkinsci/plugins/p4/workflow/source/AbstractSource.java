@@ -39,6 +39,13 @@ public abstract class AbstractSource implements ExtensionPoint, Describable<Abst
  */
 class ClientViewMappingGenerator {
 
+	private static final String ELLIPSIS = "...";
+	private static final String STAR = "*";
+	private static final String QUOTE = "\"";
+	private static final String MAP_SEP = " ";
+	private static final String MAP_DELIM = "\n";
+	private static final String PATH_DELIM = "/";
+
 	/**
 	 * Generates client view mapping string.
 	 * e.g  //depot/src/...  //ws/src/...
@@ -56,73 +63,93 @@ class ClientViewMappingGenerator {
 	 * //depot/src/...  //jenkins-job/depot/src/...
 	 * //depot/tgt/...  //jenkins-job/depot/tgt/...
 	 *
-	 * @param depotSyntax  The left hand side of the client view
-	 * @param clientSyntax The right hand side of the client view
+	 * @param depotView The left hand side of the client view
+	 * @param client    The client workspace name
 	 * @return Client view mapping
 	 */
-	public String generateClientView(String depotSyntax, String clientSyntax) {
+
+	public String generateClientView(String depotView, String client) {
 
 		StringBuffer view = new StringBuffer();
 
-		if (depotSyntax != null && !depotSyntax.isEmpty()) {
-			String[] sources = depotSyntax.split("\n");
-			int viewCount = 0;
-			int sourceCount = sources.length;
-			String destination = clientSyntax;
+		// exit early if no depotPath
+		if (depotView == null || depotView.isEmpty()) {
+			return null;
+		}
 
-			for (String source : sources) {
+		// exit early if no client is defined
+		if (client == null || client.isEmpty()) {
+			return null;
+		}
 
-				String sourceWithNoInitSlashes = source.substring(2);
-				String[] srcSplit = sourceWithNoInitSlashes.split("/");
-				StringBuffer formattedSrc = new StringBuffer("//");
-				StringBuffer formattedDest = new StringBuffer("//");
+		// Split on new line and trim any following white space
+		String[] lines = depotView.split("\n\\s*");
+		boolean multi = lines.length > 1;
 
-				if (viewCount > 0) {
-					view.append("\n");
-				}
+		for (int c = 0; c < lines.length; c++) {
+			// detect space characters for later
+			boolean spaces = lines[c].contains(" ");
 
-				if (srcSplit != null && srcSplit.length > 0) {
-					String lastSrc = srcSplit[srcSplit.length - 1];
-					boolean containsDots = lastSrc.contains(".");
+			// remove leading "//" from path
+			String path = lines[c].substring("//".length());
 
-					int count = 0;
-					for (String srcItem : srcSplit) {
-						if (count > 0) {
-							formattedSrc.append("/");
-						}
-						formattedSrc.append(srcItem);
-						count++;
-					}
-					//if multiple depots are specified in depotSyntax, append
-					//each depot path to client syntax of client view
-					if (sourceCount > 1) {
-						StringBuffer tmpDestination = new StringBuffer();
-						destination = clientSyntax + "/" + sourceWithNoInitSlashes;
-						String[] destsrcSplit = destination.split("/");
-						int dcount = 0;
-						for (String destItem : destsrcSplit) {
-							if (!destItem.contains(".")) {
-								if (dcount > 0) {
-									tmpDestination.append("/");
-								}
-								tmpDestination.append(destItem);
-								dcount++;
-							}
-						}
-						destination = tmpDestination.toString();
-					}
+			// split path on "/" depot deliminator
+			String[] parts = path.split(PATH_DELIM);
 
-					if (containsDots) {
-						formattedDest.append(destination + "/" + lastSrc);
-					} else {
-						formattedSrc.append("/...");
-						formattedDest.append(destination + "/...");
-					}
-				}
-				view.append(formattedSrc.toString().replaceAll("\n", "") + " " + formattedDest.toString());
-				viewCount++;
+			// process depot and client mappings
+			StringBuffer lhs = processLHS(parts);
+			StringBuffer rhs = processRHS(client, parts, multi);
+
+			// Wrap with quotes if spaces are used in the path
+			if (spaces) {
+				lhs.insert(0, QUOTE);
+				lhs.append(QUOTE);
+				rhs.insert(0, QUOTE);
+				rhs.append(QUOTE);
 			}
+
+			// Build view
+			if (c > 0) {
+				view.append(MAP_DELIM);
+			}
+			view.append(lhs);
+			view.append(MAP_SEP);
+			view.append(rhs);
 		}
 		return view.toString();
+	}
+
+	private StringBuffer processLHS(String[] parts) {
+		StringBuffer lhs = new StringBuffer("//");
+		for (int i = 0; i < parts.length; i++) {
+			if (i > 0) {
+				lhs.append(PATH_DELIM);
+			}
+			lhs.append(parts[i]);
+		}
+		return lhs;
+	}
+
+	private StringBuffer processRHS(String client, String[] parts, boolean multi) {
+		StringBuffer rhs = new StringBuffer("//");
+		rhs.append(client);
+		rhs.append("/");
+
+		// multi lines may require full depot path e.g.
+		//      //depot/proj/src/... //client/depot/proj/src/...
+		if (multi) {
+			for (int i = 0; i < parts.length; i++) {
+				if (i > 0) {
+					rhs.append(PATH_DELIM);
+				}
+				rhs.append(parts[i]);
+			}
+		}
+		// single lines can map directly to client root e.g.
+		//      //depot/proj/src/... //client/...
+		else {
+			rhs.append(parts[parts.length - 1]);
+		}
+		return rhs;
 	}
 }

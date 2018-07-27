@@ -168,6 +168,23 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testSpacePathClassic() throws Exception {
+
+		submitFile(jenkins, "//depot/space path/A/Jenkinsfile", "node() {}");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//depot/space path/...";
+		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "space-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
 	public void testRootPathStreams() throws Exception {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
