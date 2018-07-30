@@ -11,6 +11,7 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -69,13 +70,27 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] save(String type, Map<String, Object> spec) throws P4JavaException, InterruptedException, IOException {
-		String[] array = {"-i"};
-		P4GroovyTask task = new P4GroovyTask(type, array, spec);
+		return save(type, spec, new ArrayList());
+	}
+
+	public Map<String, Object>[] save(String type, Map<String, Object> spec, List<String> list) throws P4JavaException, InterruptedException, IOException {
+		// add '-i' to user provided args list
+		if (!list.contains("-i")) {
+			list.add("-i");
+		}
+		String[] args = list.toArray(new String[0]);
+
+		P4GroovyTask task = new P4GroovyTask(type, args, spec);
 		task.setListener(listener);
 		task.setCredential(credential);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
+	}
+
+	public Map<String, Object>[] save(String type, Map<String, Object> spec, String... args) throws P4JavaException, InterruptedException, IOException {
+		ArrayList<String> list = new ArrayList<>(Arrays.asList(args));
+		return save(type, spec, list);
 	}
 
 	public Map<String, Object> fetch(String type, String id) throws P4JavaException, InterruptedException, IOException {

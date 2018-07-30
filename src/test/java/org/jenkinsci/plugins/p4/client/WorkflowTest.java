@@ -116,14 +116,37 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   p4 = p4(credential: '" + CREDENTIAL + "', workspace: ws)\n"
 				+ "   clientName = p4.getClientName();\n"
 				+ "   client = p4.fetch('client', clientName)\n"
-				+ "   echo \"Client: ${client}\""
-				+ "   client.put('Description', 'foo')"
-				+ "   p4.save('client', client)"
+				+ "   echo \"Client: $client\"\n"
+				+ "   client.put('Description', 'foo')\n"
+				+ "   p4.save('client', client)\n"
 				+ "}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
+	}
+
+	@Test
+	public void testP4GroovyForceSpecEdit() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec.force");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
+				+ "   p4 = p4(credential: '" + CREDENTIAL + "', workspace: ws)\n"
+				+ "   clientName = p4.getClientName();\n"
+				+ "   client = p4.fetch('client', clientName)\n"
+				+ "   echo \"Client: $client\"\n"
+				+ "   client.put('Description', 'foo')\n"
+				+ "   res = p4.save('client', client, '-f')\n"
+				+ "   echo \"Result: $res\"\n"
+				+ "}", false));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+
+		// Look for no permission as '-f' flag requires 'admin' permissions
+		jenkins.assertLogContains("You don't have permission for this operation.", run);
 	}
 
 	@Test
