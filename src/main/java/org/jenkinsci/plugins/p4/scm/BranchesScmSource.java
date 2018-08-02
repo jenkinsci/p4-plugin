@@ -133,7 +133,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
-	protected List<String> getViewMappings() {
+	private List<String> getViewMappings() {
 		return toLines(getMappings());
 	}
 
