@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.core.IMapEntry;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
@@ -407,6 +408,34 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-4.txt", view.getEntry(0).getRight());
 		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-5.txt", view.getEntry(1).getRight());
+
+		p4.disconnect();
+	}
+
+	@Test
+	public void testExcludeDepotSourcePath() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "excludeDepotSource");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + CREDENTIAL + "', "
+				+ "      source: depotSource('''//depot/Main/file-4.txt\n-//depot/Main/file-5.txt''')"
+				+ "}", false));
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		String name = "jenkins-master-excludeDepotSource-0";
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		p4.login();
+
+		IClient client = p4.getConnection().getCurrentClient();
+		assertNotNull(client);
+
+		ClientView view = client.getClientView();
+		assertNotNull(view);
+
+		assertEquals("//depot/Main/file-4.txt", view.getEntry(0).getLeft());
+		assertEquals("//depot/Main/file-5.txt", view.getEntry(1).getLeft());
+		assertEquals(IMapEntry.EntryType.EXCLUDE, view.getEntry(1).getType());
 
 		p4.disconnect();
 	}
