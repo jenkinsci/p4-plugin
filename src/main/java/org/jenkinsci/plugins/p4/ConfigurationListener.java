@@ -10,6 +10,7 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -90,12 +91,9 @@ public class ConfigurationListener extends SaveableListener {
 		
 		String rootPath = j.getRootDir().getCanonicalPath();
 
-		StringBuffer view = new StringBuffer();
-		view.append(depotPath);
-		view.append(" ");
-		view.append("//" + clientName + "/...");
+		String view = ViewMapHelper.getClientView(depotPath, clientName);
 
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view.toString(), null, null, null, true);
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view, null, null, null, true);
 
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec);
 		workspace.setExpand(new HashMap<String, String>());
