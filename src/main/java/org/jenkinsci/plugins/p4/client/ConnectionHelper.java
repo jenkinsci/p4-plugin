@@ -385,8 +385,8 @@ public class ConnectionHelper implements AutoCloseable {
 		ListIterator<String> list = paths.listIterator();
 		while (list.hasNext()) {
 			String i = list.next();
-			if (!i.endsWith("/...") && !i.endsWith("/*")) {
-				list.set(i + "/*");
+			if (!i.contains("...") && !i.contains("*")) {
+				list.set(i + "*");
 			}
 		}
 

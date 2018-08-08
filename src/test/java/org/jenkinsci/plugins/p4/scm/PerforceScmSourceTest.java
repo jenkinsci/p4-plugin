@@ -109,13 +109,43 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testSingleStream() throws Exception {
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/Ace-main";
+		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "single-streams");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
 	public void testSimplePathStreams() throws Exception {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		String includes = "//stream";
+		String includes = "//stream/...";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-streams");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
+	public void testWildPathStreams() throws Exception {
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/Ace-*";
+		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "wild-streams");
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
