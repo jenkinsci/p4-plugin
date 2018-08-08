@@ -3,8 +3,6 @@ package org.jenkinsci.plugins.p4.scm;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
-import java.util.List;
-
 public class P4GraphRequestSCMHead extends P4Head implements ChangeRequestSCMHead {
 
 	private static final long serialVersionUID = 1L;
@@ -13,8 +11,8 @@ public class P4GraphRequestSCMHead extends P4Head implements ChangeRequestSCMHea
 	private final String repo;
 	private final String branch;
 
-	P4GraphRequestSCMHead(String name, String repo, String branch, List<P4Path> paths, SCMHead target) {
-		super(name, paths);
+	P4GraphRequestSCMHead(String name, String repo, String branch, P4Path path, SCMHead target) {
+		super(name, path);
 		this.target = target;
 		this.repo = repo;
 		this.branch = branch;

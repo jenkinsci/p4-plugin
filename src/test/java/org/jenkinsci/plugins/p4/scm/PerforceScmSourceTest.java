@@ -13,6 +13,7 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -182,6 +183,88 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
+	public void testMappingPathClassic() throws Exception {
+
+		submitFile(jenkins, "//depot/A/src/fileA", "content");
+		submitFile(jenkins, "//depot/A/tests/fileB", "content");
+		submitFile(jenkins, "//depot/A/Jenkinsfile", ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('Jenkinsfile'))         error 'missing Jenkinsfile'\n"
+				+ "          if(!fileExists('depot/A/src/fileA'))   error 'missing fileA'\n"
+				+ "          if(!fileExists('depot/A/tests/fileB')) error 'missing fileB'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//depot/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+		String mappings = "src/...\ntests/...";
+		source.setMappings(mappings);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "mapping-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		WorkflowJob job = multi.getItem("A");
+		assertThat("We now have a branch", job, notNullValue());
+
+		WorkflowRun build = job.getLastBuild();
+		assertThat("The branch was built", build, notNullValue());
+		assertEquals(Result.SUCCESS, build.getResult());
+	}
+
+	@Test
+	public void testMappingDefaultsClassic() throws Exception {
+
+		submitFile(jenkins, "//depot/A/src/fileA", "content");
+		submitFile(jenkins, "//depot/A/tests/fileB", "content");
+		submitFile(jenkins, "//depot/A/Jenkinsfile", ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
+				+ "          if(!fileExists('src/fileA'))   error 'missing fileA'\n"
+				+ "          if(!fileExists('tests/fileB')) error 'missing fileB'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//depot/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "mapping-default-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		WorkflowJob job = multi.getItem("A");
+		assertThat("We now have a branch", job, notNullValue());
+
+		WorkflowRun build = job.getLastBuild();
+		assertThat("The branch was built", build, notNullValue());
+		assertEquals(Result.SUCCESS, build.getResult());
 	}
 
 	@Test

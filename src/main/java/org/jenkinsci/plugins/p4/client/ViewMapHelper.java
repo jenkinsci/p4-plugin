@@ -1,11 +1,15 @@
 package org.jenkinsci.plugins.p4.client;
 
+import java.util.List;
+
 public class ViewMapHelper {
 
 	private static final String QUOTE = "\"";
 	private static final String MAP_SEP = " ";
 	private static final String MAP_DELIM = "\n";
 	private static final String PATH_DELIM = "/";
+	private static final String EXCLUDE = "-";
+	private static final String INCLUDE = "+";
 
 	/**
 	 * Generates client view mapping string.
@@ -30,9 +34,6 @@ public class ViewMapHelper {
 	 */
 
 	public static String getClientView(String depotView, String client) {
-
-		StringBuffer view = new StringBuffer();
-
 		// exit early if no depotPath
 		if (depotView == null || depotView.isEmpty()) {
 			return null;
@@ -45,14 +46,44 @@ public class ViewMapHelper {
 
 		// Split on new line and trim any following white space
 		String[] lines = depotView.split("\n\\s*");
+		StringBuffer view = processLines(lines, client);
+
+		return view.toString();
+	}
+
+	public static String getClientView(List<String> views, String client) {
+		// exit early if no views
+		if (views == null || views.isEmpty()) {
+			return null;
+		}
+
+		// exit early if no client is defined
+		if (client == null || client.isEmpty()) {
+			return null;
+		}
+
+		StringBuffer view = processLines(views.toArray(new String[0]), client);
+
+		return view.toString();
+	}
+
+	private static StringBuffer processLines(String[] lines, String client) {
+
+		StringBuffer view = new StringBuffer();
+
 		boolean multi = lines.length > 1;
 
 		for (int c = 0; c < lines.length; c++) {
 			// detect space characters for later
 			boolean spaces = lines[c].contains(" ");
+			boolean exclude = lines[c].startsWith(EXCLUDE);
+			boolean include = lines[c].startsWith(INCLUDE);
 
-			// remove leading "//" from path
-			String path = lines[c].substring("//".length());
+			// remove leading "//", "+//" or "-//" from path
+			String remove = "//";
+			remove = (exclude) ? EXCLUDE + "//" : remove;
+			remove = (include) ? INCLUDE + "//" : remove;
+			String path = lines[c].substring(remove.length());
 
 			// split path on "/" depot deliminator
 			String[] parts = path.split(PATH_DELIM);
@@ -60,6 +91,14 @@ public class ViewMapHelper {
 			// process depot and client mappings
 			StringBuffer lhs = processLHS(parts);
 			StringBuffer rhs = processRHS(client, parts, multi);
+
+			// Add Exclude/Include mappings
+			if(exclude) {
+				lhs.insert(0, EXCLUDE);
+			}
+			if(include) {
+				lhs.insert(0, INCLUDE);
+			}
 
 			// Wrap with quotes if spaces are used in the path
 			if (spaces) {
@@ -77,7 +116,8 @@ public class ViewMapHelper {
 			view.append(MAP_SEP);
 			view.append(rhs);
 		}
-		return view.toString();
+
+		return view;
 	}
 
 	private static StringBuffer processLHS(String[] parts) {

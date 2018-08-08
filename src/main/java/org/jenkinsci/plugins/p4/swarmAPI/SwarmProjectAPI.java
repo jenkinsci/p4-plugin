@@ -1,8 +1,7 @@
 package org.jenkinsci.plugins.p4.swarmAPI;
 
-import org.jenkinsci.plugins.p4.scm.P4Path;
+import org.jenkinsci.plugins.p4.scm.P4SwarmPath;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SwarmProjectAPI {
@@ -56,15 +55,10 @@ public class SwarmProjectAPI {
 		 *
 		 * @return List of paths
 		 */
-		public List<P4Path> getPaths() {
-			List<P4Path> list = new ArrayList<>();
-			for(String path : paths) {
-				if (path.endsWith("/...")) {
-					path = path.substring(0, path.lastIndexOf("/..."));
-				}
-				list.add(new P4Path(path));
-			}
-			return list;
+		public P4SwarmPath getPath() {
+			String path = paths.get(0);
+			path = path.substring(0, path.lastIndexOf("/..."));
+			return new P4SwarmPath(path, paths);
 		}
 	}
 }

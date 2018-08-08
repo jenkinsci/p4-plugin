@@ -10,14 +10,11 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GlobalLibraryScmSource extends AbstractP4ScmSource {
@@ -41,7 +38,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 			throws IOException, InterruptedException {
 		try {
 			P4Path p4Path = new P4Path(path, thingName);
-			P4Head head = new P4Head(thingName, Arrays.asList(p4Path));
+			P4Head head = new P4Head(thingName, p4Path);
 			SCMRevision revision = getRevision(head, listener);
 			return revision;
 		} catch (Exception e) {
@@ -68,28 +65,14 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public Workspace getWorkspace(List<P4Path> paths) {
-		String client = getFormat();
-
-		StringBuffer sb = new StringBuffer();
-		for (P4Path path : paths) {
-			String view = path.getPath() + "/..." + " //" + client + "/...";
-			sb.append(view).append("\n");
-		}
-
-		WorkspaceSpec spec = new WorkspaceSpec(sb.toString(), null);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
-	}
-
-	@Override
 	public PerforceScm build(SCMHead head, SCMRevision revision) {
 		if (head instanceof P4Head && revision instanceof P4Revision) {
 			P4Head perforceHead = (P4Head) head;
 			P4Revision perforceRevision = (P4Revision) revision;
 
 			// Build workspace from 'head' paths
-			List<P4Path> paths = perforceHead.getPaths();
-			Workspace workspace = getWorkspace(paths);
+			P4Path path = perforceHead.getPath();
+			Workspace workspace = getWorkspace(path);
 
 			// Build populate from revision
 			String pin = perforceRevision.getRef().toString();

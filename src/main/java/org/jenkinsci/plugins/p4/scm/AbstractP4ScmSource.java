@@ -14,6 +14,7 @@ import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
@@ -88,17 +89,18 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public abstract List<P4Head> getTags(@NonNull TaskListener listener) throws Exception;
 
-	public Workspace getWorkspace(List<P4Path> paths) {
-		String client = getFormat();
-
-		String scriptPath = getScriptPathOrDefault("Jenkinsfile");
-		StringBuffer sb = new StringBuffer();
-		for (P4Path path : paths) {
-			String view = String.format("%s/%s //%s/%s", path.getPath(), scriptPath, "${P4_CLIENT}", scriptPath);
-			sb.append(view).append("\n");
+	public Workspace getWorkspace(P4Path path) {
+		if (path == null) {
+			throw new IllegalArgumentException("missing path");
 		}
 
-		WorkspaceSpec spec = new WorkspaceSpec(sb.toString(), null);
+		StringBuffer depotView = new StringBuffer();
+		depotView.append(path.getPath());
+		depotView.append("/...");
+
+		String client = getFormat();
+		String view = ViewMapHelper.getClientView(depotView.toString(), client);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
@@ -116,8 +118,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	public PerforceScm build(SCMHead head, SCMRevision revision) {
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead perforceTag = (P4ChangeRequestSCMHead) head;
-			List<P4Path> paths = perforceTag.getPaths();
-			Workspace workspace = getWorkspace(paths);
+			P4Path path = perforceTag.getPath();
+			Workspace workspace = getWorkspace(path);
 			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 
 			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);
@@ -126,15 +128,15 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 		if (head instanceof P4GraphRequestSCMHead) {
 			P4GraphRequestSCMHead graphTag = (P4GraphRequestSCMHead) head;
-			List<P4Path> paths = graphTag.getPaths();
-			Workspace workspace = getWorkspace(paths);
+			P4Path path = graphTag.getPath();
+			Workspace workspace = getWorkspace(path);
 			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 			return scm;
 		}
 		if (head instanceof P4Head) {
 			P4Head perforceHead = (P4Head) head;
-			List<P4Path> paths = perforceHead.getPaths();
-			Workspace workspace = getWorkspace(paths);
+			P4Path path = perforceHead.getPath();
+			Workspace workspace = getWorkspace(path);
 			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
 			return scm;
 		}
@@ -191,12 +193,12 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			// TODO look for graph revisions too
 
 			long change = -1;
-			for (P4Path path : head.getPaths()) {
+			P4Path path = head.getPath();
 				String rev = path.getRevision();
 				rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
 				long c = p4.getHead(path.getPath() + rev);
 				change = (c > change) ? c : change;
-			}
+
 			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
 			return revision;
 		}
