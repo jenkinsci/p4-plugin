@@ -91,7 +91,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		ArrayList<String> changeView = new ArrayList<>();
 
 		String view = workspaceSpec.getChangeView();
-		if(view != null) {
+		if (view != null) {
 			String specString = getExpand().format(view, false);
 			for (String line : specString.split("\\n")) {
 				changeView.add(line);
@@ -126,9 +126,11 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			iclient.setOwnerName(user);
 			iclient.setRoot(getRootPath());
 
-			if (connection.getServerVersionNumber() >= 20171) {
+			if (connection.getServerVersionNumber() >= 20162) {
 				WorkspaceSpecType type = parseClientType(getSpec().getType());
-				iclient.setType(type.getId());
+				if (connection.getServerVersionNumber() >= type.getMinVersion()) {
+					iclient.setType(type.getId());
+				}
 			}
 		}
 
@@ -155,14 +157,16 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 
 		// Allow change between GRAPH and WRITEABLE
-		if (connection.getServerVersionNumber() >= 20171) {
+		if (connection.getServerVersionNumber() >= 20162) {
 			WorkspaceSpecType type = parseClientType(getSpec().getType());
-			switch (type) {
-				case GRAPH:
-				case WRITABLE:
-					iclient.setType(type.getId());
-					break;
-				default:
+			if (connection.getServerVersionNumber() >= type.getMinVersion()) {
+				switch (type) {
+					case GRAPH:
+					case WRITABLE:
+						iclient.setType(type.getId());
+						break;
+					default:
+				}
 			}
 		}
 
@@ -170,7 +174,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		// Set Backup option, defaults to enable (enable/disable)
 		if (connection.getServerVersionNumber() >= 20172) {
-			if(getSpec().isBackup()) {
+			if (getSpec().isBackup()) {
 				iclient.setBackup("enable");
 			} else {
 				iclient.setBackup("disable");
