@@ -28,18 +28,16 @@
 		<f:textarea id="id.view" />
 	</f:entry>
 
-<!--
 	<f:entry title="${%Change View}" field="changeView">
     	<f:textarea id="id.changeView" />
     </f:entry>
--->
+
     <f:entry title="${%Server ID}" field="serverID">
     	<f:textbox id="id.serverID" />
     </f:entry>
-<!--
+
 	<f:entry title="${%Backup Client}" field="backup">
 		<f:checkbox id="id.backup" default="true" />
 	</f:entry>
--->
 
 </j:jelly>
