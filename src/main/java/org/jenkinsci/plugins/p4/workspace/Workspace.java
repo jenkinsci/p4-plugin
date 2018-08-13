@@ -9,12 +9,13 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace>, Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private String charset;
 	private boolean pinHost;
 	private String rootPath;
@@ -36,6 +37,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	 * @return Client name
 	 */
 	public abstract String getName();
+
 	public abstract void setName(String name);
 
 	public String getCharset() {
@@ -93,6 +95,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	}
 
 	public Expand getExpand() {
+		// provide an empty map if Environment is not set.
+		if(expand == null) {
+			setExpand(new HashMap<String, String>());
+		}
 		return expand;
 	}
 
@@ -106,6 +112,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	 * @return Client name
 	 */
 	public String getFullName() {
+		if (expand == null) {
+			return getName();
+		}
+
 		// expands Workspace name if formatters are used.
 		String clientName = expand.format(getName(), false);
 
@@ -121,12 +131,12 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	public String getSyncID() {
 		String id = null;
 
-		if(expand == null) {
+		if (expand == null) {
 			return id;
 		}
 
 		// if syncID provide expand or use client name.
-		if(syncID != null && !syncID.isEmpty()) {
+		if (syncID != null && !syncID.isEmpty()) {
 			id = expand.formatID(syncID);
 		} else {
 			id = expand.formatID(getName());

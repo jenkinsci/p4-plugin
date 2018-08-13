@@ -86,31 +86,29 @@ public class WorkspaceTest extends DefaultEnvironment {
 		assertEquals("Perforce Client Spec", descSpec.getDisplayName());
 
 		// Log in for next set of tests...
-		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
-		p4.login();
+		try(ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			WorkspaceSpec.DescriptorImpl implSpec = (WorkspaceSpec.DescriptorImpl) descSpec;
+			AutoCompletionCandidates list = implSpec.doAutoCompleteStreamName("//");
+			assertTrue(list.getValues().contains("//stream/main"));
 
-		WorkspaceSpec.DescriptorImpl implSpec = (WorkspaceSpec.DescriptorImpl) descSpec;
-		AutoCompletionCandidates list = implSpec.doAutoCompleteStreamName("//");
-		assertTrue(list.getValues().contains("//stream/main"));
+			ListBoxModel lineItems = implSpec.doFillLineItems();
+			assertFalse(lineItems.isEmpty());
 
-		ListBoxModel lineItems = implSpec.doFillLineItems();
-		assertFalse(lineItems.isEmpty());
+			ListBoxModel typeItems = implSpec.doFillTypeItems();
+			assertFalse(typeItems.isEmpty());
 
-		ListBoxModel typeItems = implSpec.doFillTypeItems();
-		assertFalse(typeItems.isEmpty());
+			ManualWorkspaceImpl.DescriptorImpl impl = (ManualWorkspaceImpl.DescriptorImpl) desc;
+			FormValidation form = impl.doCheckName("test.ws");
+			assertEquals(FormValidation.Kind.OK, form.kind);
 
-		ManualWorkspaceImpl.DescriptorImpl impl = (ManualWorkspaceImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doCheckName("test.ws");
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			list = impl.doAutoCompleteName("m");
+			assertTrue(list.getValues().contains(client));
 
-		list = impl.doAutoCompleteName("m");
-		assertTrue(list.getValues().contains(client));
+			JSONObject json = workspace.getSpecJSON("test.ws");
+			assertEquals("//depot/... //test.ws/...\n", json.getString("view"));
+		}
 
 		JSONObject json = workspace.getSpecJSON("test.ws");
-		assertEquals("//depot/... //test.ws/...\n", json.getString("view"));
-
-		p4.disconnect();
-		json = workspace.getSpecJSON("test.ws");
 		assertEquals("please define view...", json.getString("view"));
 	}
 

@@ -2,6 +2,9 @@ package org.jenkinsci.plugins.p4.tasks;
 
 import hudson.FilePath.FileCallable;
 import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import jenkins.model.Jenkins;
@@ -25,10 +28,20 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
 
-	private final boolean deleteClient;
-	private final boolean deleteFiles;
+	private boolean deleteClient;
+	private boolean deleteFiles;
 
-	public RemoveClientTask() {
+	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener) {
+		super(credential, run, listener);
+		init();
+	}
+
+	public RemoveClientTask(String credential, Item project, TaskListener listener) {
+		super(credential, project, listener);
+		init();
+	}
+
+	private void init() {
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
 			@SuppressWarnings("unchecked")
@@ -48,7 +61,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	public Object task(ClientHelper p4) throws Exception {
 		logger.info("Task: remove client.");
 
-		String client = getClient();
+		String client = getClientName();
 		try {
 			p4.log("P4 Task: cleanup client: " + client);
 
@@ -80,8 +93,6 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 		} catch (Exception e) {
 			logger.warning("P4: Not able to get connection");
 			return false;
-		} finally {
-			p4.disconnect();
 		}
 		return deleteFiles;
 	}

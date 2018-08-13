@@ -48,13 +48,11 @@ public class TagAction extends AbstractScmTagAction {
 	private final String credential;
 	private final String p4port;
 	private final String p4user;
-	private final String p4ticket;
 
 	// Set when workspace is defined
 	private Workspace workspace;
 	private String client;
 	private String syncID;
-	private String charset;
 
 	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
@@ -63,10 +61,6 @@ public class TagAction extends AbstractScmTagAction {
 		this.credential = credential;
 		this.p4port = auth.getP4port();
 		this.p4user = auth.getUsername();
-
-		ConnectionHelper p4 = new ConnectionHelper(auth, null);
-		this.p4ticket = p4.getTicket();
-		p4.disconnect();
 	}
 
 	public String getIconFileName() {
@@ -109,9 +103,7 @@ public class TagAction extends AbstractScmTagAction {
 		name = expand.format(name, false);
 		description = expand.format(description, false);
 
-		TaggingTask task = new TaggingTask(name, description);
-		task.setListener(listener);
-		task.setCredential(credential, getRun().getParent());
+		TaggingTask task = new TaggingTask(credential, getRun(), listener, name, description);
 		task.setWorkspace(workspace);
 		task.setBuildChange(getRefChange());
 
@@ -189,7 +181,6 @@ public class TagAction extends AbstractScmTagAction {
 		this.workspace = workspace;
 		this.client = workspace.getFullName();
 		this.syncID = workspace.getSyncID();
-		this.charset = workspace.getCharset();
 
 		Expand expand = workspace.getExpand();
 		String id = expand.get(ReviewProp.REVIEW.toString());
@@ -216,7 +207,13 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public String getTicket() {
-		return p4ticket;
+		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, getRun());
+		try (ConnectionHelper p4 = new ConnectionHelper(auth, null)) {
+			return p4.getTicket();
+		} catch (Exception e) {
+			logger.severe("P4: Unable to get Ticket(): " + e.getMessage());
+		}
+		return null;
 	}
 
 	public String getTag() {
@@ -234,14 +231,12 @@ public class TagAction extends AbstractScmTagAction {
 	 * @return Perforce Label object
 	 */
 	public Label getLabel(String tag) {
-		ClientHelper p4 = new ClientHelper(ClientHelper.findCredential(credential, getRun()), null, client, charset);
-		try {
+		P4BaseCredentials baseCredential = ClientHelper.findCredential(credential, getRun());
+		try (ClientHelper p4 = new ClientHelper(baseCredential, null, workspace)) {
 			Label label = p4.getLabel(tag);
 			return label;
 		} catch (Exception e) {
 			logger.warning("Unable to get label from tag: " + tag);
-		} finally {
-			p4.disconnect();
 		}
 		return null;
 	}
@@ -262,8 +257,7 @@ public class TagAction extends AbstractScmTagAction {
 		// Workaround for JENKINS-40722
 		do {
 			actions = lastActions(run);
-		} while(actions == null && run != null && run.isBuilding());
-
+		} while (actions == null && run != null && run.isBuilding());
 
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");

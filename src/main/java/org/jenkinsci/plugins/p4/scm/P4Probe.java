@@ -62,6 +62,6 @@ public class P4Probe extends SCMProbe {
 
 	@Override
 	public void close() throws IOException {
-		p4.disconnect();
+		// No need to close ConnectionHelper
 	}
 }

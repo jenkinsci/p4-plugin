@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.p4.tasks;
 
 import hudson.FilePath.FileCallable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -22,14 +24,10 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 	private final boolean tidy;
 	private long shelf;
 
-	public UnshelveTask(String resolve, boolean tidy) {
+	public UnshelveTask(String credential, Run<?, ?> run, TaskListener listener, String resolve, boolean tidy) {
+		super(credential, run, listener);
 		this.resolve = resolve;
 		this.tidy = tidy;
-	}
-
-	@Deprecated
-	public UnshelveTask(String resolve) {
-		this(resolve, false);
 	}
 
 	public void setShelf(long shelf) {
@@ -57,8 +55,6 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 			String msg = "Unable to publish workspace: " + e;
 			logger.warning(msg);
 			throw e;
-		} finally {
-			p4.disconnect();
 		}
 		return true;
 	}

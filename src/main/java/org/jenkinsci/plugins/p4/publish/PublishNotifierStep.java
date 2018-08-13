@@ -39,9 +39,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 		Workspace ws = (Workspace) getWorkspace().clone();
 
 		// Create task
-		PublishTask task = new PublishTask(getPublish());
-		task.setListener(listener);
-		task.setCredential(getCredential(), run.getParent());
+		PublishTask task = new PublishTask(getCredential(), run, listener, getPublish());
 		ws = task.setEnvironment(run, ws, buildWorkspace);
 		task.setWorkspace(ws);
 

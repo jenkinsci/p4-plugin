@@ -45,12 +45,10 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
-
 		List<String> paths = getIncludePaths();
 		HashSet<P4Head> list = new HashSet<P4Head>();
 
-		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener);
-		try {
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 			List<IStreamSummary> specs = p4.getStreams(paths);
 			for (IStreamSummary s : specs) {
 				String name = s.getName();
@@ -59,9 +57,8 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 				P4Head head = new P4Head(name, p4Path);
 				list.add(head);
 			}
-		} finally {
-			p4.disconnect();
 		}
+
 		return new ArrayList<>(list);
 	}
 

@@ -7,6 +7,7 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -343,7 +344,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowEllipsis-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -370,7 +372,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowSpace-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -397,7 +400,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowFile-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -424,7 +428,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-excludeDepotSource-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();

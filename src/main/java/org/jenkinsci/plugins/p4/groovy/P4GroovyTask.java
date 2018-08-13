@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.groovy;
 
 import hudson.FilePath.FileCallable;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -25,14 +26,15 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 	private final String[] args;
 	private final Map<String, Object> spec;
 
-	public P4GroovyTask(String cmd, String[] args, Map<String, Object> spec) {
+	public P4GroovyTask(String credential, TaskListener listener, String cmd, String[] args, Map<String, Object> spec) {
+		super(credential, listener);
 		this.cmd = cmd;
 		this.args = Arrays.copyOf(args, args.length);
 		this.spec = spec;
 	}
 
-	public P4GroovyTask(String cmd, String... args) {
-		this(cmd, args, null);
+	public P4GroovyTask(String credential, TaskListener listener, String cmd, String... args) {
+		this(credential, listener, cmd, args, null);
 	}
 
 	@Override
@@ -59,8 +61,6 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 			logger.severe(err);
 			p4.log(err);
 			throw e;
-		} finally {
-			p4.disconnect();
 		}
 	}
 

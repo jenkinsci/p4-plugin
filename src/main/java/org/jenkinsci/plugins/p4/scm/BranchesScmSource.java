@@ -48,7 +48,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	public String getMappings() {
 		// support 1.8.1 configurations that did not have any mappings
-		if (mappings == null) {
+		if(mappings == null) {
 			mappings = DescriptorImpl.defaultPath;
 		}
 
@@ -76,8 +76,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<String> paths = getIncludePaths();
 		List<P4Head> list = new ArrayList<>();
 
-		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
-
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
 		String actualFilter = getFilter();
 		if (getFilter() == null || filter.trim().equals("")) {
 			actualFilter = ".*";
@@ -108,7 +107,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			P4Head head = new P4Head(file, p4Path);
 			list.add(head);
 		}
-		p4.disconnect();
+		}
 
 		return list;
 	}

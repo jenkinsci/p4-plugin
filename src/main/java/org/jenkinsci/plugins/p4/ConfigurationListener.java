@@ -51,15 +51,14 @@ public class ConfigurationListener extends SaveableListener {
 			String purge = "";
 			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
 
-			ClientHelper p4 = getClientHelper(p4scm);
-			int ChangelistID = -1;
+			try (ClientHelper p4 = getClientHelper(p4scm)) {
+				int ChangelistID = -1;
 
-			if (!p4scm.isAutoSubmitOnChange()) {
-				ChangelistID = p4.findPendingChangelistIDByDesc(desc, p4scm.getClientName());
+				if (!p4scm.isAutoSubmitOnChange()) {
+					ChangelistID = p4.findPendingChangelistIDByDesc(desc, p4scm.getClientName());
+				}
+				p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
 			}
-			p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
-
-			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -88,7 +87,7 @@ public class ConfigurationListener extends SaveableListener {
 		if (j == null) {
 			return null;
 		}
-		
+
 		String rootPath = j.getRootDir().getCanonicalPath();
 
 		String view = ViewMapHelper.getClientView(depotPath, clientName);
@@ -99,10 +98,7 @@ public class ConfigurationListener extends SaveableListener {
 		workspace.setExpand(new HashMap<String, String>());
 		workspace.setRootPath(rootPath);
 
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, clientName, "utf8");
-		p4.setClient(workspace);
-
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
 		return p4;
 	}
-
 }

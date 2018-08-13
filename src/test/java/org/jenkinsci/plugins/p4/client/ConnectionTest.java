@@ -174,7 +174,7 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in with client for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, "manual.ws", "utf8");
+		ClientHelper p4 = new ClientHelper(auth, null, workspace);
 		IClient iclient = p4.getClient();
 		String clienthost = iclient.getHostName();
 		String hostname = InetAddress.getLocalHost().getHostName();
@@ -236,7 +236,7 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, client, "utf8");
+		ClientHelper p4 = new ClientHelper(auth, null, workspace);
 		boolean mod = p4.getClient().getOptions().isModtime();
 		assertEquals(true, mod);
 

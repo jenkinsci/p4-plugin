@@ -83,7 +83,7 @@ public class PublishTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Stat file and check type
-		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, client, "none");
+		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, workspace);
 		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/artifact.1");
 		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
 		List<IExtendedFileSpec> eSpec = p4.connection.getExtendedFiles(fileSpec, opts);
@@ -110,7 +110,7 @@ public class PublishTest extends DefaultEnvironment {
 		project.getBuildersList().add(new CreateArtifact("artifact.2", "content"));
 
 		// Add trigger to fail submit
-		ClientHelper p4 = new ClientHelper(project, SUPER, null, client, "none");
+		ClientHelper p4 = new ClientHelper(project, SUPER, null, workspace);
 		List<ITriggerEntry> triggers = new ArrayList<>();
 		ITriggerEntry entry1 = new TriggerEntry(0, "fail",
 				ITriggerEntry.TriggerType.CHANGE_SUBMIT,

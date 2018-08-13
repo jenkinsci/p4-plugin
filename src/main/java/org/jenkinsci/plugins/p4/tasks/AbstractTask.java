@@ -26,13 +26,42 @@ public abstract class AbstractTask implements Serializable {
 
 	private static Logger logger = Logger.getLogger(AbstractTask.class.getName());
 
-	private P4BaseCredentials credential;
-	private TaskListener listener;
-	private String client;
-	private String syncID;
-	private String charset;
+	private final P4BaseCredentials credential;
+	private final TaskListener listener;
 
-	transient private Workspace workspace;
+	private Workspace workspace;
+
+	@Deprecated
+	public AbstractTask(String credential, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential);
+		this.listener = listener;
+	}
+
+	public AbstractTask(String credential, Item project, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential, project);
+		this.listener = listener;
+	}
+
+	public AbstractTask(String credential, Run run, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential, run);
+		this.listener = listener;
+	}
+
+	/**
+	 * Set the workspace used for the task.
+	 *
+	 * Often AbstractTask#setEnvironment() is used to expand the variables in the workspace before set
+	 *
+	 * @param workspace Perforce Workspace type
+	 */
+	public void setWorkspace(Workspace workspace) {
+		this.workspace = workspace;
+	}
+
+	protected ClientHelper getxxxConnection() {
+		ClientHelper p4 = new ClientHelper(credential, listener, workspace);
+		return p4;
+	}
 
 	/**
 	 * Implements the Perforce task to retry if necessary
@@ -47,49 +76,8 @@ public abstract class AbstractTask implements Serializable {
 		return credential;
 	}
 
-	@Deprecated
-	public void setCredential(String credential) {
-		this.credential = ConnectionHelper.findCredential(credential);
-	}
-
-	public void setCredential(String credential, Item project) {
-		this.credential = ConnectionHelper.findCredential(credential, project);
-	}
-
-	public void setCredential(String credential, Run run) {
-		this.credential = ConnectionHelper.findCredential(credential, run);
-	}
-
 	public TaskListener getListener() {
 		return listener;
-	}
-
-	public void setListener(TaskListener listener) {
-		this.listener = listener;
-	}
-
-	public void setWorkspace(Workspace workspace) throws AbortException {
-		this.workspace = workspace;
-		this.client = workspace.getFullName();
-		this.syncID = workspace.getSyncID();
-		this.charset = workspace.getCharset();
-
-		// setup the client workspace to use for the build.
-		ClientHelper p4 = getConnection();
-
-		// Set the client
-		try {
-			p4.setClient(workspace);
-			p4.log("... client: " + getClient());
-		} catch (Exception e) {
-			String err = "P4: Unable to setup workspace: " + e;
-			e.printStackTrace();
-			logger.severe(err);
-			p4.log(err);
-			throw new AbortException(err);
-		} finally {
-			p4.disconnect();
-		}
 	}
 
 	public Workspace setEnvironment(Run<?, ?> run, Workspace wsType, FilePath buildWorkspace)
@@ -138,21 +126,16 @@ public abstract class AbstractTask implements Serializable {
 		}
 	}
 
-	public String getClient() {
-		return client;
+	public String getClientName() {
+		return workspace.getFullName();
 	}
 
 	public String getSyncID() {
-		return syncID;
+		return workspace.getSyncID();
 	}
 
 	protected Workspace getWorkspace() {
 		return workspace;
-	}
-
-	protected ClientHelper getConnection() {
-		ClientHelper p4 = new ClientHelper(credential, listener, client, charset);
-		return p4;
 	}
 
 	protected boolean checkConnection(ClientHelper p4) {
@@ -177,32 +160,44 @@ public abstract class AbstractTask implements Serializable {
 	}
 
 	protected Object tryTask() throws AbortException {
-		ClientHelper p4 = getConnection();
+		try (ClientHelper p4 = new ClientHelper(credential, listener, workspace)) {
 
-		if (p4.hasAborted()) {
-			String msg = "P4: Previous Task Aborted!";
-			logger.warning(msg);
-			p4.log(msg);
-			p4.disconnect();
+			// Check for an abort
+			if (p4.hasAborted()) {
+				String msg = "P4: Previous Task Aborted!";
+				logger.warning(msg);
+				p4.log(msg);
+				throw new AbortException(msg);
+			}
+
+			// Check connection (might be on remote slave)
+			if (!checkConnection(p4)) {
+				String msg = "P4: Unable to connect.";
+				logger.warning(msg);
+				p4.log(msg);
+				throw new AbortException(msg);
+			}
+
+			// Run the task and retry as required
+			return retryTask(p4);
+
+		} catch (Exception e) {
+			String msg = "P4: Task Exception: " + e.getMessage();
+			logger.severe(msg);
 			throw new AbortException(msg);
 		}
+	}
 
-		// Check connection (might be on remote slave)
-		if (!checkConnection(p4)) {
-			String msg = "\nP4 Task: Unable to connect.";
-			logger.warning(msg);
-			p4.log(msg);
-			throw new AbortException(msg);
-		}
+	private Object retryTask(ClientHelper p4) throws Exception {
 
-		int trys = 0;
-		int attempt = p4.getRetry();
+		int t = 0;
 		Exception last = null;
-		while (trys <= attempt) {
-			trys++;
+
+		while (t <= p4.getRetry()) {
+			t++;
 			try {
+				// Run the task
 				Object result = task(p4);
-				p4.disconnect();
 
 				if (p4.hasAborted()) {
 					String msg = "P4: Task Aborted!";
@@ -210,31 +205,22 @@ public abstract class AbstractTask implements Serializable {
 					p4.log(msg);
 					throw new AbortException(msg);
 				}
-
 				return result;
-			} catch (AbortException e) {
-				p4.disconnect();
-				throw e;
 			} catch (Exception e) {
 				last = e;
-				String msg = "P4 Task: attempt: " + trys;
+				String msg = "P4 Task: attempt: " + t;
 				logger.severe(msg);
 				p4.log(msg);
 
 				// back off n^2 seconds, before retry
 				try {
-					TimeUnit.SECONDS.sleep(trys ^ 2);
+					TimeUnit.SECONDS.sleep(t ^ 2);
 				} catch (InterruptedException e2) {
 					Thread.currentThread().interrupt();
 				}
 			}
 		}
 
-		p4.disconnect();
-		String msg = "P4 Task: failed: " + last;
-		last.printStackTrace();
-		logger.warning(msg);
-		p4.log(msg);
-		throw new AbortException(msg);
+		throw new Exception(last);
 	}
 }

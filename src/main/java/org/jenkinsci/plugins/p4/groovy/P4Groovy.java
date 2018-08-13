@@ -56,9 +56,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException, InterruptedException, IOException {
-		P4GroovyTask task = new P4GroovyTask(cmd, args);
-		task.setListener(listener);
-		task.setCredential(credential);
+		P4GroovyTask task = new P4GroovyTask(credential, listener, cmd, args);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -80,9 +78,7 @@ public class P4Groovy implements Serializable {
 		}
 		String[] args = list.toArray(new String[0]);
 
-		P4GroovyTask task = new P4GroovyTask(type, args, spec);
-		task.setListener(listener);
-		task.setCredential(credential);
+		P4GroovyTask task = new P4GroovyTask(credential, listener, type, args, spec);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -104,16 +100,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	private IOptionsServer getConnection() {
-		String client = workspace.getFullName();
-		String charset = workspace.getCharset();
-
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, client, charset);
-		try {
-			p4.setClient(workspace);
-		} catch (Exception e) {
-			p4.log("Unable to set Client!");
-		}
-
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
 		return p4.getConnection();
 	}
 }

@@ -85,7 +85,6 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	public void testNodes() throws Exception {
 
 		TempClientHelper p4 = new TempClientHelper(null, CREDENTIAL, null, workspace);
-		p4.setClient(workspace);
 		NavigateHelper nav = new NavigateHelper(p4.getConnection());
 
 		List<NavigateHelper.Node> results = nav.getNodes("");

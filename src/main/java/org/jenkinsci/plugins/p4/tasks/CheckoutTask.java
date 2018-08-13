@@ -5,6 +5,8 @@ import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
 import hudson.FilePath.FileCallable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
@@ -43,17 +45,20 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	/**
 	 * Constructor
 	 *
-	 * @param populate Populate options
+	 * @param credential Credential ID
+	 * @param run        Jenkins Run
+	 * @param listener   TaskListener
+	 * @param populate   Populate options
 	 */
-	public CheckoutTask(Populate populate) {
+	public CheckoutTask(String credential, Run<?, ?> run, TaskListener listener, Populate populate) {
+		super(credential, run, listener);
 		this.populate = populate;
 	}
 
 	public void initialise() throws AbortException {
-		ClientHelper p4 = getConnection();
 		builds = new ArrayList<>();
 
-		try {
+		try (ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getWorkspace())) {
 			// fetch and calculate change to sync to or review to unshelve.
 			status = getStatus(getWorkspace());
 			head = p4.getClientHead();
@@ -121,10 +126,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		} catch (Exception e) {
 			String err = "P4: Unable to initialise CheckoutTask: " + e;
 			logger.severe(err);
-			p4.log(err);
 			throw new AbortException(err);
-		} finally {
-			p4.disconnect();
 		}
 	}
 
@@ -151,13 +153,13 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		if (status == CheckoutStatus.SHELVED) {
 			p4.unshelveFiles(review);
 
-			if(populate instanceof AutoCleanImpl) {
+			if (populate instanceof AutoCleanImpl) {
 				AutoCleanImpl auto = (AutoCleanImpl) populate;
-				if(auto.isTidy()) {
+				if (auto.isTidy()) {
 					p4.revertAllFiles(true);
 				}
 			} else {
-				if(!populate.isHave()) {
+				if (!populate.isHave()) {
 					p4.revertAllFiles(true);
 				}
 			}
@@ -259,11 +261,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public List<P4ChangeEntry> getChangesFull(List<P4Ref> lastRefs) {
 
-		List<P4ChangeEntry> changesFull = new ArrayList<P4ChangeEntry>();
+		List<P4ChangeEntry> changesFull = new ArrayList<>();
 
 		// Add changes to this build.
-		ClientHelper p4 = getConnection();
-		try {
+		try (ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getWorkspace())) {
 			if (status == CheckoutStatus.SHELVED) {
 				P4ChangeEntry cl = new P4ChangeEntry();
 				IChangelistSummary pending = p4.getChange(review);
@@ -272,8 +273,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			}
 
 			// add all changes to list
-			for(P4Ref build : builds) {
-				if(build.isCommit()) {
+			for (P4Ref build : builds) {
+				if (build.isCommit()) {
 					// add graph commits to list
 					List<P4Ref> commits = p4.listCommits(lastRefs, build);
 					for (P4Ref ref : commits) {
@@ -292,10 +293,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		} catch (Exception e) {
 			String err = "Unable to get full changes: " + e;
 			logger.severe(err);
-			p4.log(err);
 			e.printStackTrace();
-		} finally {
-			p4.disconnect();
 		}
 
 		return changesFull;
@@ -305,16 +303,12 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		P4ChangeEntry cl = new P4ChangeEntry();
 		P4Ref current = getBuildChange();
 
-		ClientHelper p4 = getConnection();
-		try {
+		try (ClientHelper p4 = new ClientHelper(getCredential(), getListener(), getWorkspace())) {
 			cl = current.getChangeEntry(p4);
 		} catch (Exception e) {
 			String err = "Unable to get current change: " + e;
 			logger.severe(err);
-			p4.log(err);
 			e.printStackTrace();
-		} finally {
-			p4.disconnect();
 		}
 
 		return cl;
@@ -333,8 +327,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		if (status == CheckoutStatus.SHELVED) {
 			return new P4ChangeRef(review);
 		}
-		for(P4Ref build : builds) {
-			if(!build.isCommit()) {
+		for (P4Ref build : builds) {
+			if (!build.isCommit()) {
 				return build;
 			}
 		}
