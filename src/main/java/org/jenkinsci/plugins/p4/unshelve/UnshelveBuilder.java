@@ -116,7 +116,7 @@ public class UnshelveBuilder extends Builder {
 			return true;
 		}
 
-		long change = Long.parseLong(id);
+		long change = Long.parseLong(id.trim());
 		task.setShelf(change);
 		task.setWorkspace(ws);
 
