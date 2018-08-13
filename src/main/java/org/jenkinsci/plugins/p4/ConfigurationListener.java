@@ -26,16 +26,13 @@ public class ConfigurationListener extends SaveableListener {
 
 	public void onChange(Saveable o, XmlFile xml) {
 		Jenkins j = Jenkins.getInstance();
-		if (j == null) {
-			return;
-		}
 
 		@SuppressWarnings("unchecked")
 		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
 		// Exit early if disabled
-		if (!p4scm.isAutoSave()) {
+		if (p4scm == null || !p4scm.isAutoSave()) {
 			return;
 		}
 
@@ -84,10 +81,6 @@ public class ConfigurationListener extends SaveableListener {
 		}
 
 		Jenkins j = Jenkins.getInstance();
-		if (j == null) {
-			return null;
-		}
-
 		String rootPath = j.getRootDir().getCanonicalPath();
 
 		String view = ViewMapHelper.getClientView(depotPath, clientName);

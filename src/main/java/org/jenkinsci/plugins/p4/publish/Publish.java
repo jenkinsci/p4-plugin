@@ -1,11 +1,11 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import java.io.Serializable;
-
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
+
+import java.io.Serializable;
 
 public abstract class Publish implements ExtensionPoint, Describable<Publish>, Serializable {
 
@@ -37,18 +37,12 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 
 	public PublishDescriptor getDescriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return (PublishDescriptor) j.getDescriptor(getClass());
-		}
-		return null;
+		return (PublishDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<Publish, PublishDescriptor> all() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.<Publish, PublishDescriptor> getDescriptorList(Publish.class);
-		}
-		return null;
+		return j.<Publish, PublishDescriptor> getDescriptorList(Publish.class);
 	}
 
 	public String getExpandedDesc() {

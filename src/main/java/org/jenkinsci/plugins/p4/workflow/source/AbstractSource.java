@@ -16,18 +16,12 @@ public abstract class AbstractSource implements ExtensionPoint, Describable<Abst
 
 	public P4SyncDescriptor getDescriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return (P4SyncDescriptor) j.getDescriptor(getClass());
-		}
-		return null;
+		return (P4SyncDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<AbstractSource, P4SyncDescriptor> all() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.<AbstractSource, P4SyncDescriptor>getDescriptorList(AbstractSource.class);
-		}
-		return null;
+		return j.<AbstractSource, P4SyncDescriptor>getDescriptorList(AbstractSource.class);
 	}
 
 	public static String getClientView(String src, String dest) {

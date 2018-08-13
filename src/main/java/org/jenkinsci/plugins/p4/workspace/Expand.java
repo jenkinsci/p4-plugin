@@ -23,11 +23,6 @@ public class Expand implements Serializable {
 
 	public Expand(Map<String, String> map) {
 		Jenkins jenkins = Jenkins.getInstance();
-		if (jenkins == null) {
-			logger.warning("Jenkins instance is null!");
-			return;
-		}
-
 		DescribableList<NodeProperty<?>, NodePropertyDescriptor> props = jenkins.getGlobalNodeProperties();
 		if (props != null) {
 			for (NodeProperty<?> node : props) {

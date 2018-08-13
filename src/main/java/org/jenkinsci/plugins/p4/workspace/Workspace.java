@@ -60,18 +60,12 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 
 	public WorkspaceDescriptor getDescriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return (WorkspaceDescriptor) j.getDescriptor(getClass());
-		}
-		return null;
+		return (WorkspaceDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<Workspace, WorkspaceDescriptor> all() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.<Workspace, WorkspaceDescriptor>getDescriptorList(Workspace.class);
-		}
-		return null;
+		return j.<Workspace, WorkspaceDescriptor>getDescriptorList(Workspace.class);
 	}
 
 	public String getRootPath() {
@@ -96,7 +90,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 
 	public Expand getExpand() {
 		// provide an empty map if Environment is not set.
-		if(expand == null) {
+		if (expand == null) {
 			setExpand(new HashMap<String, String>());
 		}
 		return expand;
