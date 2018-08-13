@@ -180,7 +180,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		// Log in and create counter for test
-		ClientHelper p4 = new ClientHelper(project, SUPER, null, "manual.ws", "utf8");
+		ClientHelper p4 = new ClientHelper(project, SUPER, null, workspace);
 		IOptionsServer iserver = p4.getConnection();
 		CounterOptions opts = new CounterOptions();
 		iserver.setCounter("testCounter", "9", opts);

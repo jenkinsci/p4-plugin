@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.perforce.p4java.exception.P4JavaException;
-import com.perforce.p4java.impl.generic.core.Label;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -398,10 +397,8 @@ public class PerforceScm extends SCM {
 		}
 
 		// Create task
-		PollTask task = new PollTask(filter, lastRefs);
-		task.setCredential(credential, lastRun);
+		PollTask task = new PollTask(credential, lastRun, listener, filter, lastRefs);
 		task.setWorkspace(ws);
-		task.setListener(listener);
 		task.setLimit(pin);
 
 		// Execute remote task
@@ -422,9 +419,7 @@ public class PerforceScm extends SCM {
 		boolean success = true;
 
 		// Create task
-		CheckoutTask task = new CheckoutTask(populate);
-		task.setListener(listener);
-		task.setCredential(credential, run);
+		CheckoutTask task = new CheckoutTask(credential, run, listener, populate);
 
 		// Update credential tracking
 		CredentialsProvider.track(run, task.getCredential());
@@ -589,41 +584,24 @@ public class PerforceScm extends SCM {
 				// not a change number
 			}
 
-			ConnectionHelper p4 = new ConnectionHelper(run, credential, null);
-			String name = build.toString();
-			try {
-				Label label = p4.getLabel(name);
-				String spec = label.getRevisionSpec();
-				if (spec != null && !spec.isEmpty()) {
-					if (spec.startsWith("@")) {
-						spec = spec.substring(1);
-					}
-					return spec;
-				} else {
-					// a label, but no RevisionSpec
-					return name;
+			try (ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
+				String name = build.toString();
+
+				// look for a label and return a change
+				String change = p4.labelToChange(name);
+				if (change != null) {
+					return change;
+				}
+
+				// look for a counter and return change
+				change = p4.counterToChange(name);
+				if (change != null) {
+					return change;
 				}
 			} catch (Exception e) {
-				// not a label
+				// log error, but try next item
+				logger.severe("P4: Unable to getChangeNumber: " + e.getMessage());
 			}
-
-			try {
-				String counter = p4.getCounter(name);
-				if (!"0".equals(counter)) {
-					try {
-						// if a change number, add change...
-						int change = Integer.parseInt(counter);
-						return String.valueOf(change);
-					} catch (NumberFormatException n) {
-						// no change number in counter
-					}
-				}
-			} catch (Exception e) {
-				// not a counter
-			}
-
-			p4.disconnect();
-			return name;
 		}
 		return "";
 	}
@@ -679,9 +657,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Setup Cleanup Task
-		RemoveClientTask task = new RemoveClientTask();
-		task.setListener(listener);
-		task.setCredential(credential, job);
+		RemoveClientTask task = new RemoveClientTask(credential, job, listener);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);

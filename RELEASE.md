@@ -1,5 +1,22 @@
 ## Release notes
 
+### Release 1.8.15 (major features/fixes)
+
+[@24473](https://swarm.workshop.perforce.com/changes/24473) - Enable ChangeView and Client Backup features.
+
+[@24472](https://swarm.workshop.perforce.com/changes/24472) - Add a min version check for each Client Type.  JENKINS-51048
+
+[@24458](https://swarm.workshop.perforce.com/changes/24458) - Verify new View Mapping code supports DepotSource Excludes.  JENKINS-52861
+
+[@24455](https://swarm.workshop.perforce.com/changes/24455) - Allow query of single streams by appending a `*` to a streams path.  https://github.com/p4paul/p4-jenkins/issues/36
+
+[@24454](https://swarm.workshop.perforce.com/changes/24454) - Exclude and Include mapping support.  Refactored P4Path usage and added P4SwarmPath.  JENKINS-49804
+
+[@24439](https://swarm.workshop.perforce.com/changes/24439) - Move ViewMapHelper to shared class.  JENKINS-52852
+
+[@24433](https://swarm.workshop.perforce.com/changes/24433) - Extra arguments support for P4Groovy save function.  JENKINS-52782
+
+
 ### Release 1.8.14 (major features/fixes)
 
 [@24409](https://swarm.workshop.perforce.com/changes/24409) - Added ChangeView and Client Backup support.

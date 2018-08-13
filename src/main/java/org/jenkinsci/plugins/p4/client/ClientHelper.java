@@ -35,7 +35,6 @@ import hudson.AbortException;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -84,73 +83,54 @@ public class ClientHelper extends ConnectionHelper {
 
 	private IClient iclient;
 
-	@Deprecated
-	public ClientHelper(String credential, TaskListener listener, String client) {
-		super(Jenkins.getActiveInstance(), credential, listener);
-		clientLogin(client, "none");
-	}
-
-	@Deprecated
-	public ClientHelper(String credential, TaskListener listener, String client, String charset) {
-		super(Jenkins.getActiveInstance(), credential, listener);
-		clientLogin(client, charset);
-	}
-
-	public ClientHelper(ItemGroup context, String credential, TaskListener listener, String client, String charset) {
+	public ClientHelper(ItemGroup context, String credential, TaskListener listener, Workspace workspace) {
 		super(context, credential, listener);
-		clientLogin(client, charset);
+		clientLogin(workspace);
 	}
 
-	public ClientHelper(Item context, String credential, TaskListener listener, String client, String charset) {
+	public ClientHelper(Item context, String credential, TaskListener listener, Workspace workspace) {
 		super(context, credential, listener);
-		clientLogin(client, charset);
+		clientLogin(workspace);
 	}
 
-	public ClientHelper(P4BaseCredentials credential, TaskListener listener, String client, String charset) {
+	public ClientHelper(P4BaseCredentials credential, TaskListener listener, Workspace workspace) {
 		super(credential, listener);
-		clientLogin(client, charset);
+		clientLogin(workspace);
 	}
 
+	// reserved for TempClientHelper
 	protected ClientHelper(Item context, String credential, TaskListener listener) {
 		super(context, credential, listener);
 	}
 
-	protected void clientLogin(String client, String charset) {
+	protected void clientLogin(Workspace workspace) {
 		// Exit early if no connection
 		if (connection == null) {
 			return;
 		}
 
+		// Setup charset for unicode servers
+		if (isUnicode()) {
+			connection.setCharsetName(workspace.getCharset());
+		}
+
 		// Find workspace and set as current
 		try {
-			iclient = connection.getClient(client);
-			connection.setCurrentClient(iclient);
-		} catch (Exception e) {
-			String err = "P4: Unable to use Workspace: " + e;
-			logger.severe(err);
-			log(err);
-			e.printStackTrace();
-		}
-
-		if (isUnicode()) {
-			connection.setCharsetName(charset);
-		}
-	}
-
-	public void setClient(Workspace workspace) throws Exception {
+			//iclient = connection.getClient(workspace.getFullName());
 
 		// Setup/Create workspace based on type
 		iclient = workspace.setClient(connection, authorisationConfig.getUsername());
 
-		// Exit early if client is not defined
+			// Set as Current Client, or exit early if not defined
 		if (!isClientValid(workspace)) {
 			String err = "P4: Undefined workspace: " + workspace.getFullName();
 			throw new AbortException(err);
+			} else {
+				connection.setCurrentClient(iclient);
 		}
 
-		// Exit early if client is Static
+			// Exit early if client is Static Workspace
 		if (workspace instanceof StaticWorkspaceImpl) {
-			connection.setCurrentClient(iclient);
 			return;
 		}
 
@@ -175,10 +155,11 @@ public class ClientHelper extends ConnectionHelper {
 
 		// Save client spec
 		iclient.update();
-
-		// Set active client for this connection
-		connection.setCurrentClient(iclient);
-		return;
+		} catch (Exception e) {
+			String err = "P4: Unable to setup workspace: " + e;
+			logger.severe(err);
+			log(err);
+	}
 	}
 
 	private boolean isEdgeType(String services) {

@@ -37,8 +37,7 @@ public class TempClientHelper extends ClientHelper implements Closeable {
 			manual.setSpec(spec);
 		}
 
-		//clientLogin(clientUUID, workspace.getCharset());
-		setClient(workspace);
+		clientLogin(workspace);
 	}
 
 	@Override

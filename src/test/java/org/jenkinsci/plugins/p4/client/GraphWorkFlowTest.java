@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.client;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -195,7 +196,6 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 		Assert.assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
 	}
 
-
 	@Test
 	public void testParallelSync() throws Exception {
 
@@ -217,13 +217,11 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: //graph/scm-api-plugin.git@81dcf18bca038604c4fc784de42e6069feef8bd1", run);
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, client, "none");
-		p4.login();
-
-		// Test file exists in workspace root
-		String root = p4.getConnection().getCurrentClient().getRoot();
-		assertTrue(Files.exists(Paths.get(root, "graph/scm-api-plugin/README.md")));
-		p4.disconnect();
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
+		try(ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace)) {
+			// Test file exists in workspace root
+			String root = p4.getConnection().getClient(client).getRoot();
+			assertTrue(Files.exists(Paths.get(root, "graph/scm-api-plugin/README.md")));
+		}
 	}
-
 }

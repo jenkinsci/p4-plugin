@@ -70,7 +70,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, client, "none");
+		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
 		int head = Integer.parseInt(p4.getCounter("change"));
 
 		// Build 1
@@ -133,7 +133,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, client, "none");
+		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
 		int head = Integer.parseInt(p4.getCounter("change"));
 
 		// Build 1
@@ -283,7 +283,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
 
 		// Get latest change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, client, "none");
+		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
 		int head = Integer.parseInt(p4.getCounter("change"));
 
 		// Build 2
@@ -389,7 +389,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
                 submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
 
                 // Get latest change
-                ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, client, "none");
+                ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
                 int head = Integer.parseInt(p4.getCounter("change"));
 
                 // Build 2

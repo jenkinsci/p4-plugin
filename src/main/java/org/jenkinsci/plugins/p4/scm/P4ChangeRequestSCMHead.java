@@ -3,8 +3,6 @@ package org.jenkinsci.plugins.p4.scm;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
-import java.util.List;
-
 public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHead {
 
 	private static final long serialVersionUID = 1L;
@@ -12,8 +10,8 @@ public class P4ChangeRequestSCMHead extends P4Head implements ChangeRequestSCMHe
 	private final SCMHead target;
 	private final String review;
 
-	P4ChangeRequestSCMHead(String name, String review, List<P4Path> paths, SCMHead target) {
-		super(name, paths);
+	P4ChangeRequestSCMHead(String name, String review, P4Path path, SCMHead target) {
+		super(name, path);
 		this.target = target;
 		this.review = review;
 	}

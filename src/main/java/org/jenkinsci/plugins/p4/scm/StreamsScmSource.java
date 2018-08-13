@@ -13,7 +13,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -46,29 +45,26 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
-
 		List<String> paths = getIncludePaths();
 		HashSet<P4Head> list = new HashSet<P4Head>();
 
-		ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener);
-		try {
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 			List<IStreamSummary> specs = p4.getStreams(paths);
 			for (IStreamSummary s : specs) {
 				String name = s.getName();
 				String stream = s.getStream();
 				P4Path p4Path = new P4Path(stream);
-				P4Head head = new P4Head(name, Arrays.asList(p4Path));
+				P4Head head = new P4Head(name, p4Path);
 				list.add(head);
 			}
-		} finally {
-			p4.disconnect();
 		}
+
 		return new ArrayList<>(list);
 	}
 
 	@Override
-	public Workspace getWorkspace(List<P4Path> paths) {
-		return new StreamWorkspaceImpl(getCharset(), false, paths.get(0).getPath(), getFormat());
+	public Workspace getWorkspace(P4Path path) {
+		return new StreamWorkspaceImpl(getCharset(), false, path.getPath(), getFormat());
 	}
 
 	@Extension

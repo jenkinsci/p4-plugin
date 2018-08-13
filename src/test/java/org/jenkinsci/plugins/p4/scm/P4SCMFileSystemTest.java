@@ -24,7 +24,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -86,7 +85,6 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	public void testNodes() throws Exception {
 
 		TempClientHelper p4 = new TempClientHelper(null, CREDENTIAL, null, workspace);
-		p4.setClient(workspace);
 		NavigateHelper nav = new NavigateHelper(p4.getConnection());
 
 		List<NavigateHelper.Node> results = nav.getNodes("");
@@ -114,7 +112,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		source.setOwner(owner);
 
 		P4Path path = new P4Path("//depot");
-		P4Head head = new P4Head("main", Arrays.asList(path));
+		P4Head head = new P4Head("main", path);
 
 		SCMFileSystem fs = SCMFileSystem.of(source, head);
 		assertThat(fs, notNullValue());

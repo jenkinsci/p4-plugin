@@ -24,7 +24,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GraphScmSource extends AbstractP4ScmSource {
@@ -61,7 +60,6 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				list.addAll(getRefsFromRepos(repos, p4));
 			}
 		}
-
 		return list;
 	}
 
@@ -77,7 +75,6 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				list.addAll(getBranchesFromRepos(repos, p4));
 			}
 		}
-
 		return list;
 	}
 
@@ -93,7 +90,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				P4Path p4Path = new P4Path(repoName, branchName);
 				String name = p4Path.getName();
 
-				P4Head head = new P4Head(name, Arrays.asList(p4Path));
+				P4Head head = new P4Head(name, p4Path);
 				list.add(head);
 			}
 		}
@@ -118,8 +115,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				P4Path p4Path = new P4Path(repoName, branchName);
 				String name = p4Path.getName();
 
-				P4Head target = new P4Head(name, Arrays.asList(p4Path));
-				P4GraphRequestSCMHead tag = new P4GraphRequestSCMHead(name, repoName, branchName, Arrays.asList(p4Path), target);
+				P4Head target = new P4Head(name, p4Path);
+				P4GraphRequestSCMHead tag = new P4GraphRequestSCMHead(name, repoName, branchName, p4Path, target);
 				list.add(tag);
 			}
 		}
@@ -146,7 +143,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	@Override
 	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
-			P4Ref ref = p4.getGraphHead(head.getPaths().get(0).getPath());
+			P4Ref ref = p4.getGraphHead(head.getPath().getPath());
 			P4Revision revision = new P4Revision(head, ref);
 			return revision;
 		}

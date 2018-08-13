@@ -80,8 +80,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in for next set of tests...
-		String client = "jenkins-master-ClientBackup.ws";
-		ClientHelper p4 = new ClientHelper(CREDENTIAL, null, client);
+		ClientHelper p4 = new ClientHelper(project.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		// Test backup field in client spec

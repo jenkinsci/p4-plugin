@@ -100,9 +100,7 @@ public class UnshelveBuilder extends Builder {
 	                           TaskListener listener) throws IOException, InterruptedException {
 
 		// Setup Unshelve Task
-		UnshelveTask task = new UnshelveTask(resolve, tidy);
-		task.setListener(listener);
-		task.setCredential(credential, run.getParent());
+		UnshelveTask task = new UnshelveTask(credential, run, listener, resolve, tidy);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
@@ -116,7 +114,7 @@ public class UnshelveBuilder extends Builder {
 			return true;
 		}
 
-		long change = Long.parseLong(id);
+		long change = Long.parseLong(id.trim());
 		task.setShelf(change);
 		task.setWorkspace(ws);
 

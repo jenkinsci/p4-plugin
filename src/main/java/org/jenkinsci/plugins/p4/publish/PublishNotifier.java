@@ -74,9 +74,7 @@ public class PublishNotifier extends Notifier {
 		Workspace ws = (Workspace) getWorkspace().clone();
 
 		// Create task
-		PublishTask task = new PublishTask(getPublish());
-		task.setListener(listener);
-		task.setCredential(getCredential(), build);
+		PublishTask task = new PublishTask(getCredential(), build, listener, getPublish());
 		ws = task.setEnvironment(build, ws, buildWorkspace);
 		task.setWorkspace(ws);
 

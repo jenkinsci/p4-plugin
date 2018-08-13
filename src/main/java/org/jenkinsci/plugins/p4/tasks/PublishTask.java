@@ -1,18 +1,18 @@
 package org.jenkinsci.plugins.p4.tasks;
 
+import hudson.FilePath.FileCallable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.publish.Publish;
+import org.jenkinsci.remoting.RoleChecker;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.publish.Publish;
-import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
-
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-import jenkins.security.Roles;
 
 public class PublishTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
@@ -22,7 +22,8 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 
 	private final Publish publish;
 
-	public PublishTask(Publish publish) {
+	public PublishTask(String credential, Run<?, ?> run, TaskListener listener, Publish publish) {
+		super(credential, run, listener);
 		this.publish = publish;
 	}
 
@@ -49,13 +50,11 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 			p4.log(msg);
 			logger.warning(msg);
 			return false;
-		} finally {
-			p4.disconnect();
 		}
 		return true;
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }

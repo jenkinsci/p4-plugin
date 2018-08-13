@@ -1,22 +1,22 @@
 package org.jenkinsci.plugins.p4.tasks;
 
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.remoting.RoleChecker;
-
 import com.perforce.p4java.client.IClientViewMapping;
 import com.perforce.p4java.core.ILabelMapping;
 import com.perforce.p4java.core.ViewMap;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.Label.LabelMapping;
+import hudson.FilePath.FileCallable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.remoting.RoleChecker;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 		Serializable {
@@ -31,7 +31,8 @@ public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 
 	private Object buildChange;
 
-	public TaggingTask(String name, String description) {
+	public TaggingTask(String credential, Run<?, ?> run, TaskListener listener, String name, String description) {
+		super(credential, run, listener);
 		this.name = name;
 		this.description = description;
 	}

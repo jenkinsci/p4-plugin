@@ -29,10 +29,9 @@ public class DepotSource extends AbstractSource {
 	}
 
 	protected Workspace getManualWorkspace(String source, String charset, String format) {
-		Workspace workspace = null;
 		String view = AbstractSource.getClientView(source, format);
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, null, "local", view, null, null, null, true);
-		workspace = new ManualWorkspaceImpl(charset, false, format, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		Workspace workspace = new ManualWorkspaceImpl(charset, false, format, spec);
 		return workspace;
 	}
 

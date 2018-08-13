@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.core.IMapEntry;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -116,14 +118,37 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   p4 = p4(credential: '" + CREDENTIAL + "', workspace: ws)\n"
 				+ "   clientName = p4.getClientName();\n"
 				+ "   client = p4.fetch('client', clientName)\n"
-				+ "   echo \"Client: ${client}\""
-				+ "   client.put('Description', 'foo')"
-				+ "   p4.save('client', client)"
+				+ "   echo \"Client: $client\"\n"
+				+ "   client.put('Description', 'foo')\n"
+				+ "   p4.save('client', client)\n"
 				+ "}", false));
 		job.save();
 
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		jenkins.assertLogContains("p4 client -o jenkins-master-p4groovy.spec", run);
+	}
+
+	@Test
+	public void testP4GroovyForceSpecEdit() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec.force");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "   ws = [$class: 'StreamWorkspaceImpl', charset: 'none', format: 'jenkins-${NODE_NAME}-${JOB_NAME}', pinHost: false, streamName: '//stream/main']\n"
+				+ "   p4 = p4(credential: '" + CREDENTIAL + "', workspace: ws)\n"
+				+ "   clientName = p4.getClientName();\n"
+				+ "   client = p4.fetch('client', clientName)\n"
+				+ "   echo \"Client: $client\"\n"
+				+ "   client.put('Description', 'foo')\n"
+				+ "   res = p4.save('client', client, '-f')\n"
+				+ "   echo \"Result: $res\"\n"
+				+ "}", false));
+		job.save();
+
+		WorkflowRun run = job.scheduleBuild2(0).get();
+
+		// Look for no permission as '-f' flag requires 'admin' permissions
+		jenkins.assertLogContains("You don't have permission for this operation.", run);
 	}
 
 	@Test
@@ -319,7 +344,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowEllipsis-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -346,7 +372,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowSpace-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -373,7 +400,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 
 		String name = "jenkins-master-workflowFile-0";
-		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, name, "none");
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
 		p4.login();
 
 		IClient client = p4.getConnection().getCurrentClient();
@@ -384,6 +412,35 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-4.txt", view.getEntry(0).getRight());
 		assertEquals("//jenkins-master-workflowFile-0/depot/Main/file-5.txt", view.getEntry(1).getRight());
+
+		p4.disconnect();
+	}
+
+	@Test
+	public void testExcludeDepotSourcePath() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "excludeDepotSource");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: '" + CREDENTIAL + "', "
+				+ "      source: depotSource('''//depot/Main/file-4.txt\n-//depot/Main/file-5.txt''')"
+				+ "}", false));
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		String name = "jenkins-master-excludeDepotSource-0";
+		Workspace workspace = defaultWorkspace(name);
+		ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace);
+		p4.login();
+
+		IClient client = p4.getConnection().getCurrentClient();
+		assertNotNull(client);
+
+		ClientView view = client.getClientView();
+		assertNotNull(view);
+
+		assertEquals("//depot/Main/file-4.txt", view.getEntry(0).getLeft());
+		assertEquals("//depot/Main/file-5.txt", view.getEntry(1).getLeft());
+		assertEquals(IMapEntry.EntryType.EXCLUDE, view.getEntry(1).getType());
 
 		p4.disconnect();
 	}

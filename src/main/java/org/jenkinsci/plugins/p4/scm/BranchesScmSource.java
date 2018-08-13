@@ -1,6 +1,5 @@
 package org.jenkinsci.plugins.p4.scm;
 
-import com.google.common.collect.Iterables;
 import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
@@ -8,6 +7,7 @@ import hudson.model.TaskListener;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -15,7 +15,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -49,7 +48,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	public String getMappings() {
 		// support 1.8.1 configurations that did not have any mappings
-		if (mappings == null) {
+		if(mappings == null) {
 			mappings = DescriptorImpl.defaultPath;
 		}
 
@@ -77,8 +76,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<String> paths = getIncludePaths();
 		List<P4Head> list = new ArrayList<>();
 
-		ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener);
-
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
 		String actualFilter = getFilter();
 		if (getFilter() == null || filter.trim().equals("")) {
 			actualFilter = ".*";
@@ -106,34 +104,41 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			}
 
 			P4Path p4Path = new P4Path(branch);
-			P4Head head = new P4Head(file, Arrays.asList(p4Path));
+			P4Head head = new P4Head(file, p4Path);
 			list.add(head);
 		}
-		p4.disconnect();
+		}
 
 		return list;
 	}
 
 	@Override
-	public Workspace getWorkspace(List<P4Path> paths) {
-		P4Path branchPath = Iterables.getFirst(paths, null);
-		if (branchPath == null) {
+	public Workspace getWorkspace(P4Path path) {
+		if (path == null) {
 			throw new IllegalArgumentException("missing branch path");
 		}
 
-		String client = getFormat();
-		String mappingFormat = String.format("%1s/%%1$s //%2$s/%%1$s", branchPath.getPath(), "${P4_CLIENT}");
+		List<String> views = new ArrayList<>();
 
-		StringBuffer workspaceView = new StringBuffer(1024);
-		workspaceView.append(String.format(mappingFormat, getScriptPathOrDefault("Jenkinsfile")));
 		for (String mapping : getViewMappings()) {
-			workspaceView.append("\n").append(String.format(mappingFormat, mapping));
+			StringBuffer sb = new StringBuffer();
+			sb.append(path.getPath());
+			sb.append("/");
+			sb.append(mapping);
+			views.add(sb.toString());
 		}
-		WorkspaceSpec spec = new WorkspaceSpec(workspaceView.toString(), null);
+
+		String client = getFormat();
+		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault("Jenkinsfile");
+		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath , client);
+		String mappingsView = ViewMapHelper.getClientView(views, client);
+		String view = jenkinsView + "\n" + mappingsView;
+
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
-	protected List<String> getViewMappings() {
+	private List<String> getViewMappings() {
 		return toLines(getMappings());
 	}
 

@@ -15,13 +15,18 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewsAPI;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,17 +34,21 @@ import java.util.List;
 
 public class SwarmScmSource extends AbstractP4ScmSource {
 
-	private final String project;
+	private String project;
 
 	transient private SwarmHelper swarm;
 
 	@DataBoundConstructor
-	public SwarmScmSource(String credential, String project, String charset, String format) throws Exception {
+	public SwarmScmSource(String credential, String charset, String format) throws Exception {
 		super(credential);
 
-		this.project = project;
 		setCharset(charset);
 		setFormat(format);
+	}
+
+	@DataBoundSetter
+	public void setProject(String project) {
+		this.project = project;
 	}
 
 	public String getProject() {
@@ -75,10 +84,12 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 			List<String> branches = getBranchesInReview(reviewID, project);
 			for (String branch : branches) {
-				List<P4Path> paths = getPathsInBranch(branch, project);
+				// Get first Swarm path; it MUST include the Jenkinsfile
+				P4SwarmPath swarmPath = getPathsInBranch(branch, project);
+
 				String trgName = branch + "-" + reviewID;
-				P4Head target = new P4Head(trgName, paths);
-				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, paths, target);
+				P4Head target = new P4Head(trgName, swarmPath);
+				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);
 				list.add(tag);
 			}
 		}
@@ -93,8 +104,10 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 		for (SwarmProjectAPI.Branch branch : branches) {
-			List<P4Path> paths = branch.getPaths();
-			P4Head head = new P4Head(branch.getId(), paths);
+			// Get first Swarm path; it MUST include the Jenkinsfile
+			P4SwarmPath swarmPath = branch.getPath();
+
+			P4Head head = new P4Head(branch.getId(), swarmPath);
 			list.add(head);
 		}
 
@@ -124,6 +137,24 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return scm;
 	}
 
+	@Override
+	public Workspace getWorkspace(P4Path path) {
+		if (path == null || !(path instanceof P4SwarmPath)) {
+			throw new IllegalArgumentException("missing Swarm path");
+		}
+
+		P4SwarmPath swarmPath = (P4SwarmPath) path;
+
+		String client = getFormat();
+		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault("Jenkinsfile");
+		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath, client);
+		String mappingsView = ViewMapHelper.getClientView(swarmPath.getMappings(), client);
+		String view = jenkinsView + "\n" + mappingsView;
+
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
+	}
+
 	protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {
 		return true;
 	}
@@ -151,18 +182,17 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return lastChange;
 	}
 
-	private List<P4Path> getPathsInBranch(String id, String project) throws Exception {
+	private P4SwarmPath getPathsInBranch(String id, String project) throws Exception {
 
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 
 		for (SwarmProjectAPI.Branch branch : branches) {
 			if (id.equals(branch.getId())) {
-				List<P4Path> paths = branch.getPaths();
-				return paths;
+				P4SwarmPath swarmPath = branch.getPath();
+				return swarmPath;
 			}
 		}
-
-		return new ArrayList<>();
+		return null;
 	}
 
 	@Extension

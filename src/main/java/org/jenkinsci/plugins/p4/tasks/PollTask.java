@@ -6,6 +6,8 @@ import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import hudson.FilePath.FileCallable;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -14,9 +16,9 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
+import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
-import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
@@ -25,8 +27,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
@@ -37,7 +39,8 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 	private String pin;
 
-	public PollTask(List<Filter> filter, List<P4Ref> lastRefs) {
+	public PollTask(String credential, Run<?, ?> run, TaskListener listener, List<Filter> filter, List<P4Ref> lastRefs) {
+		super(credential, run, listener);
 		this.filter = filter;
 		this.lastRefs = lastRefs;
 	}

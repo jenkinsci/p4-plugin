@@ -10,6 +10,7 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -50,15 +51,14 @@ public class ConfigurationListener extends SaveableListener {
 			String purge = "";
 			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
 
-			ClientHelper p4 = getClientHelper(p4scm);
-			int ChangelistID = -1;
+			try (ClientHelper p4 = getClientHelper(p4scm)) {
+				int ChangelistID = -1;
 
-			if (!p4scm.isAutoSubmitOnChange()) {
-				ChangelistID = p4.findPendingChangelistIDByDesc(desc, p4scm.getClientName());
+				if (!p4scm.isAutoSubmitOnChange()) {
+					ChangelistID = p4.findPendingChangelistIDByDesc(desc, p4scm.getClientName());
+				}
+				p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
 			}
-			p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
-
-			p4.disconnect();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -87,24 +87,18 @@ public class ConfigurationListener extends SaveableListener {
 		if (j == null) {
 			return null;
 		}
-		
+
 		String rootPath = j.getRootDir().getCanonicalPath();
 
-		StringBuffer view = new StringBuffer();
-		view.append(depotPath);
-		view.append(" ");
-		view.append("//" + clientName + "/...");
+		String view = ViewMapHelper.getClientView(depotPath, clientName);
 
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view.toString(), null, null, null, true);
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view, null, null, null, true);
 
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec);
 		workspace.setExpand(new HashMap<String, String>());
 		workspace.setRootPath(rootPath);
 
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, clientName, "utf8");
-		p4.setClient(workspace);
-
+		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
 		return p4;
 	}
-
 }

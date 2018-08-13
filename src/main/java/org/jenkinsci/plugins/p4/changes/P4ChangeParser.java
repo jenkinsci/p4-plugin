@@ -43,10 +43,10 @@ public class P4ChangeParser extends ChangeLogParser {
 	@Override
 	public ChangeLogSet<? extends Entry> parse(Run run, RepositoryBrowser<?> browser, File file)
 			throws IOException, SAXException {
-		try {
+		try(ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser parser = factory.newSAXParser();
-			ChangeLogHandler handler = new ChangeLogHandler(run, browser, credential);
+			ChangeLogHandler handler = new ChangeLogHandler(run, browser, p4);
 			parser.parse(file, handler);
 			P4ChangeSet changeSet = handler.getChangeLogSet();
 			return changeSet;
@@ -65,10 +65,10 @@ public class P4ChangeParser extends ChangeLogParser {
 		private RepositoryBrowser<?> browser;
 		private ConnectionHelper p4;
 
-		public ChangeLogHandler(Run<?, ?> run, RepositoryBrowser<?> browser, String credential) throws P4JavaException {
+		public ChangeLogHandler(Run<?, ?> run, RepositoryBrowser<?> browser, ConnectionHelper p4) throws P4JavaException {
 			this.run = run;
 			this.browser = browser;
-			this.p4 = new ConnectionHelper(run, credential, null);
+			this.p4 = p4;
 
 			if (browser == null) {
 				try {
@@ -198,8 +198,6 @@ public class P4ChangeParser extends ChangeLogParser {
 							entry.setGraphCommit(p4, id);
 						}
 
-						// disconnect from Perforce
-						p4.disconnect();
 					} else {
 
 						String elementText = text.toString().trim();

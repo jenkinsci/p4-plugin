@@ -45,11 +45,11 @@ You can iterate through the response by iterating through each array item and ex
 
 To retrieve the contents of a form as a map use 'fetch' providing a 'spec type' and 'spec id'. For example:
 
-	def client = p4.fetch(‘client’, ‘my_ws’)
+	def client = p4.fetch('client', 'my_ws')
 
 To save the contents of a form use 'save' providing the 'spec type' and spec as a Map. For example:
 
-	p4.save(‘client’, client)
+	p4.save('client', client)
 
 For example to update a job description:
 
@@ -58,6 +58,10 @@ For example to update a job description:
 	desc = desc + env.BUILD_URL
 	job.put('Description', desc)
 	p4.save('job', job)
+	
+Adding additional flags to save, e.g. '-f' (do not add '-i' as this is already built into save):
+
+    p4.save('client', client, '-f')
 
 # Getters
 

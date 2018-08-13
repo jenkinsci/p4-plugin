@@ -33,12 +33,12 @@ public class P4Probe extends SCMProbe {
 	public long lastModified() {
 		long last = 0L;
 		try {
-			for(P4Path path : head.getPaths()) {
+			P4Path path = head.getPath();
 				long change = p4.getHead(path.getPathBuilder("..."));
 				if(change > last) {
 					last = change;
 				}
-			}
+
 		} catch (Exception e) {
 			logger.warning("Unable to check changes: " + e.getMessage());
 		}
@@ -48,12 +48,12 @@ public class P4Probe extends SCMProbe {
 	@Override
 	public SCMProbeStat stat(@NonNull String file) throws IOException {
 		try {
-			for(P4Path path : head.getPaths()) {
+			P4Path path = head.getPath();
 				String depotPath = path.getPathBuilder(file);
 				if (p4.hasFile(depotPath)) {
 					return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
 				}
-			}
+
 		} catch (Exception e) {
 			throw new IOException("Unable to check file: " + e.getMessage());
 		}
@@ -62,6 +62,6 @@ public class P4Probe extends SCMProbe {
 
 	@Override
 	public void close() throws IOException {
-		p4.disconnect();
+		// No need to close ConnectionHelper
 	}
 }

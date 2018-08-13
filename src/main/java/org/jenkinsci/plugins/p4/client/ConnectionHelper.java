@@ -385,8 +385,8 @@ public class ConnectionHelper implements AutoCloseable {
 		ListIterator<String> list = paths.listIterator();
 		while (list.hasNext()) {
 			String i = list.next();
-			if (!i.endsWith("/...") && !i.endsWith("/*")) {
-				list.set(i + "/*");
+			if (!i.contains("...") && !i.contains("*")) {
+				list.set(i + "*");
 			}
 		}
 
@@ -464,6 +464,54 @@ public class ConnectionHelper implements AutoCloseable {
 		} catch (RequestException e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Look for a label and return a change or static label.
+	 *
+	 * @param name label
+	 * @return change reference or null if no label found.
+	 */
+	public String labelToChange(String name) {
+		try {
+			Label label = getLabel(name);
+			String spec = label.getRevisionSpec();
+			if (spec != null && !spec.isEmpty()) {
+				if (spec.startsWith("@")) {
+					spec = spec.substring(1);
+				}
+				return spec;
+			} else {
+				// a label, but no RevisionSpec
+				return name;
+			}
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Look for a counter and return a change or reference.
+	 *
+	 * @param name counter
+	 * @return change reference or null if no counter found.
+	 */
+	public String counterToChange(String name) {
+		try {
+			String counter = getCounter(name);
+			if (!"0".equals(counter)) {
+				try {
+					// if a change number, add change...
+					int change = Integer.parseInt(counter);
+					return String.valueOf(change);
+				} catch (NumberFormatException n) {
+					// no change number in counter
+				}
+			}
+		} catch (Exception e) {
+			return null;
+		}
+		return null;
 	}
 
 	/**
@@ -746,7 +794,7 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Disconnect from the Perforce Server.
 	 */
-	public void disconnect() {
+	protected void disconnect() {
 		try {
 			connection.disconnect();
 			logger.fine("P4: closed connection OK");

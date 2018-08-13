@@ -20,6 +20,8 @@ import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -64,6 +66,11 @@ abstract public class DefaultEnvironment {
 		return client;
 	}
 
+	protected Workspace defaultWorkspace(String name) {
+		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, name);
+		return workspace;
+	}
+
 	protected static final class CreateArtifact extends Builder {
 		private final String filename;
 		private final String content;
@@ -83,8 +90,6 @@ abstract public class DefaultEnvironment {
 	protected void submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
-		ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, "submit.ws", null);
-
 		// Create workspace
 		String client = "submit.ws";
 		String stream = null;
@@ -92,17 +97,17 @@ abstract public class DefaultEnvironment {
 		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
-
 		workspace.setExpand(new HashMap<String, String>());
 
 		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
-		p4.setClient(workspace);
 
 		File file = new File(wsRoot + File.separator + filename).getAbsoluteFile();
 		FilePath filePath = new FilePath(file);
 		filePath.delete();
 		filePath.write(content, "UTF-8");
+
+		ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace);
 
 		Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
 		boolean open = p4.buildChange(publish);
