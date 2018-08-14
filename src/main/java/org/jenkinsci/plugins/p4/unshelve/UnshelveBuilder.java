@@ -123,10 +123,7 @@ public class UnshelveBuilder extends Builder {
 
 	public static DescriptorImpl descriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.getDescriptorByType(UnshelveBuilder.DescriptorImpl.class);
-		}
-		return null;
+		return j.getDescriptorByType(UnshelveBuilder.DescriptorImpl.class);
 	}
 
 	@Extension

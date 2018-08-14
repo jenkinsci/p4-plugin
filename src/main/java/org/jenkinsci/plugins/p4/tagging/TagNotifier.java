@@ -85,11 +85,6 @@ public class TagNotifier extends Notifier {
 
 			AbstractProject<?, ?> project;
 			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				logger.warning("Jenkins instance is null!");
-				return tagAction;
-			}
-
 			project = j.getItemByFullName(jobName, AbstractProject.class);
 			if (project == null) {
 				logger.warning("No project; is it a valid Perforce job?");
@@ -114,10 +109,7 @@ public class TagNotifier extends Notifier {
 
 	public static DescriptorImpl descriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.getDescriptorByType(TagNotifier.DescriptorImpl.class);
-		}
-		return null;
+		return j.getDescriptorByType(TagNotifier.DescriptorImpl.class);
 	}
 
 	@Extension

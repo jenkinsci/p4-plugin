@@ -43,17 +43,13 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 
 	private void init() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			@SuppressWarnings("unchecked")
-			Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
-			DescriptorImpl p4scm = (DescriptorImpl) scm;
+		@SuppressWarnings("unchecked")
+		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
+		DescriptorImpl p4scm = (DescriptorImpl) scm;
 
+		if (p4scm != null) {
 			deleteClient = p4scm.isDeleteClient();
 			deleteFiles = p4scm.isDeleteFiles();
-		} else {
-			logger.warning("Unable to read PerforceScm global descriptor.");
-			deleteClient = false;
-			deleteFiles = false;
 		}
 	}
 

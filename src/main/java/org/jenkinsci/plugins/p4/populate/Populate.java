@@ -1,11 +1,11 @@
 package org.jenkinsci.plugins.p4.populate;
 
-import java.io.Serializable;
-
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
+
+import java.io.Serializable;
 
 public abstract class Populate implements ExtensionPoint, Describable<Populate>, Serializable {
 
@@ -53,17 +53,11 @@ public abstract class Populate implements ExtensionPoint, Describable<Populate>,
 
 	public PopulateDescriptor getDescriptor() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return (PopulateDescriptor) j.getDescriptor(getClass());
-		}
-		return null;
+		return (PopulateDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<Populate, PopulateDescriptor> all() {
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			return j.<Populate, PopulateDescriptor> getDescriptorList(Populate.class);
-		}
-		return null;
+		return j.<Populate, PopulateDescriptor> getDescriptorList(Populate.class);
 	}
 }

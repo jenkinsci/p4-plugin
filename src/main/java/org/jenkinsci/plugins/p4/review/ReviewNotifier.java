@@ -38,15 +38,10 @@ public class ReviewNotifier extends RunListener<Run> {
 				return;
 			}
 
-			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				logger.warning("Jenkins instance is null!");
-				return;
-			}
-			
 			// only process valid URLs (this gets triggered for non Reviews too)
 			String url = (result.equals(Result.SUCCESS)) ? pass : fail;
 			if (url != null && !url.isEmpty()) {
+				Jenkins j = Jenkins.getInstance();
 				String rootUrl = j.getRootUrl();
 				if (rootUrl == null) {
 					JenkinsLocationConfiguration globalConfig = new JenkinsLocationConfiguration();

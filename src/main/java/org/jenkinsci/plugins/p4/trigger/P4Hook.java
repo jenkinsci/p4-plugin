@@ -16,7 +16,6 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -130,10 +129,6 @@ public class P4Hook implements UnprotectedRootAction {
 
 	private List<Job> getJobs() {
 		Jenkins j = Jenkins.getInstance();
-		if (j == null) {
-			LOGGER.warning("Jenkins instance is null.");
-			return new ArrayList<>();
-		}
 		return j.getAllItems(Job.class);
 	}
 

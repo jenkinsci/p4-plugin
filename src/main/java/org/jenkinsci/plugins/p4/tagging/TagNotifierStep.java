@@ -68,11 +68,6 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 			}
 
 			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				logger.warning("Jenkins instance is null!");
-				return tagAction;
-			}
-
 			Job<?, ?> job = j.getItemByFullName(jobName, Job.class);
 			if (job == null) {
 				logger.warning("No job information; is it a valid Perforce job?");

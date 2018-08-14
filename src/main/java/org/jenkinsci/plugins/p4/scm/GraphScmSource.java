@@ -169,10 +169,6 @@ public class GraphScmSource extends AbstractP4ScmSource {
 
 		public List getGraphPopulateDescriptors() {
 			Jenkins j = Jenkins.getInstance();
-			if (j == null) {
-				return null;
-			}
-
 			DescriptorExtensionList<Populate, Descriptor<Populate>> list = j.getDescriptorList(Populate.class);
 			for (Descriptor<Populate> d : list) {
 				if (!(d instanceof PopulateDescriptor)) {
