@@ -190,6 +190,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	/**
 	 * SCMSource level action. `jenkins.branch.MetadataAction`
+	 *
 	 * @param event
 	 * @param listener
 	 * @return
@@ -221,6 +222,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		List<Action> result = new ArrayList<>();
 
 		return result;
+	}
 
 	/**
 	 * SCMRevision level action.
