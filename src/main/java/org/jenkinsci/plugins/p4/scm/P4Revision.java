@@ -8,7 +8,7 @@ import java.util.Objects;
 public class P4Revision extends SCMRevision {
 	private final P4Ref ref;
 
-	P4Revision(P4Head branch, P4Ref ref) {
+	public P4Revision(P4Head branch, P4Ref ref) {
 		super(branch);
 		this.ref = ref;
 	}

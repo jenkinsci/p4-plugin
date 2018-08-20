@@ -4,14 +4,14 @@ import jenkins.scm.api.SCMHead;
 
 public class P4Head extends SCMHead {
 
-	private final P4Path paths;
+	private final P4Path path;
 
-	P4Head(String name, P4Path paths) {
+	public P4Head(String name, P4Path path) {
 		super(name);
-		this.paths = paths;
+		this.path = path;
 	}
 
 	public P4Path getPath() {
-		return paths;
+		return path;
 	}
 }

@@ -7,8 +7,11 @@ import hudson.model.UnprotectedRootAction;
 import hudson.triggers.Trigger;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
+import jenkins.scm.api.SCMEvent;
+import jenkins.scm.api.SCMHeadEvent;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.p4.scm.events.P4BranchScmHeadEvent;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -41,6 +44,27 @@ public class P4Hook implements UnprotectedRootAction {
 	@Override
 	public String getUrlName() {
 		return URLNAME;
+	}
+
+	public void doEvent(StaplerRequest req) throws ServletException, IOException {
+
+		// exit early if no json
+		String contentType = req.getContentType();
+		if (contentType == null || !contentType.startsWith("application/json")) {
+			return;
+		}
+
+		String body = IOUtils.toString(req.getInputStream(), Charset.forName("UTF-8"));
+		if (body.startsWith("payload=")) {
+			body = body.substring(8);
+		}
+		JSONObject payload = JSONObject.fromObject(body);
+
+
+		String typeString = payload.getString("type");
+		SCMEvent.Type eventType = SCMEvent.Type.valueOf(typeString);
+
+		SCMHeadEvent.fireNow(new P4BranchScmHeadEvent(eventType, payload, SCMEvent.originOf(req)));
 	}
 
 	public void doChange(StaplerRequest req) throws IOException {
@@ -102,7 +126,7 @@ public class P4Hook implements UnprotectedRootAction {
 
 	private void probeJobs(@CheckForNull String port, List<Job> jobs) throws IOException {
 		for (Job<?, ?> job : jobs) {
-			if(!job.isBuildable()) {
+			if (!job.isBuildable()) {
 				continue;
 			}
 			LOGGER.fine("P4: trying: " + job.getName());

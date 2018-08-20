@@ -53,6 +53,9 @@ import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
+import org.jenkinsci.plugins.p4.scm.P4Path;
+import org.jenkinsci.plugins.p4.scm.P4Revision;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
@@ -75,6 +78,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +94,7 @@ public class PerforceScm extends SCM {
 	private final List<Filter> filter;
 	private final Populate populate;
 	private final P4Browser browser;
+	private final P4Revision revision;
 
 	private transient P4Ref parentChange;
 	private transient P4Review review;
@@ -177,6 +182,16 @@ public class PerforceScm extends SCM {
 		this.filter = filter;
 		this.populate = populate;
 		this.browser = browser;
+		this.revision = null;
+	}
+
+	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Revision revision) {
+		this.credential = source.getCredential();
+		this.workspace = source.getWorkspace(path);
+		this.filter = null;
+		this.populate = source.getPopulate();
+		this.browser = source.getBrowser();
+		this.revision = revision;
 	}
 
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
@@ -185,6 +200,7 @@ public class PerforceScm extends SCM {
 		this.filter = null;
 		this.populate = populate;
 		this.browser = null;
+		this.revision = null;
 	}
 
 	@Override
@@ -441,6 +457,12 @@ public class PerforceScm extends SCM {
 		if (isIncremental()) {
 			Run<?, ?>lastRun = run.getPreviousBuiltBuild();
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
+			task.setIncrementalChanges(changes);
+		}
+
+		// SCMRevision build per change
+		if(revision != null) {
+			List<P4Ref> changes = Arrays.asList(revision.getRef());
 			task.setIncrementalChanges(changes);
 		}
 

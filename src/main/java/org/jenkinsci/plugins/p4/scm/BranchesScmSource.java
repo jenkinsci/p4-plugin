@@ -48,7 +48,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	public String getMappings() {
 		// support 1.8.1 configurations that did not have any mappings
-		if(mappings == null) {
+		if (mappings == null) {
 			mappings = DescriptorImpl.defaultPath;
 		}
 
@@ -77,36 +77,36 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<P4Head> list = new ArrayList<>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
-		String actualFilter = getFilter();
-		if (getFilter() == null || filter.trim().equals("")) {
-			actualFilter = ".*";
-		}
-		Pattern filterPattern = Pattern.compile(actualFilter);
-
-		List<IFileSpec> specs = p4.getDirs(paths);
-		for (IFileSpec s : specs) {
-			String branch = s.getOriginalPathString();
-
-			// check the branch is not empty
-			if (branch == null || branch.isEmpty()) {
-				continue;
+			String actualFilter = getFilter();
+			if (getFilter() == null || filter.trim().equals("")) {
+				actualFilter = ".*";
 			}
+			Pattern filterPattern = Pattern.compile(actualFilter);
 
-			// check the filters
-			if (!filterPattern.matcher(branch).matches()) {
-				continue;
+			List<IFileSpec> specs = p4.getDirs(paths);
+			for (IFileSpec s : specs) {
+				String branch = s.getOriginalPathString();
+
+				// check the branch is not empty
+				if (branch == null || branch.isEmpty()) {
+					continue;
+				}
+
+				// check the filters
+				if (!filterPattern.matcher(branch).matches()) {
+					continue;
+				}
+
+				// get filename and check for null
+				String file = branch.substring(branch.lastIndexOf("/") + 1);
+				if (file == null || file.isEmpty()) {
+					continue;
+				}
+
+				P4Path p4Path = new P4Path(branch);
+				P4Head head = new P4Head(file, p4Path);
+				list.add(head);
 			}
-
-			// get filename and check for null
-			String file = branch.substring(branch.lastIndexOf("/") + 1);
-			if (file == null || file.isEmpty()) {
-				continue;
-			}
-
-			P4Path p4Path = new P4Path(branch);
-			P4Head head = new P4Head(file, p4Path);
-			list.add(head);
-		}
 		}
 
 		return list;
@@ -129,8 +129,8 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		}
 
 		String client = getFormat();
-		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault("Jenkinsfile");
-		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath , client);
+		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault();
+		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath, client);
 		String mappingsView = ViewMapHelper.getClientView(views, client);
 		String view = jenkinsView + "\n" + mappingsView;
 

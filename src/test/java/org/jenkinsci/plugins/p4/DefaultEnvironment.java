@@ -87,7 +87,7 @@ abstract public class DefaultEnvironment {
 		}
 	}
 
-	protected void submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
+	protected String submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
 		// Create workspace
@@ -107,14 +107,16 @@ abstract public class DefaultEnvironment {
 		filePath.delete();
 		filePath.write(content, "UTF-8");
 
-		ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace);
-
-		Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
-		boolean open = p4.buildChange(publish);
-		if (open) {
-			p4.publishChange(publish);
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
+			boolean open = p4.buildChange(publish);
+			if (open) {
+				return p4.publishChange(publish);
+			}
+		} finally {
+			filePath.delete();
 		}
-		filePath.delete();
+		return null;
 	}
 
 	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {

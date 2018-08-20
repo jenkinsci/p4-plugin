@@ -720,7 +720,8 @@ public class ClientHelper extends ConnectionHelper {
 		validate.check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
 
-	public void publishChange(Publish publish) throws Exception {
+	public String publishChange(Publish publish) throws Exception {
+		String id = null;
 		TimeTask timer = new TimeTask();
 		log("P4 Task: publish files to Perforce.");
 
@@ -744,23 +745,26 @@ public class ClientHelper extends ConnectionHelper {
 		if (publish instanceof SubmitImpl) {
 			SubmitImpl submit = (SubmitImpl) publish;
 			boolean reopen = submit.isReopen();
-			submitFiles(change, reopen);
+			long c = submitFiles(change, reopen);
+			id = Long.toString(c);
 		}
 
 		// if SHELVE
 		if (publish instanceof ShelveImpl) {
 			ShelveImpl shelve = (ShelveImpl) publish;
 			boolean revert = shelve.isRevert();
-			shelveFiles(change, files, revert);
+			long c = shelveFiles(change, files, revert);
+			id = Long.toString(c);
 		}
 
 		// if COMMIT
 		if (publish instanceof CommitImpl) {
 			CommitImpl commit = (CommitImpl) publish;
-			commitFiles(change);
+			id = commitFiles(change);
 		}
 
 		log("duration: " + timer.toString() + "\n");
+		return id;
 	}
 
 	private IChangelist appendPendingChangeList(List<IFileSpec> files, Publish publish, int ChangeListID) throws Exception {
@@ -795,7 +799,7 @@ public class ClientHelper extends ConnectionHelper {
 		return getChange(ChangeListID);
 	}
 
-	private void submitFiles(IChangelist change, boolean reopen) throws Exception {
+	private long submitFiles(IChangelist change, boolean reopen) throws Exception {
 		log("... submitting files");
 
 		SubmitOptions submitOpts = new SubmitOptions();
@@ -820,9 +824,10 @@ public class ClientHelper extends ConnectionHelper {
 		} else {
 			throw new P4JavaException("Unable to submit change.");
 		}
+		return cngNumber;
 	}
 
-	private void commitFiles(IChangelist change) throws Exception {
+	private String commitFiles(IChangelist change) throws Exception {
 		log("... committing files");
 		List<String> opts = new ArrayList<>();
 		opts.add("-c");
@@ -834,13 +839,13 @@ public class ClientHelper extends ConnectionHelper {
 			if (map.containsKey("submittedCommit")) {
 				String sha = (String) map.get("submittedCommit");
 				log("... committing SHA: " + sha);
-				return;
+				return sha;
 			}
 		}
 		throw new P4JavaException("Unable to commit change.");
 	}
 
-	private void shelveFiles(IChangelist change, List<IFileSpec> files, boolean revert) throws Exception {
+	private long shelveFiles(IChangelist change, List<IFileSpec> files, boolean revert) throws Exception {
 		log("... shelving files");
 
 		List<IFileSpec> shelved = iclient.shelveChangelist(change);
@@ -853,6 +858,7 @@ public class ClientHelper extends ConnectionHelper {
 		String r = (revert) ? "(revert)" : "(revert -k)";
 		log("... reverting open files " + r);
 		iclient.revertFiles(files, revertOpts);
+		return change.getId();
 	}
 
 	private boolean isOpened(List<IFileSpec> files) throws Exception {

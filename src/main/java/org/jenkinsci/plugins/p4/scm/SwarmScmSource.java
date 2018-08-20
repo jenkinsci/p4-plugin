@@ -146,7 +146,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		P4SwarmPath swarmPath = (P4SwarmPath) path;
 
 		String client = getFormat();
-		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault("Jenkinsfile");
+		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault();
 		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath, client);
 		String mappingsView = ViewMapHelper.getClientView(swarmPath.getMappings(), client);
 		String view = jenkinsView + "\n" + mappingsView;

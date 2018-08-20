@@ -64,4 +64,14 @@ public abstract class P4ScmSourceDescriptor extends SCMSourceDescriptor {
 
 		return FormValidation.ok();
 	}
+
+// TODO may want to add traits...
+/*	// need to implement this as the default filtering of form binding will not be specific enough
+	public List<SCMSourceTraitDescriptor> getTraitsDescriptors() {
+		return SCMSourceTrait._for(this, MySCMSourceContext.class, MySCMBuilder.class);
+	}
+
+	public List<SCMSourceTrait> getTraitsDefaults() {
+		return Collections.<SCMSourceTrait>singletonList(new MySCMDiscoverChangeRequests());
+	}*/
 }

@@ -22,7 +22,12 @@ public class P4HookCrumbExclusion extends CrumbExclusion {
 			return false;
 		}
 
-		if (pathInfo.equals(getExclusionPath())) {
+		if (pathInfo.equals(getExclusionPath("change"))) {
+			chain.doFilter(req, resp);
+			return true;
+		}
+
+		if (pathInfo.equals(getExclusionPath("event"))) {
 			chain.doFilter(req, resp);
 			return true;
 		}
@@ -30,7 +35,7 @@ public class P4HookCrumbExclusion extends CrumbExclusion {
 		return false;
 	}
 
-	public String getExclusionPath() {
-		return "/" + P4Hook.URLNAME + "/change";
+	public String getExclusionPath(String endPoint) {
+		return "/" + P4Hook.URLNAME + "/" + endPoint;
 	}
 }

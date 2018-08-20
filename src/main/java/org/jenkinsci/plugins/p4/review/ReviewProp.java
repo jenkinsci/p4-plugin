@@ -7,7 +7,12 @@ public enum ReviewProp {
 	LABEL("label", false), // reserved by Jenkins for Slave Axes
 	REVIEW("review", true),
 	PASS("pass", true),
-	FAIL("fail", true);
+	FAIL("fail", true),
+	PROJECT("project", true),
+	BRANCH("branch", true),
+	PATH("path", true),
+	TYPE("type", true),
+	P4PORT("p4port", true);
 
 	public static final String NAMESPACE = "p4.";
 	final private String prop;

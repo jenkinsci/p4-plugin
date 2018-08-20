@@ -8,27 +8,34 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import hudson.model.Result;
 import jenkins.branch.BranchSource;
+import jenkins.scm.api.SCMEvent;
+import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.scm.events.P4BranchScmHeadEvent;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.HashMap;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class PerforceScmSourceTest extends DefaultEnvironment {
 
@@ -37,8 +44,8 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 	@ClassRule
 	public static JenkinsRule jenkins = new JenkinsRule();
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	@ClassRule
+	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -218,9 +225,9 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 	@Test
 	public void testMappingPathClassic() throws Exception {
 
-		submitFile(jenkins, "//depot/A/src/fileA", "content");
-		submitFile(jenkins, "//depot/A/tests/fileB", "content");
-		submitFile(jenkins, "//depot/A/Jenkinsfile", ""
+		submitFile(jenkins, "//depot/classic/A/src/fileA", "content");
+		submitFile(jenkins, "//depot/classic/A/tests/fileB", "content");
+		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", ""
 				+ "pipeline {\n"
 				+ "  agent any\n"
 				+ "  stages {\n"
@@ -228,8 +235,8 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 				+ "      steps {\n"
 				+ "        script {\n"
 				+ "          if(!fileExists('Jenkinsfile'))         error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('depot/A/src/fileA'))   error 'missing fileA'\n"
-				+ "          if(!fileExists('depot/A/tests/fileB')) error 'missing fileB'\n"
+				+ "          if(!fileExists('depot/classic/A/src/fileA'))   error 'missing fileA'\n"
+				+ "          if(!fileExists('depot/classic/A/tests/fileB')) error 'missing fileB'\n"
 				+ "        }\n"
 				+ "      }\n"
 				+ "    }\n"
@@ -237,7 +244,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 				+ "}");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		String includes = "//depot/...";
+		String includes = "//depot/classic/...";
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 		source.setPopulate(new AutoCleanImpl());
 		String mappings = "src/...\ntests/...";
@@ -260,26 +267,11 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 	@Test
 	public void testMappingDefaultsClassic() throws Exception {
 
-		submitFile(jenkins, "//depot/A/src/fileA", "content");
-		submitFile(jenkins, "//depot/A/tests/fileB", "content");
-		submitFile(jenkins, "//depot/A/Jenkinsfile", ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('src/fileA'))   error 'missing fileA'\n"
-				+ "          if(!fileExists('tests/fileB')) error 'missing fileB'\n"
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		String base = "//depot/default";
+		sampleProject(base, new String[]{"Main"});
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
-		String includes = "//depot/...";
+		String includes = base + "/...";
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 		source.setPopulate(new AutoCleanImpl());
 
@@ -289,7 +281,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 
-		WorkflowJob job = multi.getItem("A");
+		WorkflowJob job = multi.getItem("Main");
 		assertThat("We now have a branch", job, notNullValue());
 
 		WorkflowRun build = job.getLastBuild();
@@ -311,7 +303,6 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
-
 
 	@Test
 	public void testMultiBranchClassicWithCredentialsInFolder() throws Exception {
@@ -357,6 +348,60 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
+	@Test
+	public void testMultiBranchClassicUpdateEvent() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/update";
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"});
+		assertNotNull(baseChange);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-update-event");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+
+		// Make a change
+		String change = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit");
+
+		HashMap<String, String> map = new HashMap<>();
+		map.put("p4port", p4d.getRshPort());
+		map.put("project", base);
+		map.put("change", change);
+		map.put("branch", branch);
+		map.put("path", base + "/" + branch);
+		JSONObject payload = JSONObject.fromObject(map);
+
+		String origin = "testMultiBranchClassicUpdateEvent";
+		P4BranchScmHeadEvent event = new P4BranchScmHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
+		SCMHeadEvent.fireNow(event);
+
+		Thread.sleep(500);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowRun build = multi.getItem("Main").getLastBuild();
+		assertTrue("Main has built", build.number == 2);
+		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+	}
+
+
+
+	/* ------------------------------------------------------------------------------------------------------------- */
+	/*	Helper methods                                                                                               */
+	/* ------------------------------------------------------------------------------------------------------------- */
+
 	private CredentialsStore getFolderStore(AbstractFolder f) {
 		Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
 		CredentialsStore folderStore = null;
@@ -367,5 +412,29 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 			}
 		}
 		return folderStore;
+	}
+
+	private String sampleProject(String base, String[] branches) throws Exception {
+		String id = null;
+		for (String branch : branches) {
+			submitFile(jenkins, base + "/" + branch + "/Jenkinsfile", ""
+					+ "pipeline {\n"
+					+ "  agent any\n"
+					+ "  stages {\n"
+					+ "    stage('Test') {\n"
+					+ "      steps {\n"
+					+ "        script {\n"
+					+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
+					+ "          if(!fileExists('src/fileA'))   error 'missing fileA'\n"
+					+ "          if(!fileExists('src/fileB'))   error 'missing fileB'\n"
+					+ "        }\n"
+					+ "      }\n"
+					+ "    }\n"
+					+ "  }\n"
+					+ "}");
+			submitFile(jenkins, base + "/" + branch + "/src/fileA", "content");
+			id = submitFile(jenkins, base + "/" + branch + "/src/fileB", "content");
+		}
+		return id;
 	}
 }

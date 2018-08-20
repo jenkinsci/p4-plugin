@@ -2,22 +2,29 @@ package org.jenkinsci.plugins.p4.scm;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Util;
+import hudson.model.Action;
 import hudson.model.TaskListener;
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMHeadObserver;
+import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
+import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
+import jenkins.scm.impl.TagSCMHeadCategory;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
-import org.jenkinsci.plugins.p4.review.P4Review;
-import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -28,11 +35,15 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class AbstractP4ScmSource extends SCMSource {
 
 	protected final String credential;
+
+	@NonNull
+	private List<SCMSourceTrait> traits = new ArrayList<>();
 
 	private String includes;
 	private String charset;
@@ -63,8 +74,18 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		this.charset = charset;
 	}
 
+	@DataBoundSetter
+	public void setTraits(@CheckForNull List<SCMSourceTrait> traits) {
+		this.traits = new ArrayList<>(Util.fixNull(traits));
+	}
+
 	public String getCredential() {
 		return credential;
+	}
+
+	@NonNull
+	public List<SCMSourceTrait> getTraits() {
+		return Collections.unmodifiableList(traits);
 	}
 
 	public String getIncludes() {
@@ -104,47 +125,24 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
-	protected String getScriptPathOrDefault(String defaultScriptPath) {
+	public String getScriptPathOrDefault() {
 		SCMSourceOwner owner = getOwner();
 		if (owner instanceof WorkflowMultiBranchProject) {
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
 			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
 			return branchProjectFactory.getScriptPath();
 		}
-		return defaultScriptPath;
-	}
-
-	@Override
-	public PerforceScm build(SCMHead head, SCMRevision revision) {
-		if (head instanceof P4ChangeRequestSCMHead) {
-			P4ChangeRequestSCMHead perforceTag = (P4ChangeRequestSCMHead) head;
-			P4Path path = perforceTag.getPath();
-			Workspace workspace = getWorkspace(path);
-			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
-
-			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);
-			scm.setReview(review);
-			return scm;
-		}
-		if (head instanceof P4GraphRequestSCMHead) {
-			P4GraphRequestSCMHead graphTag = (P4GraphRequestSCMHead) head;
-			P4Path path = graphTag.getPath();
-			Workspace workspace = getWorkspace(path);
-			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
-			return scm;
-		}
-		if (head instanceof P4Head) {
-			P4Head perforceHead = (P4Head) head;
-			P4Path path = perforceHead.getPath();
-			Workspace workspace = getWorkspace(path);
-			PerforceScm scm = new PerforceScm(getCredential(), workspace, null, getPopulate(), getBrowser());
-			return scm;
-		}
-		throw new IllegalArgumentException("SCMHead not a Perforce instance!");
+		return "Jenkinsfile";
 	}
 
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
+
+		// TODO use payload to get change if trigger event
+		if (event != null) {
+			Object payload = event.getPayload();
+		}
+
 		try {
 			List<P4Head> heads = getHeads(listener);
 
@@ -175,7 +173,94 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 	}
 
-	protected List<String> getIncludePaths() {
+	@NotNull
+	@Override
+	protected SCMProbe createProbe(@NonNull SCMHead head, @CheckForNull SCMRevision revision) throws IOException {
+		return newProbe(head, revision);
+	}
+
+	@Override
+	public PerforceScm build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
+		if (traits != null) {
+			return new P4ScmBuilder(this, head, revision).withTraits(traits).build();
+		} else {
+			return new P4ScmBuilder(this, head, revision).build();
+		}
+	}
+
+	/**
+	 * SCMSource level action. `jenkins.branch.MetadataAction`
+	 * @param event
+	 * @param listener
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@NonNull
+	@Override
+	protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
+			throws IOException, InterruptedException {
+		List<Action> result = new ArrayList<>();
+
+		return result;
+	}
+
+	/**
+	 * SCMHead level action.
+	 *
+	 * @param head
+	 * @param event
+	 * @param listener
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@NonNull
+	@Override
+	protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event, @NonNull TaskListener listener) throws IOException, InterruptedException {
+		List<Action> result = new ArrayList<>();
+
+		return result;
+
+	/**
+	 * SCMRevision level action.
+	 *
+	 * @param revision
+	 * @param event
+	 * @param listener
+	 * @return
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@NonNull
+	@Override
+	protected List<Action> retrieveActions(@NonNull SCMRevision revision, @CheckForNull SCMHeadEvent event, @NonNull TaskListener listener) throws IOException, InterruptedException {
+		List<Action> result = new ArrayList<>();
+
+		return result;
+	}
+
+	/**
+	 * Enable specific SCMHeadCategory categories.
+	 * <p>
+	 * TagSCMHeadCategory: Branches, Streams, Swarm and Graph
+	 * ChangeRequestSCMHeadCategory: Swarm and Graph
+	 *
+	 * @param category
+	 * @return
+	 */
+	@Override
+	protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {
+		if (category instanceof ChangeRequestSCMHeadCategory) {
+			return true;
+		}
+		if (category instanceof TagSCMHeadCategory) {
+			return true;
+		}
+		return true;
+	}
+
+	public List<String> getIncludePaths() {
 		return toLines(includes);
 	}
 
@@ -194,10 +279,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 			long change = -1;
 			P4Path path = head.getPath();
-				String rev = path.getRevision();
-				rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
-				long c = p4.getHead(path.getPath() + rev);
-				change = (c > change) ? c : change;
+			String rev = path.getRevision();
+			rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
+			long c = p4.getHead(path.getPath() + rev);
+			change = (c > change) ? c : change;
 
 			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
 			return revision;

@@ -56,4 +56,14 @@ public class P4Path implements Serializable {
 		}
 		return revision;
 	}
+
+	@Override
+	public String toString() {
+		StringBuffer sb = new StringBuffer(getPath());
+		String rev = getRevision();
+		rev = (rev == null) ? "latest" : rev;
+		sb.append("@");
+		sb.append(rev);
+		return sb.toString();
+	}
 }
