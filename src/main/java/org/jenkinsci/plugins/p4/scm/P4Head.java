@@ -14,4 +14,9 @@ public class P4Head extends SCMHead {
 	public P4Path getPath() {
 		return path;
 	}
+
+	@Override
+	public String toString() {
+		return "P4Head: " + getName() + " (" + path + ")";
+	}
 }

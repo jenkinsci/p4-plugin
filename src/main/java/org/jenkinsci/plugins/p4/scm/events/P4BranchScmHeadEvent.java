@@ -34,8 +34,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 	@NonNull
 	@Override
 	public String getSourceName() {
-		String p4port = getField(ReviewProp.P4PORT);
-		String change = getField(ReviewProp.CHANGE);
+		String p4port = getField(getPayload(), ReviewProp.P4PORT);
+		String change = getField(getPayload(), ReviewProp.CHANGE);
 		return p4port + "/" + change;
 	}
 
@@ -46,7 +46,7 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		// Check Perforce server P4PORT
 		if (scmSource instanceof AbstractP4ScmSource) {
 			AbstractP4ScmSource p4ScmSource = (AbstractP4ScmSource) scmSource;
-			String p4port = getField(ReviewProp.P4PORT);
+			String p4port = getField(getPayload(), ReviewProp.P4PORT);
 			String id = p4ScmSource.getCredential();
 			P4BaseCredentials credential = ConnectionHelper.findCredential(id, scmSource.getOwner());
 			if (p4port == null || !p4port.equals(credential.getP4port())) {
@@ -62,18 +62,18 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 			SwarmScmSource swarmSource = (SwarmScmSource) scmSource;
 
 			// Check matching Swarm project name
-			String project = getField(ReviewProp.PROJECT);
+			String project = getField(getPayload(), ReviewProp.PROJECT);
 			if (project == null || !project.equals(swarmSource.getProject())) {
 				return Collections.emptyMap();
 			}
 		}
 
 		// Check Branch Sources
-		if(scmSource instanceof BranchesScmSource) {
+		if (scmSource instanceof BranchesScmSource) {
 			BranchesScmSource branchSource = (BranchesScmSource) scmSource;
 
 			// Check matching Project path included in Source
-			String project = getField(ReviewProp.PROJECT);
+			String project = getField(getPayload(), ReviewProp.PROJECT);
 			if (project == null || !findInclude(project, branchSource)) {
 				return Collections.emptyMap();
 			}
@@ -89,27 +89,19 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		}
 
 		// Check Stream Sources
-		if(scmSource instanceof StreamsScmSource) {
+		if (scmSource instanceof StreamsScmSource) {
 			StreamsScmSource streamSource = (StreamsScmSource) scmSource;
 
 			// Check matching Project path included in Stream
-			String project = getField(ReviewProp.PROJECT);
+			String project = getField(getPayload(), ReviewProp.PROJECT);
 			if (project == null || !findInclude(project, streamSource)) {
 				return Collections.emptyMap();
 			}
 		}
 
-		// Build P4Head (used by P4Revision to pass change number)
-		String branch = getField(ReviewProp.BRANCH);
-		String change = getField(ReviewProp.CHANGE);
-		String path = getField(ReviewProp.PATH);
-		P4Path p4path = new P4Path(path, String.valueOf(change));
-		P4Head head = new P4Head(branch, p4path);
+		P4Revision revision = parsePayload(getPayload());
 
-		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
-		P4Revision revision = new P4Revision(head, ref);
-
-		return Collections.singletonMap(head, revision);
+		return Collections.singletonMap(revision.getHead(), revision);
 	}
 
 	@Override
@@ -122,8 +114,20 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		return false;
 	}
 
-	private String getField(ReviewProp prop) {
-		return getPayload().getString(prop.getProp());
+	public static P4Revision parsePayload(JSONObject payload) {
+		String branch = getField(payload, ReviewProp.BRANCH);
+		String change = getField(payload, ReviewProp.CHANGE);
+		String path = getField(payload, ReviewProp.PATH);
+		P4Path p4path = new P4Path(path, String.valueOf(change));
+		P4Head head = new P4Head(branch, p4path);
+
+		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
+		P4Revision revision = new P4Revision(head, ref);
+		return revision;
+	}
+
+	private static String getField(JSONObject payload, ReviewProp prop) {
+		return payload.getString(prop.getProp());
 	}
 
 	private boolean findInclude(String project, AbstractP4ScmSource source) {
@@ -132,8 +136,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		project = (project.endsWith("/...")) ? project.substring(0, project.lastIndexOf("/...")) : project;
 
 		List<String> includes = source.getIncludePaths();
-		for(String i : includes) {
-			if(i.startsWith(project)) {
+		for (String i : includes) {
+			if (i.startsWith(project)) {
 				return true;
 			}
 		}

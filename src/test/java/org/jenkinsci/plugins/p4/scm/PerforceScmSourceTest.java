@@ -361,7 +361,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 		source.setPopulate(new AutoCleanImpl());
 
-		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-update-event");
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "classic-update-event");
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 
@@ -394,6 +394,59 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
 		assertTrue("Main has built", build.number == 2);
 		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+	}
+
+	@Test
+	public void testMultiBranchClassicMultiUpdateEvents() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/multi";
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"});
+		assertNotNull(baseChange);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-update-events");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+
+		Thread.sleep(5000);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+
+		// Make a change
+		String change = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
+
+		HashMap<String, String> map = new HashMap<>();
+		map.put("p4port", p4d.getRshPort());
+		map.put("project", base);
+		map.put("change", change);
+		map.put("branch", branch);
+		map.put("path", base + "/" + branch);
+		JSONObject payload = JSONObject.fromObject(map);
+
+		// Another change that should not get sync'ed
+		submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
+
+		String origin = "testMultiBranchClassicUpdateEvent";
+		P4BranchScmHeadEvent event = new P4BranchScmHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
+		SCMHeadEvent.fireNow(event);
+
+		Thread.sleep(5000);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
+		assertTrue("Main has built", runMain.number == 2);
+		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
 	}
 
 

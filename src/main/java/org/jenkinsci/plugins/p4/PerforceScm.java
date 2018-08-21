@@ -55,7 +55,6 @@ import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
 import org.jenkinsci.plugins.p4.scm.P4Path;
-import org.jenkinsci.plugins.p4.scm.P4Revision;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
@@ -94,7 +93,7 @@ public class PerforceScm extends SCM {
 	private final List<Filter> filter;
 	private final Populate populate;
 	private final P4Browser browser;
-	private final P4Revision revision;
+	private final P4Ref revision;
 
 	private transient P4Ref parentChange;
 	private transient P4Review review;
@@ -185,7 +184,7 @@ public class PerforceScm extends SCM {
 		this.revision = null;
 	}
 
-	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Revision revision) {
+	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		this.credential = source.getCredential();
 		this.workspace = source.getWorkspace(path);
 		this.filter = null;
@@ -462,7 +461,7 @@ public class PerforceScm extends SCM {
 
 		// SCMRevision build per change
 		if(revision != null) {
-			List<P4Ref> changes = Arrays.asList(revision.getRef());
+			List<P4Ref> changes = Arrays.asList(revision);
 			task.setIncrementalChanges(changes);
 		}
 

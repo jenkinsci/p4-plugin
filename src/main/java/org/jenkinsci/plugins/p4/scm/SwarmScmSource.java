@@ -128,7 +128,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public PerforceScm build(SCMHead head, SCMRevision revision) {
+	public PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
 		PerforceScm scm = super.build(head, revision);
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);

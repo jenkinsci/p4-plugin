@@ -18,7 +18,7 @@ import jenkins.scm.api.SCMSourceOwner;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.TagSCMHeadCategory;
-import org.antlr.v4.runtime.misc.NotNull;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -37,12 +37,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
+
+import static org.jenkinsci.plugins.p4.scm.events.P4BranchScmHeadEvent.parsePayload;
 
 public abstract class AbstractP4ScmSource extends SCMSource {
 
+	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
+
 	protected final String credential;
 
-	@NonNull
 	private List<SCMSourceTrait> traits = new ArrayList<>();
 
 	private String includes;
@@ -83,7 +87,6 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		return credential;
 	}
 
-	@NonNull
 	public List<SCMSourceTrait> getTraits() {
 		return Collections.unmodifiableList(traits);
 	}
@@ -138,30 +141,41 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 
-		// TODO use payload to get change if trigger event
-		if (event != null) {
-			Object payload = event.getPayload();
-		}
-
 		try {
 			List<P4Head> heads = getHeads(listener);
-
 			List<P4Head> tags = getTags(listener);
 			heads.addAll(tags);
 
 			for (P4Head head : heads) {
+				logger.info("SCM: retrieve Head: " + head);
+
+				// get SCMRevision from payload if trigger event, else build from head (latest)
+				SCMRevision revision = getRevision(head, listener);
+				if (event != null) {
+					JSONObject payload = (JSONObject) event.getPayload();
+					P4Revision rev = parsePayload(payload);
+					if (rev.getHead().equals(head)) {
+						revision = rev;
+						logger.fine("SCM: retrieve (trigger) Revision: " + revision);
+					}
+				}
+
 				// null criteria means that all branches match.
 				if (criteria == null) {
 					// get revision and add observe
-					SCMRevision revision = getRevision(head, listener);
 					observer.observe(head, revision);
 				} else {
 					try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 						SCMSourceCriteria.Probe probe = new P4Probe(p4, head);
 						if (criteria.isHead(probe, listener)) {
-							// get revision and add observe
-							SCMRevision revision = getRevision(head, listener);
-							observer.observe(head, revision);
+							logger.info("SCM: observer head: " + head + " revision: " + revision);
+
+							// TODO:
+							// Not sure about this, Jenkins seems to ignore revision sending a null
+							// to P4SCMBuilder.  Set Head using using the correct revision.
+							if (revision != null) {
+								observer.observe(revision.getHead(), revision);
+							}
 						}
 					}
 				}
@@ -173,7 +187,6 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 	}
 
-	@NotNull
 	@Override
 	protected SCMProbe createProbe(@NonNull SCMHead head, @CheckForNull SCMRevision revision) throws IOException {
 		return newProbe(head, revision);
@@ -191,13 +204,12 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	/**
 	 * SCMSource level action. `jenkins.branch.MetadataAction`
 	 *
-	 * @param event
-	 * @param listener
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @param event    Optional event (might be null) use payload to help filter calls.
+	 * @param listener the listener to report progress on.
+	 * @return the list of {@link Action} instances to persist.
+	 * @throws IOException          if an error occurs while performing the operation.
+	 * @throws InterruptedException if any thread has interrupted the current thread.
 	 */
-	@NonNull
 	@Override
 	protected List<Action> retrieveActions(@CheckForNull SCMSourceEvent event, @NonNull TaskListener listener)
 			throws IOException, InterruptedException {
@@ -209,14 +221,13 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	/**
 	 * SCMHead level action.
 	 *
-	 * @param head
-	 * @param event
-	 * @param listener
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @param head     Changes on a branch
+	 * @param event    Optional event (might be null) use payload to help filter calls.
+	 * @param listener the listener to report progress on.
+	 * @return the list of {@link Action} instances to persist.
+	 * @throws IOException          if an error occurs while performing the operation.
+	 * @throws InterruptedException if any thread has interrupted the current thread.
 	 */
-	@NonNull
 	@Override
 	protected List<Action> retrieveActions(@NonNull SCMHead head, @CheckForNull SCMHeadEvent event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 		List<Action> result = new ArrayList<>();
@@ -227,14 +238,13 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	/**
 	 * SCMRevision level action.
 	 *
-	 * @param revision
-	 * @param event
-	 * @param listener
-	 * @return
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @param revision the {@link SCMRevision}
+	 * @param event    Optional event (might be null) use payload to help filter calls.
+	 * @param listener the listener to report progress on.
+	 * @return the list of {@link Action} instances to persist.
+	 * @throws IOException          if an error occurs while performing the operation.
+	 * @throws InterruptedException if any thread has interrupted the current thread.
 	 */
-	@NonNull
 	@Override
 	protected List<Action> retrieveActions(@NonNull SCMRevision revision, @CheckForNull SCMHeadEvent event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 		List<Action> result = new ArrayList<>();
@@ -248,8 +258,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	 * TagSCMHeadCategory: Branches, Streams, Swarm and Graph
 	 * ChangeRequestSCMHeadCategory: Swarm and Graph
 	 *
-	 * @param category
-	 * @return
+	 * @param category the Category
+	 * @return {@code true} if the supplied category is enabled for this {@link SCMSource} instance.
 	 */
 	@Override
 	protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {
