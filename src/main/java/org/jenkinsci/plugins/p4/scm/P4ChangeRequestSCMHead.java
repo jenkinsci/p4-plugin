@@ -2,6 +2,10 @@ package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
+import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
 public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead {
 
@@ -33,5 +37,13 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 	@Override
 	public SCMHead getTarget() {
 		return target;
+	}
+
+	@Override
+	public PerforceScm getScm(AbstractP4SCMSource source, P4Path path, P4Ref revision) {
+		PerforceScm scm = new PerforceScm(source, path, revision);
+		P4Review review = new P4Review(getName(), CheckoutStatus.SHELVED);
+		scm.setReview(review);
+		return scm;
 	}
 }

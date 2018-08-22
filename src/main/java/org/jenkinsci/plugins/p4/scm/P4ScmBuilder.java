@@ -8,8 +8,6 @@ import jenkins.scm.api.trait.SCMBuilder;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
-import org.jenkinsci.plugins.p4.review.P4Review;
-import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
 import java.util.logging.Logger;
 
@@ -18,6 +16,7 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 	private static Logger logger = Logger.getLogger(P4SCMBuilder.class.getName());
 
 	private final AbstractP4SCMSource source;
+	private final P4SCMHead p4head;
 	private final P4Path path;
 	private final P4Ref revision;
 
@@ -26,7 +25,7 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 		this.source = source;
 
 		if (head instanceof P4SCMHead) {
-			P4SCMHead p4head = (P4SCMHead) head;
+			this.p4head = (P4SCMHead) head;
 			if (p4head.getPath() != null) {
 				this.path = p4head.getPath();
 			} else {
@@ -34,6 +33,7 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 			}
 		} else {
 			this.path = null;
+			this.p4head = null;
 		}
 
 		// TODO:
@@ -52,21 +52,6 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 	@NonNull
 	@Override
 	public PerforceScm build() {
-		if (head() instanceof P4ChangeRequestSCMHead) {
-			PerforceScm scm = new PerforceScm(source, path, revision);
-
-			P4Review review = new P4Review(head().getName(), CheckoutStatus.SHELVED);
-			scm.setReview(review);
-			return scm;
-		}
-		if (head() instanceof P4GraphRequestSCMHead) {
-			PerforceScm scm = new PerforceScm(source, path, revision);
-			return scm;
-		}
-		if (head() instanceof P4SCMHead) {
-			PerforceScm scm = new PerforceScm(source, path, revision);
-			return scm;
-		}
-		throw new IllegalArgumentException("SCMHead not a Perforce instance!");
+		return p4head.getScm(source, path, revision);
 	}
 }

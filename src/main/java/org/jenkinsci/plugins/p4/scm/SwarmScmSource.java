@@ -9,14 +9,17 @@ import jenkins.scm.api.SCMRevision;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
+import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
@@ -125,6 +128,25 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 			return revision;
 		}
 		return super.getRevision(head, listener);
+	}
+
+
+	/**
+	 * A specific revision based on the Event Payload.
+	 *
+	 * @param payload JSON payload from an external Event
+	 * @return the change as a P4SCMRevision object or null if no match.
+	 */
+	@Override
+	public P4SCMRevision getRevision(JSONObject payload) {
+		String branch = payload.getString(ReviewProp.BRANCH.getProp());
+		String change = payload.getString(ReviewProp.CHANGE.getProp());
+		String path = payload.getString(ReviewProp.PATH.getProp());
+
+		// Do I need to verify project, branch and path if Swarm called me?
+
+		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
+		return P4SCMRevision.build(path, branch, ref);
 	}
 
 	@Override

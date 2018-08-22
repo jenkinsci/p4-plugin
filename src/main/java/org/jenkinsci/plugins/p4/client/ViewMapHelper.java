@@ -67,6 +67,21 @@ public class ViewMapHelper {
 		return view.toString();
 	}
 
+	public static String[] splitDepotPath(String path) {
+		boolean exclude = path.startsWith(EXCLUDE);
+		boolean include = path.startsWith(INCLUDE);
+
+		// remove leading "//", "+//" or "-//" from path
+		String remove = "//";
+		remove = (exclude) ? EXCLUDE + "//" : remove;
+		remove = (include) ? INCLUDE + "//" : remove;
+		path = path.substring(remove.length());
+
+		// split path on "/" depot deliminator
+		String[] parts = path.split(PATH_DELIM);
+		return parts;
+	}
+
 	private static StringBuffer processLines(String[] lines, String client) {
 
 		StringBuffer view = new StringBuffer();
@@ -79,14 +94,8 @@ public class ViewMapHelper {
 			boolean exclude = lines[c].startsWith(EXCLUDE);
 			boolean include = lines[c].startsWith(INCLUDE);
 
-			// remove leading "//", "+//" or "-//" from path
-			String remove = "//";
-			remove = (exclude) ? EXCLUDE + "//" : remove;
-			remove = (include) ? INCLUDE + "//" : remove;
-			String path = lines[c].substring(remove.length());
-
 			// split path on "/" depot deliminator
-			String[] parts = path.split(PATH_DELIM);
+			String[] parts = splitDepotPath(lines[c]);
 
 			// process depot and client mappings
 			StringBuffer lhs = processLHS(parts);

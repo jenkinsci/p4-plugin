@@ -13,6 +13,12 @@ public class P4SCMRevision extends SCMRevision {
 		this.ref = ref;
 	}
 
+	public static P4SCMRevision build(String path, String branch, P4Ref ref) {
+		P4Path p4path = new P4Path(path, ref.toString());
+		P4SCMHead head = new P4SCMHead(branch, p4path);
+		return new P4SCMRevision(head, ref);
+	}
+
 	public P4Ref getRef() {
 		return ref;
 	}

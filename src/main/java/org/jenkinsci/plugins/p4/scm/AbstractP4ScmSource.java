@@ -22,9 +22,14 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -38,8 +43,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-
-import static org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent.parsePayload;
 
 public abstract class AbstractP4SCMSource extends SCMSource {
 
@@ -153,7 +156,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 				SCMRevision revision = getRevision(head, listener);
 				if (event != null) {
 					JSONObject payload = (JSONObject) event.getPayload();
-					P4SCMRevision rev = parsePayload(payload);
+					P4SCMRevision rev = getRevision(payload);
 					if (rev.getHead().equals(head)) {
 						revision = rev;
 						logger.fine("SCM: retrieve (trigger) Revision: " + revision);
@@ -284,6 +287,14 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 		return Arrays.asList(array);
 	}
 
+	/**
+	 * Get the Latest change for the path specified in P4SCMHead.
+	 *
+	 * @param head SCMHead
+	 * @param listener for logging
+	 * @return The latest change as a P4SCMRevision object
+	 * @throws Exception pushed up stack
+	 */
 	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
@@ -299,5 +310,41 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
 			return revision;
 		}
+	}
+
+	/**
+	 * A specific revision based on the Event Payload.
+	 *
+	 * @param payload JSON payload from an external Event
+	 * @return the change as a P4SCMRevision object or null if no match.
+	 */
+	public P4SCMRevision getRevision(JSONObject payload) {
+		String change = payload.getString(ReviewProp.CHANGE.getProp());
+		P4Ref ref = P4RefBuilder.get(change);
+
+		P4BaseCredentials baseCredentials = ConnectionHelper.findCredential(credential, getOwner());
+		P4BranchScanner scanner = new P4BranchScanner(baseCredentials, ref, getScriptPathOrDefault());
+
+		// Check matching Project path included in Source
+		if (scanner.getProject() == null || !findInclude(scanner.getProject())) {
+			return null;
+		}
+
+		String path = scanner.getProject();
+		String branch = scanner.getBranch();
+		return P4SCMRevision.build(path, branch, ref);
+	}
+
+	private boolean findInclude(String project) {
+		project = (project.endsWith("/*")) ? project.substring(0, project.lastIndexOf("/*")) : project;
+		project = (project.endsWith("/...")) ? project.substring(0, project.lastIndexOf("/...")) : project;
+
+		List<String> includes = getIncludePaths();
+		for (String i : includes) {
+			if (i.startsWith(project)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
