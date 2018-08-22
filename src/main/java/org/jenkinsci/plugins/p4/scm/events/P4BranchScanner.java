@@ -47,7 +47,7 @@ public class P4BranchScanner {
 	private void scan() throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(credential, getListener())) {
 			List<IFileSpec> files = change.getFiles(p4, 1);
-			if (files == null || files.isEmpty()) {
+			if (files == null || files.isEmpty() || files.get(0) == null) {
 				p4.log("BranchScanner: Aborting - empty changelist.");
 			}
 

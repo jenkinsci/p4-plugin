@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class PerforceScmSourceTest extends DefaultEnvironment {
+public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-ScmSourceTest-p4root";
 
