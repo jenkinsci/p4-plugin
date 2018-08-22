@@ -1,6 +1,10 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.file.IFileSpec;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+
+import java.util.List;
 
 public class P4LabelRef implements P4Ref {
 
@@ -32,6 +36,11 @@ public class P4LabelRef implements P4Ref {
 	@Override
 	public long getChange() {
 		return -1L;
+	}
+
+	@Override
+	public List<IFileSpec> getFiles(ConnectionHelper p4, int limit) throws Exception {
+		return p4.getLabelFiles(label, limit);
 	}
 
 	@Override

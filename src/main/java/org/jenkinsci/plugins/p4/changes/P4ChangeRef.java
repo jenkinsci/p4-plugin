@@ -1,7 +1,11 @@
 package org.jenkinsci.plugins.p4.changes;
 
 import com.perforce.p4java.core.IChangelistSummary;
+import com.perforce.p4java.core.file.IFileSpec;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+
+import java.util.List;
 
 public class P4ChangeRef implements P4Ref {
 
@@ -34,6 +38,11 @@ public class P4ChangeRef implements P4Ref {
 	@Override
 	public long getChange() {
 		return change;
+	}
+
+	@Override
+	public List<IFileSpec> getFiles(ConnectionHelper p4, int limit) throws Exception {
+		return p4.getChangeFiles(change, limit);
 	}
 
 	@Override

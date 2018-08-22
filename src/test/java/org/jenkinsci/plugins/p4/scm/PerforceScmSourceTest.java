@@ -413,7 +413,6 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 
-		Thread.sleep(5000);
 		jenkins.waitUntilNoActivity();
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 
@@ -440,7 +439,7 @@ public class PerforceScmSourceTest extends DefaultEnvironment {
 		P4BranchScmHeadEvent event = new P4BranchScmHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		Thread.sleep(5000);
+		Thread.sleep(500);
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();

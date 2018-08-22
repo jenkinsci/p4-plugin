@@ -1,9 +1,12 @@
 package org.jenkinsci.plugins.p4.changes;
 
+import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.graph.ICommit;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+
+import java.util.List;
 
 public class P4GraphRef implements P4Ref {
 
@@ -62,6 +65,12 @@ public class P4GraphRef implements P4Ref {
 	@Override
 	public long getChange() {
 		return -1L;
+	}
+
+	@Override
+	public List<IFileSpec> getFiles(ConnectionHelper p4, int limit) throws Exception {
+		List<IFileSpec> list = p4.getCommitFiles(repo, sha);
+		return list.subList(0, limit);
 	}
 
 	public long getDate() {

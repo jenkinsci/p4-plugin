@@ -6,9 +6,8 @@ import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.trait.SCMBuilder;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
-import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
@@ -42,12 +41,7 @@ public class P4ScmBuilder extends SCMBuilder<P4ScmBuilder, PerforceScm> {
 		// So use P4Path's revision from head...
 		if (path != null && path.getRevision() != null) {
 			String rev = path.getRevision();
-			if (rev.chars().allMatch(Character::isDigit)) {
-				long change = Long.parseLong(rev);
-				this.revision = new P4ChangeRef(change);
-			} else {
-				this.revision = new P4LabelRef(rev);
-			}
+			this.revision = P4RefBuilder.get(rev);
 		} else {
 			this.revision = null;
 		}
