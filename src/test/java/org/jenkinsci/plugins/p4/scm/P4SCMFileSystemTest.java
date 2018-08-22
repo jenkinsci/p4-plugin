@@ -104,15 +104,15 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 
 		String format = workspace.getName();
 
-		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
-		source.setFilter(BranchesScmSource.DescriptorImpl.defaultFilter);
-		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
+		BranchesSCMSource source = new BranchesSCMSource(CREDENTIAL, "//depot/...", null, format);
+		source.setFilter(BranchesSCMSource.DescriptorImpl.defaultFilter);
+		source.setMappings(BranchesSCMSource.DescriptorImpl.defaultPath);
 
 		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "multi1");
 		source.setOwner(owner);
 
 		P4Path path = new P4Path("//depot");
-		P4Head head = new P4Head("main", path);
+		P4SCMHead head = new P4SCMHead("main", path);
 
 		SCMFileSystem fs = SCMFileSystem.of(source, head);
 		assertThat(fs, notNullValue());

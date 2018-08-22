@@ -11,7 +11,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
-import org.jenkinsci.plugins.p4.scm.events.P4BranchScmHeadEvent;
+import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -64,7 +64,7 @@ public class P4Hook implements UnprotectedRootAction {
 		String typeString = payload.getString("type");
 		SCMEvent.Type eventType = SCMEvent.Type.valueOf(typeString);
 
-		SCMHeadEvent.fireNow(new P4BranchScmHeadEvent(eventType, payload, SCMEvent.originOf(req)));
+		SCMHeadEvent.fireNow(new P4BranchSCMHeadEvent(eventType, payload, SCMEvent.originOf(req)));
 	}
 
 	public void doChange(StaplerRequest req) throws IOException {

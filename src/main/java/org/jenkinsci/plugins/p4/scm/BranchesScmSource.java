@@ -18,14 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class BranchesScmSource extends AbstractP4ScmSource {
+public class BranchesSCMSource extends AbstractP4SCMSource {
 
 	private P4Browser browser;
 	private String filter = DescriptorImpl.defaultFilter;
 	private String mappings = DescriptorImpl.defaultPath;
 
 	@DataBoundConstructor
-	public BranchesScmSource(String credential, String includes, String charset, String format) {
+	public BranchesSCMSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
@@ -66,15 +66,15 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 		return new ArrayList<>();
 	}
 
 	@Override
-	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 
 		List<String> paths = getIncludePaths();
-		List<P4Head> list = new ArrayList<>();
+		List<P4SCMHead> list = new ArrayList<>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
 			String actualFilter = getFilter();
@@ -104,7 +104,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				}
 
 				P4Path p4Path = new P4Path(branch);
-				P4Head head = new P4Head(file, p4Path);
+				P4SCMHead head = new P4SCMHead(file, p4Path);
 				list.add(head);
 			}
 		}
@@ -144,7 +144,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Extension
 	@Symbol("multiBranch")
-	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 		public static final String defaultPath = "...";
 

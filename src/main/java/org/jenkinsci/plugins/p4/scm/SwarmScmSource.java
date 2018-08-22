@@ -32,14 +32,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class SwarmScmSource extends AbstractP4ScmSource {
+public class SwarmSCMSource extends AbstractP4SCMSource {
 
 	private String project;
 
 	transient private SwarmHelper swarm;
 
 	@DataBoundConstructor
-	public SwarmScmSource(String credential, String charset, String format) throws Exception {
+	public SwarmSCMSource(String credential, String charset, String format) throws Exception {
 		super(credential);
 
 		setCharset(charset);
@@ -74,9 +74,9 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 
-		List<P4Head> list = new ArrayList<>();
+		List<P4SCMHead> list = new ArrayList<>();
 
 		List<SwarmReviewsAPI.Reviews> reviews = getSwarm().getActiveReviews(project);
 		for (SwarmReviewsAPI.Reviews review : reviews) {
@@ -88,7 +88,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 				P4SwarmPath swarmPath = getPathsInBranch(branch, project);
 
 				String trgName = branch + "-" + reviewID;
-				P4Head target = new P4Head(trgName, swarmPath);
+				P4SCMHead target = new P4SCMHead(trgName, swarmPath);
 				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);
 				list.add(tag);
 			}
@@ -98,16 +98,16 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 
-		List<P4Head> list = new ArrayList<>();
+		List<P4SCMHead> list = new ArrayList<>();
 
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 		for (SwarmProjectAPI.Branch branch : branches) {
 			// Get first Swarm path; it MUST include the Jenkinsfile
 			P4SwarmPath swarmPath = branch.getPath();
 
-			P4Head head = new P4Head(branch.getId(), swarmPath);
+			P4SCMHead head = new P4SCMHead(branch.getId(), swarmPath);
 			list.add(head);
 		}
 
@@ -115,13 +115,13 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
+	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead changeRequest = (P4ChangeRequestSCMHead) head;
 			String review = changeRequest.getReview();
 			long change = getLastChangeInReview(review);
 
-			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
+			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
 			return revision;
 		}
 		return super.getRevision(head, listener);
@@ -197,7 +197,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Extension
 	@Symbol("multiSwarm")
-	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 		@Override
 		public String getDisplayName() {

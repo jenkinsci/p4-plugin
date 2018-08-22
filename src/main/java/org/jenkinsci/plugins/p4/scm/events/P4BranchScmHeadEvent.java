@@ -13,21 +13,21 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
-import org.jenkinsci.plugins.p4.scm.BranchesScmSource;
-import org.jenkinsci.plugins.p4.scm.P4Head;
+import org.jenkinsci.plugins.p4.scm.AbstractP4SCMSource;
+import org.jenkinsci.plugins.p4.scm.BranchesSCMSource;
+import org.jenkinsci.plugins.p4.scm.P4SCMHead;
 import org.jenkinsci.plugins.p4.scm.P4Path;
-import org.jenkinsci.plugins.p4.scm.P4Revision;
-import org.jenkinsci.plugins.p4.scm.StreamsScmSource;
-import org.jenkinsci.plugins.p4.scm.SwarmScmSource;
+import org.jenkinsci.plugins.p4.scm.P4SCMRevision;
+import org.jenkinsci.plugins.p4.scm.StreamsSCMSource;
+import org.jenkinsci.plugins.p4.scm.SwarmSCMSource;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
+public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 
-	public P4BranchScmHeadEvent(@NonNull Type type, JSONObject payload, String origin) {
+	public P4BranchSCMHeadEvent(@NonNull Type type, JSONObject payload, String origin) {
 		super(type, payload, origin);
 	}
 
@@ -44,8 +44,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 	public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource scmSource) {
 
 		// Check Perforce server P4PORT
-		if (scmSource instanceof AbstractP4ScmSource) {
-			AbstractP4ScmSource p4ScmSource = (AbstractP4ScmSource) scmSource;
+		if (scmSource instanceof AbstractP4SCMSource) {
+			AbstractP4SCMSource p4ScmSource = (AbstractP4SCMSource) scmSource;
 			String p4port = getField(getPayload(), ReviewProp.P4PORT);
 			String id = p4ScmSource.getCredential();
 			P4BaseCredentials credential = ConnectionHelper.findCredential(id, scmSource.getOwner());
@@ -58,8 +58,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		}
 
 		// Check Swarm Sources
-		if (scmSource instanceof SwarmScmSource) {
-			SwarmScmSource swarmSource = (SwarmScmSource) scmSource;
+		if (scmSource instanceof SwarmSCMSource) {
+			SwarmSCMSource swarmSource = (SwarmSCMSource) scmSource;
 
 			// Check matching Swarm project name
 			String project = getField(getPayload(), ReviewProp.PROJECT);
@@ -69,8 +69,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		}
 
 		// Check Branch Sources
-		if (scmSource instanceof BranchesScmSource) {
-			BranchesScmSource branchSource = (BranchesScmSource) scmSource;
+		if (scmSource instanceof BranchesSCMSource) {
+			BranchesSCMSource branchSource = (BranchesSCMSource) scmSource;
 
 			// Check matching Project path included in Source
 			String project = getField(getPayload(), ReviewProp.PROJECT);
@@ -89,8 +89,8 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		}
 
 		// Check Stream Sources
-		if (scmSource instanceof StreamsScmSource) {
-			StreamsScmSource streamSource = (StreamsScmSource) scmSource;
+		if (scmSource instanceof StreamsSCMSource) {
+			StreamsSCMSource streamSource = (StreamsSCMSource) scmSource;
 
 			// Check matching Project path included in Stream
 			String project = getField(getPayload(), ReviewProp.PROJECT);
@@ -99,7 +99,7 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 			}
 		}
 
-		P4Revision revision = parsePayload(getPayload());
+		P4SCMRevision revision = parsePayload(getPayload());
 
 		return Collections.singletonMap(revision.getHead(), revision);
 	}
@@ -114,15 +114,15 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		return false;
 	}
 
-	public static P4Revision parsePayload(JSONObject payload) {
+	public static P4SCMRevision parsePayload(JSONObject payload) {
 		String branch = getField(payload, ReviewProp.BRANCH);
 		String change = getField(payload, ReviewProp.CHANGE);
 		String path = getField(payload, ReviewProp.PATH);
 		P4Path p4path = new P4Path(path, String.valueOf(change));
-		P4Head head = new P4Head(branch, p4path);
+		P4SCMHead head = new P4SCMHead(branch, p4path);
 
 		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
-		P4Revision revision = new P4Revision(head, ref);
+		P4SCMRevision revision = new P4SCMRevision(head, ref);
 		return revision;
 	}
 
@@ -130,7 +130,7 @@ public class P4BranchScmHeadEvent extends SCMHeadEvent<JSONObject> {
 		return payload.getString(prop.getProp());
 	}
 
-	private boolean findInclude(String project, AbstractP4ScmSource source) {
+	private boolean findInclude(String project, AbstractP4SCMSource source) {
 
 		project = (project.endsWith("/*")) ? project.substring(0, project.lastIndexOf("/*")) : project;
 		project = (project.endsWith("/...")) ? project.substring(0, project.lastIndexOf("/...")) : project;

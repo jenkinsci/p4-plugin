@@ -16,12 +16,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class StreamsScmSource extends AbstractP4ScmSource {
+public class StreamsSCMSource extends AbstractP4SCMSource {
 
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public StreamsScmSource(String credential, String includes, String charset, String format) {
+	public StreamsSCMSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
@@ -39,14 +39,14 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 		return new ArrayList<>();
 	}
 
 	@Override
-	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 		List<String> paths = getIncludePaths();
-		HashSet<P4Head> list = new HashSet<P4Head>();
+		HashSet<P4SCMHead> list = new HashSet<P4SCMHead>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 			List<IStreamSummary> specs = p4.getStreams(paths);
@@ -54,7 +54,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 				String name = s.getName();
 				String stream = s.getStream();
 				P4Path p4Path = new P4Path(stream);
-				P4Head head = new P4Head(name, p4Path);
+				P4SCMHead head = new P4SCMHead(name, p4Path);
 				list.add(head);
 			}
 		}
@@ -69,7 +69,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 	@Extension
 	@Symbol("multiStreams")
-	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 		@Override
 		public String getDisplayName() {

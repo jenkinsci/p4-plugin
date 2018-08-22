@@ -5,10 +5,10 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 
 import java.util.Objects;
 
-public class P4Revision extends SCMRevision {
+public class P4SCMRevision extends SCMRevision {
 	private final P4Ref ref;
 
-	public P4Revision(P4Head branch, P4Ref ref) {
+	public P4SCMRevision(P4SCMHead branch, P4Ref ref) {
 		super(branch);
 		this.ref = ref;
 	}
@@ -28,7 +28,7 @@ public class P4Revision extends SCMRevision {
 		if (o == null || getClass() != o.getClass()) {
 			return false;
 		}
-		P4Revision that = (P4Revision) o;
+		P4SCMRevision that = (P4SCMRevision) o;
 		boolean c = ref.equals(that.ref);
 		boolean h = getHead().equals(that.getHead());
 		return c && h;
@@ -47,6 +47,6 @@ public class P4Revision extends SCMRevision {
 		if (ref == null) {
 			return "undefined";
 		}
-		return "P4Revision: " + getHead() + " REF: " + ref.toString();
+		return "P4SCMRevision: " + getHead() + " REF: " + ref.toString();
 	}
 }

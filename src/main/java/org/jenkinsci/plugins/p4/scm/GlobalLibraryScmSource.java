@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GlobalLibraryScmSource extends AbstractP4ScmSource {
+public class GlobalLibrarySCMSource extends AbstractP4SCMSource {
 
 	private final String path;
 
@@ -26,7 +26,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@DataBoundConstructor
-	public GlobalLibraryScmSource(String credential, String charset, String path) {
+	public GlobalLibrarySCMSource(String credential, String charset, String path) {
 		super(credential);
 		this.path = path;
 		setCharset(charset);
@@ -38,7 +38,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 			throws IOException, InterruptedException {
 		try {
 			P4Path p4Path = new P4Path(path, thingName);
-			P4Head head = new P4Head(thingName, p4Path);
+			P4SCMHead head = new P4SCMHead(thingName, p4Path);
 			SCMRevision revision = getRevision(head, listener);
 			return revision;
 		} catch (Exception e) {
@@ -53,22 +53,22 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 		// not used
 		return new ArrayList<>();
 	}
 
 	@Override
-	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 		// not used
 		return new ArrayList<>();
 	}
 
 	@Override
 	public PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
-		if (head instanceof P4Head && revision instanceof P4Revision) {
-			P4Head perforceHead = (P4Head) head;
-			P4Revision perforceRevision = (P4Revision) revision;
+		if (head instanceof P4SCMHead && revision instanceof P4SCMRevision) {
+			P4SCMHead perforceHead = (P4SCMHead) head;
+			P4SCMRevision perforceRevision = (P4SCMRevision) revision;
 
 			// Build workspace from 'head' paths
 			P4Path path = perforceHead.getPath();
@@ -86,7 +86,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 	@Extension
 	@Symbol("globalLib")
-	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 		@Override
 		public String getDisplayName() {

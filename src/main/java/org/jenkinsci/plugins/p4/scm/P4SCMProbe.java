@@ -9,17 +9,17 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-public class P4Probe extends SCMProbe {
+public class P4SCMProbe extends SCMProbe {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(P4Probe.class.getName());
+	private static Logger logger = Logger.getLogger(P4SCMProbe.class.getName());
 
-	private final P4Head head;
+	private final P4SCMHead head;
 
 	private transient ConnectionHelper p4;
 
-	public P4Probe(ConnectionHelper p4, P4Head head) {
+	public P4SCMProbe(ConnectionHelper p4, P4SCMHead head) {
 		this.head = head;
 		this.p4 = p4;
 	}

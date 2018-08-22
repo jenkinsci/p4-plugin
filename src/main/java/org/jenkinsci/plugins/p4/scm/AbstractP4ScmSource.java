@@ -39,11 +39,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.jenkinsci.plugins.p4.scm.events.P4BranchScmHeadEvent.parsePayload;
+import static org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent.parsePayload;
 
-public abstract class AbstractP4ScmSource extends SCMSource {
+public abstract class AbstractP4SCMSource extends SCMSource {
 
-	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
+	private static Logger logger = Logger.getLogger(AbstractP4SCMSource.class.getName());
 
 	protected final String credential;
 
@@ -54,7 +54,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	private String format;
 	private Populate populate;
 
-	public AbstractP4ScmSource(String credential) {
+	public AbstractP4SCMSource(String credential) {
 		this.credential = credential;
 	}
 
@@ -109,9 +109,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public abstract P4Browser getBrowser();
 
-	public abstract List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception;
+	public abstract List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception;
 
-	public abstract List<P4Head> getTags(@NonNull TaskListener listener) throws Exception;
+	public abstract List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception;
 
 	public Workspace getWorkspace(P4Path path) {
 		if (path == null) {
@@ -142,18 +142,18 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 
 		try {
-			List<P4Head> heads = getHeads(listener);
-			List<P4Head> tags = getTags(listener);
+			List<P4SCMHead> heads = getHeads(listener);
+			List<P4SCMHead> tags = getTags(listener);
 			heads.addAll(tags);
 
-			for (P4Head head : heads) {
+			for (P4SCMHead head : heads) {
 				logger.info("SCM: retrieve Head: " + head);
 
 				// get SCMRevision from payload if trigger event, else build from head (latest)
 				SCMRevision revision = getRevision(head, listener);
 				if (event != null) {
 					JSONObject payload = (JSONObject) event.getPayload();
-					P4Revision rev = parsePayload(payload);
+					P4SCMRevision rev = parsePayload(payload);
 					if (rev.getHead().equals(head)) {
 						revision = rev;
 						logger.fine("SCM: retrieve (trigger) Revision: " + revision);
@@ -166,7 +166,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					observer.observe(head, revision);
 				} else {
 					try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
-						SCMSourceCriteria.Probe probe = new P4Probe(p4, head);
+						SCMSourceCriteria.Probe probe = new P4SCMProbe(p4, head);
 						if (criteria.isHead(probe, listener)) {
 							logger.info("SCM: observer head: " + head + " revision: " + revision);
 
@@ -195,9 +195,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	@Override
 	public PerforceScm build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
 		if (traits != null) {
-			return new P4ScmBuilder(this, head, revision).withTraits(traits).build();
+			return new P4SCMBuilder(this, head, revision).withTraits(traits).build();
 		} else {
-			return new P4ScmBuilder(this, head, revision).build();
+			return new P4SCMBuilder(this, head, revision).build();
 		}
 	}
 
@@ -284,7 +284,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		return Arrays.asList(array);
 	}
 
-	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
+	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
 			// TODO look for graph revisions too
@@ -296,7 +296,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			long c = p4.getHead(path.getPath() + rev);
 			change = (c > change) ? c : change;
 
-			P4Revision revision = new P4Revision(head, new P4ChangeRef(change));
+			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
 			return revision;
 		}
 	}

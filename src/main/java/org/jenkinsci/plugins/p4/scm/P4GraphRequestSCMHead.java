@@ -3,7 +3,7 @@ package org.jenkinsci.plugins.p4.scm;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
-public class P4GraphRequestSCMHead extends P4Head implements ChangeRequestSCMHead {
+public class P4GraphRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead {
 
 	private static final long serialVersionUID = 1L;
 

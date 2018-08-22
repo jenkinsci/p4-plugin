@@ -2,11 +2,11 @@ package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMHead;
 
-public class P4Head extends SCMHead {
+public class P4SCMHead extends SCMHead {
 
 	private final P4Path path;
 
-	public P4Head(String name, P4Path path) {
+	public P4SCMHead(String name, P4Path path) {
 		super(name);
 		this.path = path;
 	}
@@ -17,6 +17,6 @@ public class P4Head extends SCMHead {
 
 	@Override
 	public String toString() {
-		return "P4Head: " + getName() + " (" + path + ")";
+		return "P4SCMHead: " + getName() + " (" + path + ")";
 	}
 }

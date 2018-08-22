@@ -131,7 +131,7 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public List<P4Ref> getRefChanges() {
-		// parse Legacy XML data from P4Revision to P4Ref
+		// parse Legacy XML data from P4SCMRevision to P4Ref
 		if (refChanges == null || refChanges.isEmpty()) {
 			refChanges = new ArrayList<>();
 			if (buildChange != null) {

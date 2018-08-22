@@ -26,12 +26,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GraphScmSource extends AbstractP4ScmSource {
+public class GraphSCMSource extends AbstractP4SCMSource {
 
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public GraphScmSource(String credential, String includes, String charset, String format) {
+	public GraphSCMSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
@@ -49,9 +49,9 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 
-		List<P4Head> list = new ArrayList<>();
+		List<P4SCMHead> list = new ArrayList<>();
 		List<String> includes = getIncludePaths();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
@@ -64,9 +64,9 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4Head> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 
-		List<P4Head> list = new ArrayList<>();
+		List<P4SCMHead> list = new ArrayList<>();
 		List<String> includes = getIncludePaths();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
@@ -78,8 +78,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 		return list;
 	}
 
-	private List<P4Head> getBranchesFromRepos(List<IRepo> repos, ConnectionHelper p4) throws Exception {
-		List<P4Head> list = new ArrayList<>();
+	private List<P4SCMHead> getBranchesFromRepos(List<IRepo> repos, ConnectionHelper p4) throws Exception {
+		List<P4SCMHead> list = new ArrayList<>();
 
 		for (IRepo repo : repos) {
 			String repoName = getRepoName(repo);
@@ -90,7 +90,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				P4Path p4Path = new P4Path(repoName, branchName);
 				String name = p4Path.getName();
 
-				P4Head head = new P4Head(name, p4Path);
+				P4SCMHead head = new P4SCMHead(name, p4Path);
 				list.add(head);
 			}
 		}
@@ -115,7 +115,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 				P4Path p4Path = new P4Path(repoName, branchName);
 				String name = p4Path.getName();
 
-				P4Head target = new P4Head(name, p4Path);
+				P4SCMHead target = new P4SCMHead(name, p4Path);
 				P4GraphRequestSCMHead tag = new P4GraphRequestSCMHead(name, repoName, branchName, p4Path, target);
 				list.add(tag);
 			}
@@ -141,17 +141,17 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public P4Revision getRevision(P4Head head, TaskListener listener) throws Exception {
+	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 			P4Ref ref = p4.getGraphHead(head.getPath().getPath());
-			P4Revision revision = new P4Revision(head, ref);
+			P4SCMRevision revision = new P4SCMRevision(head, ref);
 			return revision;
 		}
 	}
 
 	@Extension
 	@Symbol("multiGraph")
-	public static final class DescriptorImpl extends P4ScmSourceDescriptor {
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 		@Override
 		public String getDisplayName() {

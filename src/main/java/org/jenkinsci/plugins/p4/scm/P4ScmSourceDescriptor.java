@@ -15,7 +15,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.util.List;
 
-public abstract class P4ScmSourceDescriptor extends SCMSourceDescriptor {
+public abstract class P4SCMSourceDescriptor extends SCMSourceDescriptor {
 
 	public static final String defaultFormat = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
 

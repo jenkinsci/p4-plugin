@@ -24,7 +24,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 
 	private TempClientHelper p4;
 
-	protected P4SCMFileSystem(@NonNull Item owner, @NonNull PerforceScm scm, @CheckForNull P4Revision rev) throws Exception {
+	protected P4SCMFileSystem(@NonNull Item owner, @NonNull PerforceScm scm, @CheckForNull P4SCMRevision rev) throws Exception {
 		super(rev);
 		String credential = scm.getCredential();
 		LogTaskListener listener = new LogTaskListener(LOGGER, Level.ALL);
@@ -61,7 +61,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 
 		@Override
 		public boolean supports(SCMSource source) {
-			if (source instanceof AbstractP4ScmSource) {
+			if (source instanceof AbstractP4SCMSource) {
 				return true;
 			}
 			return false;
@@ -74,10 +74,10 @@ public class P4SCMFileSystem extends SCMFileSystem {
 			}
 			PerforceScm p4scm = (PerforceScm) scm;
 
-			if (rev != null && !(rev instanceof P4Revision)) {
+			if (rev != null && !(rev instanceof P4SCMRevision)) {
 				return null;
 			}
-			P4Revision p4rev = (P4Revision) rev;
+			P4SCMRevision p4rev = (P4SCMRevision) rev;
 
 			try {
 				return new P4SCMFileSystem(owner, p4scm, p4rev);
