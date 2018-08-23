@@ -49,12 +49,14 @@ public class P4BranchScanner {
 			List<IFileSpec> files = change.getFiles(p4, 1);
 			if (files == null || files.isEmpty() || files.get(0) == null) {
 				p4.log("BranchScanner: Aborting - empty changelist.");
+				return;
 			}
 
 			String path = files.get(0).getDepotPathString();
 			String[] parts = ViewMapHelper.splitDepotPath(path);
 			if (parts.length < 2) {
 				p4.log("BranchScanner: Aborting - path too short: " + path);
+				return;
 			}
 
 			for (int n = parts.length - 1; n >= 1; n--) {
