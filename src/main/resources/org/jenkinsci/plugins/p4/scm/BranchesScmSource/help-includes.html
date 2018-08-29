@@ -1,5 +1,10 @@
 <div>
-	<p>A List of Perforce Depot paths (separated by new lines).  The plugin will recursively search for a
-		<code>Jenkinsfile</code> (or defined item) using the last directory name for the multi-branch name.</p>
-	<p>For example: <code>//depot/...</code></p>
+	<p>A List of Perforce Depot paths (separated by new lines).  The plugin will search one directory level deep for a
+		<code>Jenkinsfile</code> (or defined item) using the last directory name for the branch name.</p>
+	<p>For example, given an include path of: <code>//depot/projA</code>
+		(or <code>//depot/projA/*</code> or <code>//depot/projA/...</code> as these get trimmed before they are
+		passed to <code>p4 dirs</code>)</p>
+	<p>If a Jenkinsfile is found in <code>//depot/projA/Main/Jenkinsfile</code> and
+		<code>//depot/projA/R1.0/Jenkinsfile</code> then two branches are created for the MultiBranch project 'Main'
+		and 'R1.0'</p>
 </div>

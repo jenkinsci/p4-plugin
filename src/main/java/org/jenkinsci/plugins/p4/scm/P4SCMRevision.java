@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.scm;
 import jenkins.scm.api.SCMRevision;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class P4SCMRevision extends SCMRevision {
@@ -13,8 +14,14 @@ public class P4SCMRevision extends SCMRevision {
 		this.ref = ref;
 	}
 
-	public static P4SCMRevision build(String path, String branch, P4Ref ref) {
+	public static P4SCMRevision builder(String path, String branch, P4Ref ref) {
 		P4Path p4path = new P4Path(path, ref.toString());
+		P4SCMHead head = new P4SCMHead(branch, p4path);
+		return new P4SCMRevision(head, ref);
+	}
+
+	public static P4SCMRevision swarmBuilder(String path, String branch, P4Ref ref) {
+		P4SwarmPath p4path = new P4SwarmPath(path, Arrays.asList(path), ref.toString());
 		P4SCMHead head = new P4SCMHead(branch, p4path);
 		return new P4SCMRevision(head, ref);
 	}

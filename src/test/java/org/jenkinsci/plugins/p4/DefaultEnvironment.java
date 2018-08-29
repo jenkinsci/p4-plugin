@@ -18,6 +18,7 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.CommitImpl;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
+import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -87,7 +88,39 @@ abstract public class DefaultEnvironment {
 		}
 	}
 
+	protected String shelveFile(JenkinsRule jenkins, String path, String content) throws Exception {
+		ManualWorkspaceImpl workspace = createWorkspace(path);
+		FilePath filePath = createFilePath(path, content);
+
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			Publish publish = new ShelveImpl("Submit test files", false, false, false);
+			boolean open = p4.buildChange(publish);
+			if (open) {
+				return p4.publishChange(publish);
+			}
+		} finally {
+			filePath.delete();
+		}
+		return null;
+	}
+
 	protected String submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
+		ManualWorkspaceImpl workspace = createWorkspace(path);
+		FilePath filePath = createFilePath(path, content);
+
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
+			boolean open = p4.buildChange(publish);
+			if (open) {
+				return p4.publishChange(publish);
+			}
+		} finally {
+			filePath.delete();
+		}
+		return null;
+	}
+
+	private ManualWorkspaceImpl createWorkspace(String path)  {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
 		// Create workspace
@@ -102,22 +135,22 @@ abstract public class DefaultEnvironment {
 		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
 
+		return workspace;
+	}
+
+	private FilePath createFilePath(String path, String content) throws IOException, InterruptedException {
+		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+
+		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
+
 		File file = new File(wsRoot + File.separator + filename).getAbsoluteFile();
 		FilePath filePath = new FilePath(file);
 		filePath.delete();
 		filePath.write(content, "UTF-8");
 
-		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
-			boolean open = p4.buildChange(publish);
-			if (open) {
-				return p4.publishChange(publish);
-			}
-		} finally {
-			filePath.delete();
-		}
-		return null;
+		return filePath;
 	}
+
 
 	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());

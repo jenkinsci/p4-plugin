@@ -174,7 +174,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 */
 	private CheckoutStatus getStatus(Workspace workspace) {
 		CheckoutStatus status = CheckoutStatus.HEAD;
-		String value = workspace.getExpand().get(ReviewProp.STATUS.toString());
+		String value = workspace.getExpand().get(ReviewProp.SWARM_STATUS.toString());
 		if (value != null && !value.isEmpty()) {
 			status = CheckoutStatus.parse(value);
 		}
@@ -213,7 +213,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		}
 
 		// if change is specified then update
-		String cngStr = expand.get(ReviewProp.CHANGE.toString());
+		String cngStr = expand.get(ReviewProp.P4_CHANGE.toString());
 		if (cngStr != null && !cngStr.isEmpty()) {
 			try {
 				int change = Integer.parseInt(cngStr);
@@ -224,7 +224,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		}
 
 		// if label is specified then update
-		String lblStr = expand.get(ReviewProp.LABEL.toString());
+		String lblStr = expand.get(ReviewProp.P4_LABEL.toString());
 		if (lblStr != null && !lblStr.isEmpty()) {
 			try {
 				// if build is a change-number passed as a label
@@ -249,7 +249,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	private int getReview(Workspace workspace) {
 		int review = 0;
 		Expand expand = workspace.getExpand();
-		String value = expand.get(ReviewProp.REVIEW.toString());
+		String value = expand.get(ReviewProp.SWARM_REVIEW.toString());
 		if (value != null && !value.isEmpty()) {
 			try {
 				review = Integer.parseInt(value);

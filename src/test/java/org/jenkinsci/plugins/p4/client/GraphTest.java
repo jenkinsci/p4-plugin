@@ -67,8 +67,8 @@ public class GraphTest extends DefaultEnvironment {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "10279"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "10279"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;

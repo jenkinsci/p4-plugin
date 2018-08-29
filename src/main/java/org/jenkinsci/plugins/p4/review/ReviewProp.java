@@ -2,17 +2,24 @@ package org.jenkinsci.plugins.p4.review;
 
 public enum ReviewProp {
 
-	STATUS("status", true), 
-	CHANGE("change", true), 
-	LABEL("label", false), // reserved by Jenkins for Slave Axes
-	REVIEW("review", true),
-	PASS("pass", true),
-	FAIL("fail", true),
-	PROJECT("project", true),
-	BRANCH("branch", true),
-	PATH("path", true),
-	TYPE("type", true),
-	P4PORT("p4port", true);
+	// Basic Swarm Review properties
+	SWARM_STATUS("status", true),           // "committed" or "shelved" see tasks.CheckoutStatus
+	SWARM_REVIEW("review", true),
+	SWARM_PASS("pass", true),
+	SWARM_FAIL("fail", true),
+
+	// Extended Swarm Review properties
+	SWARM_PROJECT("swarm_project", true),
+	SWARM_BRANCH("swarm_branch", true),
+	SWARM_PATH("swarm_path", true),
+
+	// Core Perforce properties
+	P4_CHANGE("change", true),
+	P4_LABEL("label", false),               // reserved by Jenkins for Slave Axes
+	P4_PORT("p4port", true),                // must match P4PORT string in credential
+
+	// SCM MultiBranch properties
+	EVENT_TYPE("event_type", true);
 
 	public static final String NAMESPACE = "p4.";
 	final private String prop;

@@ -44,6 +44,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
+
 public abstract class AbstractP4SCMSource extends SCMSource {
 
 	private static Logger logger = Logger.getLogger(AbstractP4SCMSource.class.getName());
@@ -91,6 +93,9 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 	}
 
 	public List<SCMSourceTrait> getTraits() {
+		if (traits == null) {
+			traits = new ArrayList<>();
+		}
 		return Collections.unmodifiableList(traits);
 	}
 
@@ -197,11 +202,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 
 	@Override
 	public PerforceScm build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
-		if (traits != null) {
-			return new P4SCMBuilder(this, head, revision).withTraits(traits).build();
-		} else {
-			return new P4SCMBuilder(this, head, revision).build();
-		}
+		return new P4SCMBuilder(this, head, revision).withTraits(getTraits()).build();
 	}
 
 	/**
@@ -290,7 +291,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 	/**
 	 * Get the Latest change for the path specified in P4SCMHead.
 	 *
-	 * @param head SCMHead
+	 * @param head     SCMHead
 	 * @param listener for logging
 	 * @return The latest change as a P4SCMRevision object
 	 * @throws Exception pushed up stack
@@ -319,32 +320,64 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 	 * @return the change as a P4SCMRevision object or null if no match.
 	 */
 	public P4SCMRevision getRevision(JSONObject payload) {
-		String change = payload.getString(ReviewProp.CHANGE.getProp());
-		P4Ref ref = P4RefBuilder.get(change);
+		// Verify Change is set in JSON
+		String change = getProperty(payload, P4_CHANGE);
+		if (change == null) {
+			return null;
+		}
 
+		P4Ref ref = P4RefBuilder.get(change);
+		P4BranchScanner scanner = getScanner(ref);
+		if (scanner == null) {
+			return null;
+		}
+
+		String path = scanner.getProjectRoot();
+		String branch = scanner.getBranch();
+		return P4SCMRevision.builder(path, branch, ref);
+	}
+
+	/**
+	 * Scans for a Jenkinsfile given a submitted change.
+	 * <p>
+	 * Looks a the first submitted file and walks up the path looking for a Jenkinsfile.
+	 *
+	 * @param ref A Perforce Change or Label
+	 * @return Scanning results.
+	 */
+	protected P4BranchScanner getScanner(P4Ref ref) {
 		P4BaseCredentials baseCredentials = ConnectionHelper.findCredential(credential, getOwner());
 		P4BranchScanner scanner = new P4BranchScanner(baseCredentials, ref, getScriptPathOrDefault());
 
 		// Check matching Project path included in Source
-		if (scanner.getProject() == null || !findInclude(scanner.getProject())) {
+		if (scanner.getProjectRoot() == null || !findInclude(scanner.getProjectRoot())) {
 			return null;
 		}
-
-		String path = scanner.getProject();
-		String branch = scanner.getBranch();
-		return P4SCMRevision.build(path, branch, ref);
+		return scanner;
 	}
 
-	private boolean findInclude(String project) {
-		project = (project.endsWith("/*")) ? project.substring(0, project.lastIndexOf("/*")) : project;
-		project = (project.endsWith("/...")) ? project.substring(0, project.lastIndexOf("/...")) : project;
+	protected boolean findInclude(String path) {
+		path = (path.endsWith("/*")) ? path.substring(0, path.lastIndexOf("/*")) : path;
+		path = (path.endsWith("/...")) ? path.substring(0, path.lastIndexOf("/...")) : path;
 
 		List<String> includes = getIncludePaths();
 		for (String i : includes) {
-			if (i.startsWith(project)) {
+			if (i.startsWith(path)) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	protected String getProperty(JSONObject payload, ReviewProp property) {
+		if (!payload.has(property.getProp())) {
+			return null;
+		}
+
+		String value = payload.getString(property.getProp());
+		if (value == null || value.isEmpty()) {
+			return null;
+		}
+		return value;
 	}
 }

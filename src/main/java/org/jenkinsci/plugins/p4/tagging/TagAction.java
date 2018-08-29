@@ -183,9 +183,9 @@ public class TagAction extends AbstractScmTagAction {
 		this.syncID = workspace.getSyncID();
 
 		Expand expand = workspace.getExpand();
-		String id = expand.get(ReviewProp.REVIEW.toString());
+		String id = expand.get(ReviewProp.SWARM_REVIEW.toString());
 		if (id != null && !id.isEmpty()) {
-			String type = expand.get(ReviewProp.STATUS.toString());
+			String type = expand.get(ReviewProp.SWARM_STATUS.toString());
 			review = new P4Review(id, CheckoutStatus.parse(type));
 		}
 	}

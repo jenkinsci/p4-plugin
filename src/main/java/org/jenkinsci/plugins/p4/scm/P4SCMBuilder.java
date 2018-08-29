@@ -8,6 +8,8 @@ import jenkins.scm.api.trait.SCMBuilder;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
+import org.jenkinsci.plugins.p4.review.P4Review;
+import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
 import java.util.logging.Logger;
 
@@ -46,12 +48,20 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 			this.revision = null;
 		}
 
-		logger.info("SCM: P4SCMBuilder: " + head + "(" + revision + ")");
+		logger.info("SCM: P4SCMBuilder: " + p4head + " rev: " + revision);
 	}
 
 	@NonNull
 	@Override
 	public PerforceScm build() {
-		return p4head.getScm(source, path, revision);
+		PerforceScm scm = p4head.getScm(source, path, revision);
+
+		if (p4head instanceof P4ChangeRequestSCMHead) {
+			P4Review review = new P4Review(p4head.getName(), CheckoutStatus.SHELVED);
+			scm.setReview(review);
+		}
+
+		logger.info("SCM: build: " + path + " head: " + p4head);
+		return scm;
 	}
 }

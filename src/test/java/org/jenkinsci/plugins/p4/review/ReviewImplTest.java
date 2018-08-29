@@ -79,8 +79,8 @@ public class ReviewImplTest extends DefaultEnvironment {
 		job.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		WorkflowRun run = job.scheduleBuild2(0, actions).get();

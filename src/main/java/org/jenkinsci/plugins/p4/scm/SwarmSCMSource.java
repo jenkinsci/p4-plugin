@@ -3,23 +3,20 @@ package org.jenkinsci.plugins.p4.scm;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
-import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
-import jenkins.scm.api.SCMRevision;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
-import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
-import org.jenkinsci.plugins.p4.review.P4Review;
-import org.jenkinsci.plugins.p4.review.ReviewProp;
+import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
@@ -34,6 +31,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
+import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_BRANCH;
+import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_PATH;
+import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_PROJECT;
+import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_STATUS;
 
 public class SwarmSCMSource extends AbstractP4SCMSource {
 
@@ -65,6 +68,10 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 			}
 		}
 		return swarm;
+	}
+
+	public void setSwarm(SwarmHelper swarm) {
+		this.swarm = swarm;
 	}
 
 	@Override
@@ -130,7 +137,6 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 		return super.getRevision(head, listener);
 	}
 
-
 	/**
 	 * A specific revision based on the Event Payload.
 	 *
@@ -139,24 +145,72 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 	 */
 	@Override
 	public P4SCMRevision getRevision(JSONObject payload) {
-		String branch = payload.getString(ReviewProp.BRANCH.getProp());
-		String change = payload.getString(ReviewProp.CHANGE.getProp());
-		String path = payload.getString(ReviewProp.PATH.getProp());
 
-		// Do I need to verify project, branch and path if Swarm called me?
+		// Verify Change is set in JSON
+		String change = getProperty(payload, P4_CHANGE);
+		if(change == null) {
+			return null;
+		}
 
-		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
-		return P4SCMRevision.build(path, branch, ref);
+		// Verify Project is set in JSON and matches Source
+		String project = getProperty(payload, SWARM_PROJECT);
+
+		// If project is not defined; try probing with non-Swarm event on Swarm Source
+		if (project == null || !project.equalsIgnoreCase(getProject())) {
+
+			P4Ref ref = P4RefBuilder.get(change);
+
+			P4BranchScanner scanner = getScanner(ref);
+			String path = scanner.getProjectRoot();
+			String branch = scanner.getBranch();
+
+			return P4SCMRevision.swarmBuilder(path, branch, ref);
+		}
+
+		// Project is defined so look up in Swarm
+		String branch = getProperty(payload, SWARM_BRANCH);
+		String path = getProperty(payload, SWARM_PATH);
+		String status = getProperty(payload, SWARM_STATUS);
+
+		if (branch == null || path == null || status == null ) {
+			return null;
+		}
+
+		CheckoutStatus checkoutStatus = CheckoutStatus.parse(status);
+		switch (checkoutStatus) {
+			case SUBMITTED:
+			case COMMITTED:
+				P4Ref ref = new P4ChangeRef(Long.parseLong(change));
+				return P4SCMRevision.builder(path, branch, ref);
+
+			case SHELVED:
+				// TODO Use traits to add Swarm review information
+				return null;
+
+			default:
+				return null;
+		}
 	}
 
 	@Override
-	public PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
-		PerforceScm scm = super.build(head, revision);
-		if (head instanceof P4ChangeRequestSCMHead) {
-			P4Review review = new P4Review(head.getName(), CheckoutStatus.SHELVED);
-			scm.setReview(review);
+	protected boolean findInclude(String path) {
+		// Scan Swarm to see if path is in a project branch
+		List<SwarmProjectAPI.Branch> branches;
+		try {
+			branches = getSwarm().getBranchesInProject(project);
+		} catch (Exception e) {
+			return false;
 		}
-		return scm;
+
+		for (SwarmProjectAPI.Branch branch : branches) {
+			for(String p : branch.getPaths() ) {
+				if(p.startsWith(path)) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	@Override

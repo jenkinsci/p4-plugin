@@ -29,8 +29,8 @@ public class ReviewNotifier extends RunListener<Run> {
 
 		try {
 			EnvVars env = run.getEnvironment(listener);
-			String fail = env.get(ReviewProp.FAIL.getProp());
-			String pass = env.get(ReviewProp.PASS.getProp());
+			String fail = env.get(ReviewProp.SWARM_FAIL.getProp());
+			String pass = env.get(ReviewProp.SWARM_PASS.getProp());
 
 			Result result = run.getResult();
 			if (result == null) {

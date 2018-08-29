@@ -79,8 +79,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -119,8 +119,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -160,8 +160,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -206,8 +206,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -263,8 +263,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -307,8 +307,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -405,8 +405,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Build at change 3
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "submitted"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "3"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -469,8 +469,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Checkout at commit 9
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		// Run once
@@ -499,8 +499,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Set review to build change 9
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		// Add a trigger

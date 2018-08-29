@@ -17,16 +17,25 @@ import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
+import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -36,6 +45,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class PerforceSCMSourceTest extends DefaultEnvironment {
 
@@ -377,11 +389,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String change = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit");
 
 		HashMap<String, String> map = new HashMap<>();
-		map.put("p4port", p4d.getRshPort());
-		map.put("project", base);
-		map.put("change", change);
-		map.put("branch", branch);
-		map.put("path", base + "/" + branch);
+		map.put(ReviewProp.P4_PORT.getProp(), p4d.getRshPort());
+		map.put(ReviewProp.P4_CHANGE.getProp(), change);
 		JSONObject payload = JSONObject.fromObject(map);
 
 		String origin = "testMultiBranchClassicUpdateEvent";
@@ -392,7 +401,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
-		assertTrue("Main has built", build.number == 2);
+		assertEquals("Main has built", 2, build.number);
 		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
 	}
 
@@ -425,11 +434,149 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String change = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
 
 		HashMap<String, String> map = new HashMap<>();
-		map.put("p4port", p4d.getRshPort());
-		map.put("project", base);
-		map.put("change", change);
-		map.put("branch", branch);
-		map.put("path", base + "/" + branch);
+		map.put(ReviewProp.P4_PORT.getProp(), p4d.getRshPort());
+		map.put(ReviewProp.P4_CHANGE.getProp(), change);
+		JSONObject payload = JSONObject.fromObject(map);
+
+		// Another change that should not get sync'ed
+		submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
+
+		String origin = "testMultiBranchClassicUpdateEvent";
+		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
+		SCMHeadEvent.fireNow(event);
+
+		Thread.sleep(7000);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
+		assertEquals("Main has built", 2, runMain.number);
+		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
+	}
+
+	@Test
+	public void testMultiBranchSwarmCommittedEvent() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String project = "SwarmCommit";
+		String base = "//depot/SwarmCommit";
+		String[] branches = new String[]{"Main", "Dev"};
+
+		String baseChange = sampleProject(base, branches);
+		assertNotNull(baseChange);
+
+		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
+		assertNotNull(mockSwarm);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		SwarmSCMSource source = new SwarmSCMSource(CREDENTIAL, null, format);
+		source.setProject(project);
+		source.setSwarm(mockSwarm);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, project);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+
+		// Make a shelve / fake review
+		String commit = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
+		assertNotNull(commit);
+		assertTrue("Not a number", commit.chars().allMatch(Character::isDigit));
+
+		// Mock Changes/Reviews
+		List<Long> changes = new ArrayList<>();
+		changes.add(Long.parseLong(commit));
+		HashMap<String, List<String>> projects = new HashMap<>();
+		projects.put(project, Arrays.asList("Main"));
+		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects);
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
+
+		// Build JSON Payload
+		HashMap<String, String> map = new HashMap<>();
+		map.put(ReviewProp.P4_PORT.getProp(), p4d.getRshPort());
+		map.put(ReviewProp.P4_CHANGE.getProp(), commit);
+
+		JSONObject payload = JSONObject.fromObject(map);
+
+		// Another change that should not get sync'ed
+		submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
+
+		String origin = "testMultiBranchClassicUpdateEvent";
+		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
+		SCMHeadEvent.fireNow(event);
+
+		Thread.sleep(7000);
+		jenkins.waitUntilNoActivity();
+
+		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
+
+		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
+		assertEquals("Main should have built", 2, runMain.number);
+	}
+
+	@Ignore("Implement Swarm SHELVED event supported")
+	@Test
+	public void testMultiBranchSwarmMultiUpdateEvents() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String project = "SwarmReview";
+		String base = "//depot/SwarmReview";
+		String[] branches = new String[]{"Main", "Dev"};
+
+		String baseChange = sampleProject(base, branches);
+		assertNotNull(baseChange);
+
+		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
+		assertNotNull(mockSwarm);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		SwarmSCMSource source = new SwarmSCMSource(CREDENTIAL, null, format);
+		source.setProject(project);
+		source.setSwarm(mockSwarm);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, project);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+
+		// Make a shelve / fake review
+		String review = shelveFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
+		assertNotNull(review);
+		assertTrue("Not a number", review.chars().allMatch(Character::isDigit));
+
+		// Mock Changes/Reviews
+		List<Long> changes = new ArrayList<>();
+		changes.add(Long.parseLong(review));
+		HashMap<String, List<String>> projects = new HashMap<>();
+		projects.put(project, Arrays.asList("Main"));
+		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects);
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
+
+		// Build JSON Payload
+		HashMap<String, String> map = new HashMap<>();
+		map.put(ReviewProp.P4_PORT.getProp(), p4d.getRshPort());
+		map.put(ReviewProp.SWARM_PROJECT.getProp(), project);
+		map.put(ReviewProp.SWARM_BRANCH.getProp(), branch);
+		map.put(ReviewProp.SWARM_PATH.getProp(), base + "/" + branch);
+		map.put(ReviewProp.P4_CHANGE.getProp(), review);
+		map.put(ReviewProp.SWARM_REVIEW.getProp(), review);
+		map.put(ReviewProp.SWARM_STATUS.getProp(), CheckoutStatus.SHELVED.name());
+
 		JSONObject payload = JSONObject.fromObject(map);
 
 		// Another change that should not get sync'ed
@@ -443,9 +590,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
-		assertTrue("Main has built", runMain.number == 2);
+		assertEquals("Main has built", 2, runMain.number);
 		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
-		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
+		// TODO jenkins.assertLogContains the unshelved review
 	}
 
 
@@ -488,5 +635,23 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 			id = submitFile(jenkins, base + "/" + branch + "/src/fileB", "content");
 		}
 		return id;
+	}
+
+	private SwarmHelper sampleSwarmProject(String project, String base, String[] branches) throws Exception {
+
+		SwarmHelper mockSwarm = mock(SwarmHelper.class);
+		when(mockSwarm.getBaseUrl()).thenReturn("mock");
+		when(mockSwarm.getActiveReviews(project)).thenReturn(new ArrayList<>());
+
+		// Mock Branches and Paths
+		List<SwarmProjectAPI.Branch> swarmBranches = new ArrayList<>();
+		for (String branch : branches) {
+			List<String> swarmMainPath = new ArrayList<>();
+			swarmMainPath.add(base + "/" + branch + "/...");
+			swarmBranches.add(new SwarmProjectAPI.Branch(branch, branch, swarmMainPath));
+		}
+
+		when(mockSwarm.getBranchesInProject(project)).thenReturn(swarmBranches);
+		return mockSwarm;
 	}
 }

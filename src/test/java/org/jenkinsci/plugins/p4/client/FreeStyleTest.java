@@ -72,8 +72,8 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
-		list.add(new StringParameterValue(ReviewProp.CHANGE.toString(), "9"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -128,9 +128,9 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "committed"));
-		list.add(new StringParameterValue(ReviewProp.LABEL.toString(), "auto15"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
+		list.add(new StringParameterValue(ReviewProp.P4_LABEL.toString(), "auto15"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;
@@ -210,9 +210,9 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
-		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
-		list.add(new StringParameterValue(ReviewProp.PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;

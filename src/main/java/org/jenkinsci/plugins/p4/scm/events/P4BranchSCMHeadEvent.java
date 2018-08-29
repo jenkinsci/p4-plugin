@@ -26,8 +26,8 @@ public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 	@NonNull
 	@Override
 	public String getSourceName() {
-		String p4port = getField(getPayload(), ReviewProp.P4PORT);
-		String change = getField(getPayload(), ReviewProp.CHANGE);
+		String p4port = getField(getPayload(), ReviewProp.P4_PORT);
+		String change = getField(getPayload(), ReviewProp.P4_CHANGE);
 		return p4port + "/" + change;
 	}
 
@@ -43,7 +43,7 @@ public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 		AbstractP4SCMSource source = (AbstractP4SCMSource) scmSource;
 
 		// Check Perforce server P4PORT
-		String p4port = getField(getPayload(), ReviewProp.P4PORT);
+		String p4port = getField(getPayload(), ReviewProp.P4_PORT);
 		String id = source.getCredential();
 		P4BaseCredentials credential = ConnectionHelper.findCredential(id, scmSource.getOwner());
 		if (p4port == null || !p4port.equals(credential.getP4port())) {

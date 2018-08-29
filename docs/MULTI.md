@@ -145,3 +145,49 @@ pipeline {
     }
 }
 ```
+
+## MultiBranch trigger SCM Events
+
+Perforce can trigger Jenkins to build MultiBranch projects based on an event, such as a submitted change. 
+ 
+A triggered build also requires an administrator to add a Perforce trigger to the Perforce server. For information about adding a trigger, see [Using triggers to customize behavior](https://www.perforce.com/perforce/doc.current/manuals/p4sag/chapter.scripting.html) in [Helix Core Server Administrator Guide: Fundamentals](https://www.perforce.com/perforce/doc.current/manuals/p4sag/index.html#P4SAG/about.html).
+The trigger needs to POST a JSON payload to the Jenkins end-point  `JENKINS_URL/p4/event/`. 
+
+### Perforce Change JSON payload
+
+```json
+{
+  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
+  "change":      10001,           Change number to sync files for build
+  "event_type":  "UPDATED"        Event type (currently only UPDATED is supported)
+}
+```
+
+### Swarm Commit JSON payload
+
+```json
+{
+  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
+  "project":     <PROJECT>,       Swarm Project name
+  "branch":      <BRANCH>,        Swarm Branch name
+  "path":        <PATH>,          Swarm Path name
+  "change":      10001,           Change number to sync files for build
+  "status":      "committed",     Change status is "committed"
+  "event_type":  "UPDATED"        Event type (currently only UPDATED is supported)
+}
+```
+
+### Swarm Shelved JSON payload (draft: not yet supported)
+
+```json
+{
+  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
+  "project":     <PROJECT>,       Swarm Project name
+  "branch":      <BRANCH>,        Swarm Branch name
+  "path":        <PATH>,          Swarm Path name
+  "change":      10001,           Change number to sync files for build
+  "review":      10022,           Review number to unshelve for build
+  "status":      "shelved",       Change status is "shelved"
+  "event_type":  "UPDATED"        Event type (currently only UPDATED is supported)
+}
+```

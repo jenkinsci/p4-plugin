@@ -60,5 +60,9 @@ public class SwarmProjectAPI {
 			path = path.substring(0, path.lastIndexOf("/..."));
 			return new P4SwarmPath(path, paths);
 		}
+
+		public List<String> getPaths() {
+			return paths;
+		}
 	}
 }

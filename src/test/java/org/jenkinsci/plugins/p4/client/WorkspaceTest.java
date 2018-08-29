@@ -202,8 +202,8 @@ public class WorkspaceTest extends DefaultEnvironment {
 		project.save();
 
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
-		list.add(new StringParameterValue(ReviewProp.STATUS.toString(), "shelved"));
-		list.add(new StringParameterValue(ReviewProp.REVIEW.toString(), "19"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
 		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
 		FreeStyleBuild build;

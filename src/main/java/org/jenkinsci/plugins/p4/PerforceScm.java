@@ -401,7 +401,7 @@ public class PerforceScm extends SCM {
 		String pin = populate.getPin();
 		if (pin != null && !pin.isEmpty()) {
 			pin = ws.getExpand().format(pin, false);
-			ws.getExpand().set(ReviewProp.LABEL.toString(), pin);
+			ws.getExpand().set(ReviewProp.P4_LABEL.toString(), pin);
 		}
 
 		// Calculate last change, build if null (JENKINS-40356)
@@ -444,8 +444,8 @@ public class PerforceScm extends SCM {
 
 		// Add review to environment, if defined
 		if (review != null) {
-			ws.addEnv(ReviewProp.REVIEW.toString(), review.getId());
-			ws.addEnv(ReviewProp.STATUS.toString(), CheckoutStatus.SHELVED.toString());
+			ws.addEnv(ReviewProp.SWARM_REVIEW.toString(), review.getId());
+			ws.addEnv(ReviewProp.SWARM_STATUS.toString(), CheckoutStatus.SHELVED.toString());
 		}
 
 		// Set the Workspace and initialise

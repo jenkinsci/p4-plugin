@@ -141,14 +141,14 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		List<ParameterDefinition> swarm = new ArrayList<ParameterDefinition>();
 
 		// Swarm parameters
-		swarm.add(new StringParameterDefinition(ReviewProp.REVIEW.getProp(), null));
-		swarm.add(new StringParameterDefinition(ReviewProp.CHANGE.getProp(), null));
-		swarm.add(new StringParameterDefinition(ReviewProp.STATUS.getProp(), null));
-		swarm.add(new StringParameterDefinition(ReviewProp.PASS.getProp(), null));
-		swarm.add(new StringParameterDefinition(ReviewProp.FAIL.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_REVIEW.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.P4_CHANGE.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_STATUS.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_PASS.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_FAIL.getProp(), null));
 
 		// Custom parameters
-		swarm.add(new StringParameterDefinition(ReviewProp.LABEL.toString(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.P4_LABEL.toString(), null));
 
 		return swarm;
 	}

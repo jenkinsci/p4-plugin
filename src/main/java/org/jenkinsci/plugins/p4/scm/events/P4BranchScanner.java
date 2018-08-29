@@ -22,7 +22,7 @@ public class P4BranchScanner {
 	private final String file;
 
 	private String branch = null;
-	private String project = null;
+	private String projectRoot = null;
 
 	public P4BranchScanner(P4BaseCredentials credential, P4Ref change, String file) {
 		this.credential = credential;
@@ -40,8 +40,12 @@ public class P4BranchScanner {
 		return branch;
 	}
 
-	public String getProject() {
-		return project;
+	public String getProjectRoot() {
+		return projectRoot;
+	}
+
+	public P4Ref getChange() {
+		return change;
 	}
 
 	private void scan() throws Exception {
@@ -65,7 +69,7 @@ public class P4BranchScanner {
 				if (p4.hasFile(subPath)) {
 					branch = sub[n - 1];
 					String[] projectSub = Arrays.copyOfRange(parts, 0, n - 1);
-					project = "//" + String.join("/", projectSub);
+					projectRoot = "//" + String.join("/", projectSub);
 					return;
 				}
 			}

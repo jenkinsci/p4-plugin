@@ -11,6 +11,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -60,8 +61,7 @@ public class P4Hook implements UnprotectedRootAction {
 		}
 		JSONObject payload = JSONObject.fromObject(body);
 
-
-		String typeString = payload.getString("type");
+		String typeString = payload.getString(ReviewProp.EVENT_TYPE.getProp());
 		SCMEvent.Type eventType = SCMEvent.Type.valueOf(typeString);
 
 		SCMHeadEvent.fireNow(new P4BranchSCMHeadEvent(eventType, payload, SCMEvent.originOf(req)));
