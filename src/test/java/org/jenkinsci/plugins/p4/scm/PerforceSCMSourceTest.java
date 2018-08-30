@@ -22,13 +22,11 @@ import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
-import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -36,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
@@ -397,7 +396,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		Thread.sleep(5000);
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
@@ -445,7 +444,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		Thread.sleep(7000);
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
@@ -513,7 +512,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		Thread.sleep(7000);
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
 		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
@@ -522,6 +521,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals("Main should have built", 2, runMain.number);
 	}
 
+	/*
 	@Ignore("Implement Swarm SHELVED event supported")
 	@Test
 	public void testMultiBranchSwarmMultiUpdateEvents() throws Exception {
@@ -586,7 +586,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		Thread.sleep(5000);
+		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
@@ -594,8 +594,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
 		// TODO jenkins.assertLogContains the unshelved review
 	}
-
-
+*/
 
 	/* ------------------------------------------------------------------------------------------------------------- */
 	/*	Helper methods                                                                                               */

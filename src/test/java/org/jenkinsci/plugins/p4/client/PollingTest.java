@@ -29,7 +29,7 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -50,11 +50,11 @@ public class PollingTest extends DefaultEnvironment {
 	private static Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	@ClassRule
+	public static JenkinsRule jenkins = new JenkinsRule();
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	@ClassRule
+	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -64,7 +64,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPollingPin() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PollingPin.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -101,7 +101,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPollingInc() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PollingInc.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -141,7 +141,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPollingMask() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PollingMask.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -182,7 +182,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPollingMaskExcl() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PollingMaskExcl.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -228,7 +228,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPatternList() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PatternList.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -287,7 +287,7 @@ public class PollingTest extends DefaultEnvironment {
 
 	@Test
 	public void testPatternListCaseSensitive() throws Exception {
-		String client = "manual.ws";
+		String client = "PatternListCaseSensitive.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -367,7 +367,7 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPatternListInvalidPattern() throws Exception {
 
-		String client = "manual.ws";
+		String client = "PatternListInvalidPattern.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
@@ -453,7 +453,7 @@ public class PollingTest extends DefaultEnvironment {
 
 	@Test
 	public void shouldTriggerJobIfChanges() throws Exception {
-		String client = "manual.ws";
+		String client = "TriggerJobIfChanges.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		FreeStyleProject project = jenkins.createFreeStyleProject("TriggerJobIfChanges");
@@ -471,7 +471,7 @@ public class PollingTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<ParameterValue>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		// Run once
 		Run lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
@@ -570,10 +570,10 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
 
 		// Change 1
-		submitFile(jenkins, "//depot/main/inc.001", "content");
+		String c1 = submitFile(jenkins, "//depot/main/inc.001", "content");
 
 		// Change 2
-		submitFile(jenkins, "//depot/main/inc.002", "content");
+		String c2 = submitFile(jenkins, "//depot/main/inc.002", "content");
 
 		// add handler to read polling log
 		Logger polling = Logger.getLogger("IncPolling");
@@ -583,16 +583,16 @@ public class PollingTest extends DefaultEnvironment {
 		// poll for changes
 		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
 		job.poll(listener);
-		assertThat(pollHandler.getLogBuffer(), containsString("found change: 44"));
-		assertThat(pollHandler.getLogBuffer(), containsString("found change: 45"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: " + c1));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: " + c2));
 
 		WorkflowRun run2 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("P4 Task: syncing files at change: 44", run2);
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + c1, run2);
 
 		// Change 3
 		submitFile(jenkins, "//depot/main/inc.003", "content");
 
 		WorkflowRun run3 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("P4 Task: syncing files at change: 45", run3);
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + c2, run3);
 	}
 }
