@@ -31,14 +31,18 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_BRANCH;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_PATH;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_PROJECT;
+import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_REVIEW;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_STATUS;
 
 public class SwarmSCMSource extends AbstractP4SCMSource {
+
+	private static Logger logger = Logger.getLogger(SwarmSCMSource.class.getName());
 
 	private String project;
 
@@ -148,7 +152,7 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 
 		// Verify Change is set in JSON
 		String change = getProperty(payload, P4_CHANGE);
-		if(change == null) {
+		if (change == null) {
 			return null;
 		}
 
@@ -161,9 +165,12 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 			P4Ref ref = P4RefBuilder.get(change);
 
 			P4BranchScanner scanner = getScanner(ref);
+			if (scanner == null) {
+				return null;
+			}
+
 			String path = scanner.getProjectRoot();
 			String branch = scanner.getBranch();
-
 			return P4SCMRevision.swarmBuilder(path, branch, ref);
 		}
 
@@ -172,20 +179,26 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 		String path = getProperty(payload, SWARM_PATH);
 		String status = getProperty(payload, SWARM_STATUS);
 
-		if (branch == null || path == null || status == null ) {
+		if (branch == null || path == null || status == null) {
 			return null;
 		}
 
 		CheckoutStatus checkoutStatus = CheckoutStatus.parse(status);
+		P4Ref ref = new P4ChangeRef(Long.parseLong(change));
+
 		switch (checkoutStatus) {
 			case SUBMITTED:
 			case COMMITTED:
-				P4Ref ref = new P4ChangeRef(Long.parseLong(change));
-				return P4SCMRevision.builder(path, branch, ref);
+				logger.info("SCM Swarm: COMMITTED: path: " + path + " branch: " + branch + " ref: " + ref);
+				return P4SCMRevision.swarmBuilder(path, branch, ref);
 
 			case SHELVED:
-				// TODO Use traits to add Swarm review information
-				return null;
+				String review = getProperty(payload, SWARM_REVIEW);
+				if (review == null) {
+					return null;
+				}
+				logger.info("SCM Swarm: SHELVED: path: " + path + " branch: " + branch + " ref: " + ref + " review: " + review);
+				return P4SCMRevision.swarmBuilder(path, branch, ref, review);
 
 			default:
 				return null;
@@ -203,8 +216,8 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 		}
 
 		for (SwarmProjectAPI.Branch branch : branches) {
-			for(String p : branch.getPaths() ) {
-				if(p.startsWith(path)) {
+			for (String p : branch.getPaths()) {
+				if (p.startsWith(path)) {
 					return true;
 				}
 			}

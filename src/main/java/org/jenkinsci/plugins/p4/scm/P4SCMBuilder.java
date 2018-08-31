@@ -47,8 +47,6 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 		} else {
 			this.revision = null;
 		}
-
-		logger.info("SCM: P4SCMBuilder: " + p4head + " rev: " + revision);
 	}
 
 	@NonNull
@@ -61,7 +59,7 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 			scm.setReview(review);
 		}
 
-		logger.info("SCM: build: " + path + " head: " + p4head);
+		logger.info("SCM: build: " + path + " head: " + p4head + " rev: " + revision);
 		return scm;
 	}
 }

@@ -3,7 +3,8 @@ package org.jenkinsci.plugins.p4.scm;
 import jenkins.scm.api.SCMRevision;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class P4SCMRevision extends SCMRevision {
@@ -21,8 +22,22 @@ public class P4SCMRevision extends SCMRevision {
 	}
 
 	public static P4SCMRevision swarmBuilder(String path, String branch, P4Ref ref) {
-		P4SwarmPath p4path = new P4SwarmPath(path, Arrays.asList(path), ref.toString());
-		P4SCMHead head = new P4SCMHead(branch, p4path);
+		List<String> mappings = new ArrayList<>();
+		mappings.add(path + "/" + branch + "/...");
+
+		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, ref.toString());
+		P4SCMHead head = new P4SCMHead(branch, swarmPath);
+		return new P4SCMRevision(head, ref);
+	}
+
+	public static P4SCMRevision swarmBuilder(String path, String branch, P4Ref ref, String reviewID) {
+		List<String> mappings = new ArrayList<>();
+		mappings.add(path + "/" + branch + "/...");
+
+		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, ref.toString());
+		String trgName = branch + "-" + reviewID;
+		P4SCMHead target = new P4SCMHead(trgName, swarmPath);
+		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);
 		return new P4SCMRevision(head, ref);
 	}
 
