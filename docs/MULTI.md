@@ -155,9 +155,9 @@ The trigger needs to POST a JSON payload to the Jenkins end-point  `JENKINS_URL/
 
 ### Perforce Change JSON payload
 
-```json
+```
 {
-  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
+  "p4port":      P4PORT,          Perforce P4PORT (must match the Jenkins Credential)
   "change":      10001,           Change number to sync files for build
   "event_type":  "UPDATED"        Event type (currently only UPDATED is supported)
 }
@@ -165,12 +165,12 @@ The trigger needs to POST a JSON payload to the Jenkins end-point  `JENKINS_URL/
 
 ### Swarm Commit JSON payload
 
-```json
+```
 {
-  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
-  "project":     <PROJECT>,       Swarm Project name
-  "branch":      <BRANCH>,        Swarm Branch name
-  "path":        <PATH>,          Swarm Path name
+  "p4port":      P4PORT,          Perforce P4PORT (must match the Jenkins Credential)
+  "project":     PROJECT,         Swarm Project name
+  "branch":      BRANCH,          Swarm Branch name
+  "path":        PATH,            Swarm Path name
   "change":      10001,           Change number to sync files for build
   "status":      "committed",     Change status is "committed"
   "event_type":  "UPDATED"        Event type (currently only UPDATED is supported)
@@ -179,12 +179,12 @@ The trigger needs to POST a JSON payload to the Jenkins end-point  `JENKINS_URL/
 
 ### Swarm Shelved JSON payload (draft: not yet supported)
 
-```json
+```
 {
-  "p4port":      <P4PORT>,        Perforce P4PORT (must match the Jenkins Credential)
-  "project":     <PROJECT>,       Swarm Project name
-  "branch":      <BRANCH>,        Swarm Branch name
-  "path":        <PATH>,          Swarm Path name
+  "p4port":      P4PORT,          Perforce P4PORT (must match the Jenkins Credential)
+  "project":     PROJECT,         Swarm Project name
+  "branch":      BRANCH,          Swarm Branch name
+  "path":        PATH,            Swarm Path name
   "change":      10001,           Change number to sync files for build
   "review":      10022,           Review number to unshelve for build
   "status":      "shelved",       Change status is "shelved"
