@@ -189,7 +189,7 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 		switch (checkoutStatus) {
 			case SUBMITTED:
 			case COMMITTED:
-				logger.info("SCM Swarm: COMMITTED: path: " + path + " branch: " + branch + " ref: " + ref);
+				logger.fine("SCM Swarm: COMMITTED: path: " + path + " branch: " + branch + " ref: " + ref);
 				return P4SCMRevision.swarmBuilder(path, branch, ref);
 
 			case SHELVED:
@@ -197,7 +197,7 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 				if (review == null) {
 					return null;
 				}
-				logger.info("SCM Swarm: SHELVED: path: " + path + " branch: " + branch + " ref: " + ref + " review: " + review);
+				logger.fine("SCM Swarm: SHELVED: path: " + path + " branch: " + branch + " ref: " + ref + " review: " + review);
 				return P4SCMRevision.swarmBuilder(path, branch, ref, review);
 
 			default:

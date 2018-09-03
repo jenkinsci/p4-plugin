@@ -23,7 +23,7 @@ public class P4SCMRevision extends SCMRevision {
 
 	public static P4SCMRevision swarmBuilder(String path, String branch, P4Ref ref) {
 		List<String> mappings = new ArrayList<>();
-		mappings.add(path + "/" + branch + "/...");
+		mappings.add(path + "/...");
 
 		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, ref.toString());
 		P4SCMHead head = new P4SCMHead(branch, swarmPath);
@@ -32,9 +32,9 @@ public class P4SCMRevision extends SCMRevision {
 
 	public static P4SCMRevision swarmBuilder(String path, String branch, P4Ref ref, String reviewID) {
 		List<String> mappings = new ArrayList<>();
-		mappings.add(path + "/" + branch + "/...");
+		mappings.add(path + "/...");
 
-		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, ref.toString());
+		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, reviewID);
 		String trgName = branch + "-" + reviewID;
 		P4SCMHead target = new P4SCMHead(trgName, swarmPath);
 		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);

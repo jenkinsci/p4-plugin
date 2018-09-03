@@ -15,6 +15,7 @@ import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceCriteria;
 import jenkins.scm.api.SCMSourceEvent;
 import jenkins.scm.api.SCMSourceOwner;
+import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.TagSCMHeadCategory;
@@ -155,7 +156,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 			heads.addAll(tags);
 
 			for (P4SCMHead head : heads) {
-				logger.info("SCM: retrieve Head: " + head);
+				logger.fine("SCM: retrieve Head: " + head);
 
 				// get SCMRevision from payload if trigger event, else build from head (latest)
 				SCMRevision revision = getRevision(head, listener);
@@ -165,6 +166,13 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 					if (rev.getHead().equals(head)) {
 						revision = rev;
 						logger.fine("SCM: retrieve (trigger) Revision: " + revision);
+					} else {
+						if (rev.getHead() instanceof ChangeRequestSCMHead) {
+							if (((P4ChangeRequestSCMHead) rev.getHead()).getPath().getPath().equals(head.getPath().getPath())) {
+								revision = rev;
+								logger.fine("SCM: retrieve (trigger) Swarm Review: " + revision);
+							}
+						}
 					}
 				}
 
@@ -176,11 +184,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 					try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 						SCMSourceCriteria.Probe probe = new P4SCMProbe(p4, head);
 						if (criteria.isHead(probe, listener)) {
-							logger.info("SCM: observer head: " + head + " revision: " + revision);
-
-							// TODO:
-							// Not sure about this, Jenkins seems to ignore revision sending a null
-							// to P4SCMBuilder.  Set Head using using the correct revision.
+							logger.fine("SCM: observer head: " + head + " revision: " + revision);
 							if (revision != null) {
 								observer.observe(revision.getHead(), revision);
 							}

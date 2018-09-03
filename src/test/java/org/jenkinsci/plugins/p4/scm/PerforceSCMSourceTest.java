@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
+import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewsAPI;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -601,6 +602,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
 		assertEquals("Main should have built", 2, runMain.number);
+
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + commit, runMain);
 	}
 
 	@Test
@@ -650,6 +653,11 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects);
 		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
 
+		List<SwarmReviewsAPI.Reviews> mockReviewsList = new ArrayList<>();
+		SwarmReviewsAPI.Reviews mockReviews = new SwarmReviewsAPI.Reviews(Long.parseLong(review), changes);
+		mockReviewsList.add(mockReviews);
+		when(mockSwarm.getActiveReviews(project)).thenReturn(mockReviewsList);
+
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
 		map.put(ReviewProp.P4_PORT.getProp(), p4d.getRshPort());
@@ -663,22 +671,28 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		JSONObject payload = JSONObject.fromObject(map);
 
 		// Another change that should not get sync'ed
-//		String change = submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
-//		logger.info("Test: submitting change " + change);
+		String change = submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
+		logger.info("Test: submitting change " + change);
 
-		String origin = "testMultiBranchClassicUpdateEvent";
-		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
-		logger.info("\n\nTest: Firing Event!");
+		String origin = "testMultiBranchSwarmMultiUpdateEvents";
+		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.CREATED, payload, origin);
+		logger.fine("\n\nTest: Firing Event!");
 		SCMHeadEvent.fireNow(event);
 
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertTrue("Dev should not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertTrue("Main should not built", multi.getItem("Main").getLastBuild().number == 1);
 
-		//WorkflowRun runMain = multi.getItem("Main").getLastBuild();
-		//assertEquals("Main has built", 2, runMain.number);
-		// TODO jenkins.assertLogContains the unshelved review
+		WorkflowJob revJob = multi.getItem("Main-" + review);
+		assertNotNull(revJob);
+
+		WorkflowRun revRun = revJob.getLastBuild();
+		assertNotNull(revJob);
+
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + review, revRun);
+		jenkins.assertLogContains("P4 Task: unshelve review: " + review, revRun);
 	}
 
 

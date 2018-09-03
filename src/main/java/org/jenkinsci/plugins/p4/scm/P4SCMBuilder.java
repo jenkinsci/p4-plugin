@@ -55,11 +55,11 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 		PerforceScm scm = p4head.getScm(source, path, revision);
 
 		if (p4head instanceof P4ChangeRequestSCMHead) {
-			P4Review review = new P4Review(p4head.getName(), CheckoutStatus.SHELVED);
+			P4Review review = new P4Review(revision.toString(), CheckoutStatus.SHELVED);
 			scm.setReview(review);
 		}
 
-		logger.info("SCM: build: " + path + " head: " + p4head + " rev: " + revision);
+		logger.fine("SCM: build: " + path + " head: " + p4head + " rev: " + revision);
 		return scm;
 	}
 }
