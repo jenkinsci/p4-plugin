@@ -7,14 +7,14 @@ import hudson.model.EnvironmentContributor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
+import java.io.IOException;
+import java.util.Map;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
-
-import java.io.IOException;
-import java.util.Map;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 @Extension()
 public class P4EnvironmentContributor extends EnvironmentContributor {
@@ -53,6 +53,14 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		if (tagAction.getPort() != null) {
 			String port = tagAction.getPort();
 			env.put("P4_PORT", port);
+		}
+
+		// Set P4_ROOT value
+		if (tagAction.getWorkspace() != null) {
+			Workspace tagWorkspace = tagAction.getWorkspace();
+			if (tagWorkspace != null && tagWorkspace.getRootPath() != null) {
+				env.put("P4_ROOT", tagWorkspace.getRootPath());
+			}
 		}
 
 		// Set P4_USER connection
