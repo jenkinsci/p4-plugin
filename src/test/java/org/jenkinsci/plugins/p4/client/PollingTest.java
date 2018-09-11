@@ -9,6 +9,7 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.scm.PollingResult;
+import hudson.triggers.SCMTrigger;
 import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -594,5 +595,58 @@ public class PollingTest extends DefaultEnvironment {
 
 		WorkflowRun run3 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + c2, run3);
+	}
+
+	@Test
+	public void testPollingBuildInProgress() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PollingBuildInProgress");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        checkout perforce(\n"
+				+ "          credential: '" + CREDENTIAL + "', \n"
+				+ "          populate: forceClean(quiet: true),\n"
+				+ "          workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "            spec: clientSpec(view: '//depot/main/... //${P4_CLIENT}/...')))\n"
+				+ "        sleep 5\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}", false));
+
+		// enable SCM polling (even though we poll programmatically)
+		SCMTrigger cron = new SCMTrigger("0 0 * * *");
+		job.addTrigger(cron);
+
+		// disable concurrent builds
+		job.setConcurrentBuild(false);
+
+		// add handler to read polling log
+		Logger polling = Logger.getLogger("InProgressPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+
+		// Base-line build
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		// Submit first change
+		submitFile(jenkins, "//depot/main/file.001", "content");
+
+		// poll for changes - we should see the new submit
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		assertEquals(PollingResult.BUILD_NOW, job.poll(listener));
+
+		// Schedule build and wait until it starts
+		job.scheduleBuild2(0);
+		TimeUnit.MILLISECONDS.sleep(100);
+
+		// poll again and again for changes (while build is in-progress)
+		assertTrue(job.isBuilding());
+		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
+		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
+		assertTrue(job.isBuilding());
 	}
 }
