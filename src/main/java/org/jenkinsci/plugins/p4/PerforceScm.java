@@ -291,11 +291,6 @@ public class PerforceScm extends SCM {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
-		if (job.isBuilding() && !isConcurrentBuild(job)) {
-			listener.getLogger().println("Build in progress and concurrent builds disabled, polling delayed.");
-			return PollingResult.NO_CHANGES;
-		}
-
 		// Get last run and build workspace
 		Run<?, ?> lastRun = job.getLastBuild();
 
