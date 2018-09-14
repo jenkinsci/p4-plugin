@@ -169,8 +169,9 @@ public class SwarmSCMSource extends AbstractP4SCMSource {
 				return null;
 			}
 
-			String path = scanner.getProjectRoot();
+			String base = scanner.getProjectRoot();
 			String branch = scanner.getBranch();
+			String path = base + "/" + branch;
 			return P4SCMRevision.swarmBuilder(path, branch, ref);
 		}
 

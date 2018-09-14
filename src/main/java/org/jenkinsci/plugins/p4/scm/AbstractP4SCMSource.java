@@ -336,8 +336,9 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 			return null;
 		}
 
-		String path = scanner.getProjectRoot();
+		String base = scanner.getProjectRoot();
 		String branch = scanner.getBranch();
+		String path = base + "/" + branch;
 		return P4SCMRevision.builder(path, branch, ref);
 	}
 

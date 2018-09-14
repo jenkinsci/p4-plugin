@@ -456,6 +456,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
 		assertEquals("Main has built", 2, runMain.number);
+		assertEquals(Result.SUCCESS, runMain.getResult());
+
 		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
 	}
@@ -527,6 +529,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
 		assertEquals("Main should have built", 2, runMain.number);
+		assertEquals(Result.SUCCESS, runMain.getResult());
 
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + commit, runMain);
 	}
@@ -604,6 +607,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals("Main should have built", 2, runMain.number);
 
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + commit, runMain);
+		assertEquals(Result.SUCCESS, runMain.getResult());
 	}
 
 	@Test
@@ -693,6 +697,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + review, revRun);
 		jenkins.assertLogContains("P4 Task: unshelve review: " + review, revRun);
+		assertEquals(Result.SUCCESS, revRun.getResult());
 	}
 
 
