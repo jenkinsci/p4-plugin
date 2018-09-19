@@ -75,6 +75,6 @@ public class P4SCMRevision extends SCMRevision {
 		if (ref == null) {
 			return "undefined";
 		}
-		return "P4SCMRevision: " + getHead() + " REF: " + ref.toString();
+		return ref.toString();
 	}
 }
