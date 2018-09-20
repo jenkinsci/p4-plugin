@@ -30,7 +30,6 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 
 	private final T project;
 
-
 	public ReviewAction(T project) {
 		this.project = project;
 	}
@@ -91,7 +90,11 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 
 		for (ParameterDefinition d : defs) {
 			StringParameterValue value = (StringParameterValue) d.createValue(req);
-			if (value != null && value.value != null && !value.value.isEmpty()) {
+			if (value == null || value.getValue() == null) {
+				continue;
+			}
+			String s = (String) value.getValue();
+			if (s != null && !s.isEmpty()) {
 				values.add(value);
 			}
 		}

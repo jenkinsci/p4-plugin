@@ -4,7 +4,6 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
-import hudson.triggers.Trigger;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
@@ -134,7 +133,7 @@ public class P4Hook implements UnprotectedRootAction {
 			P4Trigger trigger = null;
 			if (job instanceof ParameterizedJobMixIn.ParameterizedJob) {
 				ParameterizedJobMixIn.ParameterizedJob pJob = (ParameterizedJobMixIn.ParameterizedJob) job;
-				for (Trigger<?> t : pJob.getTriggers().values()) {
+				for (Object t : pJob.getTriggers().values()) {
 					if (t instanceof P4Trigger) {
 						trigger = (P4Trigger) t;
 						break;
