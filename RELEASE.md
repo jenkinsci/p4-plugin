@@ -1,5 +1,37 @@
 ## Release notes
 
+### Release 1.9.0 (major features/fixes)
+
+
+[@24622](https://swarm.workshop.perforce.com/changes/24622) - Added 'command-launcher' for Jenkins 2.89.1 release and greater.
+
+[@24591](https://swarm.workshop.perforce.com/changes/24591) - Merge pull request #79 from kroutley/disablePollingBypass.  JENKINS-53224 (Disable polling bypass)
+
+[@24590](https://swarm.workshop.perforce.com/changes/24590) - Test case: polling during a non concurrent build.  Verify that the build inprogress does not get seen as a new polling event.  JENKINS-53224
+
+[@24575](https://swarm.workshop.perforce.com/changes/24575) - Merge pull request #78 from kroutley/p4affectedfile.  JENKINS-53222 (Add all FileAction enum types to P4AffectedFile)
+
+[@24574](https://swarm.workshop.perforce.com/changes/24574) - Merge pull request #77 from kroutley/master.  JENKINS-53221 (Add P4_ROOT to environment variables)
+
+[@24571](https://swarm.workshop.perforce.com/changes/24571) - Support for Swarm pre-commit review events.  Swarm pre-commit review event creates a new 'Reviews' Tag in the MultiBranch and builds with specified change and shelf.
+
+[@24536](https://swarm.workshop.perforce.com/changes/24536) - Improved Swarm SCMRevision builder.  Started to add Swarm Review Event support and exteded test case.  JENKINS-52066
+
+[@24529](https://swarm.workshop.perforce.com/changes/24529) - Swarm Commit Event support, refactoring and test.  JENKINS-52605 (Fix doc in 'Includes' help bubble for MultiBranch).  JENKINS-52066 (Improve Swarm Commit and Branch Event support)
+
+[@24504](https://swarm.workshop.perforce.com/changes/24504) - Tree walker for BranchSCMSource Events.  On a change-submit event use the change number and grab a submitted file. Walk up the path looking for a Jenkinsfile, then derive 'Project' path, 'Branch' name and 'Path' for the SCMHead/Revision.  This assumes that the Jenkinsfile is in the route of your projects.  Alternatively use the Swarm Event and pass your own 'Project', 'Branch' and 'Path'.
+
+[@24501](https://swarm.workshop.perforce.com/changes/24501) - Refactor to use P4SCMXxx naming convention.
+
+[@24497](https://swarm.workshop.perforce.com/changes/24497) - Force use of revision for Head.  Update P4Head->P4Path revision with P4Revision to avoid builds on unbounded 'latest'.
+
+[@24492](https://swarm.workshop.perforce.com/changes/24492) - Initial work for MultiBranch Event trigger.  JENKINS-52066 (Triggered Events and not Polling per change)
+
+[@24487](https://swarm.workshop.perforce.com/changes/24487) - Perforce Connection Refactor using try with resources for all IOptionsServer objects.
+
+[@24484](https://swarm.workshop.perforce.com/changes/24484) - Trim white space from shelve ID.  JENKINS-52970
+
+
 ### Release 1.8.15 (major features/fixes)
 
 [@24473](https://swarm.workshop.perforce.com/changes/24473) - Enable ChangeView and Client Backup features.
