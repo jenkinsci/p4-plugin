@@ -1,6 +1,11 @@
 ## Release notes
 
-### Release 1.9.0 (major features/fixes)
+### Release 1.9.1 (major features/fixes)
+
+[@24662](https://swarm.workshop.perforce.com/changes/24662) - Undo *SCMSource rename to original *ScmSource.  Resolve configuration loading issue due to 1.9.0 bad release.
+
+
+### ~~Release 1.9.0 (major features/fixes)~~ (skip)
 
 **Warning:  MultiBranch projects may require re-configuration; please backup settings prior to upgrade.**
 
