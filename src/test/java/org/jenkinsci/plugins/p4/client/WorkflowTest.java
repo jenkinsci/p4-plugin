@@ -6,7 +6,7 @@ import com.perforce.p4java.impl.generic.client.ClientView;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.scm.GlobalLibrarySCMSource;
+import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -269,7 +269,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		// configure Global Library
 		String path = "//depot/library";
-		GlobalLibrarySCMSource scm = new GlobalLibrarySCMSource(CREDENTIAL, null, path);
+		GlobalLibraryScmSource scm = new GlobalLibraryScmSource(CREDENTIAL, null, path);
 		SCMSourceRetriever source = new SCMSourceRetriever(scm);
 		LibraryConfiguration config = new LibraryConfiguration("testLib", source);
 		config.setImplicit(true);

@@ -26,12 +26,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GraphSCMSource extends AbstractP4SCMSource {
+public class GraphScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public GraphSCMSource(String credential, String includes, String charset, String format) {
+	public GraphScmSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);

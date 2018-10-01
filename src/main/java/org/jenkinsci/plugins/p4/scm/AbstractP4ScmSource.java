@@ -47,9 +47,9 @@ import java.util.logging.Logger;
 
 import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
 
-public abstract class AbstractP4SCMSource extends SCMSource {
+public abstract class AbstractP4ScmSource extends SCMSource {
 
-	private static Logger logger = Logger.getLogger(AbstractP4SCMSource.class.getName());
+	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
 
 	protected final String credential;
 
@@ -60,7 +60,7 @@ public abstract class AbstractP4SCMSource extends SCMSource {
 	private String format;
 	private Populate populate;
 
-	public AbstractP4SCMSource(String credential) {
+	public AbstractP4ScmSource(String credential) {
 		this.credential = credential;
 	}
 

@@ -61,7 +61,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 
 		@Override
 		public boolean supports(SCMSource source) {
-			if (source instanceof AbstractP4SCMSource) {
+			if (source instanceof AbstractP4ScmSource) {
 				return true;
 			}
 			return false;

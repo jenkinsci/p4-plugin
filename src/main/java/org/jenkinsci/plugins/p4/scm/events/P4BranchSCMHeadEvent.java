@@ -11,7 +11,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.scm.AbstractP4SCMSource;
+import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
 import org.jenkinsci.plugins.p4.scm.P4SCMRevision;
 
 import java.util.Collections;
@@ -36,11 +36,11 @@ public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 	public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource scmSource) {
 
 		// Verify SCMSource
-		if (!(scmSource instanceof AbstractP4SCMSource)) {
+		if (!(scmSource instanceof AbstractP4ScmSource)) {
 			// Not a Perforce Source
 			return Collections.emptyMap();
 		}
-		AbstractP4SCMSource source = (AbstractP4SCMSource) scmSource;
+		AbstractP4ScmSource source = (AbstractP4ScmSource) scmSource;
 
 		// Check Perforce server P4PORT
 		String p4port = getField(getPayload(), ReviewProp.P4_PORT);

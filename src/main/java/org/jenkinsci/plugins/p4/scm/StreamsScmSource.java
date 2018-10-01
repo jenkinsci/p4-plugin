@@ -16,12 +16,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class StreamsSCMSource extends AbstractP4SCMSource {
+public class StreamsScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
 
 	@DataBoundConstructor
-	public StreamsSCMSource(String credential, String includes, String charset, String format) {
+	public StreamsScmSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);

@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GlobalLibrarySCMSource extends AbstractP4SCMSource {
+public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 	private final String path;
 
@@ -26,7 +26,7 @@ public class GlobalLibrarySCMSource extends AbstractP4SCMSource {
 	}
 
 	@DataBoundConstructor
-	public GlobalLibrarySCMSource(String credential, String charset, String path) {
+	public GlobalLibraryScmSource(String credential, String charset, String path) {
 		super(credential);
 		this.path = path;
 		setCharset(charset);

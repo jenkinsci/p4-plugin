@@ -40,7 +40,7 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 	}
 
 	@Override
-	public PerforceScm getScm(AbstractP4SCMSource source, P4Path path, P4Ref revision) {
+	public PerforceScm getScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		PerforceScm scm = new PerforceScm(source, path, revision);
 		P4Review review = new P4Review(getName(), CheckoutStatus.SHELVED);
 		scm.setReview(review);

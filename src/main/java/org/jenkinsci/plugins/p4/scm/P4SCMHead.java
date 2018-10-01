@@ -22,7 +22,7 @@ public class P4SCMHead extends SCMHead {
 		return "P4SCMHead: " + getName() + " (" + path + ")";
 	}
 
-	public PerforceScm getScm(AbstractP4SCMSource source, P4Path path, P4Ref revision) {
+	public PerforceScm getScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		return new PerforceScm(source, path, revision);
 	}
 }

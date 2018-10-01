@@ -40,16 +40,16 @@ import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_PROJECT;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_REVIEW;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_STATUS;
 
-public class SwarmSCMSource extends AbstractP4SCMSource {
+public class SwarmScmSource extends AbstractP4ScmSource {
 
-	private static Logger logger = Logger.getLogger(SwarmSCMSource.class.getName());
+	private static Logger logger = Logger.getLogger(SwarmScmSource.class.getName());
 
 	private String project;
 
 	transient private SwarmHelper swarm;
 
 	@DataBoundConstructor
-	public SwarmSCMSource(String credential, String charset, String format) throws Exception {
+	public SwarmScmSource(String credential, String charset, String format) throws Exception {
 		super(credential);
 
 		setCharset(charset);

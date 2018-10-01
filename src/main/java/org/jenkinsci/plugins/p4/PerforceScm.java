@@ -53,7 +53,7 @@ import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
-import org.jenkinsci.plugins.p4.scm.AbstractP4SCMSource;
+import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
 import org.jenkinsci.plugins.p4.scm.P4Path;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
@@ -184,7 +184,7 @@ public class PerforceScm extends SCM {
 		this.revision = null;
 	}
 
-	public PerforceScm(AbstractP4SCMSource source, P4Path path, P4Ref revision) {
+	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		this.credential = source.getCredential();
 		this.workspace = source.getWorkspace(path);
 		this.filter = null;

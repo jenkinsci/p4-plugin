@@ -17,12 +17,12 @@ public class P4SCMBuilder extends SCMBuilder<P4SCMBuilder, PerforceScm> {
 
 	private static Logger logger = Logger.getLogger(P4SCMBuilder.class.getName());
 
-	private final AbstractP4SCMSource source;
+	private final AbstractP4ScmSource source;
 	private final P4SCMHead p4head;
 	private final P4Path path;
 	private final P4Ref revision;
 
-	public P4SCMBuilder(@NonNull AbstractP4SCMSource source, @NonNull SCMHead head, @CheckForNull SCMRevision revision) {
+	public P4SCMBuilder(@NonNull AbstractP4ScmSource source, @NonNull SCMHead head, @CheckForNull SCMRevision revision) {
 		super(PerforceScm.class, head, revision);
 		this.source = source;
 

@@ -18,14 +18,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class BranchesSCMSource extends AbstractP4SCMSource {
+public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
 	private String filter = DescriptorImpl.defaultFilter;
 	private String mappings = DescriptorImpl.defaultPath;
 
 	@DataBoundConstructor
-	public BranchesSCMSource(String credential, String includes, String charset, String format) {
+	public BranchesScmSource(String credential, String includes, String charset, String format) {
 		super(credential);
 		setIncludes(includes);
 		setCharset(charset);
