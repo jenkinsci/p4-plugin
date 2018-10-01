@@ -2,6 +2,7 @@
 
 ### Release 1.9.0 (major features/fixes)
 
+**Warning:  MultiBranch projects may require re-configuration; please backup settings prior to upgrade.**
 
 [@24622](https://swarm.workshop.perforce.com/changes/24622) - Added 'command-launcher' for Jenkins 2.89.1 release and greater.
 
