@@ -7,7 +7,7 @@ public class P4Path implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String path;
-	private final String revision;
+	private String revision;
 
 	public P4Path(String path, String revision) {
 		this.path = path;
@@ -16,7 +16,10 @@ public class P4Path implements Serializable {
 
 	public P4Path(String path) {
 		this.path = path;
-		this.revision = null;
+	}
+
+	public void setRevision(String revision) {
+		this.revision = revision;
 	}
 
 	public String getPathBuilder(String file) {

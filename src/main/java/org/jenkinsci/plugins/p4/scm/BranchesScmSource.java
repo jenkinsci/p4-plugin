@@ -132,7 +132,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault();
 		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath, client);
 		String mappingsView = ViewMapHelper.getClientView(views, client);
-		String view = jenkinsView + "\n" + mappingsView;
+		String view = mappingsView + "\n" + jenkinsView;
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
