@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.9.2 (major features/fixes)
+
+[@24671](https://swarm.workshop.perforce.com/changes/24671) - Added backwards support for old XML data.  Class rename in 1.9.0 would prevent processing of old build data.  JENKINS-53870
+
+
 ### Release 1.9.1 (major features/fixes)
 
 [@24662](https://swarm.workshop.perforce.com/changes/24662) - Undo *SCMSource rename to original *ScmSource.  Resolve configuration loading issue due to 1.9.0 bad release.
