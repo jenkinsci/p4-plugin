@@ -1,10 +1,18 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.Items;
 import jenkins.scm.api.SCMHead;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 
 public class P4SCMHead extends SCMHead {
+
+	@Initializer(before = InitMilestone.PLUGINS_STARTED)
+	public static void addAliases() {
+		Items.XSTREAM2.addCompatibilityAlias("org.jenkinsci.plugins.p4.scm.P4Head", P4SCMHead.class);
+	}
 
 	private final P4Path path;
 

@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.Items;
 import jenkins.scm.api.SCMRevision;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 
@@ -8,6 +11,12 @@ import java.util.List;
 import java.util.Objects;
 
 public class P4SCMRevision extends SCMRevision {
+
+	@Initializer(before = InitMilestone.PLUGINS_STARTED)
+	public static void addAliases() {
+		Items.XSTREAM2.addCompatibilityAlias("org.jenkinsci.plugins.p4.scm.P4Revision", P4SCMRevision.class);
+	}
+
 	private final P4Ref ref;
 
 	public P4SCMRevision(P4SCMHead branch, P4Ref ref) {
