@@ -9,6 +9,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -53,7 +54,7 @@ public class OpenGrokBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getDiffLink(P4AffectedFile file, String change) throws Exception {
+	public URL getDiffLink(P4AffectedFile file, P4Ref change) throws Exception {
 		String path = getRelativeFilename(file);
 
 		int rev = parseRevision(file);

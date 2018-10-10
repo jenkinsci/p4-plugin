@@ -9,6 +9,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -36,14 +37,14 @@ public class SwarmBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getDiffLink(P4AffectedFile file, String change) throws Exception {
+	public URL getDiffLink(P4AffectedFile file, P4Ref change) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public URL getFileLink(P4AffectedFile file) throws Exception {
-		String r = file.getRevision();
+		int r = parseRevision(file);
 		String path = file.getPath();
 		path = path.replace("//", "files/");
 		String rev = "?v=" + r;
