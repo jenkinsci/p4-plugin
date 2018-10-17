@@ -51,20 +51,6 @@ public abstract class P4SCMSourceDescriptor extends SCMSourceDescriptor {
 		}
 	}
 
-	public FormValidation doCheckPath(@QueryParameter String value) {
-		if (value == null || value.isEmpty()) {
-			return FormValidation.error("Please provide a valid Depot path e.g. //depot/libs");
-		}
-		if (value.endsWith("...") || value.endsWith("*")) {
-			return FormValidation.error("Please remove wild cards from path.");
-		}
-		if (value.endsWith("/")) {
-			return FormValidation.error("Please remove trailing '/' from path.");
-		}
-
-		return FormValidation.ok();
-	}
-
 // TODO may want to add traits...
 /*	// need to implement this as the default filtering of form binding will not be specific enough
 	public List<SCMSourceTraitDescriptor> getTraitsDescriptors() {

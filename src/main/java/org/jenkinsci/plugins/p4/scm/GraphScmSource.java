@@ -18,8 +18,12 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.populate.PopulateDescriptor;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -147,6 +151,22 @@ public class GraphScmSource extends AbstractP4ScmSource {
 			P4SCMRevision revision = new P4SCMRevision(head, ref);
 			return revision;
 		}
+	}
+
+	@Override
+	public Workspace getWorkspace(P4Path path) {
+		if (path == null) {
+			throw new IllegalArgumentException("missing path");
+		}
+
+		StringBuffer depotView = new StringBuffer();
+		depotView.append(path.getPath());
+		depotView.append("/...");
+
+		String client = getFormat();
+		String view = ViewMapHelper.getClientView(depotView.toString(), client);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}
 
 	@Extension

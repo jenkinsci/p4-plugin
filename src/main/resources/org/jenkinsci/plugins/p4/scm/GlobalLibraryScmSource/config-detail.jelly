@@ -3,8 +3,6 @@
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
 			xmlns:c="/lib/credentials">
 
-	<p style="color:red;"><b>BETA - subject to change</b></p>
-
     <f:entry title="Perforce Credentials" field="credential">
         <c:select/>
     </f:entry>

@@ -268,7 +268,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/fileA", content);
 
 		// configure Global Library
-		String path = "//depot/library";
+		String path = "//depot/library/...";
 		GlobalLibraryScmSource scm = new GlobalLibraryScmSource(CREDENTIAL, null, path);
 		SCMSourceRetriever source = new SCMSourceRetriever(scm);
 		LibraryConfiguration config = new LibraryConfiguration("testLib", source);

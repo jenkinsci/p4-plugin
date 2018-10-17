@@ -26,14 +26,11 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -122,20 +119,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public abstract List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception;
 
-	public Workspace getWorkspace(P4Path path) {
-		if (path == null) {
-			throw new IllegalArgumentException("missing path");
-		}
-
-		StringBuffer depotView = new StringBuffer();
-		depotView.append(path.getPath());
-		depotView.append("/...");
-
-		String client = getFormat();
-		String view = ViewMapHelper.getClientView(depotView.toString(), client);
-		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
-	}
+	public abstract Workspace getWorkspace(P4Path path);
 
 	public String getScriptPathOrDefault() {
 		SCMSourceOwner owner = getOwner();

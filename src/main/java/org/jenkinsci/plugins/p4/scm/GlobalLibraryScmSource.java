@@ -2,16 +2,23 @@ package org.jenkinsci.plugins.p4.scm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.TaskListener;
+import hudson.util.FormValidation;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.client.NavigateHelper;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +37,10 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		super(credential);
 		this.path = path;
 		setCharset(charset);
-		setFormat("jenkins-library-${NODE_NAME}-${JOB_NAME}");
+
+		String id = path.replace("/...", "");
+		id = id.replaceAll("[/]+", ".");
+		setFormat("jenkins-lib-${NODE_NAME}-${JOB_NAME}" + id);
 	}
 
 	@Override
@@ -84,6 +94,24 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		}
 	}
 
+	@Override
+	public Workspace getWorkspace(P4Path path) {
+		if (path == null) {
+			throw new IllegalArgumentException("missing path");
+		}
+
+		// patch for older configuration version when '/...' was not required.
+		String depotView = path.getPath();
+		if(!depotView.endsWith("/...")) {
+			depotView += "/...";
+		}
+
+		String client = getFormat();
+		String view = ViewMapHelper.getClientView(depotView, client);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
+	}
+
 	@Extension
 	@Symbol("globalLib")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
@@ -91,6 +119,18 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		@Override
 		public String getDisplayName() {
 			return "Helix Library";
+		}
+
+		public FormValidation doCheckPath(@QueryParameter String value) {
+			if (value == null || value.isEmpty() || !value.endsWith("/...")) {
+				return FormValidation.error("Please provide a valid Depot path e.g. //depot/libs/...");
+			}
+			return FormValidation.ok();
+		}
+
+		public AutoCompletionCandidates doAutoCompletePath(@QueryParameter String value) {
+			NavigateHelper nav = new NavigateHelper(10);
+			return nav.getCandidates(value);
 		}
 	}
 }
