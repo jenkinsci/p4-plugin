@@ -59,8 +59,15 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 	@DataBoundConstructor
+	public ManualWorkspaceImpl(String charset, boolean pinHost, String name, WorkspaceSpec spec, boolean cleanup) {
+		super(charset, pinHost, cleanup);
+		this.name = name;
+		this.spec = spec;
+	}
+
+	@Deprecated
 	public ManualWorkspaceImpl(String charset, boolean pinHost, String name, WorkspaceSpec spec) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.name = name;
 		this.spec = spec;
 	}

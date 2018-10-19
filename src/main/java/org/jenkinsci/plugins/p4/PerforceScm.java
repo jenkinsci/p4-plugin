@@ -449,13 +449,13 @@ public class PerforceScm extends SCM {
 
 		// Override build change if polling per change.
 		if (isIncremental()) {
-			Run<?, ?>lastRun = run.getPreviousBuiltBuild();
+			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 			task.setIncrementalChanges(changes);
 		}
 
 		// SCMRevision build per change
-		if(revision != null) {
+		if (revision != null) {
 			List<P4Ref> changes = Arrays.asList(revision);
 			task.setIncrementalChanges(changes);
 		}
@@ -509,6 +509,18 @@ public class PerforceScm extends SCM {
 			listener.getLogger().println("... done\n");
 		} else {
 			listener.getLogger().println("P4Task: unable to save changes, null changelogFile.\n");
+		}
+
+		// Cleanup Perforce Client
+		if (workspace.isCleanup()) {
+			listener.getLogger().println("P4Task: cleanup Client: " + workspace.getFullName());
+			RemoveClientTask removeClientTask = new RemoveClientTask(credential, run, listener, false);
+
+			// Set workspace used for the Task
+			Workspace wsc = removeClientTask.setEnvironment(run, workspace, buildWorkspace);
+			removeClientTask.setWorkspace(wsc);
+
+			buildWorkspace.act(removeClientTask);
 		}
 	}
 

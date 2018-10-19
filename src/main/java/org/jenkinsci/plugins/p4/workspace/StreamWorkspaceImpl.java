@@ -47,7 +47,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	@DataBoundConstructor
 	public StreamWorkspaceImpl(String charset, boolean pinHost,
 	                           String streamName, String format) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.streamName = streamName;
 		this.format = format;
 	}

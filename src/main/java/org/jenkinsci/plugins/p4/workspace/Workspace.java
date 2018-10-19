@@ -22,10 +22,12 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	private String hostname;
 	private Expand expand;
 	private String syncID;
+	private boolean cleanup;
 
-	public Workspace(String charset, boolean pinHost) {
+	public Workspace(String charset, boolean pinHost, boolean cleanup) {
 		this.charset = charset;
 		this.pinHost = pinHost;
+		this.cleanup = cleanup;
 	}
 
 	public abstract WorkspaceType getType();
@@ -148,6 +150,10 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	@DataBoundSetter
 	public void setSyncID(String syncID) {
 		this.syncID = syncID;
+	}
+
+	public boolean isCleanup() {
+		return cleanup;
 	}
 
 	public Object clone() {

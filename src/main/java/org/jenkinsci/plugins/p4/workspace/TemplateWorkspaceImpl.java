@@ -49,7 +49,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	@DataBoundConstructor
 	public TemplateWorkspaceImpl(String charset, boolean pinHost,
 			String templateName, String format) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.templateName = templateName;
 		this.format = format;
 	}

@@ -23,6 +23,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
@@ -37,10 +38,6 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		super(credential);
 		this.path = path;
 		setCharset(charset);
-
-		String id = path.replace("/...", "");
-		id = id.replaceAll("[/]+", ".");
-		setFormat("jenkins-lib-${NODE_NAME}-${JOB_NAME}" + id);
 	}
 
 	@Override
@@ -100,6 +97,9 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 			throw new IllegalArgumentException("missing path");
 		}
 
+		UUID uuid = UUID.randomUUID();
+		setFormat("jenkins-lib-" + uuid);
+
 		// patch for older configuration version when '/...' was not required.
 		String depotView = path.getPath();
 		if(!depotView.endsWith("/...")) {
@@ -109,7 +109,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		String client = getFormat();
 		String view = ViewMapHelper.getClientView(depotView, client);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec, true);
 	}
 
 	@Extension

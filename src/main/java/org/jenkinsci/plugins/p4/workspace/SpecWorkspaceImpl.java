@@ -50,7 +50,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public SpecWorkspaceImpl(String charset, boolean pinHost, String name, String specPath) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.name = name;
 		this.specPath = specPath;
 	}

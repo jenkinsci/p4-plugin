@@ -36,6 +36,12 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 		init();
 	}
 
+	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener, boolean deleteFiles) {
+		super(credential, run, listener);
+		this.deleteClient = true;
+		this.deleteFiles = deleteFiles;
+	}
+
 	public RemoveClientTask(String credential, Item project, TaskListener listener) {
 		super(credential, project, listener);
 		init();

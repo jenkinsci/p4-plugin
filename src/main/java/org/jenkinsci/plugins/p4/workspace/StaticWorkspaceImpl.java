@@ -34,13 +34,13 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 
 	@Deprecated
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name, boolean clone) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.name = name;
 	}
 
 	@DataBoundConstructor
 	public StaticWorkspaceImpl(String charset, boolean pinHost, String name) {
-		super(charset, pinHost);
+		super(charset, pinHost, false);
 		this.name = name;
 	}
 
