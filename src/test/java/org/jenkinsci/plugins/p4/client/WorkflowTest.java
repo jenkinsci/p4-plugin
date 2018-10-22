@@ -303,6 +303,9 @@ public class WorkflowTest extends DefaultEnvironment {
         while(job.getLastBuild().getNumber() < 2){
             Thread.sleep(10);
         }
+        while(job.getLastBuild().isBuilding()) {
+            Thread.sleep(10);
+        }
         jenkins.waitUntilNoActivity();
 
         assertEquals(Result.SUCCESS, job.getBuildByNumber(1).getResult());
