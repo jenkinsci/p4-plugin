@@ -72,7 +72,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
+	public synchronized PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
 		if (head instanceof P4SCMHead && revision instanceof P4SCMRevision) {
 			P4SCMHead perforceHead = (P4SCMHead) head;
 			P4SCMRevision perforceRevision = (P4SCMRevision) revision;

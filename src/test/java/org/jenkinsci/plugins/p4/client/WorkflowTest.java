@@ -21,6 +21,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -292,12 +293,99 @@ public class WorkflowTest extends DefaultEnvironment {
 				"}", false));
 		job.save();
 
-		WorkflowRun run = job.scheduleBuild2(0).get();
-		assertEquals(Result.SUCCESS, run.getResult());
-		jenkins.assertLogContains("SYNC_CHANGELIST: 45", run);
+		job.scheduleBuild2(0);
+		Thread.sleep(1);
+		job.scheduleBuild2(0);
+
+		while (job.getLastBuild() == null) {
+			Thread.sleep(10);
+		}
+		while (job.getLastBuild().getNumber() < 2) {
+			Thread.sleep(10);
+		}
+		while (job.getLastBuild().isBuilding()) {
+			Thread.sleep(10);
+		}
+		jenkins.waitUntilNoActivity();
+
+		assertEquals(Result.SUCCESS, job.getBuildByNumber(1).getResult());
+		assertEquals(Result.SUCCESS, job.getBuildByNumber(2).getResult());
 
 		// Clear Global Libraries for other Jobs
 		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+	}
+
+	@Test
+	public void testGlobalLibMultiple() throws Exception {
+
+		// First Library
+		// submit test library
+		String content1 = ""
+				+ "def call(String name = 'human') {\n" +
+				"    echo \"Hello1, ${name}.\"\n" +
+				"}";
+		submitFile(jenkins, "//depot/library1/vars/sayHello1.groovy", content1);
+
+		// Second library
+		// submit test library
+		String content2 = ""
+				+ "def call(String name = 'human') {\n" +
+				"    echo \"Hello2, ${name}.\"\n" +
+				"}";
+		submitFile(jenkins, "//depot/library2/vars/sayHello2.groovy", content2);
+
+		// change in source (after library)
+		String submitResult = submitFile(jenkins, "//depot/Data/fileA", content1);
+
+		// configure First Global Library
+		String path1 = "//depot/library1/...";
+		GlobalLibraryScmSource scm1 = new GlobalLibraryScmSource(CREDENTIAL, null, path1);
+		SCMSourceRetriever source1 = new SCMSourceRetriever(scm1);
+		// First lib
+		LibraryConfiguration config1 = new LibraryConfiguration("testLib1", source1);
+		config1.setImplicit(true);
+		config1.setDefaultVersion("now");
+
+		// configure Second Global Library
+		String path2 = "//depot/library2/...";
+		GlobalLibraryScmSource scm2 = new GlobalLibraryScmSource(CREDENTIAL, null, path2);
+		SCMSourceRetriever source2 = new SCMSourceRetriever(scm2);
+		// First lib
+		LibraryConfiguration config2 = new LibraryConfiguration("testLib2", source2);
+		config2.setImplicit(true);
+		config2.setDefaultVersion("now");
+
+		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
+		assertNotNull(globalLib);
+
+		List<LibraryConfiguration> libs = new ArrayList<LibraryConfiguration>();
+		libs.add(config1);
+		libs.add(config2);
+		globalLib.setLibraries(libs);
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "useLib2");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n" +
+				"    p4sync charset: 'none', \n" +
+				"      credential: '" + CREDENTIAL + "', \n" +
+				"      populate: autoClean(quiet: true), \n" +
+				"      source: depotSource('//depot/Data/...')\n" +
+				"    sayHello1 'Jenkins'\n" +
+				"    sayHello2 'Jenkins'\n" +    //Call the second lib
+				"    println \"SYNC_CHANGELIST: ${env.P4_CHANGELIST}\"\n" +
+				"}", false));
+		job.save();
+
+		WorkflowRun run1 = job.scheduleBuild2(0).get();
+
+		assertEquals(Result.SUCCESS, run1.getResult());
+		jenkins.assertLogContains("Hello1, Jenkins.", run1);
+		jenkins.assertLogContains("Hello2, Jenkins.", run1);
+
+
+		// Clear Global Libraries for other Jobs
+		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+
 	}
 
 	@Test
@@ -444,4 +532,5 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		p4.disconnect();
 	}
+	//Added a test comment
 }
