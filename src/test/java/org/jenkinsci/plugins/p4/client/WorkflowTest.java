@@ -532,4 +532,5 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		p4.disconnect();
 	}
+	//Added a test comment
 }
