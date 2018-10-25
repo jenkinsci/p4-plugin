@@ -370,6 +370,9 @@ public class PerforceScm extends SCM {
 
 		List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 
+		// Cleanup Perforce Client
+		cleanupPerforceClient(lastRun, buildWorkspace, listener, ws);
+
 		// Build if null (un-built) or if changes are found
 		if (changes == null || !changes.isEmpty()) {
 			return PollingResult.BUILD_NOW;
@@ -512,16 +515,23 @@ public class PerforceScm extends SCM {
 		}
 
 		// Cleanup Perforce Client
-		if (workspace.isCleanup()) {
-			listener.getLogger().println("P4Task: cleanup Client: " + workspace.getFullName());
-			RemoveClientTask removeClientTask = new RemoveClientTask(credential, run, listener, false);
+		cleanupPerforceClient(run, buildWorkspace, listener, ws);
+	}
 
-			// Set workspace used for the Task
-			Workspace wsc = removeClientTask.setEnvironment(run, workspace, buildWorkspace);
-			removeClientTask.setWorkspace(wsc);
-
-			buildWorkspace.act(removeClientTask);
+	private void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener, Workspace workspace) throws IOException, InterruptedException {
+		// exit early if cleanup not required
+		if (!workspace.isCleanup()) {
+			return;
 		}
+
+		listener.getLogger().println("P4Task: cleanup Client: " + workspace.getFullName());
+		RemoveClientTask removeClientTask = new RemoveClientTask(credential, run, listener, false);
+
+		// Set workspace used for the Task
+		Workspace ws = removeClientTask.setEnvironment(run, workspace, buildWorkspace);
+		removeClientTask.setWorkspace(ws);
+
+		buildWorkspace.act(removeClientTask);
 	}
 
 	// Get Matrix Execution options
