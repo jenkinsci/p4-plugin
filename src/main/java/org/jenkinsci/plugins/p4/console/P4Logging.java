@@ -1,10 +1,13 @@
 package org.jenkinsci.plugins.p4.console;
 
+import com.perforce.p4java.server.callback.ICommandCallback;
 import hudson.model.TaskListener;
 
-import com.perforce.p4java.server.callback.ICommandCallback;
+import java.util.logging.Logger;
 
 public class P4Logging implements ICommandCallback {
+
+	private static Logger logger = Logger.getLogger(P4Logging.class.getName());
 
 	private final TaskListener listener;
 	private static int MAX_LINE = 80;
@@ -14,6 +17,7 @@ public class P4Logging implements ICommandCallback {
 	}
 
 	public void issuingServerCommand(int key, String commandString) {
+		logger.finest("issuingServerCommand: (" + key + ") " + commandString);
 		if (commandString.length() > MAX_LINE) {
 			String cmd = commandString.substring(0, MAX_LINE);
 			cmd = cmd + "___";
@@ -25,6 +29,7 @@ public class P4Logging implements ICommandCallback {
 	}
 
 	public void completedServerCommand(int key, long millisecsTaken) {
+		logger.finest("completedServerCommand: (" + key + ") in " + millisecsTaken + "ms");
 	}
 
 	public void receivedServerInfoLine(int key, String infoLine) {
