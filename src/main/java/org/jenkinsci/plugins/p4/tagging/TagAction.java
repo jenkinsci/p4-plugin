@@ -54,6 +54,8 @@ public class TagAction extends AbstractScmTagAction {
 	private String client;
 	private String syncID;
 
+	private transient String p4ticket;
+
 	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
 		super(run);
 
@@ -207,13 +209,19 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public String getTicket() {
+		if (p4ticket != null) {
+			return p4ticket;
+		}
+
+		logger.finer("TagAction:getTicket()");
 		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, getRun());
+
 		try (ConnectionHelper p4 = new ConnectionHelper(auth, null)) {
-			return p4.getTicket();
+			p4ticket = p4.getTicket();
 		} catch (Exception e) {
 			logger.severe("P4: Unable to get Ticket(): " + e.getMessage());
 		}
-		return null;
+		return p4ticket;
 	}
 
 	public String getTag() {
