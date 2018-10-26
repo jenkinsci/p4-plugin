@@ -36,7 +36,6 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.TaskListener;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
@@ -60,14 +59,11 @@ import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,13 +101,13 @@ public class ClientHelper extends ConnectionHelper {
 
 	protected void clientLogin(Workspace workspace) {
 		// Exit early if no connection
-		if (connection == null) {
+		if (getConnection() == null) {
 			return;
 		}
 
 		// Setup charset for unicode servers
 		if (isUnicode()) {
-			connection.setCharsetName(workspace.getCharset());
+			getConnection().setCharsetName(workspace.getCharset());
 		}
 
 		// Find workspace and set as current
@@ -119,14 +115,14 @@ public class ClientHelper extends ConnectionHelper {
 			//iclient = connection.getClient(workspace.getFullName());
 
 		// Setup/Create workspace based on type
-		iclient = workspace.setClient(connection, authorisationConfig.getUsername());
+		iclient = workspace.setClient(getConnection(), getAuthorisationConfig().getUsername());
 
 			// Set as Current Client, or exit early if not defined
 		if (!isClientValid(workspace)) {
 			String err = "P4: Undefined workspace: " + workspace.getFullName();
 			throw new AbortException(err);
 			} else {
-				connection.setCurrentClient(iclient);
+			getConnection().setCurrentClient(iclient);
 		}
 
 			// Exit early if client is Static Workspace
@@ -145,7 +141,7 @@ public class ClientHelper extends ConnectionHelper {
 		// Set client Server ID if not already defined in the client spec.
 		String serverId = iclient.getServerId();
 		if (serverId == null || serverId.isEmpty()) {
-			IServerInfo info = connection.getServerInfo();
+			IServerInfo info = getConnection().getServerInfo();
 			String services = getServerServices();
 			serverId = info.getServerId();
 			if (serverId != null && !serverId.isEmpty() && isEdgeType(services)) {
@@ -180,7 +176,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	// TODO remove when P4Java has support for 'serverServices'
 	private String getServerServices() throws ConnectionException, AccessException {
-		List<Map<String, Object>> mapList = connection.execMapCmdList(CmdSpec.INFO, new String[]{}, null);
+		List<Map<String, Object>> mapList = getConnection().execMapCmdList(CmdSpec.INFO, new String[]{}, null);
 		for (Map<String, Object> map : mapList) {
 			if (map.containsKey("serverServices")) {
 				return (String) map.get("serverServices");
@@ -260,7 +256,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+		getValidate().check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 	}
 
 	/**
@@ -279,7 +275,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
-		validate.check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
+		getValidate().check(syncMsg, "file(s) up-to-date.", "file does not exist", "no file(s) as of that date");
 	}
 
 	/**
@@ -312,7 +308,7 @@ public class ClientHelper extends ConnectionHelper {
 		syncOpts.setQuiet(populate.isQuiet());
 
 		// Sync files with asynchronous callback and parallel if enabled to
-		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), listener);
+		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), getListener());
 		synchronized (callback) {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 
@@ -332,89 +328,6 @@ public class ClientHelper extends ConnectionHelper {
 				throw new P4JavaException(callback.getException());
 			}
 		}
-	}
-
-	private int CheckNativeUse(String revisions, SyncOptions syncOpts, ParallelSync parallel) {
-
-		try {
-			String p4 = parallel.getPath();
-
-			List<String> command = new ArrayList<String>();
-			String p4port = p4credential.getP4port();
-			p4port = (p4credential.isSsl()) ? "ssl:" + p4port : p4port;
-			command.add(p4);
-			command.add("-c" + iclient.getName());
-			command.add("-p" + p4port);
-			command.add("-u" + p4credential.getUsername());
-
-			String p4host = p4credential.getP4host();
-			if (p4host != null && !p4host.isEmpty()) {
-				command.add("-H" + p4host);
-			}
-
-			command.add("sync");
-			if (syncOpts.isForceUpdate()) {
-				command.add("-f");
-			}
-			if (syncOpts.isQuiet()) {
-				command.add("-q");
-			}
-			if (syncOpts.isClientBypass()) {
-				command.add("-k");
-			}
-			if (syncOpts.isSafetyCheck()) {
-				command.add("-s");
-			}
-			if (syncOpts.isServerBypass()) {
-				command.add("-p");
-			}
-			if (syncOpts.isNoUpdate()) {
-				command.add("-n");
-			}
-
-			String threads = parallel.getThreads();
-			String minfiles = parallel.getMinfiles();
-			String minbytes = parallel.getMinbytes();
-			command.add("--parallel");
-			command.add("threads=" + threads + ",min=" + minfiles + ",minsize=" + minbytes);
-
-			command.add(revisions);
-
-			ProcessBuilder builder = new ProcessBuilder(command);
-			final Process process = builder.start();
-			InputStream inputStream = process.getInputStream();
-			InputStream errorStream = process.getErrorStream();
-
-			BufferedReader inputStreamReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-			BufferedReader errorStreamReader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
-
-			// Log commands
-			log("(p4):cmd:... " + StringUtils.join(command, " "));
-			log("");
-
-			String line;
-			while ((line = inputStreamReader.readLine()) != null) {
-				log(line);
-			}
-			while ((line = errorStreamReader.readLine()) != null) {
-				log(line);
-			}
-			int exitCode = process.waitFor();
-
-			inputStreamReader.close();
-			errorStreamReader.close();
-
-			log("exitCode=" + Integer.toString(exitCode));
-			log("(p4):stop:0");
-			return exitCode;
-		} catch (UnsupportedEncodingException e) {
-			log(e.getMessage());
-		} catch (IOException e) {
-			log(e.getMessage());
-		} catch (InterruptedException e) {
-			log(e.getMessage());
-		}
-		return 1;
 	}
 
 	/**
@@ -497,7 +410,7 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		validate.check(list, "not opened on this client", "Replica does not support this command");
+		getValidate().check(list, "not opened on this client", "Replica does not support this command");
 
 		// check for added files and remove...
 		log("... rm [abandoned files]");
@@ -564,11 +477,11 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
 
 		// Reconcile with asynchronous callback
-		ReconcileStreamingCallback callback = new ReconcileStreamingCallback(iclient.getServer(), listener);
+		ReconcileStreamingCallback callback = new ReconcileStreamingCallback(iclient.getServer(), getListener());
 		synchronized (callback) {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
-			String[] params = Parameters.processParameters(cleanOpts, files, connection);
-			connection.execStreamingMapCommand(CmdSpec.RECONCILE.toString(), params, null, callback, 0);
+			String[] params = Parameters.processParameters(cleanOpts, files, getConnection());
+			getConnection().execStreamingMapCommand(CmdSpec.RECONCILE.toString(), params, null, callback, 0);
 			while (!callback.isDone()) {
 				callback.wait();
 			}
@@ -594,7 +507,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		validate.check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
+		getValidate().check(status, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 				"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
 
 		// Add missing, modified or locked files to a list, and delete the
@@ -637,7 +550,7 @@ public class ClientHelper extends ConnectionHelper {
 			syncOpts.setQuiet(populate.isQuiet());
 
 			List<IFileSpec> syncMsg = iclient.sync(update, syncOpts);
-			validate.check(syncMsg, "file(s) up-to-date.", "file does not exist");
+			getValidate().check(syncMsg, "file(s) up-to-date.", "file does not exist");
 		}
 		log("duration: " + timer.toString() + "\n");
 	}
@@ -650,7 +563,7 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions rOpts = new RevertFilesOptions();
 		rOpts.setNoClientRefresh(virtual);
 		List<IFileSpec> list = iclient.revertFiles(files, rOpts);
-		validate.check(list, "not opened on this client", "Replica does not support this command");
+		getValidate().check(list, "not opened on this client", "Replica does not support this command");
 	}
 
 	public void versionFile(String file, Publish publish, int ChangelistID, boolean submit) throws Exception {
@@ -701,13 +614,13 @@ public class ClientHelper extends ConnectionHelper {
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
 		List<IFileSpec> revertStat = iclient.revertFiles(files, revertOpts);
-		validate.check(revertStat, "file(s) not opened on this client.");
+		getValidate().check(revertStat, "file(s) not opened on this client.");
 
 		// flush client to populate have (sync -k)
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setClientBypass(true);
 		List<IFileSpec> syncStat = iclient.sync(files, syncOpts);
-		validate.check(syncStat, "file(s) up-to-date.", "no such file(s).");
+		getValidate().check(syncStat, "file(s) up-to-date.", "no such file(s).");
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
@@ -717,7 +630,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setRemoved(delete);
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		validate.check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
+		getValidate().check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
 
 	public String publishChange(Publish publish) throws Exception {
@@ -806,7 +719,7 @@ public class ClientHelper extends ConnectionHelper {
 		submitOpts.setReOpen(reopen);
 
 		// submit with asynchronous callback
-		SubmitStreamingCallback callback = new SubmitStreamingCallback(iclient.getServer(), listener);
+		SubmitStreamingCallback callback = new SubmitStreamingCallback(iclient.getServer(), getListener());
 		synchronized (callback) {
 			change.submit(submitOpts, callback, 0);
 			while (!callback.isDone()) {
@@ -834,7 +747,7 @@ public class ClientHelper extends ConnectionHelper {
 		opts.add(String.valueOf(change.getId()));
 		String[] args = opts.toArray(new String[opts.size()]);
 
-		Map<String, Object>[] results = connection.execMapCmd(CmdSpec.SUBMIT.name(), args, null);
+		Map<String, Object>[] results = getConnection().execMapCmd(CmdSpec.SUBMIT.name(), args, null);
 		for (Map<String, Object> map : results) {
 			if (map.containsKey("submittedCommit")) {
 				String sha = (String) map.get("submittedCommit");
@@ -849,7 +762,7 @@ public class ClientHelper extends ConnectionHelper {
 		log("... shelving files");
 
 		List<IFileSpec> shelved = iclient.shelveChangelist(change);
-		validate.check(shelved, "");
+		getValidate().check(shelved, "");
 
 		// post shelf cleanup
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
@@ -915,7 +828,7 @@ public class ClientHelper extends ConnectionHelper {
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
-		InputStream ins = connection.getFileContents(file, printOpts);
+		InputStream ins = getConnection().getFileContents(file, printOpts);
 
 		String localPath = depotToLocal(file.get(0));
 		File target = new File(localPath);
@@ -960,7 +873,7 @@ public class ClientHelper extends ConnectionHelper {
 		// Unshelve change for review
 		List<IFileSpec> shelveMsg;
 		shelveMsg = iclient.unshelveChangelist((int) review, null, 0, true, false);
-		validate.check(shelveMsg, false, "also opened by", "No such file(s)",
+		getValidate().check(shelveMsg, false, "also opened by", "No such file(s)",
 				"exclusive file already opened", "no file(s) to unshelve");
 
 		// force sync any files missed due to INFO messages e.g. exclusive files
@@ -1015,7 +928,7 @@ public class ClientHelper extends ConnectionHelper {
 		rsvOpts.setForceResolve("af".equals(mode));
 
 		List<IFileSpec> rsvMsg = iclient.resolveFilesAuto(files, rsvOpts);
-		validate.check(rsvMsg, "no file(s) to resolve");
+		getValidate().check(rsvMsg, "no file(s) to resolve");
 
 		log("... duration: " + timer.toString());
 	}
@@ -1030,11 +943,11 @@ public class ClientHelper extends ConnectionHelper {
 	 */
 	public Changelist getChange(long id) throws Exception {
 		try {
-			return (Changelist) connection.getChangelist((int) id);
+			return (Changelist) getConnection().getChangelist((int) id);
 		} catch (RequestException e) {
 			ChangelistOptions opts = new ChangelistOptions();
 			opts.setOriginalChangelist(true);
-			return (Changelist) connection.getChangelist((int) id, opts);
+			return (Changelist) getConnection().getChangelist((int) id, opts);
 		}
 	}
 
@@ -1048,7 +961,7 @@ public class ClientHelper extends ConnectionHelper {
 	public int getClientHead() throws Exception {
 		// get last change in server
 		// This will returned the also shelved CLs
-		String latestChange = connection.getCounter("change");
+		String latestChange = getConnection().getCounter("change");
 		int change = Integer.parseInt(latestChange);
 
 		// build file revision spec
@@ -1060,7 +973,7 @@ public class ClientHelper extends ConnectionHelper {
 		// one?)
 		opts.setType(IChangelist.Type.SUBMITTED);
 		opts.setMaxMostRecent(1);
-		List<IChangelistSummary> list = connection.getChangelists(files, opts);
+		List<IChangelistSummary> list = getConnection().getChangelists(files, opts);
 
 		if (!list.isEmpty() && list.get(0) != null) {
 			change = list.get(0).getId();
@@ -1081,7 +994,7 @@ public class ClientHelper extends ConnectionHelper {
 		opts.setMaxMostRecent(getMaxChangeLimit());
 		opts.setLongDesc(includeLongDescription);
 		opts.setClientName(clientName);
-		List<IChangelistSummary> list = connection.getChangelists(files, opts);
+		List<IChangelistSummary> list = getConnection().getChangelists(files, opts);
 
 		// In-line implementation of comparator because of course you can't sort changelists....
 		Collections.sort(list, new Comparator<IChangelistSummary>() {
@@ -1195,7 +1108,7 @@ public class ClientHelper extends ConnectionHelper {
 		opts.setMaxMostRecent(getMaxChangeLimit());
 
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(ws);
-		List<IChangelistSummary> cngs = connection.getChangelists(spec, opts);
+		List<IChangelistSummary> cngs = getConnection().getChangelists(spec, opts);
 		if (cngs != null) {
 			for (IChangelistSummary c : cngs) {
 				// don't try to add null or -1 changes
@@ -1259,7 +1172,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		List<P4Ref> haveChanges = new ArrayList<P4Ref>();
 		Map<String, Object>[] map;
-		map = connection.execMapCmd("cstat", new String[]{fileSpec}, null);
+		map = getConnection().execMapCmd("cstat", new String[]{fileSpec}, null);
 
 		for (Map<String, Object> entry : map) {
 			String status = (String) entry.get("status");
@@ -1292,7 +1205,7 @@ public class ClientHelper extends ConnectionHelper {
 				msg = "P4: Unable to use workspace: " + name;
 			}
 			logger.severe(msg);
-			if (listener != null) {
+			if (getListener() != null) {
 				log(msg);
 			}
 			return false;

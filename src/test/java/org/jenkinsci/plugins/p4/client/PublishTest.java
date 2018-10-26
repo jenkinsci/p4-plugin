@@ -86,7 +86,7 @@ public class PublishTest extends DefaultEnvironment {
 		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, workspace);
 		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/artifact.1");
 		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
-		List<IExtendedFileSpec> eSpec = p4.connection.getExtendedFiles(fileSpec, opts);
+		List<IExtendedFileSpec> eSpec = p4.getConnection().getExtendedFiles(fileSpec, opts);
 		assertEquals(eSpec.get(0).getHeadType(), "text+S3");
 	}
 

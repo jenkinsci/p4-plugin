@@ -67,14 +67,15 @@ public class ConnectionHelper implements AutoCloseable {
 
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
-	private boolean abort = false;
+	private final TaskListener listener;
+	private final P4BaseCredentials p4credential;
+	private final ConnectionConfig connectionConfig;
+	private final AuthorisationConfig authorisationConfig;
+	private final Validate validate;
 
-	protected final ConnectionConfig connectionConfig;
-	protected final AuthorisationConfig authorisationConfig;
-	protected IOptionsServer connection;
-	protected final TaskListener listener;
-	protected final P4BaseCredentials p4credential;
-	protected final Validate validate;
+	private IOptionsServer connection;
+	private boolean abort = false;
+	private Boolean unicode = null;
 
 	@Deprecated
 	public ConnectionHelper(String credentialID, TaskListener listener) {
@@ -115,6 +116,18 @@ public class ConnectionHelper implements AutoCloseable {
 		this.authorisationConfig = new AuthorisationConfig(credential);
 		connectionRetry();
 		validate = new Validate(listener);
+	}
+
+	public TaskListener getListener() {
+		return listener;
+	}
+
+	public AuthorisationConfig getAuthorisationConfig() {
+		return authorisationConfig;
+	}
+
+	public Validate getValidate() {
+		return validate;
 	}
 
 	public IOptionsServer getConnection() {
@@ -229,11 +242,15 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	public boolean isUnicode() {
-		try {
-			return connection.getServerInfo().isUnicodeEnabled();
-		} catch (Exception e) {
-			return false;
+		if(unicode == null) {
+			try {
+				logger.finer("ConnectionHelper:isUnicode");
+				unicode = connection.getServerInfo().isUnicodeEnabled();
+			} catch (Exception e) {
+				unicode = false;
+			}
 		}
+		return unicode;
 	}
 
 	/**
@@ -253,7 +270,7 @@ public class ConnectionHelper implements AutoCloseable {
 		connection.setUserName(authorisationConfig.getUsername());
 
 		// CHARSET is not defined (only for client access)
-		if (connection.getServerInfo().isUnicodeEnabled()) {
+		if (isUnicode()) {
 			connection.setCharsetName("utf8");
 		}
 
