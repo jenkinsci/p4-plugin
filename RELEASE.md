@@ -1,5 +1,24 @@
 ## Release notes
 
+### Release 1.9.3 (major features/fixes)
+
+[@24805](https://swarm.workshop.perforce.com/changes/24805) - Tidy up connection methods.  Cache TagAction calls to getTicket() when adding P4_TICKET to the Environment.  JENKINS-54222
+
+[@24792](https://swarm.workshop.perforce.com/changes/24792) - Cleanup Global workspace used during polling.  The temporary workspace is recreated by the polling event from details stored in the previous build's metadata.  JENKINS-50975
+
+[@24791](https://swarm.workshop.perforce.com/changes/24791) - Extra debug logging for Perforce commands; issue and complete step.  Log level FINEST.  JENKINS-54222
+
+[@24780](https://swarm.workshop.perforce.com/changes/24780) - Merge pull request #80 from p4charu/master.  Fix and a test for concurrent global libraries using perforce workspaces. JENKINS-50975
+
+[@24778](https://swarm.workshop.perforce.com/changes/24778) - Remove unused commons-compress dependency.  Resolve CVE-2018-11771 threat warning.
+
+[@24777](https://swarm.workshop.perforce.com/changes/24777) - Global Library to use UUID for client name and delete after use.  Add a new 'Delete the Perforce Client after checkout' option (for Manual clients) which normally is false, but set to true for Global Library checkouts.  JENKINS-50975
+
+[@24767](https://swarm.workshop.perforce.com/changes/24767) - Global Library support for multiple instances.  Enforce a depot syntax path ending of "/...".  Remove 'beta' from Global Library configuration.  Generate a unique workspace to sync multiple Libraries. JENKINS-53922
+
+[@24698](https://swarm.workshop.perforce.com/changes/24698) - Fix for the revision number used by Swarm and other browsers.
+
+
 ### Release 1.9.2 (major features/fixes)
 
 [@24671](https://swarm.workshop.perforce.com/changes/24671) - Added backwards support for old XML data.  Class rename in 1.9.0 would prevent processing of old build data.  JENKINS-53870
