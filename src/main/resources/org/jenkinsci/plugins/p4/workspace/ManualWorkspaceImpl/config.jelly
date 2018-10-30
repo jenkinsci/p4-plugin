@@ -15,9 +15,9 @@
 		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
 	</f:entry>
 
-	<f:entry field="cleanup">
+	<!--f:entry field="cleanup">
 		<f:checkbox title="${%Delete the Perforce Client after checkout}" default="false"/>
-	</f:entry>
+	</f:entry-->
 	
 	<f:entry>
 		<f:property field="spec" />
