@@ -26,10 +26,12 @@ import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewsAPI;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
@@ -284,7 +286,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	public void testMappingDefaultsClassic() throws Exception {
 
 		String base = "//depot/default";
-		sampleProject(base, new String[]{"Main"});
+		sampleProject(base, new String[]{"Main"}, "Jenkinsfile");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = base + "/...";
@@ -369,7 +371,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		// Setup sample Multi Branch Project
 		String base = "//depot/update";
-		String baseChange = sampleProject(base, new String[]{"Main", "Dev"});
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, "Jenkinsfile");
 		assertNotNull(baseChange);
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -415,7 +417,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		// Setup sample Multi Branch Project
 		String base = "//depot/multi";
-		String baseChange = sampleProject(base, new String[]{"Main", "Dev"});
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, "Jenkinsfile");
 		assertNotNull(baseChange);
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -470,7 +472,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String base = "//depot/SwarmTriggerCommit";
 		String[] branches = new String[]{"Main", "Dev"};
 
-		String baseChange = sampleProject(base, branches);
+		String baseChange = sampleProject(base, branches, "Jenkinsfile");
 		assertNotNull(baseChange);
 
 		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
@@ -542,7 +544,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String base = "//depot/SwarmCommit";
 		String[] branches = new String[]{"Main", "Dev"};
 
-		String baseChange = sampleProject(base, branches);
+		String baseChange = sampleProject(base, branches, "Jenkinsfile");
 		assertNotNull(baseChange);
 
 		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
@@ -618,7 +620,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String base = "//depot/SwarmReview";
 		String[] branches = new String[]{"Main", "Dev"};
 
-		String baseChange = sampleProject(base, branches);
+		String baseChange = sampleProject(base, branches, "Jenkinsfile");
 		assertNotNull(baseChange);
 
 		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
@@ -700,6 +702,74 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, revRun.getResult());
 	}
 
+	@Test
+	@Issue("JENKINS-54382")
+	public void testMultiBranchDeepJenkinsfile() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/deep";
+		String scriptPath = "space build/jfile";
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, scriptPath);
+		assertNotNull(baseChange);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "deep-jenkinsfile");
+		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+	}
+
+	@Test
+	public void testMultiBranchMultiLineDeepJenkinsfile() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/mdeep";
+		String scriptPath = "space build/jfile";
+		submitFile(jenkins, "//depot/other/src/fileA", "content");
+		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, scriptPath);
+		assertNotNull(baseChange);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/..." + "\n" + "//depot/other/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-line-deep-jenkinsfile");
+		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		String branch = "Main";
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+	}
+
 
 	/* ------------------------------------------------------------------------------------------------------------- */
 	/*	Helper methods                                                                                               */
@@ -717,17 +787,17 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		return folderStore;
 	}
 
-	private String sampleProject(String base, String[] branches) throws Exception {
+	private String sampleProject(String base, String[] branches, String jfile) throws Exception {
 		String id = null;
 		for (String branch : branches) {
-			submitFile(jenkins, base + "/" + branch + "/Jenkinsfile", ""
+			submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
 					+ "pipeline {\n"
 					+ "  agent any\n"
 					+ "  stages {\n"
 					+ "    stage('Test') {\n"
 					+ "      steps {\n"
 					+ "        script {\n"
-					+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
+					+ "          if(!fileExists('" + jfile + "')) error 'missing " + jfile + "'\n"
 					+ "          if(!fileExists('src/fileA'))   error 'missing fileA'\n"
 					+ "          if(!fileExists('src/fileB'))   error 'missing fileB'\n"
 					+ "        }\n"

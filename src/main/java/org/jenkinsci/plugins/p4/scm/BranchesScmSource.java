@@ -129,8 +129,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		}
 
 		String client = getFormat();
-		String jenkinsPath = path.getPath() + "/" + getScriptPathOrDefault();
-		String jenkinsView = ViewMapHelper.getClientView(jenkinsPath, client);
+		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
 		String mappingsView = ViewMapHelper.getClientView(views, client);
 		String view = mappingsView + "\n" + jenkinsView;
 

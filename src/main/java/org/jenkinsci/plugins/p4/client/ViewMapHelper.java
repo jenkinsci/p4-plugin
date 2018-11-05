@@ -46,7 +46,8 @@ public class ViewMapHelper {
 
 		// Split on new line and trim any following white space
 		String[] lines = depotView.split("\n\\s*");
-		StringBuffer view = processLines(lines, client);
+		boolean multi = lines.length > 1;
+		StringBuffer view = processLines(lines, client, multi);
 
 		return view.toString();
 	}
@@ -62,7 +63,38 @@ public class ViewMapHelper {
 			return null;
 		}
 
-		StringBuffer view = processLines(views.toArray(new String[0]), client);
+		boolean multi = views.size() > 1;
+		StringBuffer view = processLines(views.toArray(new String[0]), client, multi);
+
+		return view.toString();
+	}
+
+	public static String getScriptView(String base, String scriptPath, String client) {
+		// exit early if no client is defined
+		if (client == null || client.isEmpty()) {
+			return null;
+		}
+
+		StringBuffer lhs = new StringBuffer("");
+		lhs.append(base);
+		lhs.append(PATH_DELIM);
+		lhs.append(scriptPath);
+
+		StringBuffer rhs = new StringBuffer("//");
+		rhs.append(client);
+		rhs.append(PATH_DELIM);
+		rhs.append(scriptPath);
+
+		// Wrap with quotes if spaces are used in the path
+		if (base.contains(" ") || scriptPath.contains(" ")) {
+			lhs = wrapSpaces(lhs);
+			rhs = wrapSpaces(rhs);
+		}
+
+		StringBuffer view = new StringBuffer();
+		view.append(lhs);
+		view.append(MAP_SEP);
+		view.append(rhs);
 
 		return view.toString();
 	}
@@ -82,11 +114,9 @@ public class ViewMapHelper {
 		return parts;
 	}
 
-	private static StringBuffer processLines(String[] lines, String client) {
+	private static StringBuffer processLines(String[] lines, String client, boolean multi) {
 
 		StringBuffer view = new StringBuffer();
-
-		boolean multi = lines.length > 1;
 
 		for (int c = 0; c < lines.length; c++) {
 			// detect space characters for later
@@ -111,10 +141,8 @@ public class ViewMapHelper {
 
 			// Wrap with quotes if spaces are used in the path
 			if (spaces) {
-				lhs.insert(0, QUOTE);
-				lhs.append(QUOTE);
-				rhs.insert(0, QUOTE);
-				rhs.append(QUOTE);
+				lhs = wrapSpaces(lhs);
+				rhs = wrapSpaces(rhs);
 			}
 
 			// Build view
@@ -127,6 +155,12 @@ public class ViewMapHelper {
 		}
 
 		return view;
+	}
+
+	private static StringBuffer wrapSpaces(StringBuffer sb) {
+		sb.insert(0, QUOTE);
+		sb.append(QUOTE);
+		return sb;
 	}
 
 	private static StringBuffer processLHS(String[] parts) {
