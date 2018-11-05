@@ -105,57 +105,56 @@ public class ClientHelper extends ConnectionHelper {
 			return;
 		}
 
-		// Setup charset for unicode servers
-		if (isUnicode()) {
-			getConnection().setCharsetName(workspace.getCharset());
-		}
-
 		// Find workspace and set as current
 		try {
-			//iclient = connection.getClient(workspace.getFullName());
 
-		// Setup/Create workspace based on type
-		iclient = workspace.setClient(getConnection(), getAuthorisationConfig().getUsername());
+			// Setup charset for unicode servers
+			if (isUnicode()) {
+				getConnection().setCharsetName(workspace.getCharset());
+			}
+
+			// Setup/Create workspace based on type
+			iclient = workspace.setClient(getConnection(), getAuthorisationConfig().getUsername());
 
 			// Set as Current Client, or exit early if not defined
-		if (!isClientValid(workspace)) {
-			String err = "P4: Undefined workspace: " + workspace.getFullName();
-			throw new AbortException(err);
+			if (!isClientValid(workspace)) {
+				String err = "P4: Undefined workspace: " + workspace.getFullName();
+				throw new AbortException(err);
 			} else {
-			getConnection().setCurrentClient(iclient);
-		}
+				getConnection().setCurrentClient(iclient);
+			}
 
 			// Exit early if client is Static Workspace
-		if (workspace instanceof StaticWorkspaceImpl) {
-			return;
-		}
-
-		// Ensure root and host fields are not null
-		if (workspace.getRootPath() != null) {
-			iclient.setRoot(workspace.getRootPath());
-		}
-		if (workspace.getHostName() != null) {
-			iclient.setHostName(workspace.getHostName());
-		}
-
-		// Set client Server ID if not already defined in the client spec.
-		String serverId = iclient.getServerId();
-		if (serverId == null || serverId.isEmpty()) {
-			IServerInfo info = getConnection().getServerInfo();
-			String services = getServerServices();
-			serverId = info.getServerId();
-			if (serverId != null && !serverId.isEmpty() && isEdgeType(services)) {
-				iclient.setServerId(serverId);
+			if (workspace instanceof StaticWorkspaceImpl) {
+				return;
 			}
-		}
 
-		// Save client spec
-		iclient.update();
+			// Ensure root and host fields are not null
+			if (workspace.getRootPath() != null) {
+				iclient.setRoot(workspace.getRootPath());
+			}
+			if (workspace.getHostName() != null) {
+				iclient.setHostName(workspace.getHostName());
+			}
+
+			// Set client Server ID if not already defined in the client spec.
+			String serverId = iclient.getServerId();
+			if (serverId == null || serverId.isEmpty()) {
+				IServerInfo info = getConnection().getServerInfo();
+				String services = getServerServices();
+				serverId = info.getServerId();
+				if (serverId != null && !serverId.isEmpty() && isEdgeType(services)) {
+					iclient.setServerId(serverId);
+				}
+			}
+
+			// Save client spec
+			iclient.update();
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
 			logger.severe(err);
 			log(err);
-	}
+		}
 	}
 
 	private boolean isEdgeType(String services) {

@@ -14,6 +14,8 @@ import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.graph.ICommit;
@@ -241,16 +243,8 @@ public class ConnectionHelper implements AutoCloseable {
 		return connection.isConnected();
 	}
 
-	public boolean isUnicode() {
-		if(unicode == null) {
-			try {
-				logger.finer("ConnectionHelper:isUnicode");
-				unicode = connection.getServerInfo().isUnicodeEnabled();
-			} catch (Exception e) {
-				unicode = false;
-			}
-		}
-		return unicode;
+	public boolean isUnicode() throws ConnectionException, AccessException, RequestException {
+		return connection.supportsUnicode();
 	}
 
 	/**
