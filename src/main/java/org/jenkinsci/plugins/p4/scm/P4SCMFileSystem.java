@@ -28,8 +28,8 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		super(rev);
 		String credential = scm.getCredential();
 		LogTaskListener listener = new LogTaskListener(LOGGER, Level.ALL);
-		Workspace workspace = scm.getWorkspace();
-		this.p4 = new TempClientHelper(owner, credential, listener, workspace);
+		Workspace ws = (Workspace) scm.getWorkspace().clone();
+		this.p4 = new TempClientHelper(owner, credential, listener, ws);
 	}
 
 	@Override
