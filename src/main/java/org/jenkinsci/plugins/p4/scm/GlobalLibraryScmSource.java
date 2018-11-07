@@ -7,6 +7,7 @@ import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
@@ -131,6 +132,11 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		public AutoCompletionCandidates doAutoCompletePath(@QueryParameter String value) {
 			NavigateHelper nav = new NavigateHelper(10);
 			return nav.getCandidates(value);
+		}
+
+		@Override
+		public boolean isApplicable(Class<? extends SCMSourceOwner> owner) {
+			return false;
 		}
 	}
 }
