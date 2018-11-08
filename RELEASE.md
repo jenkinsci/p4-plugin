@@ -1,5 +1,19 @@
 ## Release notes
 
+
+### Release 1.9.4 (major features/fixes)
+
+[@24842](https://swarm.workshop.perforce.com/changes/24842) - Add logging for Client View field on Workspace update.
+
+[@24841](https://swarm.workshop.perforce.com/changes/24841) - Merge pull request #81 from p4charu/jenkinsci-master.  Hide Helix Library from Add Source option in MultiBranch.
+
+[@24830](https://swarm.workshop.perforce.com/changes/24830) - Preserve Pipeline client when using Lightweight checkout.  Clone Workspace before creating Temp Client. JENKINS-54488
+
+[@24829](https://swarm.workshop.perforce.com/changes/24829) - Support Jenkinsfiles in sub directories.  Preserve Jenkinsfile path in Client View. JENKINS-54382
+
+[@24826](https://swarm.workshop.perforce.com/changes/24826) - Update Perforce Server Unicode check.
+
+
 ### Release 1.9.3 (major features/fixes)
 
 [@24805](https://swarm.workshop.perforce.com/changes/24805) - Tidy up connection methods.  Cache TagAction calls to getTicket() when adding P4_TICKET to the Environment.  JENKINS-54222
