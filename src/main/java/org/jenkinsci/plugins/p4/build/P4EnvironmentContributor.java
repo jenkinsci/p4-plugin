@@ -83,7 +83,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 			PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
 
-			if (tagAction.getTicket() != null && !p4scm.isHideTicket()) {
+			if (!p4scm.isHideTicket() && tagAction.getTicket() != null) {
 				String ticket = tagAction.getTicket();
 				env.put("P4_TICKET", ticket);
 			}
