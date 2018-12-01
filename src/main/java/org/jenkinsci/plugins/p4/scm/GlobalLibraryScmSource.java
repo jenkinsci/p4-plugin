@@ -109,7 +109,27 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 		String client = getFormat();
 		String view = ViewMapHelper.getClientView(depotView, client);
-		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		
+		// Make a workspace spec that is all default except for make it writeable.
+		// Without that, we can't do Replay in pipelines.
+		boolean allwrite = true;	// the change
+		boolean clobber = true;
+		boolean compress = false;
+		boolean locked = false;
+		boolean modtime = false;
+		boolean rmdir = false;
+		String streamName = null;
+		String line = "LOCAL";
+		String changeView = null;
+		String type = null;
+		String serverID = null;
+		boolean backup = true;
+		WorkspaceSpec spec = new WorkspaceSpec(
+			allwrite, clobber, compress,
+			locked,  modtime,  rmdir,  streamName,
+			line,  view,  changeView,  type,
+			serverID,  backup );
+
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec, true);
 	}
 
