@@ -26,12 +26,15 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 /**
  * Uses the "index.jelly" view to render the changelist details and use the
  * "digest.jelly" view of to render the summary page.
  */
 public class P4ChangeParser extends ChangeLogParser {
+
+	private static Logger logger = Logger.getLogger(P4ChangeParser.class.getName());
 
 	private final String credential;
 
@@ -43,7 +46,7 @@ public class P4ChangeParser extends ChangeLogParser {
 	@Override
 	public ChangeLogSet<? extends Entry> parse(Run run, RepositoryBrowser<?> browser, File file)
 			throws IOException, SAXException {
-		try(ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
+		try (ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
 			SAXParser parser = factory.newSAXParser();
 			ChangeLogHandler handler = new ChangeLogHandler(run, browser, p4);
@@ -51,8 +54,9 @@ public class P4ChangeParser extends ChangeLogParser {
 			P4ChangeSet changeSet = handler.getChangeLogSet();
 			return changeSet;
 		} catch (Exception e) {
-			throw new SAXException("Could not parse perforce changelog: ", e);
+			logger.severe("Could not parse Perforce changelog: " + file.toString());
 		}
+		return new P4ChangeSet(run, browser, new ArrayList<>());
 	}
 
 	public static class ChangeLogHandler extends DefaultHandler {
@@ -76,8 +80,8 @@ public class P4ChangeParser extends ChangeLogParser {
 					if (url != null) {
 						this.browser = new SwarmBrowser(url);
 					}
-				} catch(RequestException re) {
-					if(re.getMessage() != null && !re.getMessage().contains("Unknown command")) {
+				} catch (RequestException re) {
+					if (re.getMessage() != null && !re.getMessage().contains("Unknown command")) {
 						throw re;
 					}
 					// else : Ignore, the command is not supported by older P4 versions
@@ -198,7 +202,6 @@ public class P4ChangeParser extends ChangeLogParser {
 							String id = text.toString();
 							entry.setGraphCommit(p4, id);
 						}
-
 					} else {
 
 						String elementText = text.toString().trim();
