@@ -13,12 +13,16 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -132,5 +136,31 @@ public class PublishTest extends DefaultEnvironment {
 		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.FAILURE, build.getResult());
 		jenkins.assertLogContains("'fail' validation failed: ", build);
+	}
+
+	@Test
+	public void testHighAsciiDescriptions() throws Exception {
+
+		byte[] byteArray = new byte[] {'t', 'e', 's', 't', 5, '.'};
+		String desc = new String(byteArray, "UTF-8");
+		submitFile(jenkins, "//depot/classic/A/src/fileA", "content", desc);
+
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "highAscii");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   def workspace = [$class: 'ManualWorkspaceImpl',\n"
+				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
+				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
+				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
+				+ "      revert:true, have:true, modtime:true]\n"
+				+ "   p4sync workspace:workspace, credential: '" + CREDENTIAL + "', populate: syncOptions\n"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		assertEquals(Result.SUCCESS, run.getResult());
+
+		P4ChangeSet changeSet = (P4ChangeSet)run.getChangeSets().get(0);
+		String msg = changeSet.getHistory().get(0).getMsg();
+		assertEquals("test?.", msg);
 	}
 }
