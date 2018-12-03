@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.model.Result;
+import hudson.model.Run;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -8,6 +10,7 @@ import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -23,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class JenkinsfileTest extends DefaultEnvironment {
@@ -426,5 +430,20 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 		assertEquals(3, job.getLastBuild().getNumber());
+	}
+
+	@Test
+	public void testInvalidCredentials() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "invalidCredentials");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: 'Invalid', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}", false));
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.FAILURE, run.getResult());
+		List<String> log = job.getLastBuild().getLog(100);
+		assertTrue(log.contains("ERROR: P4: Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials"));
 	}
 }

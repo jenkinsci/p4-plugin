@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
@@ -175,7 +176,7 @@ public class PerforceScm extends SCM {
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
-	                   P4Browser browser) {
+					   P4Browser browser) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
@@ -274,7 +275,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
-	                                               TaskListener listener) throws IOException, InterruptedException {
+												   TaskListener listener) throws IOException, InterruptedException {
 		// A baseline is not required... but a baseline object is, so we'll
 		// return the NONE object.
 		return SCMRevisionState.NONE;
@@ -287,7 +288,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
-	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+												   TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
@@ -426,7 +427,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
-	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+						 File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;
@@ -435,7 +436,13 @@ public class PerforceScm extends SCM {
 		CheckoutTask task = new CheckoutTask(credential, run, listener, populate);
 
 		// Update credential tracking
-		CredentialsProvider.track(run, task.getCredential());
+		try {
+			CredentialsProvider.track(run, task.getCredential());
+		} catch (P4InvalidCredentialException e) {
+			String err = "P4: Unable to checkout: " + e;
+			logger.severe(err);
+			throw new AbortException(err);
+		}
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
