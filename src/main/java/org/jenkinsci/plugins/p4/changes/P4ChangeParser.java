@@ -123,7 +123,8 @@ public class P4ChangeParser extends ChangeLogParser {
 						String safePath = attributes.getValue("depot");
 						String depotPath = URLDecoder.decode(safePath, "UTF-8");
 						String a = attributes.getValue("action");
-						FileAction action = FileAction.fromString(a);
+						//Replacement of / is already done at this point. No need to call the FileAction.fromString(a);
+						FileAction action = FileAction.valueOf(a);
 						String strRev = attributes.getValue("endRevision");
 
 						P4AffectedFile file = new P4AffectedFile(depotPath, strRev, action);
