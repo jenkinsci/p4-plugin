@@ -142,10 +142,10 @@ public abstract class AbstractTask implements Serializable {
 
 		// test server connection
 		if (!p4.isConnected()) {
-			p4.log("P4: Server connection error: " + credential.getP4port());
+			p4.log("P4: Server connection error: " + p4.getPort());
 			return false;
 		}
-		p4.log("... server: " + credential.getP4port());
+		p4.log("... server: " + p4.getPort());
 
 		// test node hostname
 		String host;

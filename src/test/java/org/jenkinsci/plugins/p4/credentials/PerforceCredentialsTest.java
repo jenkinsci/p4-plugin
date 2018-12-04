@@ -11,6 +11,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
+import hudson.model.Result;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -20,6 +21,10 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -28,9 +33,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class PerforceCredentialsTest extends DefaultEnvironment {
 
@@ -335,5 +338,31 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 			}
 		}
 		return folderStore;
+	}
+
+	@Test
+	public void testInvalidCredentials() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "invalidCredentials");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: 'Invalid', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}", false));
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.FAILURE, run.getResult());
+		List<String> log = job.getLastBuild().getLog(100);
+		assertTrue(log.contains("ERROR: P4: Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials"));
+	}
+
+	@Test
+	public void testInvalidPort() throws Exception {
+		P4BaseCredentials credential = new P4PasswordImpl(
+				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhos:1666",
+				null, "user", "0", "0", null, "pass");
+
+		ClientHelper myClient = new ClientHelper(credential, null,null );
+		assertNotNull(myClient.getPort());
+		assertEquals("localhos:1666", myClient.getPort());
 	}
 }
