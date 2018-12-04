@@ -274,7 +274,12 @@ public class ClientHelper extends ConnectionHelper {
 	private void syncPreview(String revisions, Populate populate) throws Exception {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setNoUpdate(true);
-		syncOpts.setQuiet(populate.isQuiet());
+
+		// Skip `p4 sync -q -n` to save compute time.
+		if(populate.isQuiet()) {
+			log("P4 Task: skipping sync.");
+			return;
+		}
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
