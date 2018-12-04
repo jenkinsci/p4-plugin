@@ -105,11 +105,15 @@ abstract public class DefaultEnvironment {
 	}
 
 	protected String submitFile(JenkinsRule jenkins, String path, String content) throws Exception {
+		return submitFile(jenkins, path, content, "Submit test files");
+	}
+
+	protected String submitFile(JenkinsRule jenkins, String path, String content, String desc) throws Exception {
 		ManualWorkspaceImpl workspace = createWorkspace(path);
 		FilePath filePath = createFilePath(path, content);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			Publish publish = new SubmitImpl("Submit test files", false, false, false, null);
+			Publish publish = new SubmitImpl(desc, false, false, false, null);
 			boolean open = p4.buildChange(publish);
 			if (open) {
 				return p4.publishChange(publish);

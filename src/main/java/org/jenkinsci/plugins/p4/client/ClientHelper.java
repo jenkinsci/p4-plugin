@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.IClientOptions;
+import com.perforce.p4java.client.IClientViewMapping;
 import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IRepo;
@@ -72,6 +73,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.COMMAND;
+import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.STOP;
 
 public class ClientHelper extends ConnectionHelper {
 
@@ -149,12 +153,31 @@ public class ClientHelper extends ConnectionHelper {
 			}
 
 			// Save client spec
-			iclient.update();
+			updateClient();
 		} catch (Exception e) {
 			String err = "P4: Unable to setup workspace: " + e;
 			logger.severe(err);
 			log(err);
 		}
+	}
+
+	private void updateClient() throws Exception {
+		iclient.update();
+		StringBuffer sb = new StringBuffer("...   View:\n");
+		ClientView clientView = iclient.getClientView();
+		for (IClientViewMapping view : clientView) {
+			sb.append("      ");
+			sb.append(view.getType().toString());
+			sb.append(view.getLeft());
+			sb.append(" ");
+			sb.append(view.getRight());
+			sb.append("\n");
+		}
+		logger.finer(sb.toString());
+
+		sb.insert(0, COMMAND);
+		sb.append(STOP);
+		log(sb.toString());
 	}
 
 	private boolean isEdgeType(String services) {
@@ -251,7 +274,12 @@ public class ClientHelper extends ConnectionHelper {
 	private void syncPreview(String revisions, Populate populate) throws Exception {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setNoUpdate(true);
-		syncOpts.setQuiet(populate.isQuiet());
+
+		// Skip `p4 sync -q -n` to save compute time.
+		if(populate.isQuiet()) {
+			log("P4 Task: skipping sync.");
+			return;
+		}
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
@@ -292,7 +320,8 @@ public class ClientHelper extends ConnectionHelper {
 			if (!options.isModtime()) {
 				options.setModtime(true);
 				iclient.setOptions(options);
-				iclient.update(); // Save client spec
+				// Save client spec
+				updateClient();
 			}
 		}
 

@@ -401,7 +401,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "   p4sync workspace:workspace, credential: '" + CREDENTIAL + "', populate: syncOptions\n"
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("p4 sync -n -q", run);
+		jenkins.assertLogContains("P4 Task: skipping sync.", run);
 	}
 
 	@Test

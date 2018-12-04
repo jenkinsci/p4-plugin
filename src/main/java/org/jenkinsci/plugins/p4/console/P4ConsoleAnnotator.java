@@ -9,8 +9,8 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 	private int id = 0;
 	private int depth = 0;
 
-	private static String COMMAND = "(p4):cmd:";
-	private static String STOP = "(p4):stop:";
+	public static final String COMMAND = "(p4):cmd:";
+	public static final String STOP = "(p4):stop:";
 
 	@Override
 	public ConsoleAnnotator<Object> annotate(Object context, MarkupText text) {
