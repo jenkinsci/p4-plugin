@@ -378,7 +378,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testConnectionErrorAfter1Retrys() {
+	public void testConnectionError() {
 		try {
 			P4PasswordImpl cred = createCredentials("user", "password", "localhost:1666", "InvalidUserPass");
 			//helper is not used but is required to call the constructor to trigger the flow.
