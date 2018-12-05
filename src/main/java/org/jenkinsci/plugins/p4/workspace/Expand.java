@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
-public class Expand implements Serializable {
+public class Expand implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -42,6 +42,10 @@ public class Expand implements Serializable {
 			}
 			set(key, value);
 		}
+	}
+
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 
 	public String format(String format, boolean wildcard) {

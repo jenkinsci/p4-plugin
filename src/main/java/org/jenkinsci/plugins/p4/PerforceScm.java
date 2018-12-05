@@ -359,7 +359,8 @@ public class PerforceScm extends SCM {
 		String executor = ExecutorHelper.getExecutorID(buildWorkspace);
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
 
-		Workspace ws = (Workspace) workspace.clone();
+		Workspace ws = workspace.deepClone();
+
 		// JENKINS-48434 by setting rootPath to null will leave client's root unchanged
 		ws.setRootPath(null);
 		ws.setExpand(envVars);

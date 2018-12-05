@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.AbortException;
 import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Describable;
@@ -156,11 +157,16 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 		return cleanup;
 	}
 
-	public Object clone() {
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
+
+	public Workspace deepClone() throws AbortException {
 		try {
-			return super.clone();
+			return (Workspace) this.clone();
 		} catch (CloneNotSupportedException e) {
-			return null;
+			throw new AbortException(e.getMessage());
 		}
 	}
 }

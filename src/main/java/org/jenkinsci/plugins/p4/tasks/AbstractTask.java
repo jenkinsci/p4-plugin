@@ -49,18 +49,12 @@ public abstract class AbstractTask implements Serializable {
 
 	/**
 	 * Set the workspace used for the task.
-	 *
 	 * Often AbstractTask#setEnvironment() is used to expand the variables in the workspace before set
 	 *
 	 * @param workspace Perforce Workspace type
 	 */
 	public void setWorkspace(Workspace workspace) {
 		this.workspace = workspace;
-	}
-
-	protected ClientHelper getxxxConnection() {
-		ClientHelper p4 = new ClientHelper(credential, listener, workspace);
-		return p4;
 	}
 
 	/**
@@ -83,7 +77,7 @@ public abstract class AbstractTask implements Serializable {
 	public Workspace setEnvironment(Run<?, ?> run, Workspace wsType, FilePath buildWorkspace)
 			throws IOException, InterruptedException {
 
-		Workspace ws = (Workspace) wsType.clone();
+		Workspace ws = wsType.deepClone();
 
 		// Set Node environment
 		EnvVars envVars = run.getEnvironment(listener);
@@ -180,7 +174,6 @@ public abstract class AbstractTask implements Serializable {
 
 			// Run the task and retry as required
 			return retryTask(p4);
-
 		} catch (Exception e) {
 			String msg = "P4: Task Exception: " + e.getMessage();
 			logger.severe(msg);

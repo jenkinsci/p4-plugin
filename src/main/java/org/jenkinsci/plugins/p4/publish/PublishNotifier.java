@@ -71,7 +71,7 @@ public class PublishNotifier extends Notifier {
 			return false;
 		}
 
-		Workspace ws = (Workspace) getWorkspace().clone();
+		Workspace ws = getWorkspace().deepClone();
 
 		// Create task
 		PublishTask task = new PublishTask(getCredential(), build, listener, getPublish());
