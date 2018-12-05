@@ -176,7 +176,7 @@ public class PerforceScm extends SCM {
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
-					   P4Browser browser) {
+	                   P4Browser browser) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
@@ -253,18 +253,22 @@ public class PerforceScm extends SCM {
 			logger.fine("Could not retrieve credentials from id: '${scmCredential}");
 			return null;
 		}
-		try {
-			ConnectionHelper connection = new ConnectionHelper(credentials, null);
-			String url = connection.getSwarm();
+		try (ConnectionHelper p4 = new ConnectionHelper(credentials, null)) {
+			String url = p4.getSwarm();
 			if (url != null) {
 				return new SwarmBrowser(url);
 			} else {
 				return null;
 			}
+		} catch (IOException e) {
+			logger.severe("Connection error. " + e.getMessage());
 		} catch (P4JavaException e) {
-			logger.info("Unable to access Perforce Property.");
-			return null;
+			logger.severe("Unable to access Swarm Property. " + e.getMessage());
+		} catch (Exception e) {
+			logger.severe("Perforce resource error. " + e.getMessage());
 		}
+
+		return null;
 	}
 
 	/**
@@ -275,7 +279,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
-												   TaskListener listener) throws IOException, InterruptedException {
+	                                               TaskListener listener) throws IOException, InterruptedException {
 		// A baseline is not required... but a baseline object is, so we'll
 		// return the NONE object.
 		return SCMRevisionState.NONE;
@@ -288,7 +292,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
-												   TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 		PollingResult state = PollingResult.NO_CHANGES;
 		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
@@ -427,7 +431,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
-						 File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;

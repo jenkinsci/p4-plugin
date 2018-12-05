@@ -37,6 +37,7 @@ import com.perforce.p4java.server.CmdSpec;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IProgressCallback;
+import hudson.AbortException;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -54,6 +55,7 @@ import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,7 +82,7 @@ public class ConnectionHelper implements AutoCloseable {
 	private Boolean unicode = null;
 
 	@Deprecated
-	public ConnectionHelper(String credentialID, TaskListener listener) {
+	public ConnectionHelper(String credentialID, TaskListener listener) throws IOException {
 		this.listener = listener;
 		P4BaseCredentials credential = findCredential(credentialID);
 		this.p4credential = credential;
@@ -90,19 +92,19 @@ public class ConnectionHelper implements AutoCloseable {
 		validate = new Validate(listener);
 	}
 
-	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) {
+	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) throws IOException {
 		this(findCredential(credentialID, context), listener);
 	}
 
-	public ConnectionHelper(Item job, String credentialID, TaskListener listener) {
+	public ConnectionHelper(Item job, String credentialID, TaskListener listener) throws IOException {
 		this(findCredential(credentialID, job), listener);
 	}
 
-	public ConnectionHelper(Run run, String credentialID, TaskListener listener) {
+	public ConnectionHelper(Run run, String credentialID, TaskListener listener) throws IOException {
 		this(findCredential(credentialID, run), listener);
 	}
 
-	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) {
+	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) throws IOException {
 		this.listener = listener;
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
@@ -111,7 +113,7 @@ public class ConnectionHelper implements AutoCloseable {
 		validate = new Validate(listener);
 	}
 
-	public ConnectionHelper(P4BaseCredentials credential) {
+	public ConnectionHelper(P4BaseCredentials credential) throws IOException {
 		this.listener = new LogTaskListener(logger, Level.INFO);
 		this.p4credential = credential;
 		this.connectionConfig = new ConnectionConfig(credential);
@@ -139,17 +141,10 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Convenience wrapper to connect and report errors
 	 */
-	private boolean connect() {
+	private boolean connect() throws Exception {
 		// Connect to the Perforce server
-		try {
-			this.connection = ConnectionFactory.getConnection(connectionConfig);
-			logger.fine("P4: opened connection OK");
-		} catch (Exception e) {
-			String err = "P4: Unable to connect: " + e;
-			logger.severe(err);
-			log(err);
-			return false;
-		}
+		this.connection = ConnectionFactory.getConnection(connectionConfig);
+		logger.fine("P4: opened connection OK");
 
 		// Login to Perforce
 		try {
@@ -186,17 +181,24 @@ public class ConnectionHelper implements AutoCloseable {
 	/**
 	 * Retry Connection with back off for each failed attempt.
 	 */
-	private void connectionRetry() {
+	private void connectionRetry() throws AbortException {
+
 		int trys = 0;
 		int attempt = getRetry();
+		String err = "P4: Invalid credentials. Giving up...";
+
 		while (trys <= attempt) {
-			if (connect()) {
-				return;
+			try {
+				if (connect()) {
+					return;
+				}
+			} catch (Exception e) {
+				err = e.getMessage();
 			}
 			trys++;
-			String err = "P4: Connection retry: " + trys;
-			logger.severe(err);
-			log(err);
+			String msg = "P4: Connection retry: " + trys;
+			logger.severe(msg);
+			log(msg);
 
 			// back off n^2 seconds, before retry
 			try {
@@ -205,9 +207,10 @@ public class ConnectionHelper implements AutoCloseable {
 				Thread.currentThread().interrupt();
 			}
 		}
-		String err = "P4: Connection retry giving up...";
+
 		logger.severe(err);
 		log(err);
+		throw new AbortException(err);
 	}
 
 	public int getRetry() {
@@ -887,7 +890,6 @@ public class ConnectionHelper implements AutoCloseable {
 
 	/**
 	 * Finds a Perforce Credential based on the String id and {@link Run}.
-	 * This also tracks usage of the credentials.
 	 *
 	 * @param credentialsId Credential ID
 	 * @param run           The {@link Run}

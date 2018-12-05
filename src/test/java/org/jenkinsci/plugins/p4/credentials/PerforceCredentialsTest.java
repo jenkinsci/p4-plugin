@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.credentials;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -9,6 +10,9 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import edu.umd.cs.findbugs.annotations.ExpectWarning;
+import hudson.AbortException;
+import hudson.model.Describable;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -22,6 +26,7 @@ import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -33,7 +38,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class PerforceCredentialsTest extends DefaultEnvironment {
 
@@ -343,7 +351,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	@Test
 	public void testInvalidCredentials() throws Exception {
 
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "invalidCredentials");
+		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidCredentials");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
 				+ "   p4sync credential: 'Invalid', template: 'test.ws'\n"
@@ -351,18 +359,33 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 				+ "}", false));
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.FAILURE, run.getResult());
-		List<String> log = job.getLastBuild().getLog(100);
-		assertTrue(log.contains("ERROR: P4: Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials"));
+		jenkins.assertLogContains("Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials", run);
 	}
 
 	@Test
 	public void testInvalidPort() throws Exception {
-		P4BaseCredentials credential = new P4PasswordImpl(
-				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhos:1666",
-				null, "user", "0", "0", null, "pass");
+		createCredentials("user", "password", "localhos:1666", "idBad");
 
-		ClientHelper myClient = new ClientHelper(credential, null,null );
-		assertNotNull(myClient.getPort());
-		assertEquals("localhos:1666", myClient.getPort());
+		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidPort");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: 'idBad', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}", false));
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.FAILURE, run.getResult());
+		jenkins.assertLogContains("Unable to resolve Perforce server host name 'localhos' for RPC connection", run);
 	}
+
+	@Test
+	public void testConnectionErrorAfter1Retrys() {
+		try {
+			P4PasswordImpl cred = createCredentials("user", "password", "localhost:1666", "InvalidUserPass");
+			//helper is not used but is required to call the constructor to trigger the flow.
+			ConnectionHelper helper = new ConnectionHelper(cred);
+		} catch (Exception e) {
+			assertEquals("P4: Invalid credentials. Giving up...", e.getMessage());
+		}
+	}
+
 }

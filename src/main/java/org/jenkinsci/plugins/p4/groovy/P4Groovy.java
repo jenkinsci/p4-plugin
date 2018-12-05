@@ -36,7 +36,7 @@ public class P4Groovy implements Serializable {
 		return workspace.getFullName();
 	}
 
-	public String getUserName() throws P4JavaException {
+	public String getUserName() throws Exception {
 		IOptionsServer p4 = getConnection();
 		String user = p4.getUserName();
 		p4.disconnect();
@@ -99,7 +99,7 @@ public class P4Groovy implements Serializable {
 		return maps[0];
 	}
 
-	private IOptionsServer getConnection() {
+	private IOptionsServer getConnection() throws IOException {
 		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
 		return p4.getConnection();
 	}
