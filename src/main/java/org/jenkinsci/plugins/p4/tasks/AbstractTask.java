@@ -11,6 +11,7 @@ import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.IOException;
@@ -66,7 +67,10 @@ public abstract class AbstractTask implements Serializable {
 	 */
 	public abstract Object task(ClientHelper p4) throws Exception;
 
-	public P4BaseCredentials getCredential() {
+	public P4BaseCredentials getCredential() throws P4InvalidCredentialException {
+		if(credential == null){
+			throw new P4InvalidCredentialException();
+		}
 		return credential;
 	}
 
@@ -137,10 +141,10 @@ public abstract class AbstractTask implements Serializable {
 
 		// test server connection
 		if (!p4.isConnected()) {
-			p4.log("P4: Server connection error: " + getCredential().getP4port());
+			p4.log("P4: Server connection error: " + p4.getPort());
 			return false;
 		}
-		p4.log("... server: " + getCredential().getP4port());
+		p4.log("... server: " + p4.getPort());
 
 		// test node hostname
 		String host;

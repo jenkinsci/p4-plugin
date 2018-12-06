@@ -110,7 +110,7 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 				}
 				return FormValidation.ok("Success");
 			} catch (Exception e) {
-				return FormValidation.error("Connection Error.");
+				return FormValidation.error("Connection Error: " + e.getMessage());
 			}
 		}
 	}

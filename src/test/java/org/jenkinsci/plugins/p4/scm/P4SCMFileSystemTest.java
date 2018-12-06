@@ -24,6 +24,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +60,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAutoComplete() {
+	public void testAutoComplete() throws IOException {
 
 		new ConnectionHelper(CREDENTIAL, null); // Initialise default connection
 		NavigateHelper nav = new NavigateHelper(5);
