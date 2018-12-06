@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.p4.credentials;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -10,9 +9,6 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import edu.umd.cs.findbugs.annotations.ExpectWarning;
-import hudson.AbortException;
-import hudson.model.Describable;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -25,8 +21,6 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -40,7 +34,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class PerforceCredentialsTest extends DefaultEnvironment {
@@ -375,17 +368,6 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.FAILURE, run.getResult());
 		jenkins.assertLogContains("Unable to resolve Perforce server host name 'localhos' for RPC connection", run);
-	}
-
-	@Test
-	public void testConnectionError() {
-		try {
-			P4PasswordImpl cred = createCredentials("user", "password", "localhost:1666", "InvalidUserPass");
-			//helper is not used but is required to call the constructor to trigger the flow.
-			ConnectionHelper helper = new ConnectionHelper(cred);
-		} catch (Exception e) {
-			assertEquals("P4: Invalid credentials. Giving up...", e.getMessage());
-		}
 	}
 
 }
