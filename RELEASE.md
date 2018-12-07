@@ -1,6 +1,23 @@
 ## Release notes
 
 
+### Release 1.9.5 (major features/fixes)
+
+[@24944](https://swarm.workshop.perforce.com/changes/24944) - Merge pull request #86 from p4charu/jenkinsci-master.  JENKINS-51632 and minor code cleanup
+
+[@24942](https://swarm.workshop.perforce.com/changes/24942) - Deep clone of Workspace objects.  WorkspaceSpec was not cloned and caused the View to change.  JENKINS-54695
+
+[@24940](https://swarm.workshop.perforce.com/changes/24940) - Skip sync when PreviewSync is used with quiet option `p4 sync -q -n`.  JENKINS-54153
+
+[@24939](https://swarm.workshop.perforce.com/changes/24939) - Escape unsupported XML low ascii characters with a '?'.  JENKINS-52661 JENKINS-54841
+
+[@24938](https://swarm.workshop.perforce.com/changes/24938) - Prevent XML parse errors from failing the build.  Jelly page is called while the changelist is being built.  Log the error and return an empty list of changes.  JENKINS-53030
+
+[@24937](https://swarm.workshop.perforce.com/changes/24937) - Merge pull request #84 from p4charu/jenkinsci-master.  Added help text for Include and Fixed incorrect images. JENKINS-54584
+
+[@24850](https://swarm.workshop.perforce.com/changes/24850) - Merge pull request #83 from rudolfwalter/patch-1.  Avoid unnecessary call to TagAction.getTicket()
+
+
 ### Release 1.9.4 (major features/fixes)
 
 [@24842](https://swarm.workshop.perforce.com/changes/24842) - Add logging for Client View field on Workspace update.
