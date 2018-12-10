@@ -11,6 +11,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
+import hudson.model.Result;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -20,6 +21,9 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -336,4 +340,34 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		}
 		return folderStore;
 	}
+
+	@Test
+	public void testInvalidCredentials() throws Exception {
+
+		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidCredentials");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: 'Invalid', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}", false));
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.FAILURE, run.getResult());
+		jenkins.assertLogContains("Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials", run);
+	}
+
+	@Test
+	public void testInvalidPort() throws Exception {
+		createCredentials("user", "password", "localhos:1666", "idBad");
+
+		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidPort");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "   p4sync credential: 'idBad', template: 'test.ws'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}", false));
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		assertEquals(Result.FAILURE, run.getResult());
+		jenkins.assertLogContains("Unable to resolve Perforce server host name 'localhos' for RPC connection", run);
+	}
+
 }

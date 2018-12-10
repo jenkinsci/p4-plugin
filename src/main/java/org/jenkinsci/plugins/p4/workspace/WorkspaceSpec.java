@@ -13,7 +13,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
 
-public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Serializable {
+public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -107,6 +107,10 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	                     boolean locked, boolean modtime, boolean rmdir, String streamName,
 	                     String line, String view) {
 		this(allwrite, clobber, compress, locked, modtime, rmdir, streamName, line, view, null, null, null, true);
+	}
+
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 
 	@Extension

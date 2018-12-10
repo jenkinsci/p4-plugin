@@ -22,7 +22,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 	protected P4SCMFileSystem(@NonNull Item owner, @NonNull PerforceScm scm, @CheckForNull P4SCMRevision rev) throws Exception {
 		super(rev);
 		String credential = scm.getCredential();
-		Workspace ws = (Workspace) scm.getWorkspace().clone();
+		Workspace ws = scm.getWorkspace().deepClone();
 		this.p4 = new TempClientHelper(owner, credential, null, ws);
 	}
 

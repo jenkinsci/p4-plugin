@@ -72,6 +72,13 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		this.spec = spec;
 	}
 
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		ManualWorkspaceImpl ws = (ManualWorkspaceImpl) super.clone();
+		ws.spec = (WorkspaceSpec) spec.clone();
+		return ws;
+	}
+
 	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception {
 		String clientName = getFullName();
 		ClientView clientView = new ClientView();

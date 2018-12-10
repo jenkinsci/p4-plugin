@@ -47,6 +47,7 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
@@ -252,18 +253,22 @@ public class PerforceScm extends SCM {
 			logger.fine("Could not retrieve credentials from id: '${scmCredential}");
 			return null;
 		}
-		try {
-			ConnectionHelper connection = new ConnectionHelper(credentials, null);
-			String url = connection.getSwarm();
+		try (ConnectionHelper p4 = new ConnectionHelper(credentials, null)) {
+			String url = p4.getSwarm();
 			if (url != null) {
 				return new SwarmBrowser(url);
 			} else {
 				return null;
 			}
+		} catch (IOException e) {
+			logger.severe("Connection error. " + e.getMessage());
 		} catch (P4JavaException e) {
-			logger.info("Unable to access Perforce Property.");
-			return null;
+			logger.severe("Unable to access Swarm Property. " + e.getMessage());
+		} catch (Exception e) {
+			logger.severe("Perforce resource error. " + e.getMessage());
 		}
+
+		return null;
 	}
 
 	/**
@@ -359,7 +364,8 @@ public class PerforceScm extends SCM {
 		String executor = ExecutorHelper.getExecutorID(buildWorkspace);
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
 
-		Workspace ws = (Workspace) workspace.clone();
+		Workspace ws = workspace.deepClone();
+
 		// JENKINS-48434 by setting rootPath to null will leave client's root unchanged
 		ws.setRootPath(null);
 		ws.setExpand(envVars);
@@ -435,7 +441,13 @@ public class PerforceScm extends SCM {
 		CheckoutTask task = new CheckoutTask(credential, run, listener, populate);
 
 		// Update credential tracking
-		CredentialsProvider.track(run, task.getCredential());
+		try {
+			CredentialsProvider.track(run, task.getCredential());
+		} catch (P4InvalidCredentialException e) {
+			String err = "P4: Unable to checkout: " + e;
+			logger.severe(err);
+			throw new AbortException(err);
+		}
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);

@@ -83,23 +83,23 @@ public class ClientHelper extends ConnectionHelper {
 
 	private IClient iclient;
 
-	public ClientHelper(ItemGroup context, String credential, TaskListener listener, Workspace workspace) {
+	public ClientHelper(ItemGroup context, String credential, TaskListener listener, Workspace workspace) throws IOException {
 		super(context, credential, listener);
 		clientLogin(workspace);
 	}
 
-	public ClientHelper(Item context, String credential, TaskListener listener, Workspace workspace) {
+	public ClientHelper(Item context, String credential, TaskListener listener, Workspace workspace) throws IOException {
 		super(context, credential, listener);
 		clientLogin(workspace);
 	}
 
-	public ClientHelper(P4BaseCredentials credential, TaskListener listener, Workspace workspace) {
+	public ClientHelper(P4BaseCredentials credential, TaskListener listener, Workspace workspace) throws IOException {
 		super(credential, listener);
 		clientLogin(workspace);
 	}
 
 	// reserved for TempClientHelper
-	protected ClientHelper(Item context, String credential, TaskListener listener) {
+	protected ClientHelper(Item context, String credential, TaskListener listener) throws IOException {
 		super(context, credential, listener);
 	}
 
@@ -274,7 +274,12 @@ public class ClientHelper extends ConnectionHelper {
 	private void syncPreview(String revisions, Populate populate) throws Exception {
 		SyncOptions syncOpts = new SyncOptions();
 		syncOpts.setNoUpdate(true);
-		syncOpts.setQuiet(populate.isQuiet());
+
+		// Skip `p4 sync -q -n` to save compute time.
+		if (populate.isQuiet()) {
+			log("P4 Task: skipping sync.");
+			return;
+		}
 
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 		List<IFileSpec> syncMsg = iclient.sync(files, syncOpts);
