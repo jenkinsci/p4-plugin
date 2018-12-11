@@ -154,8 +154,12 @@ public class ClientHelper extends ConnectionHelper {
 
 			// Save client spec
 			updateClient();
+			
 		} catch (Exception e) {
-			String err = "P4: Unable to setup workspace: " + e;
+			java.io.StringWriter writer = new java.io.StringWriter();
+			java.io.PrintWriter printWriter = new java.io.PrintWriter(writer);
+			e.printStackTrace(printWriter);
+			String err = "P4: Unable to setup workspace: " + writer.toString();
 			logger.severe(err);
 			log(err);
 		}
@@ -163,21 +167,25 @@ public class ClientHelper extends ConnectionHelper {
 
 	private void updateClient() throws Exception {
 		iclient.update();
-		StringBuffer sb = new StringBuffer("...   View:\n");
 		ClientView clientView = iclient.getClientView();
-		for (IClientViewMapping view : clientView) {
-			sb.append("      ");
-			sb.append(view.getType().toString());
-			sb.append(view.getLeft());
-			sb.append(" ");
-			sb.append(view.getRight());
-			sb.append("\n");
-		}
-		logger.finer(sb.toString());
+		if (clientView != null)
+		{			
+			StringBuffer sb = new StringBuffer("...   View:\n");
+			for (IClientViewMapping view : clientView) {
+				sb.append("      ");
+				if (view.getType() != null)
+					sb.append(view.getType().toString());
+				sb.append(view.getLeft());
+				sb.append(" ");
+				sb.append(view.getRight());
+				sb.append("\n");
+			}
+			logger.finer(sb.toString());
 
-		sb.insert(0, COMMAND);
-		sb.append(STOP);
-		log(sb.toString());
+			sb.insert(0, COMMAND);
+			sb.append(STOP);
+			log(sb.toString());
+		}
 	}
 
 	private boolean isEdgeType(String services) {
