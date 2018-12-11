@@ -65,6 +65,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,10 +156,9 @@ public class ClientHelper extends ConnectionHelper {
 
 			// Save client spec
 			updateClient();
-			
 		} catch (Exception e) {
-			java.io.StringWriter writer = new java.io.StringWriter();
-			java.io.PrintWriter printWriter = new java.io.PrintWriter(writer);
+			StringWriter writer = new StringWriter();
+			PrintWriter printWriter = new PrintWriter(writer);
 			e.printStackTrace(printWriter);
 			String err = "P4: Unable to setup workspace: " + writer.toString();
 			logger.severe(err);
@@ -168,8 +169,7 @@ public class ClientHelper extends ConnectionHelper {
 	private void updateClient() throws Exception {
 		iclient.update();
 		ClientView clientView = iclient.getClientView();
-		if (clientView != null)
-		{			
+		if (clientView != null) {
 			StringBuffer sb = new StringBuffer("...   View:\n");
 			for (IClientViewMapping view : clientView) {
 				sb.append("      ");
