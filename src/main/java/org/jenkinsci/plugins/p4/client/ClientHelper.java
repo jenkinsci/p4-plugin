@@ -16,6 +16,7 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
+import com.perforce.p4java.impl.generic.core.InputMapper;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
 import com.perforce.p4java.impl.mapbased.server.Parameters;
 import com.perforce.p4java.option.changelist.SubmitOptions;
@@ -167,8 +168,19 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private void updateClient() throws Exception {
+
+		// exit early if no change
+		String clientName = iclient.getName();
+		IClient original = getConnection().getClient(clientName);
+		if (diffClient(original, iclient)) {
+			log("...   No change in client detected.");
+			return;
+		}
+
 		iclient.update();
 		ClientView clientView = iclient.getClientView();
+
+		// Log client view...
 		if (clientView != null) {
 			StringBuffer sb = new StringBuffer("...   View:\n");
 			for (IClientViewMapping view : clientView) {
@@ -186,6 +198,45 @@ public class ClientHelper extends ConnectionHelper {
 			sb.append(STOP);
 			log(sb.toString());
 		}
+	}
+
+	private boolean diffClient(IClient a, IClient b) {
+
+		if (a == null || b == null) {
+			return false;
+		}
+
+		Map<String, Object> mapA = InputMapper.map(a);
+		List<String> valuesA = cleanMap(mapA);
+
+		Map<String, Object> mapB = InputMapper.map(b);
+		List<String> valuesB = cleanMap(mapB);
+
+		return valuesA.equals(valuesB);
+	}
+
+	private List<String> cleanMap(Map<String, Object> map) {
+
+		// remove empty fields
+		String[] unset = new String[]{"Host", "Stream"};
+		for (String key : unset) {
+			if ("".equals(map.get(key))) {
+				map.remove(key);
+			}
+		}
+
+		// remove set fields
+		String[] set = new String[]{"Type"};
+		for (String key : set) {
+			map.remove(key);
+		}
+
+		List<String> values = new ArrayList(map.values());
+		values.removeAll(Collections.singleton(null));
+		values.removeAll(Collections.singleton(""));
+		Collections.sort(values);
+
+		return values;
 	}
 
 	private boolean isEdgeType(String services) {
