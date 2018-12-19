@@ -90,7 +90,7 @@ abstract public class DefaultEnvironment {
 
 	protected String shelveFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		ManualWorkspaceImpl workspace = createWorkspace(path);
-		FilePath filePath = createFilePath(path, content);
+		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
 			Publish publish = new ShelveImpl("Submit test files", false, false, false);
@@ -110,7 +110,11 @@ abstract public class DefaultEnvironment {
 
 	protected String submitFile(JenkinsRule jenkins, String path, String content, String desc) throws Exception {
 		ManualWorkspaceImpl workspace = createWorkspace(path);
-		FilePath filePath = createFilePath(path, content);
+		return submitFile(jenkins, path, content, desc, workspace);
+	}
+
+	protected String submitFile(JenkinsRule jenkins, String path, String content, String desc, Workspace workspace) throws Exception {
+		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
 			Publish publish = new SubmitImpl(desc, false, false, false, null);
@@ -142,10 +146,10 @@ abstract public class DefaultEnvironment {
 		return workspace;
 	}
 
-	private FilePath createFilePath(String path, String content) throws IOException, InterruptedException {
+	private FilePath createFilePath(String path, String content, Workspace workspace) throws IOException, InterruptedException {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
-		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
+		File wsRoot = new File(workspace.getRootPath()).getAbsoluteFile();
 
 		File file = new File(wsRoot + File.separator + filename).getAbsoluteFile();
 		FilePath filePath = new FilePath(file);
@@ -154,7 +158,6 @@ abstract public class DefaultEnvironment {
 
 		return filePath;
 	}
-
 
 	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
