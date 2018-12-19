@@ -7,6 +7,7 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
+import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -19,8 +20,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -382,10 +385,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Hello1, Jenkins.", run1);
 		jenkins.assertLogContains("Hello2, Jenkins.", run1);
 
-
 		// Clear Global Libraries for other Jobs
 		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
-
 	}
 
 	@Test
@@ -532,5 +533,53 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		p4.disconnect();
 	}
-	//Added a test comment
+
+	@Test
+	public void testManualStream() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "manualStream");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node('master') {\n"
+				+ "  checkout(\n"
+				+ "    changelog: false,\n"
+				+ "    poll: false,\n"
+				+ "    scm: perforce(\n"
+				+ "      credential: '" + CREDENTIAL + "',\n"
+				+ "      populate: forceClean(\n"
+				+ "        have: true,\n"
+				+ "        revert: true,\n"
+				+ "        quiet: false\n"
+				+ "      ),\n"
+				+ "      workspace: manualSpec(\n"
+				+ "        name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}',\n"
+				+ "        spec: clientSpec(\n"
+				+ "          allwrite: true,\n"
+				+ "          line: 'UNIX',\n"
+				+ "          streamName: '//stream/main',\n"
+				+ "          view: \"\"\n"
+				+ "        )\n"
+				+ "      )\n"
+				+ "    )\n"
+				+ "  )\n"
+				+ "}", false));
+
+		WorkflowRun run1 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
+		jenkins.assertLogNotContains("NullPointerException", run1);
+
+		// Create workspace
+		String client = "manualStream.ws";
+		String stream = "//stream/main";
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
+		workspace.setExpand(new HashMap<String, String>());
+		File wsRoot = new File("target/manualStream.ws").getAbsoluteFile();
+		workspace.setRootPath(wsRoot.toString());
+
+		String c1 = submitFile(jenkins, "//stream/main/file-10.txt", "content", "workspace test", workspace);
+
+		//Triggering manual build as unable to get the polling build
+		WorkflowRun run2 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + c1, run2);
+		jenkins.assertLogNotContains("NullPointerException", run2);
+	}
 }
