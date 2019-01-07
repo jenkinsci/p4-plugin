@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workspace;
 
+import hudson.Util;
 import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
@@ -50,21 +51,11 @@ public class Expand implements Cloneable, Serializable {
 
 	public String format(String format, boolean wildcard) {
 		if (formatTags != null) {
-			for (Entry<String, String> entry : formatTags.entrySet()) {
-				String key = entry.getKey();
-				String value = entry.getValue();
-				if (value != null) {
-					format = format.replace("${" + key + "}", value);
-				}
-			}
+			format = Util.replaceMacro(format, formatTags); // fails to replace undefined tags, just like before
 		}
 
 		// cleanup undefined tags
-		if (wildcard) {
-			format = format.replaceAll("\\$\\{.+?\\}", "*");
-		}
-		format = format.replace("${", "");
-		format = format.replace("}", "");
+		format = format.replaceAll("\\$\\{.+?\\}", wildcard ? "*" : ""); // strips undefined tags unless wildcard=true
 		return format;
 	}
 
