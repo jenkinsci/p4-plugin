@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -370,4 +371,14 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Unable to resolve Perforce server host name 'localhos' for RPC connection", run);
 	}
 
+	@Test
+	public void testConnectionError() {
+		try {
+			P4PasswordImpl cred = createCredentials("user", "password", p4d.getRshPort(), "InvalidUserPass");
+			//helper is not used but is required to call the constructor to trigger the flow.
+			ConnectionHelper helper = new ConnectionHelper(cred);
+		} catch (Exception e) {
+			assertEquals("P4: Invalid credentials. Giving up...", e.getMessage());
+		}
+	}
 }

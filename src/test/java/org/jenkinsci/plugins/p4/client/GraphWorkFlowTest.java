@@ -217,8 +217,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: //graph/scm-api-plugin.git@81dcf18bca038604c4fc784de42e6069feef8bd1", run);
 
 		// Log in for next set of tests...
-		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
-		try(ClientHelper p4 = new ClientHelper(job.asItem(), CREDENTIAL, null, workspace)) {
+		try(ConnectionHelper p4 = new ConnectionHelper(job.asItem(), CREDENTIAL, null)) {
 			// Test file exists in workspace root
 			String root = p4.getConnection().getClient(client).getRoot();
 			assertTrue(Files.exists(Paths.get(root, "graph/scm-api-plugin/README.md")));
