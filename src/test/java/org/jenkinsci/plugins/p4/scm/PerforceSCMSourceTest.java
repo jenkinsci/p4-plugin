@@ -770,6 +770,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 	}
 
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 
 	/* ------------------------------------------------------------------------------------------------------------- */
 	/*	Helper methods                                                                                               */

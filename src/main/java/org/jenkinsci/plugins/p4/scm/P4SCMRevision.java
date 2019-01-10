@@ -25,7 +25,8 @@ public class P4SCMRevision extends SCMRevision {
 	}
 
 	public static P4SCMRevision builder(String path, String branch, P4Ref ref) {
-		P4Path p4path = new P4Path(path, ref.toString());
+		P4Path p4path = new P4Path(path);
+		p4path.setRevision(ref.toString());
 		P4SCMHead head = new P4SCMHead(branch, p4path);
 		return new P4SCMRevision(head, ref);
 	}
@@ -34,8 +35,10 @@ public class P4SCMRevision extends SCMRevision {
 		List<String> mappings = new ArrayList<>();
 		mappings.add(path + "/...");
 
-		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, ref.toString());
-		P4SCMHead head = new P4SCMHead(branch, swarmPath);
+		P4Path p4Path = new P4Path(path);
+		p4Path.setRevision(ref.toString());
+		p4Path.setMappings(mappings);
+		P4SCMHead head = new P4SCMHead(branch, p4Path);
 		return new P4SCMRevision(head, ref);
 	}
 
@@ -43,10 +46,12 @@ public class P4SCMRevision extends SCMRevision {
 		List<String> mappings = new ArrayList<>();
 		mappings.add(path + "/...");
 
-		P4SwarmPath swarmPath = new P4SwarmPath(path, mappings, reviewID);
+		P4Path p4Path = new P4Path(path);
+		p4Path.setRevision(reviewID);
+		p4Path.setMappings(mappings);
 		String trgName = branch + "-" + reviewID;
-		P4SCMHead target = new P4SCMHead(trgName, swarmPath);
-		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);
+		P4SCMHead target = new P4SCMHead(trgName, p4Path);
+		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
 		return new P4SCMRevision(head, ref);
 	}
 

@@ -427,4 +427,84 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 		assertEquals(3, job.getLastBuild().getNumber());
 	}
+
+	@Test
+	public void testJenkinsfileLocation() throws Exception {
+
+		String content = ""
+				+ "node {\n"
+				+ "   echo 'Alt Jenkinsfile'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/Other/Jenkinsfile", content);
+		String change = submitFile(jenkins, "//depot/Data/j001", "Content");
+
+		// Manual workspace spec definition
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		StringBuffer sb = new StringBuffer();
+		sb.append("//depot/Data/... //" + client + "/..." + "\n");
+		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString());
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "jenkinsfileLocation");
+		job.setDefinition(new CpsScmFlowDefinition(scm, "build/Jenkinsfile"));
+
+		// Build 1
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run);
+		jenkins.assertLogContains("Alt Jenkinsfile", run);
+		jenkins.assertLogContains("P4_CHANGELIST: " + change, run);
+	}
+
+	@Test
+	public void testJenkinsfileLocationLightweight() throws Exception {
+
+		String content = ""
+				+ "node {\n"
+				+ "   echo 'Alt Jenkinsfile'\n"
+				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/Other/Jenkinsfile", content);
+		String change = submitFile(jenkins, "//depot/Data/j002", "Content");
+
+		// Manual workspace spec definition
+		String client = "manual.ws";
+		String stream = null;
+		String line = "LOCAL";
+		StringBuffer sb = new StringBuffer();
+		sb.append("//depot/Data/... //" + client + "/..." + "\n");
+		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString());
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "jenkinsfileLocationLightweight");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "build/Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Get current change
+		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
+		String head = p4.getCounter("change");
+
+		// Build 1
+		WorkflowRun run = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run);
+		jenkins.assertLogContains("Alt Jenkinsfile", run);
+		assertEquals(head, change);
+	}
 }

@@ -91,7 +91,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 
 			for (IGraphRef ref : refs) {
 				String branchName = ref.getName();
-				P4Path p4Path = new P4Path(repoName, branchName);
+				P4Path p4Path = new P4Path(repoName);
+				p4Path.setRevision(branchName);
 				String name = p4Path.getName();
 
 				P4SCMHead head = new P4SCMHead(name, p4Path);
@@ -116,7 +117,8 @@ public class GraphScmSource extends AbstractP4ScmSource {
 					continue;
 				}
 
-				P4Path p4Path = new P4Path(repoName, branchName);
+				P4Path p4Path = new P4Path(repoName);
+				p4Path.setRevision(branchName);
 				String name = p4Path.getName();
 
 				P4SCMHead target = new P4SCMHead(name, p4Path);

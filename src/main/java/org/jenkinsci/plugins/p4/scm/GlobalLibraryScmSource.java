@@ -45,7 +45,8 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	protected SCMRevision retrieve(@NonNull final String thingName, @NonNull TaskListener listener)
 			throws IOException, InterruptedException {
 		try {
-			P4Path p4Path = new P4Path(path, thingName);
+			P4Path p4Path = new P4Path(path);
+			p4Path.setRevision(thingName);
 			P4SCMHead head = new P4SCMHead(thingName, p4Path);
 			SCMRevision revision = getRevision(head, listener);
 			return revision;

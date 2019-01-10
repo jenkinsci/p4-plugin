@@ -104,6 +104,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				}
 
 				P4Path p4Path = new P4Path(branch);
+				p4Path.setMappings(getDepotPathMappings(p4Path));
 				P4SCMHead head = new P4SCMHead(file, p4Path);
 				list.add(head);
 			}
@@ -114,19 +115,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public Workspace getWorkspace(P4Path path) {
-		if (path == null) {
-			throw new IllegalArgumentException("missing branch path");
-		}
-
-		List<String> views = new ArrayList<>();
-
-		for (String mapping : getViewMappings()) {
-			StringBuffer sb = new StringBuffer();
-			sb.append(path.getPath());
-			sb.append("/");
-			sb.append(mapping);
-			views.add(sb.toString());
-		}
+		List<String> views = getDepotPathMappings(path);
 
 		String client = getFormat();
 		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
@@ -134,24 +123,49 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		String view = mappingsView + "\n" + jenkinsView;
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
-	}
+		ManualWorkspaceImpl ws = new ManualWorkspaceImpl(getCharset(), false, client, spec, false);
+
+		return ws;
+}
 
 	private List<String> getViewMappings() {
 		return toLines(getMappings());
 	}
 
-	@Extension
-	@Symbol("multiBranch")
-	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
-
-		public static final String defaultPath = "...";
-
-		public static final String defaultFilter = ".*";
-
-		@Override
-		public String getDisplayName() {
-			return "Helix Branches";
+	private List<String> getDepotPathMappings(P4Path path) {
+		if (path == null) {
+			throw new IllegalArgumentException("missing branch path");
 		}
+
+		List<String> views = new ArrayList<>();
+
+		for (String mapping : getViewMappings()) {
+			if (mapping.startsWith("//")) {
+				mapping = mapping.replaceAll("\\$\\{BRANCH_NAME\\}", path.getNode());
+				views.add(mapping);
+			} else {
+				StringBuffer sb = new StringBuffer();
+				sb.append(path.getPath());
+				sb.append("/");
+				sb.append(mapping);
+				views.add(sb.toString());
+			}
+		}
+
+		return views;
 	}
+
+@Extension
+@Symbol("multiBranch")
+public static final class DescriptorImpl extends P4SCMSourceDescriptor {
+
+	public static final String defaultPath = "...";
+
+	public static final String defaultFilter = ".*";
+
+	@Override
+	public String getDisplayName() {
+		return "Helix Branches";
+	}
+}
 }

@@ -296,6 +296,14 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			long c = p4.getHead(path.getPath() + rev);
 			change = (c > change) ? c : change;
 
+			List<String> maps = path.getMappings();
+			if (maps != null && !maps.isEmpty()) {
+				for (String map : maps) {
+					c = p4.getHead(map);
+					change = (c > change) ? c : change;
+				}
+			}
+
 			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
 			return revision;
 		}

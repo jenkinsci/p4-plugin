@@ -1,18 +1,17 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class P4Path implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private final String path;
-	private String revision;
 
-	public P4Path(String path, String revision) {
-		this.path = path;
-		this.revision = revision;
-	}
+	private String revision;
+	private List<String> mappings = new ArrayList<>();
 
 	public P4Path(String path) {
 		this.path = path;
@@ -20,6 +19,10 @@ public class P4Path implements Serializable {
 
 	public void setRevision(String revision) {
 		this.revision = revision;
+	}
+
+	public void setMappings(List<String> mappings) {
+		this.mappings.addAll(mappings);
 	}
 
 	public String getPathBuilder(String file) {
@@ -53,11 +56,19 @@ public class P4Path implements Serializable {
 		return path;
 	}
 
+	public String getNode() {
+		return path.substring(path.lastIndexOf("/") + 1);
+	}
+
 	public String getRevision() {
 		if (revision != null && revision.startsWith("refs/heads/")) {
 			return revision.substring("refs/heads/".length());
 		}
 		return revision;
+	}
+
+	public List<String> getMappings() {
+		return mappings;
 	}
 
 	@Override

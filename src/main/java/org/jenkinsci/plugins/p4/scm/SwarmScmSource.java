@@ -99,12 +99,12 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			List<String> branches = getBranchesInReview(reviewID, project);
 			for (String branch : branches) {
 				// Get first Swarm path; it MUST include the Jenkinsfile
-				P4SwarmPath swarmPath = getPathsInBranch(branch, project);
-				swarmPath.setRevision(reviewID);
+				P4Path p4Path = getPathsInBranch(branch, project);
+				p4Path.setRevision(reviewID);
 
 				String trgName = branch + "-" + reviewID;
-				P4SCMHead target = new P4SCMHead(trgName, swarmPath);
-				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, swarmPath, target);
+				P4SCMHead target = new P4SCMHead(trgName, p4Path);
+				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
 				list.add(tag);
 			}
 		}
@@ -120,9 +120,9 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 		for (SwarmProjectAPI.Branch branch : branches) {
 			// Get first Swarm path; it MUST include the Jenkinsfile
-			P4SwarmPath swarmPath = branch.getPath();
+			P4Path p4Path = branch.getPath();
 
-			P4SCMHead head = new P4SCMHead(branch.getId(), swarmPath);
+			P4SCMHead head = new P4SCMHead(branch.getId(), p4Path);
 			list.add(head);
 		}
 
@@ -230,15 +230,13 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public Workspace getWorkspace(P4Path path) {
-		if (path == null || !(path instanceof P4SwarmPath)) {
-			throw new IllegalArgumentException("missing Swarm path");
+		if (path == null) {
+			throw new IllegalArgumentException("missing path");
 		}
-
-		P4SwarmPath swarmPath = (P4SwarmPath) path;
 
 		String client = getFormat();
 		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
-		String mappingsView = ViewMapHelper.getClientView(swarmPath.getMappings(), client);
+		String mappingsView = ViewMapHelper.getClientView(path.getMappings(), client);
 		String view = mappingsView + "\n" + jenkinsView;
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -272,13 +270,13 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		return lastChange;
 	}
 
-	private P4SwarmPath getPathsInBranch(String id, String project) throws Exception {
+	private P4Path getPathsInBranch(String id, String project) throws Exception {
 
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 
 		for (SwarmProjectAPI.Branch branch : branches) {
 			if (id.equals(branch.getId())) {
-				P4SwarmPath swarmPath = branch.getPath();
+				P4Path swarmPath = branch.getPath();
 				return swarmPath;
 			}
 		}
