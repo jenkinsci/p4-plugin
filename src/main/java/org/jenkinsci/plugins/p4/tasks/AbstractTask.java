@@ -158,7 +158,7 @@ public abstract class AbstractTask implements Serializable {
 	}
 
 	protected Object tryTask() throws AbortException {
-		try (ClientHelper p4 = new ClientHelper(credential, listener, workspace)) {
+		try (ClientHelper p4 = new ClientHelper(getCredential(), listener, workspace)) {
 
 			// Check for an abort
 			if (p4.hasAborted()) {
