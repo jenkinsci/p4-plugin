@@ -25,7 +25,6 @@ public class P4GroovyTest extends DefaultEnvironment {
 	public void testInvalidCredentials() {
 		StreamWorkspaceImpl ws = new StreamWorkspaceImpl(null, false, "//stream/main", "job1-temp-branch1");
 		P4Groovy p4 = new P4Groovy("bad credential", null, ws, new FilePath(new File("workspace")));
-
 		try {
 			Map<String, Object>[] result = p4.run("status");
 		} catch (Exception e) {
