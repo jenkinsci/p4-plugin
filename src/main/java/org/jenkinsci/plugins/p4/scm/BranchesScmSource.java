@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
-	private String filter = DescriptorImpl.defaultFilter;
+	private String pattern = DescriptorImpl.defaultPattern;
 	private String mappings = DescriptorImpl.defaultPath;
 
 	@DataBoundConstructor
@@ -38,12 +38,12 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	}
 
 	@DataBoundSetter
-	public void setFilter(String filter) {
-		this.filter = filter;
+	public void setPattern(String pattern) {
+		this.pattern = pattern;
 	}
 
-	public String getFilter() {
-		return filter;
+	public String getPattern() {
+		return pattern;
 	}
 
 	public String getMappings() {
@@ -77,11 +77,11 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<P4SCMHead> list = new ArrayList<>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
-			String actualFilter = getFilter();
-			if (getFilter() == null || filter.trim().equals("")) {
-				actualFilter = ".*";
+			String actualPattern = getPattern();
+			if (getPattern() == null || getPattern().trim().equals("")) {
+				actualPattern = ".*";
 			}
-			Pattern filterPattern = Pattern.compile(actualFilter);
+			Pattern filterPattern = Pattern.compile(actualPattern);
 
 			List<IFileSpec> specs = p4.getDirs(paths);
 			for (IFileSpec s : specs) {
@@ -161,7 +161,7 @@ public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
 	public static final String defaultPath = "...";
 
-	public static final String defaultFilter = ".*";
+	public static final String defaultPattern = ".*";
 
 	@Override
 	public String getDisplayName() {

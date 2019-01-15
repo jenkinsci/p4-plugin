@@ -185,15 +185,29 @@ public class PerforceScm extends SCM {
 		this.revision = null;
 	}
 
+	/**
+	 * MultiBranch constructor for building jobs.
+	 *
+	 * @param source ScmSource
+	 * @param path Perforce project path and mappings
+	 * @param revision Perforce revision
+	 */
 	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		this.credential = source.getCredential();
 		this.workspace = source.getWorkspace(path);
-		this.filter = null;
+		this.filter = source.getFilter();
 		this.populate = source.getPopulate();
 		this.browser = source.getBrowser();
 		this.revision = revision;
 	}
 
+	/**
+	 * Internal constructor for functional tests.
+	 *
+	 * @param credential Credential ID
+	 * @param workspace Workspace type
+	 * @param populate Populate options
+	 */
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
 		this.credential = credential;
 		this.workspace = workspace;

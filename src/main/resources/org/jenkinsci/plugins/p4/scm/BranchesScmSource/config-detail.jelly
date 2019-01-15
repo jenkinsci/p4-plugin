@@ -11,8 +11,8 @@
       <f:textarea/>
     </f:entry>
 
-    <f:entry title="Include Filter" field="filter">
-      <f:textbox default="${descriptor.defaultFilter}"/>
+    <f:entry title="Include Filter" field="pattern">
+      <f:textbox default="${descriptor.defaultPattern}"/>
     </f:entry>
 
 	<f:advanced>
@@ -30,6 +30,10 @@
 
     	<f:entry title="View Mappings" field="mappings">
             <f:textarea default="${descriptor.defaultPath}"/>
+        </f:entry>
+
+        <f:entry title="Polling build filters">
+        	<f:repeatableHeteroProperty field="filter" hasHeader="true" addCaption="Add new build filter"/>
         </f:entry>
 
     	<t:listScmBrowsers name="p4.browser"/>
