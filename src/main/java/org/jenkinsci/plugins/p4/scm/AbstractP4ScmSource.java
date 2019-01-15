@@ -300,7 +300,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 		// TODO look for graph revisions too
 
-		// TODO add logic to disable from last change to avoid poll per change
+		// Check for 'Polling per Change' filter option
+		boolean perChange = PerforceScm.isIncremental(getFilter());
 
 		long change;
 		P4Path path = head.getPath();
@@ -308,8 +309,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		// Fetch last scan
 		P4SCMRevision last = getLastScan(head);
 
-		// For the first scan, last will be null, so use the latest change on the path.
-		if (last == null) {
+		/* If 'Polling per Change' is disabled then get the latest change; otherwise use the latest change for the
+		 * first scan then the oldest un-built change.
+		 */
+		if (last == null || !perChange) {
 			change = findLatestChange(path, listener);
 		} else {
 			change = findIncrementalChange(path, last.getRef(), listener);

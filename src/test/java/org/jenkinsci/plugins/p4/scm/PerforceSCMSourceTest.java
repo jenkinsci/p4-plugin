@@ -774,7 +774,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchRemoteJenkinsfile() throws Exception {
+	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
 		// Setup sample Multi Branch Project
 		String base = "//depot/Remote";
@@ -814,7 +814,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		source.setPopulate(new AutoCleanImpl());
 		source.setMappings("//depot/ProjectA/${BRANCH_NAME}/...");
 
-		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-remote-jenkinsfile");
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-remote-scan-jenkinsfile");
 		multi.getSourcesList().add(new BranchSource(source));
 
 		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
@@ -854,6 +854,81 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4ChangeSet changeSet2 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
 		assertEquals(1, changeSet2.getHistory().size());
 		assertEquals(change2, changeSet2.getHistory().get(0).getId().toString());
+	}
+
+	@Test
+	public void testMultiBranchRemoteJenkinsfileLatestChange() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/LatestRemote";
+		String scriptPath = "a space/jfile";
+		String branch = "Main";
+
+		// Remote Jenkinsfile
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('" + scriptPath + "')) error 'missing " + scriptPath + "'\n"
+				+ "          if(!fileExists('src/fileA'))   error 'missing fileA'\n"
+				+ "          if(!fileExists('src/fileB'))   error 'missing fileB'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		// Source files
+		String projBase = "//depot/ProjectB/Main";
+		submitFile(jenkins, projBase + "/src/fileA", "content");
+		String baseChange = submitFile(jenkins, projBase + "/src/fileB", "content");
+		assertNotNull(baseChange);
+
+		// Setup MultiBranch
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+		source.setMappings("//depot/ProjectB/${BRANCH_NAME}/...");
+
+		// Empty set of filters
+		List<Filter> filter = new ArrayList<>();
+		source.setFilter(filter);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-remote-latest-jenkinsfile");
+		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet baseSet = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(baseChange, baseSet.getHistory().get(0).getId().toString());
+
+		// Multiple changes
+		submitFile(jenkins, projBase + "/src/fileC", "content");
+		String change2 = submitFile(jenkins, projBase + "/src/fileD", "content");
+
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		assertEquals(1, job.getLastBuild().getChangeSets().size());
+		P4ChangeSet changeSet = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(2, changeSet.getHistory().size());
+		assertEquals(change2, changeSet.getHistory().get(0).getId().toString());
 	}
 
 

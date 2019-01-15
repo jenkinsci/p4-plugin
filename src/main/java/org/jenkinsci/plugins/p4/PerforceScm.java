@@ -477,7 +477,7 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Override build change if polling per change.
-		if (isIncremental()) {
+		if (isIncremental(getFilter())) {
 			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 			task.setIncrementalChanges(changes);
@@ -932,7 +932,7 @@ public class PerforceScm extends SCM {
 	 *
 	 * @return true if set
 	 */
-	private boolean isIncremental() {
+	public static boolean isIncremental(List<Filter> filter) {
 		if (filter != null) {
 			for (Filter f : filter) {
 				if (f instanceof FilterPerChangeImpl) {

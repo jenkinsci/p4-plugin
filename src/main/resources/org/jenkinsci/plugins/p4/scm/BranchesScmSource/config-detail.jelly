@@ -32,7 +32,7 @@
             <f:textarea default="${descriptor.defaultPath}"/>
         </f:entry>
 
-        <f:entry title="Polling build filters">
+        <f:entry title="Polling build filters" field="filter">
         	<f:repeatableHeteroProperty field="filter" hasHeader="true" addCaption="Add new build filter"/>
         </f:entry>
 
