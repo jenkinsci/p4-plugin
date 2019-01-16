@@ -106,7 +106,7 @@ public class ClientHelper extends ConnectionHelper {
 		super(context, credential, listener);
 	}
 
-	protected void clientLogin(Workspace workspace) {
+	protected void clientLogin(Workspace workspace) throws AbortException {
 		// Exit early if no connection
 		if (getConnection() == null) {
 			return;
@@ -164,6 +164,7 @@ public class ClientHelper extends ConnectionHelper {
 			String err = "P4: Unable to setup workspace: " + writer.toString();
 			logger.severe(err);
 			log(err);
+			throw new AbortException(e.getMessage());
 		}
 	}
 
