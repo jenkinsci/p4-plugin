@@ -931,6 +931,70 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(change2, changeSet.getHistory().get(0).getId().toString());
 	}
 
+	@Test
+	public void testMultiBranchRemoteJenkinsfilePlus() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String base = "//depot/Plus";
+		String scriptPath = "a space/jfile";
+		String branch = "Main";
+
+		// Remote Jenkinsfile with lightweight access to extra files
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('" + scriptPath + "')) error 'missing " + scriptPath + "'\n"
+				+ "          if(!fileExists('depot/Plus/Main/pod/test.yaml'))   error 'missing test.yaml'\n"
+				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileA'))   error 'missing fileA'\n"
+				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileB'))   error 'missing fileB'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		// Extra file (Kubernetes)
+		submitFile(jenkins, base + "/" + branch + "/pod/test.yaml", "content");
+
+		// Source files
+		String projBase = "//depot/test_Main/ProjectC";
+		submitFile(jenkins, projBase + "/src/fileA", "content");
+		String baseChange = submitFile(jenkins, projBase + "/src/fileB", "content");
+		assertNotNull(baseChange);
+
+		// Setup MultiBranch with remote and local mappings
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		List<Filter> filter = new ArrayList<>();
+		filter.add(new FilterPerChangeImpl(true));
+		source.setFilter(filter);
+		source.setPopulate(new AutoCleanImpl());
+		source.setMappings("//depot/test_${BRANCH_NAME}/ProjectC/...\n...");
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-remote-plus-jenkinsfile");
+		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet baseSet = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(baseChange, baseSet.getHistory().get(0).getId().toString());
+	}
 
 	/* ------------------------------------------------------------------------------------------------------------- */
 	/*	Helper methods                                                                                               */
