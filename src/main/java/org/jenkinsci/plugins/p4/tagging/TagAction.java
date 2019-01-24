@@ -272,6 +272,19 @@ public class TagAction extends AbstractScmTagAction {
 			return changes;
 		}
 
+		logger.fine("   using syncID: " + syncID);
+
+		// Fetch all syncIDs and check for duplicates JENKINS-55075
+		List<String> syncList = new ArrayList<>();
+		for (TagAction action : actions) {
+			if(syncList.contains(action.getSyncID())) {
+				listener.getLogger().println("WARNING: duplicate syncID found: " + action.getSyncID());
+				logger.severe("WARNING: duplicate syncID found: " + action.getSyncID());
+			}
+			syncList.add(action.getSyncID());
+			logger.fine("   stored syncID: " + action.getSyncID());
+		}
+
 		// look for action matching view
 		// (clone ID now filtered from the syncID to addresses JENKINS-43877)
 		for (TagAction action : actions) {

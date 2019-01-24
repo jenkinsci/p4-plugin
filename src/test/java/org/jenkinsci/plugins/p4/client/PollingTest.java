@@ -27,6 +27,7 @@ import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
@@ -110,7 +111,7 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
 
 		// Pin at label auto15
-		Populate populate = new AutoCleanImpl(true, true, false,false, false, "auto15", null);
+		Populate populate = new AutoCleanImpl(true, true, false, false, false, "auto15", null);
 		List<Filter> filter = new ArrayList<>();
 		FilterPerChangeImpl inc = new FilterPerChangeImpl(true);
 		filter.add(inc);
@@ -648,5 +649,68 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
 		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
 		assertTrue(job.isBuilding());
+	}
+
+	@Test
+	public void testPipelineFailedPolling() throws Exception {
+
+		String fail = ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        sh 'nvc'\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Pass Jenkinsfile");
+
+		// Manual workspace spec definition
+		String client = "basicJenkinsfile.ws";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate and Filter options
+		Populate populate = new AutoCleanImpl();
+		List<Filter> filter = new ArrayList<>();
+		filter.add(new FilterPerChangeImpl(true));
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPolling");
+		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+
+		// enable SCM polling (even though we poll programmatically)
+		SCMTrigger cron = new SCMTrigger("0 0 * * *");
+		job.addTrigger(cron);
+
+		// expect pass build
+		WorkflowRun run1 = jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
+
+		// Update Jenkinsfile to fail
+		String change1 = submitFile(jenkins, "//depot/Data/file1", "content", "change 1");
+		String change2 = submitFile(jenkins, "//depot/Data/file2", "content", "change 2");
+
+		// Poll for changes incrementally (change 1)
+		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
+		PollingResult found = job.poll(listener);
+		assertEquals(PollingResult.BUILD_NOW, found);
+		job.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		// Poll for changes incrementally (change 2)
+		found = job.poll(listener);
+		assertEquals(PollingResult.BUILD_NOW, found);
+		job.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		// Poll for changes incrementally (no change)
+		found = job.poll(listener);
+		assertEquals(PollingResult.NO_CHANGES, found);
 	}
 }

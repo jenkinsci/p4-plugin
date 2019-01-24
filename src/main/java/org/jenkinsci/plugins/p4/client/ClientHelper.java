@@ -174,7 +174,6 @@ public class ClientHelper extends ConnectionHelper {
 		String clientName = iclient.getName();
 		IClient original = getConnection().getClient(clientName);
 		if (diffClient(original, iclient)) {
-			log("...   No change in client detected.");
 			return;
 		}
 
@@ -193,6 +192,7 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append(view.getRight());
 				sb.append("\n");
 			}
+			sb.append("...   Root: " + iclient.getRoot());
 			logger.finer(sb.toString());
 
 			sb.insert(0, COMMAND);
