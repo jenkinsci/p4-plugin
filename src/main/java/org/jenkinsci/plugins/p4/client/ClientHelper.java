@@ -1304,4 +1304,9 @@ public class ClientHelper extends ConnectionHelper {
 	public IClient getClient() {
 		return iclient;
 	}
+
+	public String where(String localFile) throws Exception {
+		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(localFile);
+		return depotToLocal(file.get(0));
+	}
 }

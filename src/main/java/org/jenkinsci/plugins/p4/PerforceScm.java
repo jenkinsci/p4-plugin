@@ -61,6 +61,7 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
+import org.jenkinsci.plugins.p4.tasks.WhereTask;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.SpecWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -95,6 +96,7 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 	private final P4Ref revision;
+	private final String script;
 
 	private transient P4Ref parentChange;
 	private transient P4Review review;
@@ -183,6 +185,7 @@ public class PerforceScm extends SCM {
 		this.populate = populate;
 		this.browser = browser;
 		this.revision = null;
+		this.script = null;
 	}
 
 	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
@@ -192,6 +195,7 @@ public class PerforceScm extends SCM {
 		this.populate = source.getPopulate();
 		this.browser = source.getBrowser();
 		this.revision = revision;
+		this.script = source.getScriptPathOrDefault();
 	}
 
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
@@ -201,6 +205,7 @@ public class PerforceScm extends SCM {
 		this.populate = populate;
 		this.browser = null;
 		this.revision = null;
+		this.script = null;
 	}
 
 	@Override
@@ -481,6 +486,11 @@ public class PerforceScm extends SCM {
 		tag.setRefChanges(task.getSyncChange());
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
+		// JENKINS-39107: Make Depot location of Jenkinsfile available
+		WhereTask where = new WhereTask(credential, run, listener, script);
+		where.setWorkspace(ws);
+		String jenkinsPath = buildWorkspace.act(where);
+		tag.setJenkinsPath(jenkinsPath);
 		run.addAction(tag);
 
 		// Invoke build.

@@ -6,7 +6,9 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import hudson.EnvVars;
 import hudson.model.Result;
+import hudson.util.LogTaskListener;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -39,6 +41,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -768,6 +771,34 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		WorkflowJob job = multi.getItem(branch);
 		assertThat("We now have a branch", job, notNullValue());
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+	}
+
+	@Test
+	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
+		String base = "//depot/default";
+		sampleProject(base, new String[]{"Main"}, "Jenkinsfile");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "mapping-default-classic");
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowJob job = multi.getItem("Main");
+
+		WorkflowRun build = job.getLastBuild();
+		assertThat("The branch was built", build, notNullValue());
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		Logger polling = Logger.getLogger("TestJenkinsfilePathAvailableAsEnvVar");
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		EnvVars env = build.getEnvironment(listener);
+		String path = env.get("JENKINSFILE_PATH");
+		assertNotNull(path);
 	}
 
 
