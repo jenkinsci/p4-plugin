@@ -1,5 +1,26 @@
 ## Release notes
 
+### Release 1.9.6 (major features/fixes)
+
+
+[@25019](https://swarm.workshop.perforce.com/changes/25019) - Merge pull request #89 from p4charu/jenkinsci-master.  JENKINS-49924: Added more help text for absolute clarity
+
+[@25018](https://swarm.workshop.perforce.com/changes/25018) - Merge pull request #88 from p4charu/jenkinsci-master.  Fixed JENKINS-55430 and better credential error reporting
+
+[@25015](https://swarm.workshop.perforce.com/changes/25015) - Enable/Disable MultiBranch Scan per change using Polling Filter.
+
+[@25014](https://swarm.workshop.perforce.com/changes/25014) - Scan per change support for MultiBranch with remote Jenkinsfiles.  Only the 'Polling per Change' Filter is supported; need to disable or support the other filter types.  JENKINS-53936
+
+[@25006](https://swarm.workshop.perforce.com/changes/25006) - Support for remote Jenkinsfiles in a MultiBranch project.  Jenkinsfile are idenitified by the Include branches path (e.g.  //depot/Remote/...), but you must add a Mapping in the BranchSource->Advanced->View Mappings to locate the projects source and use a special ${BRANCH_NAME} in the path. (e.g. //depot/ProjectA/${BRANCH_NAME}/...) JENKINS-53936
+                                                                                                                         
+[@25001](https://swarm.workshop.perforce.com/changes/25001) - Strip undefined variables.  JENKINS-53723
+
+[@24987](https://swarm.workshop.perforce.com/changes/24987) - Diff client object before save to reduce unnecessary spec changes.  JENKINS-52590
+
+[@24986](https://swarm.workshop.perforce.com/changes/24986) - Merge pull request #87 from p4charu/jenkinsci-master.  Test to confirm JENKINS-54628 is fixed.
+
+[@24968](https://swarm.workshop.perforce.com/changes/24968) - Merge pull request #85 from DrakkenWulf/master.  Fix ability to do Replay in Pipelines.  JENKINS-55107
+
 
 ### Release 1.9.5 (major features/fixes)
 

@@ -106,7 +106,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		String format = workspace.getName();
 
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
-		source.setFilter(BranchesScmSource.DescriptorImpl.defaultFilter);
+		source.setPattern(BranchesScmSource.DescriptorImpl.defaultPattern);
 		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
 
 		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "multi1");

@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.p4.swarmAPI;
 
-import org.jenkinsci.plugins.p4.scm.P4SwarmPath;
+import org.jenkinsci.plugins.p4.scm.P4Path;
 
 import java.util.List;
 
@@ -55,10 +55,12 @@ public class SwarmProjectAPI {
 		 *
 		 * @return List of paths
 		 */
-		public P4SwarmPath getPath() {
+		public P4Path getPath() {
 			String path = paths.get(0);
 			path = path.substring(0, path.lastIndexOf("/..."));
-			return new P4SwarmPath(path, paths);
+			P4Path p4Path = new P4Path(path);
+			p4Path.setMappings(paths);
+			return p4Path;
 		}
 
 		public List<String> getPaths() {

@@ -188,16 +188,30 @@ public class PerforceScm extends SCM {
 		this.script = null;
 	}
 
+	/**
+	 * MultiBranch constructor for building jobs.
+	 *
+	 * @param source ScmSource
+	 * @param path Perforce project path and mappings
+	 * @param revision Perforce revision
+	 */
 	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
 		this.credential = source.getCredential();
 		this.workspace = source.getWorkspace(path);
-		this.filter = null;
+		this.filter = source.getFilter();
 		this.populate = source.getPopulate();
 		this.browser = source.getBrowser();
 		this.revision = revision;
 		this.script = source.getScriptPathOrDefault();
 	}
 
+	/**
+	 * Internal constructor for functional tests.
+	 *
+	 * @param credential Credential ID
+	 * @param workspace Workspace type
+	 * @param populate Populate options
+	 */
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
 		this.credential = credential;
 		this.workspace = workspace;
@@ -468,7 +482,7 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Override build change if polling per change.
-		if (isIncremental()) {
+		if (isIncremental(getFilter())) {
 			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 			task.setIncrementalChanges(changes);
@@ -928,7 +942,7 @@ public class PerforceScm extends SCM {
 	 *
 	 * @return true if set
 	 */
-	private boolean isIncremental() {
+	public static boolean isIncremental(List<Filter> filter) {
 		if (filter != null) {
 			for (Filter f : filter) {
 				if (f instanceof FilterPerChangeImpl) {
