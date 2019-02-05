@@ -1,4 +1,9 @@
 # P4 Plugin
+
+[![Jenkins Version](https://img.shields.io/badge/Jenkins-2.89.1%2B-green.svg)](https://jenkins.io/download/)
+[![Helix Core](https://img.shields.io/badge/Helix%20Core-2016.2%2B-green.svg)](https://www.perforce.com/products/helix-core)
+[![Helix Swarm](https://img.shields.io/badge/Helix%20Swarm-2016.2%2B-green.svg)](https://www.perforce.com/products/helix-swarm)
+
 Jenkins plugin for a Perforce Helix Core Server (P4D).
 
 ## Contents
