@@ -27,10 +27,12 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
+import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -56,6 +58,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	private String charset;
 	private String format;
 	private Populate populate;
+	private List<Filter> filter;
 
 	public AbstractP4ScmSource(String credential) {
 		this.credential = credential;
@@ -86,6 +89,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		this.traits = new ArrayList<>(Util.fixNull(traits));
 	}
 
+	@DataBoundSetter
+	public void setFilter(List<Filter> filter) {
+		this.filter = filter;
+	}
+
 	public String getCredential() {
 		return credential;
 	}
@@ -111,6 +119,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public Populate getPopulate() {
 		return populate;
+	}
+
+	public List<Filter> getFilter() {
+		return filter;
 	}
 
 	public abstract P4Browser getBrowser();
@@ -285,20 +297,99 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	 * @throws Exception pushed up stack
 	 */
 	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
+
+		// TODO look for graph revisions too
+
+		// Check for 'Polling per Change' filter option
+		boolean perChange = PerforceScm.isIncremental(getFilter());
+
+		long change;
+		P4Path path = head.getPath();
+
+		// Fetch last scan
+		P4SCMRevision last = getLastScan(head);
+
+		/* If 'Polling per Change' is disabled then get the latest change; otherwise use the latest change for the
+		 * first scan then the oldest un-built change.
+		 */
+		if (last == null || !perChange) {
+			change = findLatestChange(path, listener);
+		} else {
+			change = findIncrementalChange(path, last.getRef(), listener);
+		}
+
+		return new P4SCMRevision(head, new P4ChangeRef(change));
+	}
+
+	private long findLatestChange(P4Path path, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
-			// TODO look for graph revisions too
+			// Changelist end limit (report up to this change)
+			String to = path.getRevision();
+			to = (to != null && !to.isEmpty()) ? to : "now";
 
-			long change = -1;
-			P4Path path = head.getPath();
-			String rev = path.getRevision();
-			rev = (rev != null && !rev.isEmpty()) ? "/...@" + rev : "/...";
-			long c = p4.getHead(path.getPath() + rev);
+			long change = p4.getHead(path.getPath() + "/..." + "@" + to);
+
+			List<String> maps = path.getMappings();
+			if (maps != null && !maps.isEmpty()) {
+				for (String map : maps) {
+					long c = p4.getHead(map + "@" + to);
+					change = (c > change) ? c : change;
+				}
+			}
+			return change;
+		}
+	}
+
+	private long findIncrementalChange(P4Path path, P4Ref ref, TaskListener listener) throws Exception {
+		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+
+			// Calculate change revision range.
+			String to = path.getRevision();
+			to = (to != null && !to.isEmpty()) ? to : "now";
+			long change = ref.getChange();
+			String from = String.valueOf(change + 1);
+
+			long c = p4.getLowestHead(path.getPath() + "/...", from, to);
 			change = (c > change) ? c : change;
 
-			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
-			return revision;
+			List<String> maps = path.getMappings();
+			if (maps != null && !maps.isEmpty()) {
+				for (String map : maps) {
+					c = p4.getLowestHead(map, from, to);
+					change = (c > change) ? c : change;
+				}
+			}
+			return change;
 		}
+	}
+
+	/**
+	 * Get the SCMRevision for the last MultiBranch Scan on the specified branch/head
+	 *
+	 * @param head the branch to scan
+	 * @return a P4SCMRevision (change number)
+	 */
+	private P4SCMRevision getLastScan(P4SCMHead head) {
+		SCMSourceOwner owner = getOwner();
+		if (!(owner instanceof WorkflowMultiBranchProject)) {
+			return null;
+		}
+
+		WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
+		WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+		WorkflowJob job = branchProject.getJob(head.getName());
+
+		if (job == null) {
+			return null;
+		}
+
+		SCMRevision r = branchProjectFactory.getRevision(job);
+		if (r instanceof P4SCMRevision) {
+			return (P4SCMRevision) r;
+		}
+
+		return null;
 	}
 
 	/**

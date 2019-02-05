@@ -677,6 +677,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public long getHead(String path) throws Exception {
+		logger.info("getHead: p4 changes " + path);
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
@@ -686,6 +687,26 @@ public class ConnectionHelper implements AutoCloseable {
 		if (!changes.isEmpty()) {
 			return changes.get(0).getId();
 		}
+		return -1;
+	}
+
+	/**
+	 * Get the lowest change on the given path
+	 *
+	 * @param path Perforce depot path //foo/...
+	 * @return change number
+	 * @throws Exception push up stack
+	 */
+	public long getLowestHead(String path, String from, String to) throws Exception {
+		String rev = path + "@" + from + ",@" + to;
+		logger.info("getLowestHead: p4 changes " + rev);
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(rev);
+
+		List<IChangelistSummary> changes = connection.getChangelists(spec, null);
+		if (!changes.isEmpty()) {
+			return changes.get(changes.size() - 1).getId();
+		}
+
 		return -1;
 	}
 

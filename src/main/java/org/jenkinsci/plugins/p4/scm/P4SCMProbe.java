@@ -42,6 +42,7 @@ public class P4SCMProbe extends SCMProbe {
 		long last = 0L;
 		try {
 			P4Path path = head.getPath();
+			// TODO this may need to scan 'mappings' for HelixBranches
 			long change = p4.getHead(path.getPathBuilder("..."));
 			if (change > last) {
 				last = change;

@@ -215,5 +215,9 @@ abstract public class DefaultEnvironment {
 		public String getLogBuffer() {
 			return sb.toString();
 		}
+
+		public void clear() {
+			sb = new StringBuffer();
+		}
 	}
 }
