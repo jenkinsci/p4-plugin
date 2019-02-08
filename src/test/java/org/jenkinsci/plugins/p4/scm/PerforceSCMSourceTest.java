@@ -786,7 +786,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 		source.setPopulate(new AutoCleanImpl());
 
-		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "JenkinsfilePathAvailableAsEnvVar");
+		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "mapping-default-classic");
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
@@ -804,7 +804,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertNotNull(path);
 	}
 
-	@Test
+  @Test
 	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
 		// Setup sample Multi Branch Project
