@@ -778,33 +778,42 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 	@Test
 	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
-		String base = "//depot/default";
-		sampleProject(base, new String[]{"Main"}, "Jenkinsfile");
+		String base = "//depot/default/default1";
+		String branch = "Main";
+		String id = submitFile(jenkins, base + "/" + branch + "/" + "Jenkinsfile", ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "             echo \"The jenkinsfile path is ${JENKINSFILE_PATH}\""
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = base + "/...";
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 		source.setPopulate(new AutoCleanImpl());
 
-		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "mapping-default-classic");
+		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "JenkinsfilePathEnvVar");
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
 		WorkflowJob job = multi.getItem("Main");
-
 		WorkflowRun build = job.getLastBuild();
+
 		assertThat("The branch was built", build, notNullValue());
 		assertEquals(Result.SUCCESS, build.getResult());
-
-		Logger polling = Logger.getLogger("TestJenkinsfilePathAvailableAsEnvVar");
-		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
-		EnvVars env = build.getEnvironment(listener);
-		String path = env.get("JENKINSFILE_PATH");
-		assertNotNull(path);
+		jenkins.assertLogContains("The jenkinsfile path is", build);
+		jenkins.assertLogContains("/Jenkinsfile", build);
 	}
 
-  @Test
+	@Test
 	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
 		// Setup sample Multi Branch Project
