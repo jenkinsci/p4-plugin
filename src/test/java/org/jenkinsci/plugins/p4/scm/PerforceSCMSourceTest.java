@@ -6,9 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
-import hudson.EnvVars;
 import hudson.model.Result;
-import hudson.util.LogTaskListener;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -44,7 +42,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -779,15 +776,16 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	@Test
 	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
 		String base = "//depot/default/default1";
+		String scriptPath = "MyJenkinsfile";
 		String branch = "Main";
-		String id = submitFile(jenkins, base + "/" + branch + "/" + "Jenkinsfile", ""
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
 				+ "pipeline {\n"
 				+ "  agent any\n"
 				+ "  stages {\n"
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
 				+ "        script {\n"
-				+ "             echo \"The jenkinsfile path is ${JENKINSFILE_PATH}\""
+				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
 				+ "        }\n"
 				+ "      }\n"
 				+ "    }\n"
@@ -801,6 +799,11 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "JenkinsfilePathEnvVar");
 		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
@@ -809,8 +812,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		assertThat("The branch was built", build, notNullValue());
 		assertEquals(Result.SUCCESS, build.getResult());
-		jenkins.assertLogContains("The jenkinsfile path is", build);
-		jenkins.assertLogContains("/Jenkinsfile", build);
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + branch + "/" + scriptPath, build);
 	}
 
 	@Test
