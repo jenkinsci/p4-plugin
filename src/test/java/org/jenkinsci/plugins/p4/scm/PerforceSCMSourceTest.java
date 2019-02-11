@@ -776,7 +776,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	@Test
 	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
 		String base = "//depot/default/default1";
-		String scriptPath = "MyJenkinsfile";
+		String scriptPath = "build/MyJenkinsfile";
 		String branch = "Main";
 		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
 				+ "pipeline {\n"
