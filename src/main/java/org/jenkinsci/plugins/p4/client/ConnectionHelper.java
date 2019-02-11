@@ -555,8 +555,6 @@ public class ConnectionHelper implements AutoCloseable {
 	 */
 	public void deleteClient(String name) throws Exception {
 		DeleteClientOptions opts = new DeleteClientOptions();
-		//Fix for JENKINS-55826
-		opts.setForce(true);
 		connection.deleteClient(name, opts);
 	}
 
