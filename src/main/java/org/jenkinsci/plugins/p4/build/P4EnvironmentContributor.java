@@ -95,5 +95,12 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			changelog = StringUtils.defaultIfBlank(changelog, "Not-set");
 			env.put("HUDSON_CHANGELOG_FILE", changelog);
 		}
+
+		// JENKINS-39107: Make the jenkinsPath available
+		if(tagAction.getJenkinsPath() != null) {
+			String jenkinspath = tagAction.getJenkinsPath();
+			jenkinspath = StringUtils.defaultIfBlank(jenkinspath, "Not-set");
+			env.put("JENKINSFILE_PATH", jenkinspath);
+		}
 	}
 }

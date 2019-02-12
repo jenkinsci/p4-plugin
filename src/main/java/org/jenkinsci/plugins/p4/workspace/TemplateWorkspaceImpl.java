@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.SwitchClientViewOptions;
 import com.perforce.p4java.server.IOptionsServer;
@@ -48,7 +49,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public TemplateWorkspaceImpl(String charset, boolean pinHost,
-			String templateName, String format) {
+	                             String templateName, String format) {
 		super(charset, pinHost, false);
 		this.templateName = templateName;
 		this.format = format;
@@ -83,12 +84,16 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 
 		// Owner set for use with p4maven
 		iclient.setOwnerName(user);
-		
+
 		// set line endings explicitly (JENKINS-28760)
 		iclient.setLineEnd(itemplate.getLineEnd());
 
+		// Clear lock flag (JENKINS-55826)
+		IClientSummary.IClientOptions clientOpts = itemplate.getOptions();
+		clientOpts.setLocked(false);
+
 		// set options explicitly (JENKINS-30546)
-		iclient.setOptions(itemplate.getOptions());
+		iclient.setOptions(clientOpts);
 
 		// Root required to switch view; must reload values in iclient.
 		iclient.setRoot(getRootPath());
@@ -114,6 +119,5 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 		public FormValidation doCheckTemplateName(@QueryParameter String value) {
 			return checkClientName(value);
 		}
-
 	}
 }

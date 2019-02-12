@@ -44,6 +44,7 @@ public class TagAction extends AbstractScmTagAction {
 	private P4Revision buildChange;
 	private P4Review review;
 	private File changelog;
+	private String jenkinsPath;
 
 	private final String credential;
 	private final String p4port;
@@ -345,5 +346,13 @@ public class TagAction extends AbstractScmTagAction {
 
 	public File getChangelog() {
 		return changelog;
+	}
+
+	public void setJenkinsPath(String jenkinsPath) {
+		this.jenkinsPath = jenkinsPath;
+	}
+
+	public String getJenkinsPath() {
+		return jenkinsPath;
 	}
 }

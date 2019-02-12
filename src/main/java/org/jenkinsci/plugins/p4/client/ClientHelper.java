@@ -896,6 +896,20 @@ public class ClientHelper extends ConnectionHelper {
 		return path;
 	}
 
+	private String localToDepot(IFileSpec fileSpec) throws Exception {
+		String depotPath = fileSpec.getDepotPathString();
+		if (depotPath == null) {
+			depotPath = fileSpec.getOriginalPathString();
+		}
+		if (depotPath == null) {
+			return null;
+		}
+		List<IFileSpec> dSpec = FileSpecBuilder.makeFileSpecList(depotPath);
+		List<IFileSpec> lSpec = iclient.where(dSpec);
+		String path = lSpec.get(0).getDepotPathString();
+		return path;
+	}
+
 	private void deleteFile(String rev) throws Exception {
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(rev);
 
@@ -1303,5 +1317,10 @@ public class ClientHelper extends ConnectionHelper {
 
 	public IClient getClient() {
 		return iclient;
+	}
+
+	public String where(String localFile) throws Exception {
+		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(localFile);
+		return localToDepot(file.get(0));
 	}
 }

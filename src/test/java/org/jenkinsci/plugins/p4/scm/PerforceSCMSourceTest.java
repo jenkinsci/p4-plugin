@@ -774,6 +774,48 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
+		String base = "//depot/default/default1";
+		String scriptPath = "build/MyJenkinsfile";
+		String branch = "Main";
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.createProject(WorkflowMultiBranchProject.class, "JenkinsfilePathEnvVar");
+		multi.getSourcesList().add(new BranchSource(source));
+
+		WorkflowBranchProjectFactory workflowBranchProjectFactory = new WorkflowBranchProjectFactory();
+		workflowBranchProjectFactory.setScriptPath(scriptPath);
+		multi.setProjectFactory(workflowBranchProjectFactory);
+
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowJob job = multi.getItem("Main");
+		WorkflowRun build = job.getLastBuild();
+
+		assertThat("The branch was built", build, notNullValue());
+		assertEquals(Result.SUCCESS, build.getResult());
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + branch + "/" + scriptPath, build);
+	}
+
+	@Test
 	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
 		// Setup sample Multi Branch Project
