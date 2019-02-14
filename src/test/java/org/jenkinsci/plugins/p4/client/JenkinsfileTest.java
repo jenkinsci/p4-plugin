@@ -507,4 +507,95 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Alt Jenkinsfile", run);
 		assertEquals(head, change);
 	}
+
+	@Test
+	public void testPipelineJenkinsfilePathEnvVar() throws Exception {
+		String base = "//depot/envJfile";
+		String scriptPath = "Jenkinsfile";
+		submitFile(jenkins, base + "/" + scriptPath, ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+
+		// Manual workspace spec definition
+		String client = "envJfile.ws";
+		String view = base + "/" + "..." + " //" + client + "/" + "...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job LightWeight Checkout
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfileCheckout");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, scriptPath);
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Build 1
+		WorkflowRun run1 = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run1);
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run1);
+
+		// SCM Jenkinsfile job Full Checkout
+		cpsScmFlowDefinition.setLightweight(false);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Build 2
+		WorkflowRun run2 = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run2);
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run2);
+	}
+
+	@Test
+	public void testNodeJenkinsfilePathEnvVar() throws Exception {
+		String base = "//depot/envJfile";
+		String scriptPath = "Jenkinsfile";
+		submitFile(jenkins, base + "/" + scriptPath, ""
+				+ "node() {\n"
+				+ "  echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
+				+ "}");
+
+		// Manual workspace spec definition
+		String client = "envJfile.ws";
+		String view = base + "/" + "..." + " //" + client + "/" + "...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job Full Checkout
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfileCheckout");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, scriptPath);
+		cpsScmFlowDefinition.setLightweight(false);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Build 1
+		WorkflowRun run1 = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run1);
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run1);
+		
+	/*
+	    // SCM Jenkinsfile job LightWeight Checkout
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Build 2
+		WorkflowRun run2 = job.scheduleBuild2(0).get();
+		jenkins.assertBuildStatusSuccess(run2);
+		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run2);
+	*/
+	}
 }

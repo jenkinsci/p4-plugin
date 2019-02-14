@@ -7,14 +7,15 @@ import hudson.model.EnvironmentContributor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.SCM;
-import java.io.IOException;
-import java.util.Map;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+
+import java.io.IOException;
+import java.util.Map;
 
 @Extension()
 public class P4EnvironmentContributor extends EnvironmentContributor {
@@ -90,17 +91,16 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		}
 
 		// JENKINS-37442: Make the log file name available
-		if(tagAction.getChangelog() != null) {
+		if (tagAction.getChangelog() != null) {
 			String changelog = tagAction.getChangelog().getAbsolutePath();
 			changelog = StringUtils.defaultIfBlank(changelog, "Not-set");
 			env.put("HUDSON_CHANGELOG_FILE", changelog);
 		}
 
 		// JENKINS-39107: Make the jenkinsPath available
-		if(tagAction.getJenkinsPath() != null) {
-			String jenkinspath = tagAction.getJenkinsPath();
-			jenkinspath = StringUtils.defaultIfBlank(jenkinspath, "Not-set");
-			env.put("JENKINSFILE_PATH", jenkinspath);
+		if (tagAction.getJenkinsPath() != null) {
+			String jenkinsPath = tagAction.getJenkinsPath();
+			env.put("JENKINSFILE_PATH", jenkinsPath);
 		}
 	}
 }
