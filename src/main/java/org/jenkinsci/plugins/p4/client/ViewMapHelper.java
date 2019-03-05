@@ -52,7 +52,7 @@ public class ViewMapHelper {
 		return view.toString();
 	}
 
-	public static String getClientView(List<String> views, String client) {
+	public static String getClientView(List<String> views, String client, boolean external) {
 		// exit early if no views
 		if (views == null || views.isEmpty()) {
 			return null;
@@ -63,8 +63,7 @@ public class ViewMapHelper {
 			return null;
 		}
 
-		boolean multi = views.size() > 1;
-		StringBuffer view = processLines(views.toArray(new String[0]), client, multi);
+		StringBuffer view = processLines(views.toArray(new String[0]), client, external);
 
 		return view.toString();
 	}
@@ -114,7 +113,7 @@ public class ViewMapHelper {
 		return parts;
 	}
 
-	private static StringBuffer processLines(String[] lines, String client, boolean multi) {
+	private static StringBuffer processLines(String[] lines, String client, boolean external) {
 
 		StringBuffer view = new StringBuffer();
 
@@ -128,8 +127,8 @@ public class ViewMapHelper {
 			String[] parts = splitDepotPath(lines[c]);
 
 			// process depot and client mappings
-			StringBuffer lhs = processLHS(parts);
-			StringBuffer rhs = processRHS(client, parts, multi);
+			StringBuffer lhs = processLHS(parts, external);
+			StringBuffer rhs = processRHS(client, parts, external);
 
 			// Add Exclude/Include mappings
 			if(exclude) {
@@ -163,8 +162,14 @@ public class ViewMapHelper {
 		return sb;
 	}
 
-	private static StringBuffer processLHS(String[] parts) {
+	private static StringBuffer processLHS(String[] parts, boolean external) {
 		StringBuffer lhs = new StringBuffer("//");
+
+		// Add overlay for local mappings
+		if(!external) {
+			lhs.insert(0, INCLUDE);
+		}
+
 		for (int i = 0; i < parts.length; i++) {
 			if (i > 0) {
 				lhs.append(PATH_DELIM);
@@ -174,14 +179,14 @@ public class ViewMapHelper {
 		return lhs;
 	}
 
-	private static StringBuffer processRHS(String client, String[] parts, boolean multi) {
+	private static StringBuffer processRHS(String client, String[] parts, boolean external) {
 		StringBuffer rhs = new StringBuffer("//");
 		rhs.append(client);
 		rhs.append("/");
 
-		// multi lines may require full depot path e.g.
+		// External mapping lines require full depot path e.g.
 		//      //depot/proj/src/... //client/depot/proj/src/...
-		if (multi) {
+		if (external) {
 			for (int i = 0; i < parts.length; i++) {
 				if (i > 0) {
 					rhs.append(PATH_DELIM);
@@ -189,7 +194,7 @@ public class ViewMapHelper {
 				rhs.append(parts[i]);
 			}
 		}
-		// single lines can map directly to client root e.g.
+		// local mapping lines can map directly to client root e.g.
 		//      //depot/proj/src/... //client/...
 		else {
 			rhs.append(parts[parts.length - 1]);
