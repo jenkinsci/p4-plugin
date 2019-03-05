@@ -44,9 +44,10 @@ public class ConfigurationListener extends SaveableListener {
 			String desc = "Configuration change";
 			boolean success = false;
 			boolean delete = true;
+			boolean modtime = false;
 			boolean reopen = false;
 			String purge = "";
-			SubmitImpl publish = new SubmitImpl(desc, success, delete, reopen, purge);
+			SubmitImpl publish = new SubmitImpl(desc, success, delete, modtime, reopen, purge);
 
 			try (ClientHelper p4 = getClientHelper(p4scm)) {
 				int ChangelistID = -1;

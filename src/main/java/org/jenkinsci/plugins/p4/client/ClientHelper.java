@@ -657,7 +657,7 @@ public class ClientHelper extends ConnectionHelper {
 	public void versionFile(String file, Publish publish, int ChangelistID, boolean submit) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
-		findChangeFiles(files, publish.isDelete());
+		findChangeFiles(files, publish.isDelete(), publish.isModtime());
 
 		// Exit early if no change
 		if (!isOpened(files)) {
@@ -687,7 +687,7 @@ public class ClientHelper extends ConnectionHelper {
 			// build file revision spec
 			String ws = "//" + iclient.getName() + "/...";
 			files = FileSpecBuilder.makeFileSpecList(ws);
-			findChangeFiles(files, publish.isDelete());
+			findChangeFiles(files, publish.isDelete(), publish.isModtime());
 		}
 
 		// Check if file is open
@@ -697,7 +697,7 @@ public class ClientHelper extends ConnectionHelper {
 		return open;
 	}
 
-	private void findChangeFiles(List<IFileSpec> files, boolean delete) throws Exception {
+	private void findChangeFiles(List<IFileSpec> files, boolean delete, boolean modtime) throws Exception {
 		// cleanup pending changes (revert -k)
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
@@ -712,6 +712,7 @@ public class ClientHelper extends ConnectionHelper {
 
 		// check status - find all changes to files
 		ReconcileFilesOptions statusOpts = new ReconcileFilesOptions();
+		statusOpts.setCheckModTime(modtime);
 		statusOpts.setUseWildcards(true);
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setOutsideEdit(true);

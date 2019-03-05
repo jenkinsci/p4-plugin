@@ -27,6 +27,7 @@ Now complete the configuration by selecting one of the following change types:
 3. **Options** there are a number of options that can be set to configure client behaviour: 
    - **Only publish on build success:** The assets will only be shelved when the build is successful.   
    - **Propagate deletes:** Select to enable files to be deleted when the asset is published.   
+   - **Use MODTIME for consistency check:** Select to reconcile files with -m flag.   
    - **Revert opened file list:** Reverts open files in the pending changelist, but leaves the content in the workspace unchanged. Equivalent to `p4 revert -k`.   
 
 Click the browser **Back** button to go back to the previous page. 
@@ -37,7 +38,8 @@ Click the browser **Back** button to go back to the previous page.
 2. **Description:** The change description used to submit the assets to the Perforce Helix Server. `${VAR}` variables are expanded base on the system environment. For more information about environment variables, see [Variable Expansion](VARIABLEEXPANSION.md).  
 3. **Options** there are a number of options that can be set to configure client behavior: 
    - **Only publish on build success:** The assets will only be shelved when the build is successful.   
-   - **Propagate deletes:** Select to enable files to be deleted when the asset is published.   
+   - **Propagate deletes:** Select to enable files to be deleted when the asset is published.
+   - **Use MODTIME for consistency check:** Select to reconcile files with -m flag.   
    - **Reopened files:** Submitted files are reopened, allowing subsequent modification.   
 
 Click the browser **Back** button to go back to the previous page. 

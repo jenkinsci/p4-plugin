@@ -93,7 +93,7 @@ abstract public class DefaultEnvironment {
 		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			Publish publish = new ShelveImpl("Submit test files", false, false, false);
+			Publish publish = new ShelveImpl("Submit test files", false, false, false, false);
 			boolean open = p4.buildChange(publish);
 			if (open) {
 				return p4.publishChange(publish);
@@ -117,7 +117,7 @@ abstract public class DefaultEnvironment {
 		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			Publish publish = new SubmitImpl(desc, false, false, false, null);
+			Publish publish = new SubmitImpl(desc, false, false, false, false, null);
 			boolean open = p4.buildChange(publish);
 			if (open) {
 				return p4.publishChange(publish);
@@ -182,7 +182,7 @@ abstract public class DefaultEnvironment {
 		project.getBuildersList().add(new CreateArtifact(filename, content));
 
 		// Submit artifacts
-		CommitImpl commit = new CommitImpl("publish", true, true);
+		CommitImpl commit = new CommitImpl("publish", true, true, false);
 		commit.addFile(path);
 		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, commit);
 		project.getPublishersList().add(publish);

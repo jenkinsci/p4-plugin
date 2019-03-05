@@ -76,7 +76,7 @@ public class PublishTest extends DefaultEnvironment {
 		project.getBuildersList().add(new CreateArtifact("artifact.2", "content"));
 
 		// Submit artifacts
-		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
+		SubmitImpl submit = new SubmitImpl("publish", true, true, false, true, "3");
 		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
 		project.getPublishersList().add(publish);
 		project.save();
@@ -126,7 +126,7 @@ public class PublishTest extends DefaultEnvironment {
 		assertNotNull("Triggers saved.");
 
 		// Submit artifacts
-		SubmitImpl submit = new SubmitImpl("publish", true, true, true, "3");
+		SubmitImpl submit = new SubmitImpl("publish", true, true, false, true, "3");
 		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
 		project.getPublishersList().add(publish);
 		project.save();

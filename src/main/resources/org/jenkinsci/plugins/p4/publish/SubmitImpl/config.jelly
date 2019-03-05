@@ -17,7 +17,11 @@
 	<f:entry field="delete">
 		<f:checkbox title="${%Propagate deletes}" default="false"/>
 	</f:entry>
-	
+
+	<f:entry field="modtime">
+		<f:checkbox title="${%Use MODTIME for consistency check}" default="false"/>
+	</f:entry>
+
 	<f:entry field="reopen">
 		<f:checkbox title="${%Reopened files}" default="false"/>
 	</f:entry>
