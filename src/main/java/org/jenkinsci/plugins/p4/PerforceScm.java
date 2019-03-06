@@ -240,14 +240,17 @@ public class PerforceScm extends SCM {
 			ManualWorkspaceImpl ws = (ManualWorkspaceImpl) workspace;
 			key.append(ws.getSpec().getView());
 			key.append(ws.getSpec().getStreamName());
+			key.append(ws.getName());
 		}
 		if (workspace instanceof StreamWorkspaceImpl) {
 			StreamWorkspaceImpl ws = (StreamWorkspaceImpl) workspace;
 			key.append(ws.getStreamName());
+			key.append(ws.getName());
 		}
 		if (workspace instanceof SpecWorkspaceImpl) {
 			SpecWorkspaceImpl ws = (SpecWorkspaceImpl) workspace;
 			key.append(ws.getSpecPath());
+			key.append(ws.getName());
 		}
 		if (workspace instanceof StaticWorkspaceImpl) {
 			StaticWorkspaceImpl ws = (StaticWorkspaceImpl) workspace;
@@ -256,6 +259,7 @@ public class PerforceScm extends SCM {
 		if (workspace instanceof TemplateWorkspaceImpl) {
 			TemplateWorkspaceImpl ws = (TemplateWorkspaceImpl) workspace;
 			key.append(ws.getTemplateName());
+			key.append(ws.getName());
 		}
 
 		return key.toString();
