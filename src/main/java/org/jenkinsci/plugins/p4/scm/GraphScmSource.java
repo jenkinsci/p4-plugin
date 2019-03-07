@@ -166,7 +166,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 		depotView.append("/...");
 
 		String client = getFormat();
-		String view = ViewMapHelper.getClientView(depotView.toString(), client);
+		String view = ViewMapHelper.getClientView(depotView.toString(), client, false);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
 	}

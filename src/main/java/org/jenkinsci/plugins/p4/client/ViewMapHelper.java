@@ -33,7 +33,7 @@ public class ViewMapHelper {
 	 * @return Client view mapping
 	 */
 
-	public static String getClientView(String depotView, String client) {
+	public static String getClientView(String depotView, String client, boolean overlay) {
 		// exit early if no depotPath
 		if (depotView == null || depotView.isEmpty()) {
 			return null;
@@ -47,12 +47,12 @@ public class ViewMapHelper {
 		// Split on new line and trim any following white space
 		String[] lines = depotView.split("\n\\s*");
 		boolean multi = lines.length > 1;
-		StringBuffer view = processLines(lines, client, multi);
+		StringBuffer view = processLines(lines, client, multi, overlay);
 
 		return view.toString();
 	}
 
-	public static String getClientView(List<String> views, String client, boolean external) {
+	public static String getClientView(List<String> views, String client, boolean external, boolean overlay) {
 		// exit early if no views
 		if (views == null || views.isEmpty()) {
 			return null;
@@ -63,7 +63,7 @@ public class ViewMapHelper {
 			return null;
 		}
 
-		StringBuffer view = processLines(views.toArray(new String[0]), client, external);
+		StringBuffer view = processLines(views.toArray(new String[0]), client, external, overlay);
 
 		return view.toString();
 	}
@@ -113,7 +113,7 @@ public class ViewMapHelper {
 		return parts;
 	}
 
-	private static StringBuffer processLines(String[] lines, String client, boolean external) {
+	private static StringBuffer processLines(String[] lines, String client, boolean external, boolean overlay) {
 
 		StringBuffer view = new StringBuffer();
 
@@ -127,7 +127,8 @@ public class ViewMapHelper {
 			String[] parts = splitDepotPath(lines[c]);
 
 			// process depot and client mappings
-			StringBuffer lhs = processLHS(parts, external);
+			include |= !external && overlay;
+			StringBuffer lhs = processLHS(parts);
 			StringBuffer rhs = processRHS(client, parts, external);
 
 			// Add Exclude/Include mappings
@@ -162,13 +163,8 @@ public class ViewMapHelper {
 		return sb;
 	}
 
-	private static StringBuffer processLHS(String[] parts, boolean external) {
+	private static StringBuffer processLHS(String[] parts) {
 		StringBuffer lhs = new StringBuffer("//");
-
-		// Add overlay for local mappings
-		if(!external) {
-			lhs.insert(0, INCLUDE);
-		}
 
 		for (int i = 0; i < parts.length; i++) {
 			if (i > 0) {

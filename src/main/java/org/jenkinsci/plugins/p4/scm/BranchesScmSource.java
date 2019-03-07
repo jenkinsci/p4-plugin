@@ -135,10 +135,10 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
 		view.append((jenkinsView == null) ? "" : jenkinsView + "\n");
 
-		String externalMappings = ViewMapHelper.getClientView(externalViews, client, external);
+		String externalMappings = ViewMapHelper.getClientView(externalViews, client, external, true);
 		view.append((externalMappings == null) ? "" : externalMappings + "\n");
 
-		String localMappings = ViewMapHelper.getClientView(localViews, client, false);
+		String localMappings = ViewMapHelper.getClientView(localViews, client, false, true);
 		view.append((localMappings == null) ? "" : localMappings + "\n");
 
 		WorkspaceSpec spec = new WorkspaceSpec(view.toString(), null);

@@ -537,7 +537,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
 		// SCM Jenkinsfile job LightWeight Checkout
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfileCheckout");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfilePipelinw");
 		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, scriptPath);
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
@@ -577,7 +577,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
 		// SCM Jenkinsfile job Full Checkout
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfileCheckout");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "envJfileNode");
 		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, scriptPath);
 		cpsScmFlowDefinition.setLightweight(false);
 		job.setDefinition(cpsScmFlowDefinition);
