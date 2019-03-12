@@ -68,6 +68,10 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -96,7 +100,8 @@ public class PerforceScm extends SCM {
 	private final Populate populate;
 	private final P4Browser browser;
 	private final P4Ref revision;
-	private final String script;
+
+	private String script;
 
 	private transient P4Ref parentChange;
 	private transient P4Review review;
@@ -185,14 +190,13 @@ public class PerforceScm extends SCM {
 		this.populate = populate;
 		this.browser = browser;
 		this.revision = null;
-		this.script = null;
 	}
 
 	/**
 	 * MultiBranch constructor for building jobs.
 	 *
-	 * @param source ScmSource
-	 * @param path Perforce project path and mappings
+	 * @param source   ScmSource
+	 * @param path     Perforce project path and mappings
 	 * @param revision Perforce revision
 	 */
 	public PerforceScm(AbstractP4ScmSource source, P4Path path, P4Ref revision) {
@@ -209,8 +213,8 @@ public class PerforceScm extends SCM {
 	 * Internal constructor for functional tests.
 	 *
 	 * @param credential Credential ID
-	 * @param workspace Workspace type
-	 * @param populate Populate options
+	 * @param workspace  Workspace type
+	 * @param populate   Populate options
 	 */
 	public PerforceScm(String credential, Workspace workspace, Populate populate) {
 		this.credential = credential;
@@ -219,7 +223,6 @@ public class PerforceScm extends SCM {
 		this.populate = populate;
 		this.browser = null;
 		this.revision = null;
-		this.script = null;
 	}
 
 	@Override
@@ -501,7 +504,7 @@ public class PerforceScm extends SCM {
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
 		// JENKINS-39107: Make Depot location of Jenkinsfile available
-		WhereTask where = new WhereTask(credential, run, listener, script);
+		WhereTask where = new WhereTask(credential, run, listener, getScriptPath(run));
 		where.setWorkspace(ws);
 		String jenkinsPath = buildWorkspace.act(where);
 		tag.setJenkinsPath(jenkinsPath);
@@ -552,6 +555,35 @@ public class PerforceScm extends SCM {
 
 		// Cleanup Perforce Client
 		cleanupPerforceClient(run, buildWorkspace, listener, ws);
+	}
+
+	private String getScriptPath(Run<?, ?> run) {
+		if (script != null) {
+			return script;
+		}
+
+		if (!(run instanceof WorkflowRun)) {
+			return null;
+		}
+
+		WorkflowRun workflowRun = (WorkflowRun) run;
+		WorkflowJob job = workflowRun.getParent();
+		return getScriptPath(job);
+	}
+
+	public String getScriptPath(Item item) {
+		if (!(item instanceof WorkflowJob)) {
+			return null;
+		}
+
+		WorkflowJob job = (WorkflowJob) item;
+		FlowDefinition definition = job.getDefinition();
+		if (!(definition instanceof CpsScmFlowDefinition)) {
+			return null;
+		}
+
+		CpsScmFlowDefinition cps = (CpsScmFlowDefinition) definition;
+		return cps.getScriptPath();
 	}
 
 	private void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener, Workspace workspace) throws IOException, InterruptedException {
