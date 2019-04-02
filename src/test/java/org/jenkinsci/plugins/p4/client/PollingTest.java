@@ -656,7 +656,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		String fail = ""
 				+ "pipeline {\n"
-				+ "  agent any\n"
+				+ "  agentxxx\n"
 				+ "  stages {\n"
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
@@ -688,25 +688,29 @@ public class PollingTest extends DefaultEnvironment {
 		SCMTrigger cron = new SCMTrigger("0 0 * * *");
 		job.addTrigger(cron);
 
-		// expect pass build
+		// Build #1
 		WorkflowRun run1 = jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
 
 		// Update Jenkinsfile to fail
-		String change1 = submitFile(jenkins, "//depot/Data/file1", "content", "change 1");
-		String change2 = submitFile(jenkins, "//depot/Data/file2", "content", "change 2");
+		submitFile(jenkins, "//depot/Data/file1", "content", "change 1");
+		submitFile(jenkins, "//depot/Data/file2", "content", "change 2");
 
 		// Poll for changes incrementally (change 1)
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		PollingResult found = job.poll(listener);
 		assertEquals(PollingResult.BUILD_NOW, found);
-		job.scheduleBuild2(0);
+
+		// Build #2
+		jenkins.assertBuildStatus(Result.FAILURE,job.scheduleBuild2(0));
 		jenkins.waitUntilNoActivity();
 
 		// Poll for changes incrementally (change 2)
 		found = job.poll(listener);
 		assertEquals(PollingResult.BUILD_NOW, found);
-		job.scheduleBuild2(0);
+
+		// Build #3
+		jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 		jenkins.waitUntilNoActivity();
 
 		// Poll for changes incrementally (no change)
