@@ -660,7 +660,7 @@ public class PollingTest extends DefaultEnvironment {
 				+ "  stages {\n"
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
-				+ "        sh 'date'\n"
+				+ "        echo 'test'\n"
 				+ "      }\n"
 				+ "    }\n"
 				+ "  }\n"
@@ -704,14 +704,14 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes incrementally (change 1)
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
 		cron.run();
-		Thread.sleep(2000);
+		Thread.sleep(1100);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
 		assertEquals(Result.FAILURE, job.getLastBuild().getResult());
 
 		// Poll for changes incrementally (no change)
 		cron.run();
-		Thread.sleep(2000);
+		Thread.sleep(1100);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll, but no build", 2, job.getLastBuild().number);
 	}
