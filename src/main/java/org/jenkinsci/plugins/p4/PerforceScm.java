@@ -402,7 +402,7 @@ public class PerforceScm extends SCM {
 		cleanupPerforceClient(lastRun, buildWorkspace, listener, ws);
 
 		// Build if null (un-built) or if changes are found
-		if (changes == null || !changes.isEmpty()) {
+		if (changes != null && !changes.isEmpty()) {
 			return PollingResult.BUILD_NOW;
 		}
 		return PollingResult.NO_CHANGES;
@@ -510,17 +510,6 @@ public class PerforceScm extends SCM {
 		tag.setJenkinsPath(jenkinsPath);
 		run.addAction(tag);
 
-		// Write change log if changeLogFile has been set.
-		if (changelogFile != null) {
-			// Calculate changes prior to build (based on last build)
-			listener.getLogger().println("P4 Task: saving built changes.");
-			List<P4ChangeEntry> changes = calculateChanges(run, task);
-			P4ChangeSet.store(changelogFile, changes);
-			listener.getLogger().println("... done\n");
-		} else {
-			listener.getLogger().println("P4Task: unable to save changes, null changelogFile.\n");
-		}
-
 		// Invoke build.
 		String node = ws.getExpand().get("NODE_NAME");
 		Job<?, ?> job = run.getParent();
@@ -551,6 +540,17 @@ public class PerforceScm extends SCM {
 			String msg = "P4: Build failed";
 			logger.warning(msg);
 			throw new AbortException(msg);
+		}
+
+		// Write change log if changeLogFile has been set.
+		if (changelogFile != null) {
+			// Calculate changes prior to build (based on last build)
+			listener.getLogger().println("P4 Task: saving built changes.");
+			List<P4ChangeEntry> changes = calculateChanges(run, task);
+			P4ChangeSet.store(changelogFile, changes);
+			listener.getLogger().println("... done\n");
+		} else {
+			listener.getLogger().println("P4Task: unable to save changes, null changelogFile.\n");
 		}
 
 		// Cleanup Perforce Client

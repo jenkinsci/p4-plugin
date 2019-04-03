@@ -654,19 +654,25 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPipelineFailedPolling() throws Exception {
 
-		String fail = ""
+		String pass = ""
 				+ "pipeline {\n"
-				+ "  agentxxx\n"
+				+ "  agent any\n"
 				+ "  stages {\n"
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
-				+ "        sh 'nvc'\n"
+				+ "        sh 'date'\n"
 				+ "      }\n"
 				+ "    }\n"
 				+ "  }\n"
 				+ "}";
 
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Pass Jenkinsfile");
+		String fail = ""
+				+ "pipeline {\n"
+				+ "  agentxxx\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
 		String client = "basicJenkinsfile.ws";
@@ -676,45 +682,37 @@ public class PollingTest extends DefaultEnvironment {
 
 		// SCM and Populate and Filter options
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<>();
-		filter.add(new FilterPerChangeImpl(true));
-		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, null);
 
 		// SCM Jenkinsfile job
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPolling");
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+
+		// Set lightweight checkout
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
 
 		// enable SCM polling (even though we poll programmatically)
 		SCMTrigger cron = new SCMTrigger("0 0 * * *");
 		job.addTrigger(cron);
 
 		// Build #1
-		WorkflowRun run1 = jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
-		jenkins.assertLogContains("P4 Task: syncing files at change", run1);
-
-		// Update Jenkinsfile to fail
-		submitFile(jenkins, "//depot/Data/file1", "content", "change 1");
-		submitFile(jenkins, "//depot/Data/file2", "content", "change 2");
+		WorkflowRun build = jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", build);
 
 		// Poll for changes incrementally (change 1)
-		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
-		PollingResult found = job.poll(listener);
-		assertEquals(PollingResult.BUILD_NOW, found);
-
-		// Build #2
-		jenkins.assertBuildStatus(Result.FAILURE,job.scheduleBuild2(0));
+		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
+		cron.run();
+		Thread.sleep(2000);
 		jenkins.waitUntilNoActivity();
-
-		// Poll for changes incrementally (change 2)
-		found = job.poll(listener);
-		assertEquals(PollingResult.BUILD_NOW, found);
-
-		// Build #3
-		jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
-		jenkins.waitUntilNoActivity();
+		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
+		assertEquals(Result.FAILURE, job.getLastBuild().getResult());
 
 		// Poll for changes incrementally (no change)
-		found = job.poll(listener);
-		assertEquals(PollingResult.NO_CHANGES, found);
+		cron.run();
+		Thread.sleep(2000);
+		jenkins.waitUntilNoActivity();
+		assertEquals("Poll, but no build", 2, job.getLastBuild().number);
 	}
 }
