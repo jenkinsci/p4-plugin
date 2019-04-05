@@ -10,7 +10,9 @@ import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
+import hudson.triggers.TimerTrigger;
 import hudson.util.LogTaskListener;
+import jenkins.branch.BranchSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -22,6 +24,7 @@ import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
+import org.jenkinsci.plugins.p4.scm.BranchesScmSource;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -30,8 +33,9 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
@@ -41,9 +45,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -52,11 +59,11 @@ public class PollingTest extends DefaultEnvironment {
 	private static Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	@Rule
+	public JenkinsRule jenkins = new JenkinsRule();
 
-	@ClassRule
-	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	@Rule
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -612,23 +619,18 @@ public class PollingTest extends DefaultEnvironment {
 				+ "          populate: forceClean(quiet: true),\n"
 				+ "          workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
 				+ "            spec: clientSpec(view: '//depot/main/... //${P4_CLIENT}/...')))\n"
-				+ "        sleep 5\n"
 				+ "      }\n"
 				+ "    }\n"
 				+ "  }\n"
 				+ "}", false));
 
 		// enable SCM polling (even though we poll programmatically)
-		SCMTrigger cron = new SCMTrigger("0 0 * * *");
+		SCMTrigger cron = new SCMTrigger("* * * * *");
 		job.addTrigger(cron);
 
 		// disable concurrent builds
 		job.setConcurrentBuild(false);
-
-		// add handler to read polling log
-		Logger polling = Logger.getLogger("InProgressPolling");
-		TestHandler pollHandler = new TestHandler();
-		polling.addHandler(pollHandler);
+		job.setQuietPeriod(1);
 
 		// Base-line build
 		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -636,19 +638,15 @@ public class PollingTest extends DefaultEnvironment {
 		// Submit first change
 		submitFile(jenkins, "//depot/main/file.001", "content");
 
-		// poll for changes - we should see the new submit
-		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
-		assertEquals(PollingResult.BUILD_NOW, job.poll(listener));
+		// Poll for changes multiple times
+		for (int i = 0; i < 300; i++) {
+			cron.run();
+			Thread.sleep(20);
+		}
+		jenkins.waitUntilNoActivity();
 
-		// Schedule build and wait until it starts
-		job.scheduleBuild2(0);
-		TimeUnit.MILLISECONDS.sleep(100);
-
-		// poll again and again for changes (while build is in-progress)
-		assertTrue(job.isBuilding());
-		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
-		assertEquals(PollingResult.NO_CHANGES, job.poll(listener));
-		assertTrue(job.isBuilding());
+		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 	}
 
 	@Test
@@ -704,15 +702,80 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes incrementally (change 1)
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
 		cron.run();
-		Thread.sleep(1100);
+		Thread.sleep(100);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
 		assertEquals(Result.FAILURE, job.getLastBuild().getResult());
 
 		// Poll for changes incrementally (no change)
 		cron.run();
-		Thread.sleep(1100);
+		Thread.sleep(100);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll, but no build", 2, job.getLastBuild().number);
+	}
+
+	@Test
+	public void testMultiBranchFailedPolling() throws Exception {
+
+		// Setup sample Multi Branch Project
+		String branch = "Main";
+		String jfile = "Jenkinsfile";
+		String base = "//depot/multiFailPoll";
+		String baseChange = submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('" + jfile + "')) error 'missing " + jfile + "'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}");
+		assertNotNull(baseChange);
+
+		// Setup Branch Source
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		// Setup MultiBranch Job
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "MultiBranchFailedPolling");
+		multi.getSourcesList().add(new BranchSource(source));
+		TimerTrigger timer = new TimerTrigger("0 0 * * *");
+		multi.addTrigger(timer);
+
+		// Build #1
+		multi.scheduleBuild2(0);
+
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// Test on branch 'Main'
+		WorkflowJob job = multi.getItem(branch);
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+
+		// Add bad Jenkinsfile
+		submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
+				+ "pipeline {\n"
+				+ "  agentxxx\n"
+				+ "}");
+
+		// Poll - Build #2 (fail)
+		timer.run();
+		Thread.sleep(100);
+		jenkins.waitUntilNoActivity();
+		assertEquals(2, job.getLastBuild().number);
+		assertEquals(Result.FAILURE, job.getLastBuild().getResult());
+
+		// Poll - No build
+		timer.run();
+		Thread.sleep(100);
+		jenkins.waitUntilNoActivity();
+		assertEquals(2, job.getLastBuild().number);
 	}
 }
