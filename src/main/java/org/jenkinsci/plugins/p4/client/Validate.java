@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
+
 public class Validate {
 
 	private static Logger logger = Logger.getLogger(Validate.class.getName());
@@ -63,7 +65,7 @@ public class Validate {
 				// superfluous p4java message
 				boolean unknownMsg = true;
 				for (String istring : ignoreList) {
-					if (!istring.isEmpty() && msg.contains(istring)) {
+					if (!istring.isEmpty() && StringUtils.containsIgnoreCase(msg, istring)) {
 						// its a known message
 						unknownMsg = false;
 						break;
