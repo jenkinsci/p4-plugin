@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
+
 public class Validate {
 
 	private static Logger logger = Logger.getLogger(Validate.class.getName());
@@ -24,7 +26,7 @@ public class Validate {
 	 * Look for a message in the returned FileSpec from operation.
 	 *
 	 * @param fileSpecs List of Perforce file specs
-	 * @param ignore    Parameter list of messages to ignore
+	 * @param ignore    Parameter list of messages to ignore (case insensitive)
 	 * @return true if no errors.
 	 * @throws Exception push up stack
 	 */
@@ -36,7 +38,7 @@ public class Validate {
 	 * Only return boolean; false is returned for an exception.
 	 *
 	 * @param fileSpecs List of Perforce file specs
-	 * @param ignore    Parameter list of messages to ignore
+	 * @param ignore    Parameter list of messages to ignore (case insensitive)
 	 * @return true if no errors or exceptions
 	 */
 	public boolean checkCatch(List<IFileSpec> fileSpecs, String... ignore) {
@@ -63,7 +65,7 @@ public class Validate {
 				// superfluous p4java message
 				boolean unknownMsg = true;
 				for (String istring : ignoreList) {
-					if (!istring.isEmpty() && msg.contains(istring)) {
+					if (!istring.isEmpty() && StringUtils.containsIgnoreCase(msg, istring)) {
 						// its a known message
 						unknownMsg = false;
 						break;
