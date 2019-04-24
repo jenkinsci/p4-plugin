@@ -193,6 +193,7 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append("\n");
 			}
 			sb.append("...   Root: " + iclient.getRoot());
+			sb.append("\n");
 			logger.finer(sb.toString());
 
 			sb.insert(0, COMMAND);
