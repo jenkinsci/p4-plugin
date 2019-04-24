@@ -17,6 +17,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
+import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.scm.ChangeLogParser;
@@ -319,11 +320,34 @@ public class PerforceScm extends SCM {
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
 	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+
+		String jobName = job.getName();
+		logger.finer("P4: polling[" + jobName + "] started...");
+
 		PollingResult state = PollingResult.NO_CHANGES;
-		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
 		// Get last run and build workspace
 		Run<?, ?> lastRun = job.getLastBuild();
+
+		Queue.Item[] items = Jenkins.getInstance().getQueue().getItems();
+		for(Queue.Item item : items) {
+			if(item.task instanceof WorkflowJob) {
+				WorkflowJob task = (WorkflowJob) item.task;
+				if(task.equals(job)) {
+					if(item instanceof Queue.WaitingItem) {
+						logger.info("P4: polling[" + jobName + "] skipping WaitingItem");
+						return PollingResult.NO_CHANGES;
+					}
+					if(item instanceof Queue.BlockedItem) {
+						logger.finer("P4: polling[" + jobName + "] BlockedItem");
+					}
+					if(item instanceof Queue.BuildableItem) {
+						logger.finer("P4: polling[" + jobName + "] BuildableItem");
+					}
+				}
+			}
+
+		}
 
 		// Build workspace is often null as requiresWorkspaceForPolling() returns false as a checked out workspace is
 		// not needed, but we still need a client and artificial root for the view.
@@ -338,6 +362,8 @@ public class PerforceScm extends SCM {
 				return PollingResult.NO_CHANGES;
 			}
 		}
+
+		Node node = NodeHelper.workspaceToNode(buildWorkspace);
 
 		if (job instanceof MatrixProject) {
 			if (isBuildParent(job)) {
@@ -355,7 +381,8 @@ public class PerforceScm extends SCM {
 					state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
 					// exit early if changes found
 					if (state == PollingResult.BUILD_NOW) {
-						return PollingResult.BUILD_NOW;
+						logger.finer("P4: polling[" + jobName + "] exit (Matrix): " + state.change);
+						return state;
 					}
 				}
 			}
@@ -364,6 +391,7 @@ public class PerforceScm extends SCM {
 			state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
 		}
 
+		logger.finer("P4: polling[" + jobName + "] exit: " + state.change);
 		return state;
 	}
 
@@ -382,7 +410,6 @@ public class PerforceScm extends SCM {
 	 */
 	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, Run<?, ?> lastRun)
 			throws InterruptedException, IOException {
-		PrintStream log = listener.getLogger();
 
 		// set NODE_NAME to Node or default "master" if not set
 		String nodeName = NodeHelper.getNodeName(buildWorkspace);
@@ -398,18 +425,24 @@ public class PerforceScm extends SCM {
 
 		// Set EXPANDED client
 		String client = ws.getFullName();
-		log.println("P4: Polling on: " + nodeName + " with:" + client);
+		listener.getLogger().println("P4: Polling on: " + nodeName + " with:" + client);
 
 		List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 
 		// Cleanup Perforce Client
 		cleanupPerforceClient(lastRun, buildWorkspace, listener, ws);
 
-		// Build if null (un-built) or if changes are found
-		if (changes == null || !changes.isEmpty()) {
+		// Build if changes are found or report NO_CHANGE
+		if (changes == null) {
+			listener.getLogger().println("P4: Polling error; no previous change.");
+			return PollingResult.NO_CHANGES;
+		} else if(changes.isEmpty()) {
+			listener.getLogger().println("P4: Polling no changes found.");
+			return PollingResult.NO_CHANGES;
+		} else {
+			changes.forEach((c) -> listener.getLogger().println("P4: Polling found change: " + c));
 			return PollingResult.BUILD_NOW;
 		}
-		return PollingResult.NO_CHANGES;
 	}
 
 	/**
@@ -438,6 +471,7 @@ public class PerforceScm extends SCM {
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
 			// no previous build, return null.
+			listener.getLogger().println("P4: Polling: No changes in previous build.");
 			return null;
 		}
 
@@ -459,6 +493,9 @@ public class PerforceScm extends SCM {
 	@Override
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
 	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+
+		String jobName = run.getParent().getName();
+		logger.finer("P4: checkout[" + jobName + "] started...");
 
 		PrintStream log = listener.getLogger();
 		boolean success = true;
@@ -549,16 +586,18 @@ public class PerforceScm extends SCM {
 		// Write change log if changeLogFile has been set.
 		if (changelogFile != null) {
 			// Calculate changes prior to build (based on last build)
-			listener.getLogger().println("P4 Task: saving built changes.");
+			listener.getLogger().println("P4: saving built changes.");
 			List<P4ChangeEntry> changes = calculateChanges(run, task);
 			P4ChangeSet.store(changelogFile, changes);
 			listener.getLogger().println("... done\n");
 		} else {
-			listener.getLogger().println("P4Task: unable to save changes, null changelogFile.\n");
+			listener.getLogger().println("P4: unable to save changes, null changelogFile.\n");
 		}
 
 		// Cleanup Perforce Client
 		cleanupPerforceClient(run, buildWorkspace, listener, ws);
+
+		logger.finer("P4: checkout[" + jobName + "] finished.");
 	}
 
 	private String getScriptPath(Run<?, ?> run) {
@@ -736,7 +775,7 @@ public class PerforceScm extends SCM {
 	public boolean processWorkspaceBeforeDeletion(Job<?, ?> job, FilePath buildWorkspace, Node node)
 			throws IOException, InterruptedException {
 
-		logger.info("processWorkspaceBeforeDeletion");
+		logger.finer("processWorkspaceBeforeDeletion");
 
 		Run<?, ?> run = job.getLastBuild();
 
@@ -775,7 +814,7 @@ public class PerforceScm extends SCM {
 
 		boolean clean = buildWorkspace.act(task);
 
-		logger.info("clean: " + clean);
+		logger.finer("processWorkspaceBeforeDeletion cleaned: " + clean);
 		return clean;
 	}
 

@@ -70,10 +70,10 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 			PollingResult pollResult = item.poll(listener);
 			if (pollResult != null && pollResult.hasChanges()) {
-				log.println("Changes found");
+				log.println("P4: Changes found");
 				build(job);
 			} else {
-				log.println("No changes");
+				log.println("P4: No changes");
 			}
 		} catch (Exception e) {
 			String msg = "P4: Failed to record P4 trigger: ";

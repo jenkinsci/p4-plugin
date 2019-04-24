@@ -123,6 +123,14 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					builds.add(graphHead);
 				}
 			}
+
+			// Generate build report
+			StringBuffer buildReport = new StringBuffer("P4: builds: ");
+			for(P4Ref build : builds) {
+				buildReport.append(build.toString() + " ");
+			}
+			p4.log(buildReport.toString());
+
 		} catch (Exception e) {
 			String err = "P4: Unable to initialise CheckoutTask: " + e;
 			logger.severe(err);
