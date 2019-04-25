@@ -5,6 +5,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.ApproveState;
 import org.json.JSONArray;
@@ -81,7 +82,7 @@ public class SwarmHelper {
 		switch (state) {
 			case VOTE_UP:
 			case VOTE_DOWN:
-				return postVote(id, state);
+				return postVote(id, state, description);
 			default:
 				return patchReview(id, state, description);
 		}
@@ -121,19 +122,47 @@ public class SwarmHelper {
 		}
 	}
 
-	private boolean postVote(String id, ApproveState state) throws Exception {
+	private boolean postComment(String id, String description) throws Exception {
+		if (StringUtils.isEmpty(description)) {
+			return true;
+		}
+		
+		String url = getApiUrl() + "/comments/";
+
+		Map<String, Object> parameters = new HashedMap();
+		parameters.put("topic", "reviews/" + id);
+		parameters.put("body", description);
+
+		// Send COMMENT request to Swarm
+		HttpResponse<JsonNode> res = Unirest.post(url)
+				.basicAuth(user, ticket)
+				.fields(parameters)
+				.asJson();
+
+		if (res.getStatus() == 200) {
+			p4.log("Swarm review id: " + id + " comment: " + description);
+			return true;
+		} else {
+			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
+			String error = res.getBody().getObject().getString("error");
+			p4.log("Swarm error message: " + error);
+			throw new SwarmException(res);
+		}
+	}
+
+	private boolean postVote(String id, ApproveState state, String description) throws Exception {
 
 		String vote = state.getId();
 		String url = getBaseUrl() + "/reviews/" + id + "/vote/" + vote;
 
-		// Send PATCH request to Swarm
+		// Send VOTE request to Swarm
 		HttpResponse<JsonNode> res = Unirest.post(url)
 				.basicAuth(user, ticket)
 				.asJson();
 
 		if (res.getStatus() == 200) {
 			p4.log("Swarm review id: " + id + " voted: " + vote);
-			return true;
+			return postComment(id, description);
 		} else {
 			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
 			String error = res.getBody().getObject().getString("error");
