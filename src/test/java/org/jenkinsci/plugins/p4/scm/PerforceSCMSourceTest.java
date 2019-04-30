@@ -255,9 +255,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
 				+ "        script {\n"
-				+ "          if(!fileExists('Jenkinsfile'))         error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('depot/classic/A/src/fileA'))   error 'missing fileA'\n"
-				+ "          if(!fileExists('depot/classic/A/tests/fileB')) error 'missing fileB'\n"
+				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
+				+ "          if(!fileExists('fileA'))       error 'missing fileA'\n"
+				+ "          if(!fileExists('fileB'))       error 'missing fileB'\n"
 				+ "        }\n"
 				+ "      }\n"
 				+ "    }\n"
@@ -990,7 +990,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "      steps {\n"
 				+ "        script {\n"
 				+ "          if(!fileExists('" + scriptPath + "')) error 'missing " + scriptPath + "'\n"
-				+ "          if(!fileExists('depot/Plus/Main/pod/test.yaml'))   error 'missing test.yaml'\n"
+				+ "          if(!fileExists('test.yaml'))   error 'missing test.yaml'\n"
 				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileA'))   error 'missing fileA'\n"
 				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileB'))   error 'missing fileB'\n"
 				+ "        }\n"
@@ -1000,7 +1000,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "}");
 
 		// Extra file (Kubernetes)
-		submitFile(jenkins, base + "/" + branch + "/pod/test.yaml", "content");
+		submitFile(jenkins, base + "/" + branch + "/test.yaml", "content");
 
 		// Source files
 		String projBase = "//depot/test_Main/ProjectC";
