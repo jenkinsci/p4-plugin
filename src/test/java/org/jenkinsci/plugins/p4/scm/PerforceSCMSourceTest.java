@@ -1048,22 +1048,20 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 		// Test on branch 'Main'
-		WorkflowJob job2 = multi.getItem(branch);
-		assertThat("We now have a branch", job2, notNullValue());
-		assertEquals(Result.SUCCESS, job2.getLastBuild().getResult());
-		P4ChangeSet nextChanges = (P4ChangeSet) job2.getLastBuild().getChangeSets().get(0);
-		assertEquals(change1, nextChanges.getHistory().get(0).getId().toString());
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes1 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change1, changes1.getHistory().get(0).getId().toString());
 
 		//Schedule another build to build the next change
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 		// Test on branch 'Main'
-		WorkflowJob job3 = multi.getItem(branch);
-		assertThat("We now have a branch", job3, notNullValue());
-		assertEquals(Result.SUCCESS, job3.getLastBuild().getResult());
-		P4ChangeSet builtChanges = (P4ChangeSet) job2.getLastBuild().getChangeSets().get(0);
-		assertEquals(change2, builtChanges.getHistory().get(0).getId().toString());
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes2 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change2, changes2.getHistory().get(0).getId().toString());
 	}
 
 	/* ------------------------------------------------------------------------------------------------------------- */
