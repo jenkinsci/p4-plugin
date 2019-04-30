@@ -1042,7 +1042,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		//Make change to fileA and submit
 		String change1 = submitFile(jenkins, projBase + "/src/fileA", "content changed");
 		//Make change to fileB and submit
-		String change2 =submitFile(jenkins, projBase + "/src/fileB", "content changed");
+		String change2 = submitFile(jenkins, projBase + "/src/fileB", "content changed");
 		//Schedule build
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
