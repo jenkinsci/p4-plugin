@@ -1036,6 +1036,32 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 		P4ChangeSet baseSet = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
 		assertEquals(baseChange, baseSet.getHistory().get(0).getId().toString());
+		/*
+		Test to confirm PollPerChange works with the latest changes
+		 */
+		//Make change to fileA and submit
+		String change1 = submitFile(jenkins, projBase + "/src/fileA", "content changed");
+		//Make change to fileB and submit
+		String change2 = submitFile(jenkins, projBase + "/src/fileB", "content changed");
+		//Schedule build
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		// Test on branch 'Main'
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes1 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change1, changes1.getHistory().get(0).getId().toString());
+
+		//Schedule another build to build the next change
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		// Test on branch 'Main'
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes2 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change2, changes2.getHistory().get(0).getId().toString());
 	}
 
 	/* ------------------------------------------------------------------------------------------------------------- */
