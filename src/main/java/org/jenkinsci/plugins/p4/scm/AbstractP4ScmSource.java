@@ -191,7 +191,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 				checkInterrupt();
 			}
 		} catch (Exception e) {
-			throw new IOException(e.getMessage());
+			throw new IOException(e);
 		}
 	}
 
