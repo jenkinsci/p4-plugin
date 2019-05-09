@@ -240,6 +240,26 @@ public class SwarmHelper {
 		return branches;
 	}
 
+	public List<String> getProjects() throws Exception {
+
+		String url = getApiUrl() + "/projects";
+
+
+		HttpResponse<String> res = Unirest.get(url)
+				.basicAuth(user, ticket)
+				.asString();
+
+		if (res.getStatus() != 200) {
+			throw new SwarmException(res);
+		}
+
+		Gson gson = new Gson();
+		SwarmProjectsAPI api = gson.fromJson(res.getBody(), SwarmProjectsAPI.class);
+
+		List<String> projects = api.getIDs();
+		return projects;
+	}
+
 	private static class SwarmException extends Exception {
 		static final long serialVersionUID = 1;
 

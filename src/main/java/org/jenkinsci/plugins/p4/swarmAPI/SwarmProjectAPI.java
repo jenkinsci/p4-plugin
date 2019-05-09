@@ -20,10 +20,16 @@ public class SwarmProjectAPI {
 	}
 
 	public static class Project {
+		private String id;
 		private List<Branch> branches;
 
-		public Project(List<Branch> branches) {
+		public Project(String id, List<Branch> branches) {
+			this.id = id;
 			this.branches = branches;
+		}
+
+		public String getId() {
+			return id;
 		}
 
 		public List<Branch> getBranches() {
