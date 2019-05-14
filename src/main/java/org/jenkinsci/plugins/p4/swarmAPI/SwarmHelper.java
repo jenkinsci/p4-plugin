@@ -126,7 +126,7 @@ public class SwarmHelper {
 		if (StringUtils.isEmpty(description)) {
 			return true;
 		}
-		
+
 		String url = getApiUrl() + "/comments/";
 
 		Map<String, Object> parameters = new HashedMap();
@@ -240,13 +240,22 @@ public class SwarmHelper {
 		return branches;
 	}
 
+	/**
+	 * Get a list of project 'ids' from swarm where the current users is a member or owner
+	 *
+	 * @return A filtered list of projects
+	 * @throws Exception API or connection errors
+	 */
 	public List<String> getProjects() throws Exception {
 
 		String url = getApiUrl() + "/projects";
 
+		Map<String, Object> query = new HashMap<>();
+		query.put("fields", "id,members,owners");
 
 		HttpResponse<String> res = Unirest.get(url)
 				.basicAuth(user, ticket)
+				.queryString(query)
 				.asString();
 
 		if (res.getStatus() != 200) {
@@ -256,7 +265,7 @@ public class SwarmHelper {
 		Gson gson = new Gson();
 		SwarmProjectsAPI api = gson.fromJson(res.getBody(), SwarmProjectsAPI.class);
 
-		List<String> projects = api.getIDs();
+		List<String> projects = api.getIDsByUser(user);
 		return projects;
 	}
 

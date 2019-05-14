@@ -14,11 +14,18 @@ public class SwarmProjectsAPI {
 		return projects;
 	}
 
-	public List<String> getIDs() {
+	/**
+	 * Filtered list of project IDs by owner and member.
+	 *
+	 * @return a list of projects.
+	 */
+	public List<String> getIDsByUser(String user) {
 		List<String> list = new ArrayList<>();
 
-		for(SwarmProjectAPI.Project p : projects) {
-			list.add(p.getId());
+		for (SwarmProjectAPI.Project p : projects) {
+			if (p.getMembers().contains(user) && p.getOwners().contains(user)) {
+				list.add(p.getId());
+			}
 		}
 		return list;
 	}
