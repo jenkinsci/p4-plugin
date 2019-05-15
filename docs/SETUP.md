@@ -1,4 +1,6 @@
-﻿# Freestyle Project Setup Guide
+_Online documentation for [Freestyle Project](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/freestyle-project-setup.html)_
+
+# Freestyle Project Setup Guide
 Freestyle projects are configured using the Jenkins graphical user interface. Once the job is complete you can view the script that Jenkins generates. This is a good way to learn what the scripts contain.  
 
 ## Add Credentials
