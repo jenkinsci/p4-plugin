@@ -1,3 +1,5 @@
+_Online documentation for [Multibranch Pipeline Guide](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/multibranch-pipeline-setup.html)_
+
 # MultiBranch Pipeline Guide
 
 MulitBranch Pipeline support allows Jenkins to automatically find branches or change reviews in Perforce and create 
