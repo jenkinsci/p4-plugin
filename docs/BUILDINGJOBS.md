@@ -1,4 +1,6 @@
-﻿# Building Jobs
+_Online documentation for [Building Jobs](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/building-jobs.html)_
+
+# Building Jobs
 This section describes how to start a build. 
 
 ## Before You Start
