@@ -1,3 +1,5 @@
+_Online documentation for [Pipeline Library](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/library.html#Global_Pipeline_Library_guide)_
+
 # Global Pipeline Library Guide
 
 A guide on how to access Pipeline libraries versioned in Perforce Helix. 
