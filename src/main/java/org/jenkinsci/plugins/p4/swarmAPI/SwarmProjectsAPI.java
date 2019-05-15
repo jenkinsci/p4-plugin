@@ -23,7 +23,7 @@ public class SwarmProjectsAPI {
 		List<String> list = new ArrayList<>();
 
 		for (SwarmProjectAPI.Project p : projects) {
-			if (p.getMembers().contains(user) && p.getOwners().contains(user)) {
+			if (p.getMembers().contains(user) || p.getOwners().contains(user)) {
 				list.add(p.getId());
 			}
 		}
