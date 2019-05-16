@@ -1,0 +1,15 @@
+pipeline {
+
+	agent {
+		label 'p4java'
+	}
+
+	stages {
+
+		stage('Build and Test') {
+			steps {
+				sh 'mvn clean package'
+			}
+		}
+	}
+}
