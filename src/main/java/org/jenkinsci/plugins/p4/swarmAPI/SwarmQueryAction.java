@@ -80,6 +80,9 @@ public class SwarmQueryAction implements RootAction {
 				multi.getSourcesList().add(new BranchSource(source));
 
 				multi.scheduleBuild2(0);
+
+				PrintWriter out = rsp.getWriter();
+				out.write(name);
 			} catch (Exception e) {
 				throw new IOException(e);
 			}
