@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.p4.swarmAPI;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import hudson.Extension;
 import hudson.model.RootAction;
 import jenkins.branch.BranchSource;
@@ -17,6 +19,9 @@ import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 
 @Symbol("swarm_projects")
 @Extension
@@ -81,8 +86,30 @@ public class SwarmQueryAction implements RootAction {
 
 				multi.scheduleBuild2(0);
 
+				rsp.setStatus(SC_CREATED);
+				rsp.setContentType("text/plain");
+
 				PrintWriter out = rsp.getWriter();
 				out.write(name);
+
+			} catch (IllegalArgumentException e) {
+				rsp.setStatus(SC_BAD_REQUEST);
+				rsp.setContentType("text/plain");
+
+				JsonObject json = new JsonObject();
+				json.addProperty("message", "Failed to create pipeline");
+				json.addProperty("code", SC_BAD_REQUEST);
+				JsonArray errors = new JsonArray();
+				JsonObject error = new JsonObject();
+				error.addProperty("message", name + " already exists");
+				error.addProperty("code", "ALREADY_EXISTS");
+				error.addProperty("field", "name");
+				errors.add(error);
+				json.add("errors", errors);
+
+				PrintWriter out = rsp.getWriter();
+				out.write(json.toString());
+
 			} catch (Exception e) {
 				throw new IOException(e);
 			}
