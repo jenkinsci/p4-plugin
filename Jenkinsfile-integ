@@ -8,7 +8,20 @@ pipeline {
 
 		stage('Build and Test') {
 			steps {
-				sh 'mvn clean package'
+				sh 'mvn clean package -P enable-jacoco'
+
+				publishHTML target: [
+					allowMissing: false,
+					alwaysLinkToLastBuild: true,
+					keepAll: true,
+					reportDir: 'target/site/',
+					reportFiles: 'surefire-report.html',
+					reportName: 'TestReport'
+				]
+
+				publishCoverage adapters: [
+					jacocoAdapter('target/site/jacoco/jacoco.xml')
+				]
 			}
 		}
 	}
