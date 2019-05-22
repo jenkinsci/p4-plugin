@@ -1056,12 +1056,13 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Get the change number for the last change within the scope of the
-	 * workspace view.
+	 * workspace view up to the specified revision
 	 *
+	 * @param to To revision (change or label)
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
-	public int getClientHead() throws Exception {
+	public int getClientHead(P4Ref to) throws Exception {
 		// get last change in server
 		// This will also return shelved CLs
 		String latestChange = getConnection().getCounter("change");
@@ -1069,6 +1070,9 @@ public class ClientHelper extends ConnectionHelper {
 
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
+		if (to != null) {
+			ws = ws + "@" + to.toString();
+		}
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
@@ -1086,33 +1090,13 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Get the change number for the last change within the scope of the
-	 * workspace view up to the specified revision
+	 * workspace view.
 	 *
-	 * @param revision To revision (change or label)
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
-	public int getClientHead(P4Ref revision) throws Exception {
-		// get last change in server
-		// This will also return shelved CLs
-		String latestChange = getConnection().getCounter("change");
-		int change = Integer.parseInt(latestChange);
-
-		// build file revision spec
-		String ws = "//" + iclient.getName() + "/...@" + revision.toString();
-		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
-
-		GetChangelistsOptions opts = new GetChangelistsOptions();
-		opts.setType(IChangelist.Type.SUBMITTED);
-		opts.setMaxMostRecent(1);
-		List<IChangelistSummary> list = getConnection().getChangelists(files, opts);
-
-		if (!list.isEmpty() && list.get(0) != null) {
-			change = list.get(0).getId();
-		} else {
-			log("P4: no revisions under " + ws + " using latest change: " + change);
-		}
-		return change;
+	public int getClientHead() throws Exception {
+		return getClientHead(null);
 	}
 
 	public List<IChangelistSummary> getPendingChangelists(boolean includeLongDescription, String clientName) throws Exception {
