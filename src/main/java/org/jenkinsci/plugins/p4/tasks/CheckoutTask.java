@@ -111,6 +111,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				}
 			}
 
+			// limit buildChange to the next highest change number within the client's view
+			buildChange = new P4ChangeRef(p4.getClientHead(buildChange));
+
 			// add buildChange to list of changes to builds
 			builds.add(buildChange);
 

@@ -17,7 +17,6 @@ import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -83,7 +82,6 @@ public class CheckoutTest extends DefaultEnvironment {
 	}
 
 	@Issue("JENKINS-57534")
-	@Ignore
 	@Test
 	public void testCheckoutRestrictedView() throws Exception {
 		String client = "CheckoutRestrictedView.ws";
