@@ -6,9 +6,21 @@ pipeline {
 
 	stages {
 
+		stage('Compile') {
+			steps {
+				sh 'mvn compiler:compile findbugs:check'
+			}
+		}
+
 		stage('Build and Test') {
 			steps {
 				sh 'mvn clean package -P enable-jacoco'
+			}
+		}
+
+		stage('Reporting') {
+			steps {
+				sh 'mvn surefire-report:report-only'
 
 				publishHTML target: [
 					allowMissing: false,
@@ -26,5 +38,6 @@ pipeline {
 
 			}
 		}
+
 	}
 }
