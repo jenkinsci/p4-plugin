@@ -1062,11 +1062,11 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
-	public int getClientHead(P4Ref to) throws Exception {
+	public long getClientHead(P4Ref to) throws Exception {
 		// get last change in server
 		// This will also return shelved CLs
 		String latestChange = getConnection().getCounter("change");
-		int change = Integer.parseInt(latestChange);
+		long change = Long.parseLong(latestChange);
 
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
@@ -1082,6 +1082,9 @@ public class ClientHelper extends ConnectionHelper {
 
 		if (!list.isEmpty() && list.get(0) != null) {
 			change = list.get(0).getId();
+		} else if ( to != null) {
+			change = to.getChange();
+			log("P4: no revisions under " + ws + " using change: " + change);
 		} else {
 			log("P4: no revisions under " + ws + " using latest change: " + change);
 		}
@@ -1095,7 +1098,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
-	public int getClientHead() throws Exception {
+	public long getClientHead() throws Exception {
 		return getClientHead(null);
 	}
 
