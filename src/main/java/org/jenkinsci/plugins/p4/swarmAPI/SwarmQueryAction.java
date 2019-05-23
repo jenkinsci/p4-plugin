@@ -87,14 +87,17 @@ public class SwarmQueryAction implements RootAction {
 				multi.scheduleBuild2(0);
 
 				rsp.setStatus(SC_CREATED);
-				rsp.setContentType("text/plain");
+				rsp.setContentType("application/json");
+
+				JsonObject json = new JsonObject();
+				json.addProperty("name", name);
 
 				PrintWriter out = rsp.getWriter();
-				out.write(name);
+				out.write(json.toString());
 
 			} catch (IllegalArgumentException e) {
 				rsp.setStatus(SC_BAD_REQUEST);
-				rsp.setContentType("text/plain");
+				rsp.setContentType("application/json");
 
 				JsonObject json = new JsonObject();
 				json.addProperty("message", "Failed to create pipeline");
