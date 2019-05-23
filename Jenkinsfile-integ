@@ -21,7 +21,9 @@ pipeline {
 
 				publishCoverage adapters: [
 					jacocoAdapter('target/site/jacoco/jacoco.xml')
-				]
+				],
+				sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+
 			}
 		}
 	}
