@@ -2,8 +2,10 @@ package org.jenkinsci.plugins.p4.scm;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Item;
+import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
@@ -12,6 +14,7 @@ import jenkins.scm.api.SCMSource;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 import java.io.IOException;
 
@@ -23,6 +26,15 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		super(rev);
 		String credential = scm.getCredential();
 		Workspace ws = scm.getWorkspace().deepClone();
+
+		// TODO Set environment (on SCM or Workspace)
+		if (owner instanceof WorkflowJob) {
+			WorkflowJob _job = (WorkflowJob) owner;
+			Run<?,?> build = _job.getLastBuild();
+			EnvVars env = build.getEnvironment(null);
+			ws.setExpand(env);
+		}
+
 		this.p4 = new TempClientHelper(owner, credential, null, ws);
 	}
 

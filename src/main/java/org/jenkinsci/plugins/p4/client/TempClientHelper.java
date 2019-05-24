@@ -25,7 +25,7 @@ public class TempClientHelper extends ClientHelper implements Closeable {
 
 		this.clientUUID = "jenkinsTemp-" + UUID.randomUUID().toString();
 		workspace.setName(clientUUID);
-		workspace.setExpand(new HashMap<String, String>());
+		//workspace.setExpand(new HashMap<String, String>());
 
 		// Update view with new name
 		if(workspace instanceof ManualWorkspaceImpl) {
