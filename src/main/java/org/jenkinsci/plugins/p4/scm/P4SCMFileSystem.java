@@ -7,6 +7,7 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.scm.SCM;
+import hudson.util.LogTaskListener;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMRevision;
@@ -17,8 +18,12 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class P4SCMFileSystem extends SCMFileSystem {
+
+	private static Logger logger = Logger.getLogger(P4SCMFileSystem.class.getName());
 
 	private TempClientHelper p4;
 
@@ -27,11 +32,11 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		String credential = scm.getCredential();
 		Workspace ws = scm.getWorkspace().deepClone();
 
-		// TODO Set environment (on SCM or Workspace)
+		// Set environment in Workspace
 		if (owner instanceof WorkflowJob) {
 			WorkflowJob _job = (WorkflowJob) owner;
 			Run<?,?> build = _job.getLastBuild();
-			EnvVars env = build.getEnvironment(null);
+			EnvVars env = build.getEnvironment(new LogTaskListener(logger, Level.INFO));
 			ws.setExpand(env);
 		}
 
@@ -48,7 +53,6 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		return 0;
 	}
 
-	@NonNull
 	@Override
 	public SCMFile getRoot() {
 		return new P4SCMFile(this);
@@ -74,7 +78,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		}
 
 		@Override
-		public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev) throws IOException, InterruptedException {
+		public SCMFileSystem build(@NonNull Item owner, SCM scm, @CheckForNull SCMRevision rev) throws IOException, InterruptedException {
 			if (scm == null || !(scm instanceof PerforceScm)) {
 				return null;
 			}
