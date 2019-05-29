@@ -1,5 +1,52 @@
 ## Release notes
 
+### Release 1.10.0 (major features/fixes)
+
+[@25655](https://swarm.workshop.perforce.com/changes/25655) - Extract the Job Environment when fetching the Jenkinsfile. Allow Parameterized builds for the Stream field when using 'Pipline Script from SCM'. JENKINS-56775
+
+[@25651](https://swarm.workshop.perforce.com/changes/25651) - Merge pull request #100 from stuartrowe/JENKINS-57534.  Limit buildChange to the next highest change number within the client's view. JENKINS-57534
+
+[@25648](https://swarm.workshop.perforce.com/changes/25648) - BlueOcean: Create MultiBranch Pipelines.  Endpoints for Perforce credentials and Swarm Projects query.  JENKINS-52396 
+
+[@25632](https://swarm.workshop.perforce.com/changes/25632) - Update P4Java 2019.1.1802476
+
+[@25610](https://swarm.workshop.perforce.com/changes/25610) - Merge pull request #98 from stuartrowe/JENKINS-57358.  Add null check before using P4Path object returned by method SwarmScmSource#getPathsInBranch.  JENKINS-57358
+
+[@25570](https://swarm.workshop.perforce.com/changes/25570) - Merge pull request #92 from p4charu/jenkinsci-master.  Updated help text for Jenkinsfile path.  JENKINS-39107 
+
+[@25564](https://swarm.workshop.perforce.com/changes/25564) - Merge branch 'local_map'.  MultiBranch support for 'HelixBranches' local and remote Mappings.  Allows MultiBranches to map Depot paths external to the MultiBranch projects root.  
+
+---
+
+_For example, a MultiBranch project with the following Jenkinsfiles:_
+
+    ProjA >> main
+      //depot/projA/main/Jenkinsfile
+      //depot/projA/main/src/...
+
+    ProjA>> dev
+      //depot/projA/dev/Jenkinsfile
+      //depot/projA/dev/src/...
+
+_An 'Includes' path for Branch Sources set to:  `//depot/projA/...`  Jenkins will now create two branches 'main' and 'dev'.  The default Mapping is '...' so the 'src/...' and any other files under the branch root will appear in the project's workspace.  To import an extenal location we can add another line to the mapping:_
+
+    ...
+    //depot/external/stuff/...
+
+_Now both branches 'main' and 'dev' will have a folder 'depot/external/stuff' with the mapped files.  We can also use the `BRANCH_NAME` environment variable in the remote path uses the branch name._
+
+    ...
+    //depot/external/${BRANCH_NAME}/... 
+
+_and in 'main' you will now see the remote files in ' depot/external/main' along with the local project files mapped with '...'_
+
+---
+
+[@25553](https://swarm.workshop.perforce.com/changes/25553) - Merge pull request #97 from stuartrowe/JENKINS-57179.  Post a comment after voting if description field is not empty.  JENKINS-57179
+
+[@25530](https://swarm.workshop.perforce.com/changes/25530) - Merge pull request #96 from stuartrowe/JENKINS-57095.  Use StringUtils.containsIgnoreCase instead of String#contains so the ignore list parameter for Validate#check is case insensitive.  JENKINS-57095
+
+
 ### Release 1.9.7 (major features/fixes)
 
 [@25439](https://swarm.workshop.perforce.com/changes/25439) - Skip polling if Job is in WaitingItem Queue.  JENKINS-56037 JENKINS-56286
