@@ -155,11 +155,11 @@ abstract public class DefaultEnvironment {
 	}
 
 	private StreamWorkspaceImpl createStreamsWorkspace(String path, int depth) {
-		Path p = Paths.get(path);
+		String p[] = path.substring(2).split("/");
 
 		StringBuffer sb = new StringBuffer("//");
 		for (int i = 0; i < depth; i++) {
-			sb.append(p.getName(i));
+			sb.append(p[i]);
 			sb.append("/");
 		}
 
