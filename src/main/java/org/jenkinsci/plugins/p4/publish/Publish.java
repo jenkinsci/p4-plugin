@@ -14,6 +14,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 	private final String description;
 	private final boolean onlyOnSuccess;
 	private final boolean delete;
+	private final boolean modtime;
 
 	private String expandedDesc;
 
@@ -29,10 +30,15 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 		return delete;
 	}
 
-	public Publish(String description, boolean onlyOnSuccess, boolean delete) {
+	public boolean isModtime() {
+		return modtime;
+	}
+
+	public Publish(String description, boolean onlyOnSuccess, boolean delete, boolean modtime) {
 		this.description = description;
 		this.onlyOnSuccess = onlyOnSuccess;
 		this.delete = delete;
+		this.modtime = modtime;
 	}
 
 	public PublishDescriptor getDescriptor() {

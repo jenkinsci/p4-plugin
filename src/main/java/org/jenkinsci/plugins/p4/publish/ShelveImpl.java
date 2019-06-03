@@ -17,8 +17,8 @@ public class ShelveImpl extends Publish implements Serializable {
 	}
 
 	@DataBoundConstructor
-	public ShelveImpl(String description, boolean onlyOnSuccess, boolean delete, boolean revert) {
-		super(description, onlyOnSuccess, delete);
+	public ShelveImpl(String description, boolean onlyOnSuccess, boolean delete, boolean modtime, boolean revert) {
+		super(description, onlyOnSuccess, delete, modtime);
 		this.revert = revert;
 	}
 

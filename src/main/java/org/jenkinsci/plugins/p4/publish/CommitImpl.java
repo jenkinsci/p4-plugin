@@ -13,8 +13,8 @@ public class CommitImpl extends Publish implements Serializable {
 	private List<String> files;
 
 	@DataBoundConstructor
-	public CommitImpl(String description, boolean onlyOnSuccess, boolean delete) {
-		super(description, onlyOnSuccess, delete);
+	public CommitImpl(String description, boolean onlyOnSuccess, boolean delete, boolean modtime) {
+		super(description, onlyOnSuccess, delete, modtime);
 		files = new ArrayList<>();
 	}
 
