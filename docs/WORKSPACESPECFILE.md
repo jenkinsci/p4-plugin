@@ -1,5 +1,21 @@
 ﻿# Spec File Workspace
-Loads the workspace configuration from a depot file containing a client workspace spec. This is the same output as `p4 client -o` and the Spec depot `.p4s` format. The name of the Workspace must match the name of the client workspace spec.
+Loads the workspace configuration from a depot file containing a client workspace spec. This is the same output as `p4 client -o` and the Spec depot `.p4s` format. The name of the Workspace (to be used by Jenkins) must match the name of the client in the workspace spec. The simplest method is to use the ${P4_CLIENT} variable in the spec, for example:
+
+    FILE: //depot/jenkins-master-swarm.p4s
+    --------------------------------------------------------------------------
+    Client:	        ${P4_CLIENT}
+    Owner:	        pallen
+    Description:
+          Created by pallen.
+    Root:	        /Users/pallen/Perforce/1666/ws
+    Options:	noallwrite noclobber nocompress unlocked nomodtime normdir
+    SubmitOptions:	submitunchanged
+    LineEnd:	local
+    View:
+	      //depot/projA/... //${P4_CLIENT}/...	
+
+In the configuration specify the workspace name to be used by Jenkins and the location of the spec file.
+
 ![Spec File Workspace Configuration](images/specfileworkspace.png)
 
 1. **Workspace behaviour:** select **Static (static view, master only)** from the dropdown list. 
