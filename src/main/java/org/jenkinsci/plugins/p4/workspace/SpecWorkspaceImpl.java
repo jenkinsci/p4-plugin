@@ -18,7 +18,10 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+
+import static com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser.parseCommandResultMapAsString;
 
 public class SpecWorkspaceImpl extends Workspace implements Serializable {
 
@@ -70,7 +73,14 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		// parse spec
 		String spec = IOUtils.toString(ins, "UTF-8");
 		spec = getExpand().format(spec, false);
-		connection.execInputStringMapCmd("client", new String[]{"-i"}, spec);
+		if(!spec.contains(clientName)) {
+			throw new Exception("Spec file does not match client.");
+		}
+
+		// save spec
+		List<Map<String, Object>> resultMap = connection.execInputStringMapCmdList("client", new String[]{"-i"}, spec);
+		String msg = parseCommandResultMapAsString(resultMap);
+		logger.fine(msg);
 
 		// get client
 		IClient iclient = connection.getClient(clientName);

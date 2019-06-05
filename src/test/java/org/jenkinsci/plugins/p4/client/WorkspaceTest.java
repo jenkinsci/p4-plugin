@@ -259,6 +259,80 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testFreeStyleProject_SpecWsChangeView() throws Exception {
+
+		String client = "jenkins-${JOB_NAME}";
+		String specPath = "//depot/spec/test2";
+
+		String specFile = ""
+				+ "Client: ${P4_CLIENT}\n"
+				+ "Owner: pallen\n"
+				+ "Root: /tmp\n"
+				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
+				+ "SubmitOptions: submitunchanged\n"
+				+ "LineEnd:	local\n"
+				+ "View:\n"
+				+ "\t//depot/Data/... //${P4_CLIENT}/...\n"
+				+ "ChangeView:\n"
+				+"\t//depot/Data/...@17\n";
+
+		submitFile(jenkins, specPath, specFile);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Spec-ChangeView");
+		SpecWorkspaceImpl workspace = new SpecWorkspaceImpl("none", false, client, specPath);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		WorkspaceDescriptor desc = workspace.getDescriptor();
+		assertNotNull(desc);
+		assertEquals("Spec File (load workspace spec from file in Perforce)", desc.getDisplayName());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 17"));
+	}
+
+	@Test
+	public void testFreeStyleProject_SpecWsBadSpec() throws Exception {
+
+		String client = "jenkins-${JOB_NAME}";
+		String specPath = "//depot/spec/test3";
+
+		String specFile = ""
+				+ "Client: bad_client\n"
+				+ "Owner: pallen\n"
+				+ "Root: /tmp\n"
+				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
+				+ "SubmitOptions: submitunchanged\n"
+				+ "LineEnd:	local\n"
+				+ "View:\n"
+				+ "\t//depot/Data/... //bad_client/...\n";
+
+		submitFile(jenkins, specPath, specFile);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Spec-BadClient");
+		SpecWorkspaceImpl workspace = new SpecWorkspaceImpl("none", false, client, specPath);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.FAILURE, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("ERROR: P4: Unable to initialise CheckoutTask: hudson.AbortException: Spec file does not match client."));
+	}
+
+	@Test
 	public void testSyncID() throws Exception {
 		Map<String, String> map = new HashMap<>();
 		map.put("NODE_NAME", "foo");
