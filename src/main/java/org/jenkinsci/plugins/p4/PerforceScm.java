@@ -586,8 +586,6 @@ public class PerforceScm extends SCM {
 			List<P4ChangeEntry> changes = calculateChanges(run, task);
 			P4ChangeSet.store(changelogFile, changes);
 			listener.getLogger().println("... done\n");
-		} else {
-			listener.getLogger().println("P4: unable to save changes, null changelogFile.\n");
 		}
 
 		// Cleanup Perforce Client
