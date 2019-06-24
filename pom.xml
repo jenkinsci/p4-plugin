@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.9.7</version>
+  <version>1.10.0</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
@@ -25,7 +25,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>p4-1.9.7</tag>
+    <tag>p4-1.10.0</tag>
   </scm>
 
   <developers>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2018.1.1638495</version>
+      <version>2019.1.1802476</version>
     </dependency>
 
     <dependency>

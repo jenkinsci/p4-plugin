@@ -100,12 +100,14 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			for (String branch : branches) {
 				// Get first Swarm path; it MUST include the Jenkinsfile
 				P4Path p4Path = getPathsInBranch(branch, project);
-				p4Path.setRevision(reviewID);
+				if (p4Path != null) {
+					p4Path.setRevision(reviewID);
 
-				String trgName = branch + "-" + reviewID;
-				P4SCMHead target = new P4SCMHead(trgName, p4Path);
-				P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
-				list.add(tag);
+					String trgName = branch + "-" + reviewID;
+					P4SCMHead target = new P4SCMHead(trgName, p4Path);
+					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
+					list.add(tag);
+				}
 			}
 		}
 
@@ -236,7 +238,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		String client = getFormat();
 		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
-		String mappingsView = ViewMapHelper.getClientView(path.getMappings(), client);
+		String mappingsView = ViewMapHelper.getClientView(path.getMappings(), client, false, true);
 		String view = mappingsView + "\n" + jenkinsView;
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);

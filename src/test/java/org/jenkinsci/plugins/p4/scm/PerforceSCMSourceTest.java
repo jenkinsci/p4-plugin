@@ -255,9 +255,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "    stage('Test') {\n"
 				+ "      steps {\n"
 				+ "        script {\n"
-				+ "          if(!fileExists('Jenkinsfile'))         error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('depot/classic/A/src/fileA'))   error 'missing fileA'\n"
-				+ "          if(!fileExists('depot/classic/A/tests/fileB')) error 'missing fileB'\n"
+				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
+				+ "          if(!fileExists('fileA'))       error 'missing fileA'\n"
+				+ "          if(!fileExists('fileB'))       error 'missing fileB'\n"
 				+ "        }\n"
 				+ "      }\n"
 				+ "    }\n"
@@ -990,7 +990,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "      steps {\n"
 				+ "        script {\n"
 				+ "          if(!fileExists('" + scriptPath + "')) error 'missing " + scriptPath + "'\n"
-				+ "          if(!fileExists('depot/Plus/Main/pod/test.yaml'))   error 'missing test.yaml'\n"
+				+ "          if(!fileExists('test.yaml'))   error 'missing test.yaml'\n"
 				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileA'))   error 'missing fileA'\n"
 				+ "          if(!fileExists('depot/test_Main/ProjectC/src/fileB'))   error 'missing fileB'\n"
 				+ "        }\n"
@@ -1000,7 +1000,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				+ "}");
 
 		// Extra file (Kubernetes)
-		submitFile(jenkins, base + "/" + branch + "/pod/test.yaml", "content");
+		submitFile(jenkins, base + "/" + branch + "/test.yaml", "content");
 
 		// Source files
 		String projBase = "//depot/test_Main/ProjectC";
@@ -1036,6 +1036,32 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 		P4ChangeSet baseSet = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
 		assertEquals(baseChange, baseSet.getHistory().get(0).getId().toString());
+		/*
+		Test to confirm PollPerChange works with the latest changes
+		 */
+		//Make change to fileA and submit
+		String change1 = submitFile(jenkins, projBase + "/src/fileA", "content changed");
+		//Make change to fileB and submit
+		String change2 = submitFile(jenkins, projBase + "/src/fileB", "content changed");
+		//Schedule build
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		// Test on branch 'Main'
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes1 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change1, changes1.getHistory().get(0).getId().toString());
+
+		//Schedule another build to build the next change
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		// Test on branch 'Main'
+		assertThat("We now have a branch", job, notNullValue());
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		P4ChangeSet changes2 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(change2, changes2.getHistory().get(0).getId().toString());
 	}
 
 	/* ------------------------------------------------------------------------------------------------------------- */

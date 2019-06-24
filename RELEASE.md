@@ -1,7 +1,21 @@
 ## Release notes
 
-### Release 1.9.6 (major features/fixes)
+### Release 1.9.7 (major features/fixes)
 
+[@25439](https://swarm.workshop.perforce.com/changes/25439) - Skip polling if Job is in WaitingItem Queue.  JENKINS-56037 JENKINS-56286
+
+[@25437](https://swarm.workshop.perforce.com/changes/25437) - Skip build if polling finds no/null change.  JENKINS-55075
+
+[@25123](https://swarm.workshop.perforce.com/changes/25123) - Added Pipeline Job support and tests for declarative and scripted.  JENKINS-39107
+
+[@25115](https://swarm.workshop.perforce.com/changes/25115) - Merge pull request #91 from p4charu/jenkinsci-master.  Fixed JENKINS-39107 and JENKINS-55826
+
+[@25057](https://swarm.workshop.perforce.com/changes/25057) - Merge pull request #90 from jlloyola/master.  Changed P4Ticket web field type to password.
+
+[@25056](https://swarm.workshop.perforce.com/changes/25056) - Check for duplicate syncIDs and test polling after failed build.  JENKINS-55075
+
+
+### Release 1.9.6 (major features/fixes)
 
 [@25019](https://swarm.workshop.perforce.com/changes/25019) - Merge pull request #89 from p4charu/jenkinsci-master.  JENKINS-49924: Added more help text for absolute clarity
 

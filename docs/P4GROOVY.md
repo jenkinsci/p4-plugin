@@ -1,3 +1,5 @@
+_Online documentation for [P4Groovy](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/pipeline-p4groovy.html)_
+
 # P4Groovy
 
 ## Introduction

@@ -20,10 +20,29 @@ public class SwarmProjectAPI {
 	}
 
 	public static class Project {
+		private String id;
+
+		private List<String> members;
+		private List<String> owners;
 		private List<Branch> branches;
 
-		public Project(List<Branch> branches) {
+		public Project(String id, List<String> members, List<String> owners, List<Branch> branches) {
+			this.id = id;
+			this.members = members;
+			this.owners = owners;
 			this.branches = branches;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public List<String> getMembers() {
+			return members;
+		}
+
+		public List<String> getOwners() {
+			return owners;
 		}
 
 		public List<Branch> getBranches() {

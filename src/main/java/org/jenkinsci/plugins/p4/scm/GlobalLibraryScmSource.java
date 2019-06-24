@@ -109,7 +109,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 		}
 
 		String client = getFormat();
-		String view = ViewMapHelper.getClientView(depotView, client);
+		String view = ViewMapHelper.getClientView(depotView, client, true);
 		
 		// Make a workspace spec that is all default except for make it writeable.
 		// Without that, we can't do Replay in pipelines.
