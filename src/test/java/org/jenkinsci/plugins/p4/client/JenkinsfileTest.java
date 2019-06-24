@@ -1,5 +1,11 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.model.Action;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.ParametersDefinitionProperty;
+import hudson.model.StringParameterDefinition;
+import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -7,6 +13,7 @@ import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -18,6 +25,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -597,5 +606,42 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		jenkins.assertBuildStatusSuccess(run2);
 		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run2);
 	*/
+	}
+
+
+	@Test
+	public void testParametersStreamJenkinsfile() throws Exception {
+
+		// Create workspace
+		submitStreamFile(jenkins, "//stream/main/Jenkinsfile", "node() {}", "desc");
+
+		// Stream Spec
+		String client = "streamTest.ws";
+		String stream = "//stream/${ST}";
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
+		workspace.setExpand(new HashMap<>());
+		File wsRoot = new File("target/manualStream.ws").getAbsoluteFile();
+		workspace.setRootPath(wsRoot.toString());
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job Full Checkout
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "testParametersStreamJenkinsfile");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(false);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Add Parameters to build
+		StringParameterDefinition spd = new StringParameterDefinition("ST", "default");
+		ParametersDefinitionProperty def = new ParametersDefinitionProperty(spd);
+		job.addProperty(def);
+
+		// Build 1 with ST=main
+		ParameterValue param = new StringParameterValue("ST", "main");
+		Action actions = new ParametersAction(param);
+		WorkflowRun run1 = job.scheduleBuild2(0, actions).get();
+		jenkins.assertBuildStatusSuccess(run1);
 	}
 }

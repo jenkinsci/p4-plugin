@@ -105,6 +105,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 				P4Path p4Path = new P4Path(branch);
 				p4Path.setMappings(getDepotPathMappings(p4Path));
+				p4Path.setMappings(getLocalPathMappings(p4Path));
 				P4SCMHead head = new P4SCMHead(file, p4Path);
 				list.add(head);
 			}
@@ -115,35 +116,58 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public Workspace getWorkspace(P4Path path) {
-		List<String> views = getDepotPathMappings(path);
+		if (path == null) {
+			throw new IllegalArgumentException("missing branch path");
+		}
 
+		List<String> externalViews = getDepotPathMappings(path);
+		List<String> localViews = getLocalPathMappings(path);
+
+		// If there is only one view for external/local then external is treated as local
+		boolean external = false;
+		if((externalViews.size() + localViews.size()) > 1) {
+			external = true;
+		}
+
+		StringBuffer view = new StringBuffer();
 		String client = getFormat();
-		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
-		String mappingsView = ViewMapHelper.getClientView(views, client);
-		String view = mappingsView + "\n" + jenkinsView;
 
-		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
+		view.append((jenkinsView == null) ? "" : jenkinsView + "\n");
+
+		String externalMappings = ViewMapHelper.getClientView(externalViews, client, external, true);
+		view.append((externalMappings == null) ? "" : externalMappings + "\n");
+
+		String localMappings = ViewMapHelper.getClientView(localViews, client, false, true);
+		view.append((localMappings == null) ? "" : localMappings + "\n");
+
+		WorkspaceSpec spec = new WorkspaceSpec(view.toString(), null);
 		ManualWorkspaceImpl ws = new ManualWorkspaceImpl(getCharset(), false, client, spec, false);
 
 		return ws;
-}
+	}
 
 	private List<String> getViewMappings() {
 		return toLines(getMappings());
 	}
 
 	private List<String> getDepotPathMappings(P4Path path) {
-		if (path == null) {
-			throw new IllegalArgumentException("missing branch path");
-		}
-
 		List<String> views = new ArrayList<>();
 
 		for (String mapping : getViewMappings()) {
 			if (mapping.startsWith("//")) {
 				mapping = mapping.replaceAll("\\$\\{BRANCH_NAME\\}", path.getNode());
 				views.add(mapping);
-			} else {
+			}
+		}
+		return views;
+	}
+
+	private List<String> getLocalPathMappings(P4Path path) {
+		List<String> views = new ArrayList<>();
+
+		for (String mapping : getViewMappings()) {
+			if (!mapping.startsWith("//")) {
 				StringBuffer sb = new StringBuffer();
 				sb.append(path.getPath());
 				sb.append("/");
@@ -151,21 +175,20 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 				views.add(sb.toString());
 			}
 		}
-
 		return views;
 	}
 
-@Extension
-@Symbol("multiBranch")
-public static final class DescriptorImpl extends P4SCMSourceDescriptor {
+	@Extension
+	@Symbol("multiBranch")
+	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
-	public static final String defaultPath = "...";
+		public static final String defaultPath = "...";
 
-	public static final String defaultPattern = ".*";
+		public static final String defaultPattern = ".*";
 
-	@Override
-	public String getDisplayName() {
-		return "Helix Branches";
+		@Override
+		public String getDisplayName() {
+			return "Helix Branches";
+		}
 	}
-}
 }

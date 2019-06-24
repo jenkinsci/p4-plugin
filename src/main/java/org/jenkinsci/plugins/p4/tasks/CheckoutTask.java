@@ -38,9 +38,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	private final Populate populate;
 
 	private CheckoutStatus status;
-	private int head;
+	private long head;
 	private List<P4Ref> builds;
-	private int review;
+	private long review;
 
 	/**
 	 * Constructor
@@ -73,7 +73,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					String revSpec = labelSpec.getRevisionSpec();
 					if (revSpec != null && !revSpec.isEmpty() && revSpec.startsWith("@")) {
 						try {
-							int change = Integer.parseInt(revSpec.substring(1));
+							long change = Long.parseLong(revSpec.substring(1));
 							// if change is bigger than head, use head
 							if (change > head) {
 								buildChange = new P4ChangeRef(head);
@@ -93,7 +93,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					try {
 						String counter = p4.getCounter(label);
 						// if a change number, add change...
-						int change = Integer.parseInt(counter);
+						long change = Long.parseLong(counter);
 						// if change is bigger than head, use head
 						if (change > head) {
 							buildChange = new P4ChangeRef(head);
@@ -110,6 +110,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					buildChange = new P4ChangeRef(head);
 				}
 			}
+
+			// limit buildChange to the next highest change number within the client's view
+			buildChange = new P4ChangeRef(p4.getClientHead(buildChange));
 
 			// add buildChange to list of changes to builds
 			builds.add(buildChange);
@@ -210,7 +213,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			if (!expandedPopulateLabel.isEmpty()) {
 				try {
 					// if build is a change-number passed as a label
-					int change = Integer.parseInt(expandedPopulateLabel);
+					long change = Long.parseLong(expandedPopulateLabel);
 					build = new P4ChangeRef(change);
 					logger.info("getBuildChange:pinned:change:" + change);
 				} catch (NumberFormatException e) {
@@ -224,7 +227,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		String cngStr = expand.get(ReviewProp.P4_CHANGE.toString());
 		if (cngStr != null && !cngStr.isEmpty()) {
 			try {
-				int change = Integer.parseInt(cngStr);
+				long change = Long.parseLong(cngStr);
 				build = new P4ChangeRef(change);
 				logger.info("getBuildChange:ReviewProp:CHANGE:" + change);
 			} catch (NumberFormatException e) {
@@ -236,7 +239,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		if (lblStr != null && !lblStr.isEmpty()) {
 			try {
 				// if build is a change-number passed as a label
-				int change = Integer.parseInt(lblStr);
+				long change = Long.parseLong(lblStr);
 				build = new P4ChangeRef(change);
 				logger.info("getBuildChange:ReviewProp:LABEL:" + change);
 			} catch (NumberFormatException e) {
@@ -254,13 +257,13 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	 *
 	 * @param workspace
 	 */
-	private int getReview(Workspace workspace) {
-		int review = 0;
+	private long getReview(Workspace workspace) {
+		long review = 0;
 		Expand expand = workspace.getExpand();
 		String value = expand.get(ReviewProp.SWARM_REVIEW.toString());
 		if (value != null && !value.isEmpty()) {
 			try {
-				review = Integer.parseInt(value);
+				review = Long.parseLong(value);
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -356,7 +359,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		}
 	}
 
-	public int getReview() {
+	public long getReview() {
 		return review;
 	}
 

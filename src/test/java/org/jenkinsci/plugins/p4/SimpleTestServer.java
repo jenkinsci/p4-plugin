@@ -108,9 +108,22 @@ public class SimpleTestServer {
 		}
 	}
 
-	public void destroy() throws IOException {
+	public void destroy() throws Exception {
 		if (p4root.exists()) {
+			int count = 5;
+			while(!tryDestroy() && count > 0) {
+				Thread.sleep(200);
+				count --;
+			}
+		}
+	}
+
+	private boolean tryDestroy() {
+		try {
 			FileUtils.deleteDirectory(p4root);
+			return true;
+		} catch (IOException e) {
+			return false;
 		}
 	}
 

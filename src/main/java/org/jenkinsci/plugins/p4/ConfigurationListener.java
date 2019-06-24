@@ -83,7 +83,7 @@ public class ConfigurationListener extends SaveableListener {
 		Jenkins j = Jenkins.getInstance();
 		String rootPath = j.getRootDir().getCanonicalPath();
 
-		String view = ViewMapHelper.getClientView(depotPath, clientName);
+		String view = ViewMapHelper.getClientView(depotPath, clientName, true);
 
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view, null, null, null, true);
 

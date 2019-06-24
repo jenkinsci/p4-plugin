@@ -22,12 +22,15 @@ import org.jenkinsci.plugins.p4.publish.ShelveImpl;
 import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
@@ -113,6 +116,11 @@ abstract public class DefaultEnvironment {
 		return submitFile(jenkins, path, content, desc, workspace);
 	}
 
+	protected String submitStreamFile(JenkinsRule jenkins, String path, String content, String desc) throws Exception {
+		StreamWorkspaceImpl workspace = createStreamsWorkspace(path, 2);
+		return submitFile(jenkins, path, content, desc, workspace);
+	}
+
 	protected String submitFile(JenkinsRule jenkins, String path, String content, String desc, Workspace workspace) throws Exception {
 		FilePath filePath = createFilePath(path, content, workspace);
 
@@ -128,7 +136,7 @@ abstract public class DefaultEnvironment {
 		return null;
 	}
 
-	private ManualWorkspaceImpl createWorkspace(String path)  {
+	private ManualWorkspaceImpl createWorkspace(String path) {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
 
 		// Create workspace
@@ -141,6 +149,27 @@ abstract public class DefaultEnvironment {
 		workspace.setExpand(new HashMap<String, String>());
 
 		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
+		workspace.setRootPath(wsRoot.toString());
+
+		return workspace;
+	}
+
+	private StreamWorkspaceImpl createStreamsWorkspace(String path, int depth) {
+		Path p = Paths.get(path);
+
+		StringBuffer sb = new StringBuffer("//");
+		for (int i = 0; i < depth; i++) {
+			sb.append(p.getName(i));
+			sb.append("/");
+		}
+
+		String stream = sb.toString().substring(0,sb.lastIndexOf("/"));
+
+		String client = "stream.ws";
+		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
+		workspace.setExpand(new HashMap<String, String>());
+
+		File wsRoot = new File("target/stream.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
 
 		return workspace;

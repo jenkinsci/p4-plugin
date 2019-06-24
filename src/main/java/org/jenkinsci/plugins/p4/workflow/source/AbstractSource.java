@@ -25,6 +25,6 @@ public abstract class AbstractSource implements ExtensionPoint, Describable<Abst
 	}
 
 	public static String getClientView(String src, String dest) {
-		return ViewMapHelper.getClientView(src, dest);
+		return ViewMapHelper.getClientView(src, dest, false);
 	}
 }

@@ -1,3 +1,5 @@
+_Online documentation for [Pipeline Project](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/chapter-pipeline.html)_
+
 # Workflow Setup Guide
 
 This guide covers the setup and configuration of Perforce tasks from Jenkins Pipeline scripts and assumes the reader 

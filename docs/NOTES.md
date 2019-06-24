@@ -1,3 +1,5 @@
+_Online documentation for [Notes & Tips](https://www.perforce.com/manuals/jenkins/Content/P4Jenkins/notes.html)_
+
 # Usage Notes and Tips
 
 ## Seeding a Perforce Configuration
