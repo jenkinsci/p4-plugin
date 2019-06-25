@@ -33,21 +33,23 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 
 	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener) {
 		super(credential, run, listener);
-		init();
-	}
-
-	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener, boolean deleteFiles) {
-		super(credential, run, listener);
-		this.deleteClient = true;
-		this.deleteFiles = deleteFiles;
+		useGlobalSettings();
 	}
 
 	public RemoveClientTask(String credential, Item project, TaskListener listener) {
 		super(credential, project, listener);
-		init();
+		useGlobalSettings();
 	}
 
-	private void init() {
+	public void setDeleteClient(boolean deleteClient) {
+		this.deleteClient = deleteClient;
+	}
+
+	public void setDeleteFiles(boolean deleteFiles) {
+		this.deleteFiles = deleteFiles;
+	}
+
+	private void useGlobalSettings() {
 		Jenkins j = Jenkins.getInstance();
 		@SuppressWarnings("unchecked")
 		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);

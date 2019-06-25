@@ -632,7 +632,11 @@ public class PerforceScm extends SCM {
 		}
 
 		listener.getLogger().println("P4Task: cleanup Client: " + workspace.getFullName());
-		RemoveClientTask removeClientTask = new RemoveClientTask(credential, run, listener, false);
+		RemoveClientTask removeClientTask = new RemoveClientTask(credential, run, listener);
+
+		// Override Global settings so that the client is deleted, but the files are preserved.
+		removeClientTask.setDeleteClient(true);
+		removeClientTask.setDeleteFiles(false);
 
 		// Set workspace used for the Task
 		Workspace ws = removeClientTask.setEnvironment(run, workspace, buildWorkspace);

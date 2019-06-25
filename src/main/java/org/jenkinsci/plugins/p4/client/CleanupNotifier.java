@@ -63,6 +63,7 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(credential, run, listener);
+		task.setDeleteClient(deleteClient);
 
 		// Set workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
