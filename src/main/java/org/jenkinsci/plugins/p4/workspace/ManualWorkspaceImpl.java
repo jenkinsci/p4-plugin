@@ -84,7 +84,9 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		ClientView clientView = new ClientView();
 		int order = 0;
 		String specString = getExpand().format(workspaceSpec.getView(), false);
-		for (String line : specString.split("\\n")) {
+
+		// Split on new line and trim any following white space
+		for (String line : specString.split("\n\\s*")) {
 			String origName = getExpand().format(getName(), false);
 			line = line.replace(origName, clientName);
 
