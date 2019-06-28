@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.client;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder;
+import com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser;
 import com.perforce.p4java.server.IServer;
 import hudson.model.TaskListener;
 
@@ -18,6 +19,8 @@ public class ReconcileStreamingCallback extends AbstractStreamingCallback {
 
 	@Override
 	public boolean handleResult(Map<String, Object> map, int key) throws P4JavaException {
+		log(map);
+
 		List<IFileSpec> specList = new ArrayList<IFileSpec>();
 		specList.add(ResultListBuilder.handleFileReturn(map, getServer()));
 
@@ -25,8 +28,11 @@ public class ReconcileStreamingCallback extends AbstractStreamingCallback {
 			getValidate().check(specList, "also opened by", "no file(s) to reconcile", "must sync/resolve",
 					"exclusive file already opened", "cannot submit from stream", "instead of", "empty, assuming text");
 		} catch (Exception e) {
+			setFail();
+			P4JavaException exception = new P4JavaException(e);
+			setException(exception);
 			// re-throw exception as AbortException is only used if !quiet
-			throw new P4JavaException(e);
+			throw exception;
 		}
 		return true;
 	}

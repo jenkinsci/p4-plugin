@@ -16,6 +16,7 @@ hs_err_pid*
 .project
 
 go.sh
+go.bat
 
 docs/UserGuide.pdf
 target/

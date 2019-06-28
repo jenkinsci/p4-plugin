@@ -21,10 +21,6 @@ public class P4Progress implements IProgressCallback {
 
 	public boolean tick(int key, String msg) {
 		if (msg != null && !msg.isEmpty()) {
-			StringBuffer sb = new StringBuffer();
-			for (String line : msg.split("(?<=\\n)")) {
-				sb.append("... " + line);
-			}
 			log(msg);
 		}
 

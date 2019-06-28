@@ -534,16 +534,16 @@ public class ClientHelper extends ConnectionHelper {
 		boolean delete = ((AutoCleanImpl) populate).isDelete();
 		boolean replace = ((AutoCleanImpl) populate).isReplace();
 
-		String[] base = {"-w", "-f"};
-		List<String> list = new ArrayList<String>();
-		list.addAll(Arrays.asList(base));
+		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions();
+		cleanOpts.setUpdateWorkspace(true);
+		cleanOpts.setUseWildcards(true);
 
 		if (delete && !replace) {
-			list.add("-a");
+			cleanOpts.setOutsideAdd(true);
 		}
 		if (replace && !delete) {
-			list.add("-e");
-			list.add("-d");
+			cleanOpts.setOutsideEdit(true);
+			cleanOpts.setRemoved(true);
 		}
 		if (!replace && !delete) {
 			log("P4 Task: skipping clean, no options set.");
@@ -553,7 +553,7 @@ public class ClientHelper extends ConnectionHelper {
 		// set MODTIME if populate options is used and server supports flag
 		if (populate.isModtime()) {
 			if (checkVersion(20141)) {
-				list.add("-m");
+				cleanOpts.setCheckModTime(true);
 			} else {
 				log("P4: Resolving files by MODTIME not supported (requires 2014.1 or above)");
 			}
@@ -562,17 +562,19 @@ public class ClientHelper extends ConnectionHelper {
 		TimeTask timer = new TimeTask();
 		log("P4 Task: cleaning workspace to match have list.");
 
-		String[] args = list.toArray(new String[list.size()]);
-		ReconcileFilesOptions cleanOpts = new ReconcileFilesOptions(args);
-
 		// Reconcile with asynchronous callback
 		ReconcileStreamingCallback callback = new ReconcileStreamingCallback(iclient.getServer(), getListener());
 		synchronized (callback) {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
 			String[] params = Parameters.processParameters(cleanOpts, files, getConnection());
-			getConnection().execStreamingMapCommand(CmdSpec.RECONCILE.toString(), params, null, callback, 0);
+			iclient.reconcileFiles(files, cleanOpts, callback, 0);
+
 			while (!callback.isDone()) {
 				callback.wait();
+			}
+
+			if (callback.isFail()) {
+				throw new P4JavaException(callback.getException());
 			}
 		}
 

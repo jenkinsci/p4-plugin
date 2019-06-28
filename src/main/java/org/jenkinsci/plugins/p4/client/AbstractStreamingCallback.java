@@ -16,9 +16,11 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 
 	private final Server server;
 	private final Validate validate;
+	private final TaskListener listener;
 
 	public AbstractStreamingCallback(IServer iserver, TaskListener listener) {
 		this.server = (Server) iserver;
+		this.listener = listener;
 		this.validate = new Validate(listener);
 	}
 
@@ -63,4 +65,27 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 	public Validate getValidate() {
 		return validate;
 	}
+
+	protected void log(Map<String, Object> map) {
+		if (listener == null) {
+			return;
+		}
+
+		if (map == null || map.isEmpty() || map.get("depotFile") == null) {
+			return;
+		}
+
+		StringBuffer msg = new StringBuffer();
+		String action = (map.get("action") == null) ? "" : (String) map.get("action");
+		String clientFile = (map.get("clientFile") == null) ? "" : (String) map.get("clientFile");
+		String depotFile = (map.get("depotFile") == null) ? "" : (String) map.get("depotFile");
+		String rev = (map.get("rev") == null) ? "" : (String) map.get("rev");
+
+		msg.append(depotFile + "#" + rev);
+		msg.append(" - ");
+		msg.append(clientFile + " ");
+		msg.append(action);
+		listener.getLogger().println(msg.toString());
+	}
+
 }
