@@ -18,7 +18,6 @@ import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.impl.generic.core.InputMapper;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
-import com.perforce.p4java.impl.mapbased.server.Parameters;
 import com.perforce.p4java.option.changelist.SubmitOptions;
 import com.perforce.p4java.option.client.AddFilesOptions;
 import com.perforce.p4java.option.client.ParallelSyncOptions;
@@ -566,7 +565,6 @@ public class ClientHelper extends ConnectionHelper {
 		ReconcileStreamingCallback callback = new ReconcileStreamingCallback(iclient.getServer(), getListener());
 		synchronized (callback) {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
-			String[] params = Parameters.processParameters(cleanOpts, files, getConnection());
 			iclient.reconcileFiles(files, cleanOpts, callback, 0);
 
 			while (!callback.isDone()) {
