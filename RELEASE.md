@@ -1,5 +1,26 @@
 ## Release notes
 
+### Release 1.10.1 (major features/fixes)
+
+[@25759](https://swarm.workshop.perforce.com/changes/25759) - Use iclient.reconcileFiles over old execMap method. Added extra logging to reconcile.
+
+[@25758](https://swarm.workshop.perforce.com/changes/25758) - P4Java update 2019.1.1822775  JENKINS-58109 JENKINS-58048 JENKINS-57945 JENKINS-57955
+
+    #1822014 (Bug #099164) Support Ditto '&' mappings in client view. 
+    #1821933 (Bug #099149) Resolve symlink detection issue when using reconcile. 
+    #1815000 (Bug #099165) Support reconcile streaming functionality
+
+[@25737](https://swarm.workshop.perforce.com/changes/25737) - Trim white space for Manual Workspace Views.
+
+[@25736](https://swarm.workshop.perforce.com/changes/25736) - Cleanup step - use checkbox state and ignore Global option.  The global options for deleting the client is ignored and the cleanup checkbox state is used.  JENKINS-47107
+
+[@25689](https://swarm.workshop.perforce.com/changes/25689) - Update SpecFile usage docs.  JENKINS-52679
+
+[@25688](https://swarm.workshop.perforce.com/changes/25688) - Raise errors for execMap "client -i" in SpecWorkspaceImpl.  JENKINS-52679
+
+[@25668](https://swarm.workshop.perforce.com/changes/25668) - Merge pull request #94 from lystor/bug-56414.  JENKINS-56414: Support of Reconcile with Modtime in P4Publish
+
+
 ### Release 1.10.0 (major features/fixes)
 
 [@25655](https://swarm.workshop.perforce.com/changes/25655) - Extract the Job Environment when fetching the Jenkinsfile. Allow Parameterized builds for the Stream field when using 'Pipline Script from SCM'. JENKINS-56775
