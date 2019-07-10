@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.10.2 (major features/fixes)
+
+[@25801](https://swarm.workshop.perforce.com/changes/25801) - Update p4java to 2019.1.1827134.  Fix various symlink issue. JENKINS-58109 JENKINS-58048 JENKINS-57945 JENKINS-57955
+
+
 ### Release 1.10.1 (major features/fixes)
 
 [@25759](https://swarm.workshop.perforce.com/changes/25759) - Use iclient.reconcileFiles over old execMap method. Added extra logging to reconcile.
