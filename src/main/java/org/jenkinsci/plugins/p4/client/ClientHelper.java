@@ -1059,11 +1059,12 @@ public class ClientHelper extends ConnectionHelper {
 	 * Get the change number for the last change within the scope of the
 	 * workspace view up to the specified revision
 	 *
+	 * @param from From revision (change or label)
 	 * @param to To revision (change or label)
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
-	public long getClientHead(P4Ref to) throws Exception {
+	public long getClientHead(P4Ref from, P4Ref to) throws Exception {
 		// get last change in server
 		// This will also return shelved CLs
 		String latestChange = getConnection().getCounter("change");
@@ -1071,9 +1072,14 @@ public class ClientHelper extends ConnectionHelper {
 
 		// build file revision spec
 		String ws = "//" + iclient.getName() + "/...";
-		if (to != null) {
+		if(from != null && to != null) {
+			ws = ws + "@" + from.toString() + "," + to.toString();
+		} else if(from == null && to != null) {
 			ws = ws + "@" + to.toString();
+		} else if(from != null && to == null) {
+			ws = ws + "@" + from.toString() + ",now";
 		}
+
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
@@ -1100,7 +1106,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception push up stack
 	 */
 	public long getClientHead() throws Exception {
-		return getClientHead(null);
+		return getClientHead(null, null);
 	}
 
 	public List<IChangelistSummary> getPendingChangelists(boolean includeLongDescription, String clientName) throws Exception {

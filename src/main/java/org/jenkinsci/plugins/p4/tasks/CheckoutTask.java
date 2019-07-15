@@ -111,8 +111,14 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				}
 			}
 
-			// limit buildChange to the next highest change number within the client's view
-			buildChange = new P4ChangeRef(p4.getClientHead(buildChange));
+			/**
+			 * Limit buildChange to the next highest change number within the client's view.
+			 * If the head limit is 0 then scan the full history (original behaviour for JENKINS-57534)
+			 */
+			long rangeLimit = buildChange.getChange() - p4.getHeadLimit();
+			rangeLimit = (rangeLimit < 0) ? 1 : rangeLimit;
+			P4ChangeRef limitRef = (p4.getHeadLimit() == 0) ? null : new P4ChangeRef(rangeLimit);
+			buildChange = new P4ChangeRef(p4.getClientHead(limitRef, buildChange));
 
 			// add buildChange to list of changes to builds
 			builds.add(buildChange);
@@ -129,11 +135,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 			// Generate build report
 			StringBuffer buildReport = new StringBuffer("P4: builds: ");
-			for(P4Ref build : builds) {
+			for (P4Ref build : builds) {
 				buildReport.append(build.toString() + " ");
 			}
 			p4.log(buildReport.toString());
-
 		} catch (Exception e) {
 			String err = "P4: Unable to initialise CheckoutTask: " + e;
 			logger.severe(err);

@@ -926,17 +926,33 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	protected int getMaxChangeLimit() {
+		PerforceScm.DescriptorImpl scm = getP4SCM();
 		int max = 0;
+		if (scm != null) {
+			max = scm.getMaxChanges();
+		}
+		max = (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
+		return max;
+	}
+
+	public long getHeadLimit() {
+		PerforceScm.DescriptorImpl scm = getP4SCM();
+		if(scm != null) {
+			return scm.getHeadLimit();
+		}
+		return 0;
+	}
+
+	public PerforceScm.DescriptorImpl getP4SCM() {
 		Jenkins j = Jenkins.getInstance();
 		if (j != null) {
 			Descriptor dsc = j.getDescriptor(PerforceScm.class);
 			if (dsc instanceof PerforceScm.DescriptorImpl) {
 				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
-				max = p4scm.getMaxChanges();
+				return p4scm;
 			}
 		}
-		max = (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
-		return max;
+		return null;
 	}
 
 	public void log(String msg) {

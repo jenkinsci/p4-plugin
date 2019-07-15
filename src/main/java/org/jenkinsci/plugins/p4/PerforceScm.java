@@ -109,6 +109,7 @@ public class PerforceScm extends SCM {
 
 	public static final int DEFAULT_FILE_LIMIT = 50;
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
+	public static final long DEFAULT_HEAD_LIMIT = 0;
 
 	public String getCredential() {
 		return credential;
@@ -851,6 +852,8 @@ public class PerforceScm extends SCM {
 		private int maxFiles = DEFAULT_FILE_LIMIT;
 		private int maxChanges = DEFAULT_CHANGE_LIMIT;
 
+		private long headLimit = DEFAULT_HEAD_LIMIT;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -889,6 +892,10 @@ public class PerforceScm extends SCM {
 
 		public int getMaxChanges() {
 			return maxChanges;
+		}
+
+		public long getHeadLimit() {
+			return headLimit;
 		}
 
 		/**
@@ -963,6 +970,13 @@ public class PerforceScm extends SCM {
 				logger.info("Unable to read Max limits in configuration.");
 				maxFiles = DEFAULT_FILE_LIMIT;
 				maxChanges = DEFAULT_CHANGE_LIMIT;
+			}
+
+			try {
+				headLimit = json.getLong("headLimit");
+			} catch (JSONException e) {
+				logger.info("Unable to read query limits in configuration.");
+				headLimit = DEFAULT_HEAD_LIMIT;
 			}
 
 			save();
