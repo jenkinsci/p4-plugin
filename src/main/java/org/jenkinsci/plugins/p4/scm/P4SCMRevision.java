@@ -49,7 +49,7 @@ public class P4SCMRevision extends SCMRevision {
 		P4Path p4Path = new P4Path(path);
 		p4Path.setRevision(reviewID);
 		p4Path.setMappings(mappings);
-		String trgName = branch + "-" + reviewID;
+		String trgName = reviewID;
 		P4SCMHead target = new P4SCMHead(trgName, p4Path);
 		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
 		return new P4SCMRevision(head, ref);

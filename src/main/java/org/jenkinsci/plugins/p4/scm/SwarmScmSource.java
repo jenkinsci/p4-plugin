@@ -103,7 +103,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 				if (p4Path != null) {
 					p4Path.setRevision(reviewID);
 
-					String trgName = branch + "-" + reviewID;
+					String trgName = reviewID;
 					P4SCMHead target = new P4SCMHead(trgName, p4Path);
 					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
 					list.add(tag);

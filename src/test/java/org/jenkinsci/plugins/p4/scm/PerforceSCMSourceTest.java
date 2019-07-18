@@ -694,7 +694,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertTrue("Dev should not built", multi.getItem("Dev").getLastBuild().number == 1);
 		assertTrue("Main should not built", multi.getItem("Main").getLastBuild().number == 1);
 
-		WorkflowJob revJob = multi.getItem("Main-" + review);
+		WorkflowJob revJob = multi.getItem(review);
 		assertNotNull(revJob);
 
 		WorkflowRun revRun = revJob.getLastBuild();
