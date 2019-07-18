@@ -134,8 +134,7 @@ public class ViewMapHelper {
 			// Add Exclude/Include mappings
 			if(exclude) {
 				lhs.insert(0, EXCLUDE);
-			}
-			if(include) {
+			} else if(include) {
 				lhs.insert(0, INCLUDE);
 			}
 

@@ -333,6 +333,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 			List<String> maps = path.getMappings();
 			if (maps != null && !maps.isEmpty()) {
 				for (String map : maps) {
+					if(map.startsWith("-")) {
+						continue;
+					}
 					long c = p4.getHead(map + "@" + to);
 					change = (c > change) ? c : change;
 				}
