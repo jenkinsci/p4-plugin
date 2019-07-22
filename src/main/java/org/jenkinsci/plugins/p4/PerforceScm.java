@@ -623,6 +623,10 @@ public class PerforceScm extends SCM {
 		}
 
 		CpsScmFlowDefinition cps = (CpsScmFlowDefinition) definition;
+		if(!this.equals(cps.getScm())) {
+			return null;
+		}
+
 		return cps.getScriptPath();
 	}
 
