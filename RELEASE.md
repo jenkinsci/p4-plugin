@@ -1,5 +1,19 @@
 ## Release notes
 
+
+### Release 1.10.3 (major features/fixes)
+
+[@25850](https://swarm.workshop.perforce.com/changes/25850) - Merge pull request #101 from williambrode/master.  Lower print out for null changelog to logger.fine()
+
+[@25849](https://swarm.workshop.perforce.com/changes/25849) - Merge pull request #102 from stuartrowe/JENKINS-58504.  Only set the script path for pipeline script checkout.  JENKINS-58504
+
+[@25844](https://swarm.workshop.perforce.com/changes/25844) - Change Swarm Reviews so that they are only identified by review number in the multi branch (for better rendering in BlueOcean).
+
+[@25843](https://swarm.workshop.perforce.com/changes/25843) - MultiBranch support for Swarm path Exclusions in the project configuration.
+
+[@25826](https://swarm.workshop.perforce.com/changes/25826) - Global option to limit change query.  By default 'Head change query limit' is set to 1000 (0 is no limit) and the plugin will limit the query based on the workspace view.  For large servers set the value to a range based on commit rate and job queue duration. e.g. 200 global commits/hour and jobs are queued for no longer than 10 hours, so 2000 change query limit (200*10).  JENKINS-58116  JENKINS-57870
+
+
 ### Release 1.10.2 (major features/fixes)
 
 [@25801](https://swarm.workshop.perforce.com/changes/25801) - Update p4java to 2019.1.1827134.  Fix various symlink issue. JENKINS-58109 JENKINS-58048 JENKINS-57945 JENKINS-57955
