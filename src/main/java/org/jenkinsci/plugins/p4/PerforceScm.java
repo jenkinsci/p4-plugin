@@ -109,7 +109,7 @@ public class PerforceScm extends SCM {
 
 	public static final int DEFAULT_FILE_LIMIT = 50;
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
-	public static final long DEFAULT_HEAD_LIMIT = 0;
+	public static final long DEFAULT_HEAD_LIMIT = 1000;
 
 	public String getCredential() {
 		return credential;
