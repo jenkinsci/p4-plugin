@@ -103,6 +103,7 @@ public class PerforceScm extends SCM {
 	private final P4Ref revision;
 
 	private String script;
+	private TagAction tagAction = null;
 
 	private transient P4Ref parentChange;
 	private transient P4Review review;
@@ -546,6 +547,7 @@ public class PerforceScm extends SCM {
 		where.setWorkspace(ws);
 		String jenkinsPath = buildWorkspace.act(where);
 		tag.setJenkinsPath(jenkinsPath);
+		tagAction = tag;
 		run.addAction(tag);
 
 		// Invoke build.
@@ -706,14 +708,11 @@ public class PerforceScm extends SCM {
 	@Override
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
-
-		TagAction tagAction = TagAction.getLastAction(build);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
 	public void buildEnvironment(Run<?, ?> run, Map<String, String> env) {
-		TagAction tagAction = TagAction.getLastAction(run);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 	}
 
