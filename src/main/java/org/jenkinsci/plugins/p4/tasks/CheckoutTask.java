@@ -115,10 +115,12 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			 * Limit buildChange to the next highest change number within the client's view.
 			 * If the head limit is 0 then scan the full history (original behaviour for JENKINS-57534)
 			 */
-			long rangeLimit = buildChange.getChange() - p4.getHeadLimit();
-			rangeLimit = (rangeLimit < 0) ? 1 : rangeLimit;
-			P4ChangeRef limitRef = (p4.getHeadLimit() == 0) ? null : new P4ChangeRef(rangeLimit);
-			buildChange = new P4ChangeRef(p4.getClientHead(limitRef, buildChange));
+			if (buildChange.getChange() > 0) {
+				long rangeLimit = buildChange.getChange() - p4.getHeadLimit();
+				rangeLimit = (rangeLimit < 0) ? 1 : rangeLimit;
+				P4ChangeRef limitRef = (p4.getHeadLimit() == 0) ? null : new P4ChangeRef(rangeLimit);
+				buildChange = new P4ChangeRef(p4.getClientHead(limitRef, buildChange));
+			}
 
 			// add buildChange to list of changes to builds
 			builds.add(buildChange);
