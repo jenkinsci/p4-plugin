@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.publish;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.Serializable;
 
@@ -53,6 +54,11 @@ public class SubmitImpl extends Publish implements Serializable {
 		super(description, onlyOnSuccess, delete, modtime);
 		this.reopen = reopen;
 		this.purge = purge;
+	}
+
+	@DataBoundSetter
+	public void setPaths(String paths) {
+		super.setPaths(paths);
 	}
 
 	@Extension

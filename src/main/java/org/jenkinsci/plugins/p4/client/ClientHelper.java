@@ -686,8 +686,11 @@ public class ClientHelper extends ConnectionHelper {
 			iclient.addFiles(files, opts);
 		} else {
 			// build file revision spec
-			String ws = "//" + iclient.getName() + "/...";
-			files = FileSpecBuilder.makeFileSpecList(ws);
+			String clientBase = "//" + iclient.getName() + "/";
+
+			List<String> paths = buildPaths(publish, clientBase);
+
+			files = FileSpecBuilder.makeFileSpecList(paths);
 			findChangeFiles(files, publish.isDelete(), publish.isModtime());
 		}
 
@@ -696,6 +699,26 @@ public class ClientHelper extends ConnectionHelper {
 
 		log("duration: " + timer.toString() + "\n");
 		return open;
+	}
+
+	private List<String> buildPaths(Publish publish, String clientBase) {
+		List<String> list = new ArrayList<>();
+		String rawPaths = publish.getPaths();
+
+		if (rawPaths == null) {
+			list.add(clientBase + "...");
+			return list;
+		}
+
+		String[] array = rawPaths.split("[\\r\\n]+");
+		for(String a : array) {
+			if(a.startsWith("//")) {
+				list.add(a);
+			} else {
+				list.add(clientBase + a);
+			}
+		}
+		return list;
 	}
 
 	private void findChangeFiles(List<IFileSpec> files, boolean delete, boolean modtime) throws Exception {
