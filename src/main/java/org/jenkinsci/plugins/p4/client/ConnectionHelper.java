@@ -694,6 +694,8 @@ public class ConnectionHelper implements AutoCloseable {
 	 * Get the lowest change on the given path
 	 *
 	 * @param path Perforce depot path //foo/...
+	 * @param from revision specifier
+	 * @param to revision specifier
 	 * @return change number
 	 * @throws Exception push up stack
 	 */

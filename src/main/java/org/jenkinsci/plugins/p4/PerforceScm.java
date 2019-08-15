@@ -1033,6 +1033,7 @@ public class PerforceScm extends SCM {
 	/**
 	 * Incremental polling filter is set
 	 *
+	 * @param filter List of filters to check for incrementaloption
 	 * @return true if set
 	 */
 	public static boolean isIncremental(List<Filter> filter) {

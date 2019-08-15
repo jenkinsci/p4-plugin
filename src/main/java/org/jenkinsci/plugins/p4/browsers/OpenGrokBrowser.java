@@ -24,12 +24,12 @@ public class OpenGrokBrowser extends P4Browser {
 
 	/**
 	 * The URL of the OpenGrok server, e.g.
-	 * <tt>http://opengrok.libreoffice.org/</tt>
+	 * http://opengrok.libreoffice.org/
 	 */
 
 	/**
 	 * The Perforce depot path for the 'project', e.g.
-	 * <tt>//depot/core/main</tt>
+	 * //depot/core/main
 	 */
 	private final String depotPath;
 
@@ -38,7 +38,7 @@ public class OpenGrokBrowser extends P4Browser {
 	}
 
 	/**
-	 * The name of the 'project' in OpenGrok, e.g. <tt>core</tt>
+	 * The name of the 'project' in OpenGrok, e.g. core
 	 */
 	private final String projectName;
 

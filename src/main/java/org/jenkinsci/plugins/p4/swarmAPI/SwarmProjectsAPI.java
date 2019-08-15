@@ -17,6 +17,7 @@ public class SwarmProjectsAPI {
 	/**
 	 * Filtered list of project IDs by owner and member.
 	 *
+	 * @param user Perforce/Swarm user
 	 * @return a list of projects.
 	 */
 	public List<String> getIDsByUser(String user) {

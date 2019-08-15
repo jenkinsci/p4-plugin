@@ -30,6 +30,7 @@ public class ViewMapHelper {
 	 *
 	 * @param depotView The left hand side of the client view
 	 * @param client    The client workspace name
+	 * @param overlay   Overlay '+' mappings
 	 * @return Client view mapping
 	 */
 
