@@ -705,7 +705,7 @@ public class ClientHelper extends ConnectionHelper {
 		List<String> list = new ArrayList<>();
 		String rawPaths = publish.getPaths();
 
-		if (rawPaths == null) {
+		if (rawPaths == null || rawPaths.isEmpty()) {
 			list.add(clientBase + "...");
 			return list;
 		}
