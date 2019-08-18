@@ -14,19 +14,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 public class P4Groovy implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String credential;
+	private final String credentialName;
 	private final Workspace workspace;
 	private final FilePath buildWorkspace;
+	private final P4BaseCredentials p4Credential;
 
 	private transient TaskListener listener = null;
 
-	public P4Groovy(String credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
-		this.credential = credential;
+	public P4Groovy(String credentialName, P4BaseCredentials p4Credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
+		this.credentialName = credentialName;
+		this.p4Credential = p4Credential;
 		this.workspace = workspace;
 		this.listener = listener;
 		this.buildWorkspace = buildWorkspace;
@@ -56,7 +59,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException, InterruptedException, IOException {
-		P4GroovyTask task = new P4GroovyTask(credential, listener, cmd, args);
+		P4GroovyTask task = new P4GroovyTask(p4Credential, credentialName, listener, cmd, args);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -78,7 +81,7 @@ public class P4Groovy implements Serializable {
 		}
 		String[] args = list.toArray(new String[0]);
 
-		P4GroovyTask task = new P4GroovyTask(credential, listener, type, args, spec);
+		P4GroovyTask task = new P4GroovyTask(p4Credential, credentialName, listener, type, args, spec);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -100,7 +103,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	private IOptionsServer getConnection() throws IOException {
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
+		ClientHelper p4 = new ClientHelper(p4Credential, listener, workspace);
 		return p4.getConnection();
 	}
 }
