@@ -4,8 +4,8 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.IOException;
@@ -14,22 +14,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 public class P4Groovy implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String credentialName;
+	private final P4BaseCredentials credential;
 	private final Workspace workspace;
 	private final FilePath buildWorkspace;
-	private final P4BaseCredentials p4Credential;
 
 	private transient TaskListener listener = null;
 
-	public P4Groovy(String credentialName, P4BaseCredentials p4Credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
-		this.credentialName = credentialName;
-		this.p4Credential = p4Credential;
+	public P4Groovy(P4BaseCredentials credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
+		this.credential = credential;
 		this.workspace = workspace;
 		this.listener = listener;
 		this.buildWorkspace = buildWorkspace;
@@ -59,7 +56,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	public Map<String, Object>[] run(String cmd, String... args) throws P4JavaException, InterruptedException, IOException {
-		P4GroovyTask task = new P4GroovyTask(p4Credential, credentialName, listener, cmd, args);
+		P4GroovyTask task = new P4GroovyTask(credential, listener, cmd, args);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -81,7 +78,7 @@ public class P4Groovy implements Serializable {
 		}
 		String[] args = list.toArray(new String[0]);
 
-		P4GroovyTask task = new P4GroovyTask(p4Credential, credentialName, listener, type, args, spec);
+		P4GroovyTask task = new P4GroovyTask(credential, listener, type, args, spec);
 		task.setWorkspace(workspace);
 
 		return buildWorkspace.act(task);
@@ -103,7 +100,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	private IOptionsServer getConnection() throws IOException {
-		ClientHelper p4 = new ClientHelper(p4Credential, listener, workspace);
+		ClientHelper p4 = new ClientHelper(credential, listener, workspace);
 		return p4.getConnection();
 	}
 }

@@ -60,7 +60,7 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 		workspace.setRootPath(buildWorkspace.getRemote());
 
 		// Create Task
-		GetP4Task task = new GetP4Task(credential, workspace, buildWorkspace, listener, run);
+		GetP4Task task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
 
 		p4Groovy = buildWorkspace.act(task);
 	}

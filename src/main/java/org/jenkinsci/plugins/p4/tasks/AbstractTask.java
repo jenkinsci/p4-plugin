@@ -28,33 +28,28 @@ public abstract class AbstractTask implements Serializable {
 	private static Logger logger = Logger.getLogger(AbstractTask.class.getName());
 
 	private final P4BaseCredentials credential;
-	private final String credentialName;
 	private final TaskListener listener;
 
 	private Workspace workspace;
 
 	@Deprecated
-	public AbstractTask(String credentialName, TaskListener listener) {
-		this.credential = ConnectionHelper.findCredential(credentialName);
-		this.credentialName = credentialName;
+	public AbstractTask(String credential, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential);
 		this.listener = listener;
 	}
 
-	public AbstractTask(P4BaseCredentials p4Credential, String credentialName, TaskListener listener) {
-		this.credential = p4Credential;
-		this.credentialName = credentialName;
-		this.listener = listener;
-	}
-	
-	public AbstractTask(String credentialName, Item project, TaskListener listener) {
-		this.credential = ConnectionHelper.findCredential(credentialName, project);
-		this.credentialName = credentialName;
+	public AbstractTask(P4BaseCredentials credential, TaskListener listener) {
+		this.credential = credential;
 		this.listener = listener;
 	}
 
-	public AbstractTask(String credentialName, Run run, TaskListener listener) {
-		this.credential = ConnectionHelper.findCredential(credentialName, run);
-		this.credentialName = credentialName;
+	public AbstractTask(String credential, Item project, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential, project);
+		this.listener = listener;
+	}
+
+	public AbstractTask(String credential, Run run, TaskListener listener) {
+		this.credential = ConnectionHelper.findCredential(credential, run);
 		this.listener = listener;
 	}
 
@@ -79,7 +74,7 @@ public abstract class AbstractTask implements Serializable {
 
 	public P4BaseCredentials getCredential() throws P4InvalidCredentialException {
 		if(credential == null){
-			throw new P4InvalidCredentialException( "credential '" + credentialName + "' not found.");
+			throw new P4InvalidCredentialException();
 		}
 		return credential;
 	}
