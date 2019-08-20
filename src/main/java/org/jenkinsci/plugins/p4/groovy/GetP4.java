@@ -14,6 +14,9 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 
 public class GetP4 extends Builder implements SimpleBuildStep {
 
@@ -59,8 +62,13 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 		workspace.setExpand(envVars);
 		workspace.setRootPath(buildWorkspace.getRemote());
 
-		// Create Task
-		GetP4Task task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
+		GetP4Task task;
+		try {
+			task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
+		} catch (P4InvalidCredentialException ex) {
+			// credential not found. 
+			throw new IOException(ex.getMessage(), ex);
+		}
 
 		p4Groovy = buildWorkspace.act(task);
 	}
