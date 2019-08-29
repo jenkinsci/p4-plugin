@@ -115,7 +115,7 @@ public class PublishTest extends DefaultEnvironment {
 
 		// Submit artifacts
 		SubmitImpl submit = new SubmitImpl("publish", true, true, false, true, null);
-		submit.setPaths("file.1");
+		submit.setPaths("//depot/Data/none/...\n  file.1");
 		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
 		project.getPublishersList().add(publish);
 		project.save();

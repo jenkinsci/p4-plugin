@@ -710,7 +710,7 @@ public class ClientHelper extends ConnectionHelper {
 			return list;
 		}
 
-		String[] array = rawPaths.split("[\\r\\n]+");
+		String[] array = rawPaths.split("\n\\s*");
 		for(String a : array) {
 			if(a.startsWith("//")) {
 				list.add(a);
