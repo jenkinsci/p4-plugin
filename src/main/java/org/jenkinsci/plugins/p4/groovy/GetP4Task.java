@@ -21,7 +21,7 @@ public class GetP4Task extends MasterToSlaveCallable<P4Groovy, InterruptedExcept
 
 	private final TaskListener listener;
 
-	public GetP4Task(Run run, String credential, Workspace workspace, FilePath buildWorkspace, TaskListener listener) throws P4InvalidCredentialException {
+	protected GetP4Task(Run run, String credential, Workspace workspace, FilePath buildWorkspace, TaskListener listener) throws P4InvalidCredentialException {
 		this.workspace = workspace;
 		this.listener = listener;
 		this.buildWorkspace = buildWorkspace;
