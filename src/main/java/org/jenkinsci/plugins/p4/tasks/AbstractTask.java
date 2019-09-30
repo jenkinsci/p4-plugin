@@ -38,6 +38,11 @@ public abstract class AbstractTask implements Serializable {
 		this.listener = listener;
 	}
 
+	public AbstractTask(P4BaseCredentials credential, TaskListener listener) {
+		this.credential = credential;
+		this.listener = listener;
+	}
+
 	public AbstractTask(String credential, Item project, TaskListener listener) {
 		this.credential = ConnectionHelper.findCredential(credential, project);
 		this.listener = listener;
