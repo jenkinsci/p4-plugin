@@ -582,4 +582,25 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + c1, run2);
 		jenkins.assertLogNotContains("NullPointerException", run2);
 	}
+
+
+	@Test
+	public void testStaticLabelSync() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "staticLabelSync");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "  spec = clientSpec(view: '//depot/Main/... //${P4_CLIENT}/...')\n"
+				+ "  ws = manualSpec(cleanup: false, name: 'jenkins-${NODE_NAME}-${JOB_NAME}', spec: spec)\n"
+				+ "  p4 = p4(credential: '" + CREDENTIAL + "', workspace: ws)\n"
+				+ "  p4.run('tag', '-lstatic1', '//...@10')\n"
+				+ "  \n"
+				+ "  p4sync(\n"
+				+ "    credential: '" + CREDENTIAL + "',\n"
+				+ "    populate: autoClean(delete: true, modtime: false, pin: 'static1', quiet: true, replace: true, tidy: false),\n"
+				+ "    source: depotSource('//depot/Main/...'))"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at client/label: static1", run);
+	}
 }

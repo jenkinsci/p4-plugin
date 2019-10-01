@@ -1306,6 +1306,12 @@ public class ClientHelper extends ConnectionHelper {
 	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs, P4Ref changeLimit) throws Exception {
 
 		P4Ref from = getSingleChange(fromRefs);
+
+		// return empty array, if from and changeLimit are equal, or Perforce will report a change
+		if (from.equals(changeLimit)) {
+			return new ArrayList<P4Ref>();
+		}
+
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + "," + changeLimit);
 			return listChanges(fromRefs, changeLimit);
