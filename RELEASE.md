@@ -1,5 +1,17 @@
 ## Release notes
 
+### Release 1.10.4 (major features/fixes)
+
+[@26099](https://swarm.workshop.perforce.com/changes/26099) - Prevent infinite polling when last build and current are pinned to a label.  Added test to verify support for static lables. JENKINS-58149
+
+[@26096](https://swarm.workshop.perforce.com/changes/26096) - Merge pull request #108 from joel-f-brown/master.  Credentials handling for Folders when using P4Groovy.  Use run to determine the credentials in GetP4Task, then pass the P4BaseCredentials instead of the credentials ID.  Now the P4Groovy getConnection() method uses the P4BaseCredentials instead of looking up the credentials from the active Jenkins instance.  JENKINS-58745 JENKINS-57314
+
+[@26095](https://swarm.workshop.perforce.com/changes/26095) - Merge pull request #109 from daniel-beck-bot/https-urls-pom.  Use HTTPS URLs in pom.xml
+
+[@26094](https://swarm.workshop.perforce.com/changes/26094) - Merge pull request #105 from jenkinsci/publishFilter.  Publish path filter for reconcile JENKINS-56501
+
+[@25909](https://swarm.workshop.perforce.com/changes/25909) - Merge pull request #103 from williambrode/JENKINS-58686.  Don't query submitted changes when syncing to CL 0.  JENKINS-58686
+
 
 ### Release 1.10.3 (major features/fixes)
 
