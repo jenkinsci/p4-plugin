@@ -95,6 +95,48 @@ public class PublishTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testPublishWithFilter() throws Exception {
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-filter");
+
+		// Create workspace
+		String client = "manual.ws";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// Populate with P4 scm
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+
+		// Create artifact files
+		project.getBuildersList().add(new CreateArtifact("file.1", "content"));
+		project.getBuildersList().add(new CreateArtifact("file.2", "content"));
+
+		// Submit artifacts
+		SubmitImpl submit = new SubmitImpl("publish", true, true, false, true, null);
+		submit.setPaths("//depot/Data/none/...\n  file.1");
+		PublishNotifier publish = new PublishNotifier(CREDENTIAL, workspace, submit);
+		project.getPublishersList().add(publish);
+		project.save();
+
+		// Start build
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Stat file and check type
+		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, workspace);
+		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/file.*");
+		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
+		List<IExtendedFileSpec> eSpec = p4.getConnection().getExtendedFiles(fileSpec, opts);
+
+		assertNotNull(eSpec);
+		assertEquals(1, eSpec.size());
+		assertEquals("//depot/Data/file.1", eSpec.get(0).getDepotPathString());
+	}
+
+	@Test
 	public void testPublishWithFail() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-fail");
 

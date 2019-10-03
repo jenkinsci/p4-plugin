@@ -686,8 +686,11 @@ public class ClientHelper extends ConnectionHelper {
 			iclient.addFiles(files, opts);
 		} else {
 			// build file revision spec
-			String ws = "//" + iclient.getName() + "/...";
-			files = FileSpecBuilder.makeFileSpecList(ws);
+			String clientBase = "//" + iclient.getName() + "/";
+
+			List<String> paths = buildPaths(publish, clientBase);
+
+			files = FileSpecBuilder.makeFileSpecList(paths);
 			findChangeFiles(files, publish.isDelete(), publish.isModtime());
 		}
 
@@ -696,6 +699,26 @@ public class ClientHelper extends ConnectionHelper {
 
 		log("duration: " + timer.toString() + "\n");
 		return open;
+	}
+
+	private List<String> buildPaths(Publish publish, String clientBase) {
+		List<String> list = new ArrayList<>();
+		String rawPaths = publish.getPaths();
+
+		if (rawPaths == null || rawPaths.isEmpty()) {
+			list.add(clientBase + "...");
+			return list;
+		}
+
+		String[] array = rawPaths.split("\n\\s*");
+		for(String a : array) {
+			if(a.startsWith("//")) {
+				list.add(a);
+			} else {
+				list.add(clientBase + a);
+			}
+		}
+		return list;
 	}
 
 	private void findChangeFiles(List<IFileSpec> files, boolean delete, boolean modtime) throws Exception {
@@ -1283,6 +1306,12 @@ public class ClientHelper extends ConnectionHelper {
 	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs, P4Ref changeLimit) throws Exception {
 
 		P4Ref from = getSingleChange(fromRefs);
+
+		// return empty array, if from and changeLimit are equal, or Perforce will report a change
+		if (from.equals(changeLimit)) {
+			return new ArrayList<P4Ref>();
+		}
+
 		if (from.getChange() > 0) {
 			log("P4: Polling with range: " + from + "," + changeLimit);
 			return listChanges(fromRefs, changeLimit);

@@ -21,5 +21,11 @@
 	<f:entry field="revert">
 		<f:checkbox title="${%Revert opened file list}" default="false"/>
 	</f:entry>
+
+	<f:advanced>
+	    <f:entry title="Publish paths" field="paths">
+            <f:textarea default="${descriptor.defaultPath}"/>
+        </f:entry>
+	</f:advanced>
 	
 </j:jelly>

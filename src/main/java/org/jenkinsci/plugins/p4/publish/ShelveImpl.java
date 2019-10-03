@@ -3,6 +3,7 @@ package org.jenkinsci.plugins.p4.publish;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.Serializable;
 
@@ -20,6 +21,11 @@ public class ShelveImpl extends Publish implements Serializable {
 	public ShelveImpl(String description, boolean onlyOnSuccess, boolean delete, boolean modtime, boolean revert) {
 		super(description, onlyOnSuccess, delete, modtime);
 		this.revert = revert;
+	}
+
+	@DataBoundSetter
+	public void setPaths(String paths) {
+		super.setPaths(paths);
 	}
 
 	@Extension

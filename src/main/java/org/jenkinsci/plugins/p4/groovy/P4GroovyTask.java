@@ -5,6 +5,7 @@ import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.tasks.AbstractTask;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
@@ -26,14 +27,14 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 	private final String[] args;
 	private final Map<String, Object> spec;
 
-	public P4GroovyTask(String credential, TaskListener listener, String cmd, String[] args, Map<String, Object> spec) {
+	protected P4GroovyTask(P4BaseCredentials credential, TaskListener listener, String cmd, String[] args, Map<String, Object> spec) {
 		super(credential, listener);
 		this.cmd = cmd;
 		this.args = Arrays.copyOf(args, args.length);
 		this.spec = spec;
 	}
 
-	public P4GroovyTask(String credential, TaskListener listener, String cmd, String... args) {
+	protected P4GroovyTask(P4BaseCredentials credential, TaskListener listener, String cmd, String... args) {
 		this(credential, listener, cmd, args, null);
 	}
 

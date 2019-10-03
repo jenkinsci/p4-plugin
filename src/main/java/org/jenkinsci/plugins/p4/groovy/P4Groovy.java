@@ -4,8 +4,8 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.FilePath;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.IOException;
@@ -19,13 +19,13 @@ public class P4Groovy implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String credential;
+	private final P4BaseCredentials credential;
 	private final Workspace workspace;
 	private final FilePath buildWorkspace;
 
 	private transient TaskListener listener = null;
 
-	public P4Groovy(String credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
+	protected P4Groovy(P4BaseCredentials credential, TaskListener listener, Workspace workspace, FilePath buildWorkspace) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.listener = listener;
@@ -100,7 +100,7 @@ public class P4Groovy implements Serializable {
 	}
 
 	private IOptionsServer getConnection() throws IOException {
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
+		ClientHelper p4 = new ClientHelper(credential, listener, workspace);
 		return p4.getConnection();
 	}
 }

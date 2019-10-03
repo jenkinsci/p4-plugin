@@ -17,6 +17,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 	private final boolean modtime;
 
 	private String expandedDesc;
+	private String paths;
 
 	public String getDescription() {
 		return description;
@@ -57,5 +58,13 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 
 	public void setExpandedDesc(String expandedDesc) {
 		this.expandedDesc = expandedDesc;
+	}
+
+	protected void setPaths(String paths) {
+		this.paths = paths;
+	}
+
+	public String getPaths() {
+		return paths;
 	}
 }
