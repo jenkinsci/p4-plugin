@@ -262,11 +262,7 @@ public class TagAction extends AbstractScmTagAction {
 		List<P4Ref> changes = new ArrayList<>();
 
 		List<TagAction> actions;
-		// Check for actions until the build is complete
-		// Workaround for JENKINS-40722
-		do {
-			actions = lastActions(run);
-		} while (actions == null && run != null && run.isBuilding());
+		actions = lastActions(run);
 
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");

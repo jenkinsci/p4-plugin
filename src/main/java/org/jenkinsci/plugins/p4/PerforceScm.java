@@ -525,6 +525,15 @@ public class PerforceScm extends SCM {
 		// Override build change if polling per change.
 		if (isIncremental(getFilter())) {
 			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
+			/* Fix for JENKINS-58639
+			Check if a previous build is in progress. If yes, do not try and build the same change being built.
+			To help lookForChanges() find the correct change to build, sending it the previousBuildInProgress
+			if not null else previousBuiltBuild.
+			 */
+			Run<?, ?> inProgressRun = run.getPreviousBuildInProgress();
+			if (inProgressRun != null) {
+				lastRun = inProgressRun;
+			}
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 			task.setIncrementalChanges(changes);
 		}
