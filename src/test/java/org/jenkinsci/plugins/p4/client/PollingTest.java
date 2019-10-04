@@ -702,7 +702,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes incrementally (change 1)
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
 		cron.run();
-		Thread.sleep(1000);
+		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
 		assertEquals(Result.FAILURE, job.getLastBuild().getResult());

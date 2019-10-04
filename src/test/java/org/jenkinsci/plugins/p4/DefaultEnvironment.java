@@ -25,19 +25,21 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
 abstract public class DefaultEnvironment {
+
+	private static Logger logger = Logger.getLogger(DefaultEnvironment.class.getName());
 
 	protected final static String R15_1 = "r15.1";
 	protected final static String R17_1 = "r17.1";
@@ -163,7 +165,7 @@ abstract public class DefaultEnvironment {
 			sb.append("/");
 		}
 
-		String stream = sb.toString().substring(0,sb.lastIndexOf("/"));
+		String stream = sb.toString().substring(0, sb.lastIndexOf("/"));
 
 		String client = "stream.ws";
 		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
@@ -221,6 +223,24 @@ abstract public class DefaultEnvironment {
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.SUCCESS, build.getResult());
+	}
+
+	protected boolean waitForBuild(WorkflowJob job, int buildNumber) throws InterruptedException {
+		return waitForBuild(job, buildNumber, 30, 100L);
+	}
+
+	protected boolean waitForBuild(WorkflowJob job, int buildNumber, final int retry, long delay) throws InterruptedException {
+		int r = retry;
+		while (r > 0) {
+			r--;
+			if (job.getLastBuild().number == buildNumber) {
+				logger.info("waitForBuild(): Attempts: " + (retry - r));
+				return true;
+			}
+			Thread.sleep(delay);
+		}
+		logger.severe("Gave up waiting for build");
+		return false;
 	}
 
 	public class TestHandler extends Handler {

@@ -407,7 +407,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
@@ -456,7 +456,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
