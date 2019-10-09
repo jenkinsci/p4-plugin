@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.10.5 (major features/fixes)
+
+[@26112](https://swarm.workshop.perforce.com/changes/26112) - Merge pull request #110 from p4charu/jenkinsci-master.  If last build is not completely built look for last build in progress.  JENKINS-58639
+
+
 ### Release 1.10.4 (major features/fixes)
 
 [@26099](https://swarm.workshop.perforce.com/changes/26099) - Prevent infinite polling when last build and current are pinned to a label.  Added test to verify support for static lables. JENKINS-58149
