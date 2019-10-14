@@ -18,6 +18,7 @@ import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
@@ -602,5 +603,40 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: syncing files at client/label: static1", run);
+	}
+
+	@Test
+	@Issue("JENKINS-52806")
+	public void testTagActionEvnVarsWithParallelSteps() throws Exception {
+
+		// need 3 executors (job + one for each parallel step)
+		jenkins.jenkins.setNumExecutors(3);
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "parallelTagAction");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "  parallel ([ BranchOne: {\n"
+				+ "    node {\n"
+				+ "      def scmVars1 = checkout poll: false,\n"
+				+ "        scm: perforce(credential: '" + CREDENTIAL + "',\n"
+				+ "          populate: syncOnly(force: false, have: true, revert: false),\n"
+				+ "          workspace: manualSpec(name: 'Client_1',\n"
+				+ "            spec: clientSpec(streamName: '//stream/main', view: '')))\n"
+				+ "      echo \"${scmVars1.get('P4_CLIENT')}\"\n"
+				+ "    }\n"
+				+ "  }, BranchTwo: {\n"
+				+ "    node {\n"
+				+ "      def scmVars2 = checkout poll: false,\n"
+				+ "        scm: perforce(credential: '" + CREDENTIAL + "',\n"
+				+ "          populate: syncOnly(force: false, have: true, revert: false),\n"
+				+ "          workspace: manualSpec(name: 'Client_2',\n"
+				+ "            spec: clientSpec(streamName: '//stream/main', view: '')))\n"
+				+ "      echo \"${scmVars2.get('P4_CLIENT')}\"\n"
+				+ "    }\n"
+				+ "  }])\n"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("[BranchOne] Client_1", run);
+		jenkins.assertLogContains("[BranchTwo] Client_2", run);
 	}
 }

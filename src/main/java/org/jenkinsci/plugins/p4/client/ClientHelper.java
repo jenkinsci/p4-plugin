@@ -119,6 +119,8 @@ public class ClientHelper extends ConnectionHelper {
 				getConnection().setCharsetName(workspace.getCharset());
 			}
 
+			login();
+
 			// Setup/Create workspace based on type
 			iclient = workspace.setClient(getConnection(), getAuthorisationConfig().getUsername());
 

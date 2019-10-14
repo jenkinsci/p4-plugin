@@ -641,7 +641,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Poll for changes multiple times
 		for (int i = 0; i < 300; i++) {
 			cron.run();
-			Thread.sleep(30);
+			Thread.sleep(40);
 		}
 		jenkins.waitUntilNoActivity();
 
