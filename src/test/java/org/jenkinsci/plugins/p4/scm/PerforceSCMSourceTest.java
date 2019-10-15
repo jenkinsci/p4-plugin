@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -527,7 +526,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
 		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
@@ -603,7 +602,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.UPDATED, payload, origin);
 		SCMHeadEvent.fireNow(event);
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
 		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
@@ -688,14 +687,21 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		logger.fine("\n\nTest: Firing Event!");
 		SCMHeadEvent.fireNow(event);
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+		WorkflowJob revJob = multi.getItem(review);
+
+		// wait for review build to start...
+		int tries = 100;
+		while (revJob == null && tries > 0) {
+			tries--;
+			revJob = multi.getItem(review);
+			Thread.sleep(100);
+		}
+		assertNotNull(revJob);
+
 		jenkins.waitUntilNoActivity();
 
 		assertTrue("Dev should not built", multi.getItem("Dev").getLastBuild().number == 1);
 		assertTrue("Main should not built", multi.getItem("Main").getLastBuild().number == 1);
-
-		WorkflowJob revJob = multi.getItem(review);
-		assertNotNull(revJob);
 
 		WorkflowRun revRun = revJob.getLastBuild();
 		assertNotNull(revJob);
