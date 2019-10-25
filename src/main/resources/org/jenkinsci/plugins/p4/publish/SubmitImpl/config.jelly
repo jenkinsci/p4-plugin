@@ -25,5 +25,11 @@
 	<f:entry field="reopen">
 		<f:checkbox title="${%Reopened files}" default="false"/>
 	</f:entry>
+
+    <f:advanced>
+        <f:entry title="Publish paths" field="paths">
+            <f:textarea default="${descriptor.defaultPath}"/>
+        </f:entry>
+    </f:advanced>
 	
 </j:jelly>
