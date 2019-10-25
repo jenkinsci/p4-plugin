@@ -1,5 +1,17 @@
 ## Release notes
 
+
+### Release 1.10.6 (major features/fixes)
+
+[@26143](https://swarm.workshop.perforce.com/changes/26143) - Update p4java 2019.1.1873579 for Symlink and UTF8-BOM support.  JENKINS-59213 JENKINS-59611 
+
+[@26142](https://swarm.workshop.perforce.com/changes/26142) - Enable Advanced Publish paths for Submits.  Publish path filter for reconcile JENKINS-56501
+
+[@26122](https://swarm.workshop.perforce.com/changes/26122) - Added additional login to resolve parallel connection issue. Includes test case for parallel stages.  JENKINS-52806
+
+[@26121](https://swarm.workshop.perforce.com/changes/26121) - Merge pull request #104 from williambrode/JENKINS-52806 Fix for p4 environment variables being wrong in parallel pipeline syncs.
+
+
 ### Release 1.10.5 (major features/fixes)
 
 [@26112](https://swarm.workshop.perforce.com/changes/26112) - Merge pull request #110 from p4charu/jenkinsci-master.  If last build is not completely built look for last build in progress.  JENKINS-58639
