@@ -639,4 +639,24 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("[BranchOne] Client_1", run);
 		jenkins.assertLogContains("[BranchTwo] Client_2", run);
 	}
+
+	@Test
+	@Issue("JENKINS-60074")
+	public void testTagActionEvnVars() throws Exception {
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "nodeTagAction");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node() {\n"
+				+ "  node {\n"
+				+ "    def scmVars1 = checkout poll: false,\n"
+				+ "      scm: perforce(credential: '" + CREDENTIAL + "',\n"
+				+ "        populate: syncOnly(force: false, have: true, revert: false),\n"
+				+ "        workspace: manualSpec(name: 'Client_1',\n"
+				+ "          spec: clientSpec(streamName: '//stream/main', view: '')))\n"
+				+ "    echo \"${scmVars1.get('P4_CLIENT')}\"\n"
+				+ "  }\n"
+				+ "}", false));
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("Client_1", run);
+	}
 }

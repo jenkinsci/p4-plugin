@@ -717,11 +717,13 @@ public class PerforceScm extends SCM {
 	@Override
 	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
 		super.buildEnvVars(build, env);
+		P4EnvironmentContributor.buildEnvironment(TagAction.getLastAction(build), env);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 	}
 
-	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885
+	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885 JENKINS-52806 JENKINS-60074
 	public void buildEnvironment(Run<?, ?> run, Map<String, String> env) {
+		P4EnvironmentContributor.buildEnvironment(TagAction.getLastAction(run), env);
 		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 	}
 
