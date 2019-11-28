@@ -1,6 +1,13 @@
 ## Release notes
 
 
+### Release 1.10.7 (major features/fixes)
+
+[@26186](https://swarm.workshop.perforce.com/changes/26186) - Update p4java 2019.1.1889202
+
+[@26163](https://swarm.workshop.perforce.com/changes/26163) - Pre-load build environment. buildEnvironment() is called by Jenkins and tagAction may not be set - so use old pre-load behaviour.  JENKINS-60074
+
+
 ### Release 1.10.6 (major features/fixes)
 
 [@26143](https://swarm.workshop.perforce.com/changes/26143) - Update p4java 2019.1.1873579 for Symlink and UTF8-BOM support.  JENKINS-59213 JENKINS-59611 
