@@ -59,9 +59,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
 
-		// Expand env variables in Template name
-		Expand expand = getExpand();
-		String template = expand.format(getTemplateName(), false);
+		String template = getTemplateClient(connection);
 
 		// Check template exists or exit early
 		IClient itemplate = connection.getClient(template);
@@ -105,6 +103,19 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 		connection.switchClientView(template, clientName, opts);
 		iclient = connection.getClient(clientName);
 		return iclient;
+	}
+
+	private String getTemplateClient(IOptionsServer connection) throws Exception {
+		// Expand env variables in Template name
+		Expand expand = getExpand();
+		String template = expand.format(getTemplateName(), false);
+
+		return template;
+	}
+
+	public boolean templateExists(IOptionsServer connection) throws Exception {
+		String template = getTemplateClient(connection);
+		return (connection.getClient(template) != null);
 	}
 
 	@Extension

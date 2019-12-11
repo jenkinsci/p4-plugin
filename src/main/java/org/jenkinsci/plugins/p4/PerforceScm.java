@@ -815,6 +815,14 @@ public class PerforceScm extends SCM {
 				logger.warning("P4: client not found:" + client);
 				return false;
 			}
+			//JENKINS-60144 Checking if the template ws exists before deleting client, otherwise it throws exception along the line.
+			if (workspace instanceof TemplateWorkspaceImpl) {
+				TemplateWorkspaceImpl template = (TemplateWorkspaceImpl) workspace;
+				boolean exists = template.templateExists(connection.getConnection());
+				if (!exists) {
+					return false;
+				}
+			}
 		} catch (Exception e) {
 			logger.warning("P4: Not able to get connection");
 			return false;
