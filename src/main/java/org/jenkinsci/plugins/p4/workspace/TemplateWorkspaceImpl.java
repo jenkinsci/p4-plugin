@@ -109,7 +109,6 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 		// Expand env variables in Template name
 		Expand expand = getExpand();
 		String template = expand.format(getTemplateName(), false);
-
 		return template;
 	}
 
