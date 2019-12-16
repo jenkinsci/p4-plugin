@@ -137,8 +137,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		SCMSourceOwner owner = getOwner();
 		if (owner instanceof WorkflowMultiBranchProject) {
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
-			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
-			return branchProjectFactory.getScriptPath();
+			if (branchProject.getProjectFactory() instanceof WorkflowBranchProjectFactory) {
+				WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+				return branchProjectFactory.getScriptPath();
+			}
 		}
 		return "Jenkinsfile";
 	}
@@ -380,18 +382,21 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 
 		WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
-		WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
-		WorkflowJob job = branchProject.getJob(head.getName());
+		if (branchProject.getProjectFactory() instanceof WorkflowBranchProjectFactory) {
+			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+			WorkflowJob job = branchProject.getJob(head.getName());
 
-		if (job == null) {
+			if (job == null) {
+				return null;
+			}
+
+			SCMRevision r = branchProjectFactory.getRevision(job);
+			if (r instanceof P4SCMRevision) {
+				return (P4SCMRevision) r;
+			}
+
 			return null;
 		}
-
-		SCMRevision r = branchProjectFactory.getRevision(job);
-		if (r instanceof P4SCMRevision) {
-			return (P4SCMRevision) r;
-		}
-
 		return null;
 	}
 
