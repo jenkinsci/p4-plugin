@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Action;
 import hudson.model.TaskListener;
+import jenkins.branch.BranchProjectFactory;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
@@ -33,6 +34,7 @@ import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -137,8 +139,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		SCMSourceOwner owner = getOwner();
 		if (owner instanceof WorkflowMultiBranchProject) {
 			WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
-			if (branchProject.getProjectFactory() instanceof WorkflowBranchProjectFactory) {
-				WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+			BranchProjectFactory<WorkflowJob, WorkflowRun> project = branchProject.getProjectFactory();
+			if (project instanceof WorkflowBranchProjectFactory) {
+				WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) project;
 				return branchProjectFactory.getScriptPath();
 			}
 		}
@@ -382,8 +385,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 
 		WorkflowMultiBranchProject branchProject = (WorkflowMultiBranchProject) owner;
-		if (branchProject.getProjectFactory() instanceof WorkflowBranchProjectFactory) {
-			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) branchProject.getProjectFactory();
+		BranchProjectFactory<WorkflowJob, WorkflowRun> project = branchProject.getProjectFactory();
+		if (project instanceof WorkflowBranchProjectFactory) {
+			WorkflowBranchProjectFactory branchProjectFactory = (WorkflowBranchProjectFactory) project;
 			WorkflowJob job = branchProject.getJob(head.getName());
 
 			if (job == null) {
