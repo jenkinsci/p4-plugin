@@ -2,5 +2,6 @@
 	<p>A List of Perforce depot paths to one or more Streams (separated by new lines).  The plugin will recursively search for a
 		<code>Jenkinsfile</code> (or defined item) using the Stream name for the multi-branch name.</p>
 	<p><code>...</code> or <code>*</code> can be used as wildcards in Perforce depot paths.</p>
-	<p>For example: <code>//streams/...</code></p>
+	<p>For example: <code>//streams/bar</code> will include <code>//streams/bar</code> and </p>
+	<p><code>//streams/bar... or //streams/bar* </code> will include <code>//streams/bar, //streams/bar-01, //streams/bar-02 </code> and so on.</p>
 </div>
