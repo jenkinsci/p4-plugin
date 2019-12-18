@@ -396,14 +396,6 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<IStreamSummary> getStreams(List<String> paths) throws Exception {
-		ListIterator<String> list = paths.listIterator();
-		while (list.hasNext()) {
-			String i = list.next();
-			if (!i.contains("...") && !i.contains("*")) {
-				list.set(i + "*");
-			}
-		}
-
 		GetStreamsOptions opts = new GetStreamsOptions();
 		List<IStreamSummary> streams = connection.getStreams(paths, opts);
 		return streams;
