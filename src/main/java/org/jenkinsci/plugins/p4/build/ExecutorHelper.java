@@ -16,11 +16,18 @@ public class ExecutorHelper {
 
 	public static String getExecutorID(FilePath build) {
 		String id = UNKNOWN_EXECUTOR;
-		String name = build.getName();
-		Pattern pattern = Pattern.compile(".*" + COMBINATOR + "([0-9]+)");
-		Matcher matcher = pattern.matcher(name);
-		if (matcher.matches()) {
-			id = matcher.group(1);
+		String workspaceDir = build.getRemote();
+		if (!workspaceDir.contains(COMBINATOR)) {
+			return id;
+		}
+		for (String directory : workspaceDir.replace("\\", "/").split("/")) {
+			if (directory.contains(COMBINATOR)) {
+				Pattern pattern = Pattern.compile(".*" + COMBINATOR + "([0-9]+)");
+				Matcher matcher = pattern.matcher(directory);
+				if (matcher.matches()) {
+					id = matcher.group(1);
+				}
+			}
 		}
 		return id;
 	}
