@@ -16,8 +16,8 @@ public class ExecutorHelper {
 
 	public static String getExecutorID(FilePath build) {
 		String id = UNKNOWN_EXECUTOR;
-		String name = build.getName();
-		Pattern pattern = Pattern.compile(".*" + COMBINATOR + "([0-9]+)");
+		String name = build.getRemote();
+		Pattern pattern = Pattern.compile(".*" + COMBINATOR + "([0-9]+)" + ".*");
 		Matcher matcher = pattern.matcher(name);
 		if (matcher.matches()) {
 			id = matcher.group(1);
