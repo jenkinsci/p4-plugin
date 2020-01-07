@@ -412,7 +412,7 @@ public class PerforceScm extends SCM {
 		// set NODE_NAME to Node or default "master" if not set
 		String nodeName = NodeHelper.getNodeName(buildWorkspace);
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
-		String executor = ExecutorHelper.getExecutorID(buildWorkspace);
+		String executor = ExecutorHelper.getExecutorID(buildWorkspace, listener);
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
 
 		Workspace ws = workspace.deepClone();

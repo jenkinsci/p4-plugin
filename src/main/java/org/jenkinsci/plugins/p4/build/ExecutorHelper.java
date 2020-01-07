@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.build;
 
 import hudson.FilePath;
+import hudson.model.TaskListener;
 import hudson.slaves.WorkspaceList;
 
 import java.util.regex.Matcher;
@@ -9,9 +10,15 @@ import java.util.regex.Pattern;
 public class ExecutorHelper {
 
 	private static final String COMBINATOR = System.getProperty(WorkspaceList.class.getName(), "@");
-	public static final String UNKNOWN_EXECUTOR = "0";
+	private static final String UNKNOWN_EXECUTOR = "0";
 
 	private ExecutorHelper() {
+	}
+
+	public static String getExecutorID(FilePath build, TaskListener listener) {
+		String id = getExecutorID(build);
+		listener.getLogger().println("Executor number at runtime: " + id);
+		return id;
 	}
 
 	public static String getExecutorID(FilePath build) {
