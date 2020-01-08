@@ -16,7 +16,6 @@
 
 ### ~~Release 1.10.8 (major features/fixes)~~ (skip)
 
-
 ### Release 1.10.7 (major features/fixes)
 
 [@26186](https://swarm.workshop.perforce.com/changes/26186) - Update p4java 2019.1.1889202
@@ -498,8 +497,7 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@22840](https://swarm.workshop.perforce.com/changes/22840) - Merge pull request #49 from aosterkamp/master - add support for "P4Trigger" declarative pipeline trigger
 
-[@22830](https://swarm.workshop.perforce.com/changes/22830) - Prevent log spam by changing log level to fine.  
- pr/49 @rebnridgway
+[@22830](https://swarm.workshop.perforce.com/changes/22830) - Prevent log spam by changing log level to fine. pr/49 @rebnridgway
 
 
 ### Release 1.7.5 (major features/fixes)
@@ -518,8 +516,7 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@22808](https://swarm.workshop.perforce.com/changes/22808) - Create directories as required when printing locked file.  JENKINS-37868
 
-[@22807](https://swarm.workshop.perforce.com/changes/22807) - Merge pull request #52 from jfperusse-bhvr/fix-unshelve-exclusive �
-.  Fix unshelving of exclusively checked out files.  JENKINS-46599
+[@22807](https://swarm.workshop.perforce.com/changes/22807) - Merge pull request #52 from jfperusse-bhvr/fix-unshelve-exclusive.  Fix unshelving of exclusively checked out files.  JENKINS-46599
 
 [@22806](https://swarm.workshop.perforce.com/changes/22806) - Remove debug `jenkins/` endpoint from sample trigger.
 
@@ -789,7 +786,7 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@20418](https://swarm.workshop.perforce.com/changes/20418) - Replace FileCallable and checkRoles with MasterToSlaveCallable.
 
-[@20308](https://swarm.workshop.perforce.com/changes/20308) - P4Groovy (experimental).  Get a P4 object in groovy.  Supporting basic functions: ’run’ (to run perforce commands), ‘fetch’ and ‘save’ (to access Perforce specs).
+[@20308](https://swarm.workshop.perforce.com/changes/20308) - P4Groovy (experimental).  Get a P4 object in groovy.  Supporting basic functions: run (to run perforce commands), fetch and save (to access Perforce specs).
 
 ### Release 1.4.6 (major features/fixes)
 
@@ -893,15 +890,15 @@ Not a release.
 
 ### Release 1.3.9 (major features/fixes)
 
-[@19374](https://swarm.workshop.perforce.com/changes/19374) - Poll on Master (without workspace).  New Polling Filter ‘Poll on Master using Last Build’.  Only polls on the master and fetches it change from the last Build. Note that 0 is assumed if no previous build is found.  JENKINS-32814
+[@19374](https://swarm.workshop.perforce.com/changes/19374) - Poll on Master (without workspace).  New Polling Filter Poll on Master using Last Build.  Only polls on the master and fetches it change from the last Build. Note that 0 is assumed if no previous build is found.  JENKINS-32814
 
-[@19365](https://swarm.workshop.perforce.com/changes/19365) - Track syncs with a 'Change' field in the Workspace Description.  Polling used ‘p4 cstat’ to determine the last sync’ed change in a workspace.  However, if the have list is empty (such as in the Force Clean Populate mode) it would appear as if no changes have been synced.  JENKINS-32518 JENKINS-32523
+[@19365](https://swarm.workshop.perforce.com/changes/19365) - Track syncs with a 'Change' field in the Workspace Description.  Polling used p4 cstat to determine the last synced change in a workspace.  However, if the have list is empty (such as in the Force Clean Populate mode) it would appear as if no changes have been synced.  JENKINS-32518 JENKINS-32523
 
 [@19357](https://swarm.workshop.perforce.com/changes/19357) - Populate class support for DSL p4sync.  JENKINS-34318
 
 [@19325](https://swarm.workshop.perforce.com/changes/19325) - ParallelSync needs to be Serializable.  JENKINS-29228
 
-[@19324](https://swarm.workshop.perforce.com/changes/19324) - Added Parallel Sync.  An Advanced Populate option.  Must specify the PATH to the ‘p4’ executable as parallel sync is not supported by p4java.  JENKINS-29228
+[@19324](https://swarm.workshop.perforce.com/changes/19324) - Added Parallel Sync.  An Advanced Populate option.  Must specify the PATH to the p4 executable as parallel sync is not supported by p4java.  JENKINS-29228
 
 [@19303](https://swarm.workshop.perforce.com/changes/19303) - Protect against null when no jobs are in a changelist.  JENKINS-33993
 
@@ -941,7 +938,7 @@ Not a release.
 
 [@17834](https://swarm.workshop.perforce.com/changes/17834) - Helix branding update.
 
-[@17303](https://swarm.workshop.perforce.com/changes/17303) - Unsync Perforce versioned files on cleanup.  Don’t rely on Jenkins to Delete Perforce versioned files as some OS ACLs can’t delete them.  JENKINS-24003
+[@17303](https://swarm.workshop.perforce.com/changes/17303) - Unsync Perforce versioned files on cleanup.  Dont rely on Jenkins to Delete Perforce versioned files as some OS ACLs cant delete them.  JENKINS-24003
 
 ### Release 1.3.6 (major features/fixes)
 
@@ -1009,7 +1006,7 @@ Not a release.
 
 [@16325](https://swarm.workshop.perforce.com/changes/16325) - Enable 'Populate have list' to function in all modes. Previously if 'Populate have list' was unselected in Force Clean mode it would have no effect. @ksong
 
-[@16297](https://swarm.workshop.perforce.com/changes/16297) - Set P4IGNORE filename to defaults. With slaves and different users I can’t rely on the P4IGNORE in the environment, so I set the default ’.p4ignore’ or ‘p4ignore.txt’ on Windows. [#14](https://github.com/p4paul/p4-jenkins/issues/14)
+[@16297](https://swarm.workshop.perforce.com/changes/16297) - Set P4IGNORE filename to defaults. With slaves and different users I cant rely on the P4IGNORE in the environment, so I set the default .p4ignore or p4ignore.txt on Windows. [#14](https://github.com/p4paul/p4-jenkins/issues/14)
 
 [@16272](https://swarm.workshop.perforce.com/changes/16272) - Filter reported changelists. Remove -1 and duplicate changes.
 
@@ -1059,17 +1056,17 @@ Use a P4Revision object and not int/String as Object. Insure that there is no am
 
 [@15515](https://swarm.workshop.perforce.com/changes/15515) - Update P4Java to 2015.1.1210288
 
-[@15503](https://swarm.workshop.perforce.com/changes/15503) - Created P4UserProperty to store Email address. P4UserProperty extends UserProperty to store the Perforce User’s email. Then retrieves it with P4AddressResolver by extending MailAddressResolver. JENKINS-28421
+[@15503](https://swarm.workshop.perforce.com/changes/15503) - Created P4UserProperty to store Email address. P4UserProperty extends UserProperty to store the Perforce Users email. Then retrieves it with P4AddressResolver by extending MailAddressResolver. JENKINS-28421
 
 [@15491](https://swarm.workshop.perforce.com/changes/15491) - This fix is to expand the Template name. @mjoubert When using a Template the name does not expand (unlike the client name) if it contains variables.
 
 [@15490](https://swarm.workshop.perforce.com/changes/15490) - Check for empty param values. JENKINS-29943
 
-[@15430](https://swarm.workshop.perforce.com/changes/15430) - Trap User Abort and stop Perforce. Uses the ‘tick’ function on Progress to check if the Thread has been interrupted. If a user aborts the build then the Perforce connection is dropped at the next tick. JENKINS-26650
+[@15430](https://swarm.workshop.perforce.com/changes/15430) - Trap User Abort and stop Perforce. Uses the tick function on Progress to check if the Thread has been interrupted. If a user aborts the build then the Perforce connection is dropped at the next tick. JENKINS-26650
 
 [@15419](https://swarm.workshop.perforce.com/changes/15419) - Updates README with 'change' vs 'P4_CHANGELIST' issue
 
-[@15403](https://swarm.workshop.perforce.com/changes/15403) - Perforce triggered polling BETA. Perforce triggers on a change-submit and sends a POST to the endpoint http://${JENKINS}/p4/change with the data: payload={"change":"12345","p4port":"localhost:1666"}.  Note: ‘change’ is not used (yet).
+[@15403](https://swarm.workshop.perforce.com/changes/15403) - Perforce triggered polling BETA. Perforce triggers on a change-submit and sends a POST to the endpoint http://${JENKINS}/p4/change with the data: payload={"change":"12345","p4port":"localhost:1666"}.  Note: change is not used (yet).
 
 [@15394](https://swarm.workshop.perforce.com/changes/15394) - Workflow-DSL functionality. Tested workflow DSL against 1.596.1 older functionality tested against 1.580.1 @sven_erik_knop
 
@@ -1087,7 +1084,7 @@ Use a P4Revision object and not int/String as Object. Insure that there is no am
 
 [@15293](https://swarm.workshop.perforce.com/changes/15293) - Add retry attempts to Perforce Tasks. If a task fails due to an exception then the task will retry based on the value specified in the connection Credential.
 
-[@15249](https://swarm.workshop.perforce.com/changes/15249) - Null protection if Label Owner is not set.  Fall back to “unknown” for user.
+[@15249](https://swarm.workshop.perforce.com/changes/15249) - Null protection if Label Owner is not set.  Fall back to unknown for user.
 
 [@15138](https://swarm.workshop.perforce.com/changes/15138) - StreamName not shown in Manual Workspace config.
 
