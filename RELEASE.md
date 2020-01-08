@@ -1,6 +1,22 @@
 ## Release notes
 
 
+### Release 1.10.9 (major features/fixes)
+
+[@26211](https://swarm.workshop.perforce.com/changes/26211) - Merge pull request #113 from jenkinsci/msmeeth-master EXECUTOR_NUMBER is always expanded to '0' in workspace name when checking out with Perforce to a subdirectory  JENKINS-59484
+
+[@26210](https://swarm.workshop.perforce.com/changes/26210) - Merge pull request #93 from lystor/bug-56290 Impossible to Add Streams with Exact Names to Multibranch Pipeline  JENKINS-56290
+
+[@26208](https://swarm.workshop.perforce.com/changes/26208) - Merge pull request #112 from p4charu/jenkinsci-master Refactored to reduce number of calls to login -s  JENKINS-60141
+
+[@26206](https://swarm.workshop.perforce.com/changes/26206) - Making Polling ignore "default jenkinsfile" when "Pipeline: Multibranch with defaults" plugin is installed and instead use the word "jenkinsfile" as the jenkinsfile location.  JENKINS-60321
+
+[@26204](https://swarm.workshop.perforce.com/changes/26204) - Merge pull request #111 from p4charu/jenkinsci-master Check if the template ws exists when deleting jenkins project  JENKINS-60144
+
+
+### ~~Release 1.10.8 (major features/fixes)~~ (skip)
+
+
 ### Release 1.10.7 (major features/fixes)
 
 [@26186](https://swarm.workshop.perforce.com/changes/26186) - Update p4java 2019.1.1889202
@@ -482,7 +498,8 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@22840](https://swarm.workshop.perforce.com/changes/22840) - Merge pull request #49 from aosterkamp/master - add support for "P4Trigger" declarative pipeline trigger
 
-[@22830](https://swarm.workshop.perforce.com/changes/22830) - Prevent log spam by changing log level to fine.  pr/49 @rebnridgway
+[@22830](https://swarm.workshop.perforce.com/changes/22830) - Prevent log spam by changing log level to fine.  
+ pr/49 @rebnridgway
 
 
 ### Release 1.7.5 (major features/fixes)
@@ -501,7 +518,8 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@22808](https://swarm.workshop.perforce.com/changes/22808) - Create directories as required when printing locked file.  JENKINS-37868
 
-[@22807](https://swarm.workshop.perforce.com/changes/22807) - Merge pull request #52 from jfperusse-bhvr/fix-unshelve-exclusive .  Fix unshelving of exclusively checked out files.  JENKINS-46599
+[@22807](https://swarm.workshop.perforce.com/changes/22807) - Merge pull request #52 from jfperusse-bhvr/fix-unshelve-exclusive �
+.  Fix unshelving of exclusively checked out files.  JENKINS-46599
 
 [@22806](https://swarm.workshop.perforce.com/changes/22806) - Remove debug `jenkins/` endpoint from sample trigger.
 
