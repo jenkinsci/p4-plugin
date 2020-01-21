@@ -46,7 +46,7 @@ public class ViewMapHelper {
 		}
 
 		// Split on new line and trim any following white space
-		String[] lines = depotView.split("\n\\s*");
+		String[] lines = depotView.trim().split("\n\\s*");
 		boolean multi = lines.length > 1;
 		StringBuffer view = processLines(lines, client, multi, overlay);
 

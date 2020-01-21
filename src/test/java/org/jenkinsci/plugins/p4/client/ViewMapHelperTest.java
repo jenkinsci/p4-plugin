@@ -22,10 +22,12 @@ public class ViewMapHelperTest extends DefaultEnvironment {
     @Test
     public void testgetClientView_multipath_ok(){
         String multi_path = 
-            "\n//depot/Projects/Foo/Bar/Baz/Tick/Tock/...\n//depot/Projects/Foo/Bar/Baz/Tick/Tack/...\n";
+            "\n//depot/foo/...\n//depot/bar/...";
         String res = ViewMapHelper.getClientView(multi_path, "p4client", false);
         // String[] exp = new String[]{"depot", "Projects", "my-super-project" };
 
-        assertEquals("Depot path is equal", "Something", res);
+        String expected = "//depot/foo/... //p4client/depot/foo/...\n//depot/bar/... //p4client/depot/bar/...";
+
+        assertEquals(expected, res);
     }
 }
