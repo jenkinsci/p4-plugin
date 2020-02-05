@@ -78,7 +78,6 @@ public class P4Hook implements UnprotectedRootAction {
 
 			final String port = payload.getString("p4port");
 			//final String change = payload.getString("change");
-			final List<Job> jobs = getJobs();
 
 			LOGGER.info("Received trigger event for: " + port);
 			if (port == null) {
@@ -91,6 +90,7 @@ public class P4Hook implements UnprotectedRootAction {
 
 				@Override
 				public void run() {
+					final List<Job> jobs = getJobs();
 					try {
 						probeJobs(port, jobs);
 					} catch (IOException e) {
