@@ -3,6 +3,13 @@
 
 ### Release 1.10.9 (major features/fixes)
 
+[@26294](https://swarm.workshop.perforce.com/changes/26294) - Merge pull request #116 from ajxb/ajb-trigger.  Get list of jobs immediately prior to probing
+
+[@26263](https://swarm.workshop.perforce.com/changes/26263) - Merge pull request #115 from nwillems/viewmaphelper-test.  Allow spacing around viewmappings
+
+
+### Release 1.10.9 (major features/fixes)
+
 [@26211](https://swarm.workshop.perforce.com/changes/26211) - Merge pull request #113 from jenkinsci/msmeeth-master EXECUTOR_NUMBER is always expanded to '0' in workspace name when checking out with Perforce to a subdirectory  JENKINS-59484
 
 [@26210](https://swarm.workshop.perforce.com/changes/26210) - Merge pull request #93 from lystor/bug-56290 Impossible to Add Streams with Exact Names to Multibranch Pipeline  JENKINS-56290
