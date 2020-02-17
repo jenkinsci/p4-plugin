@@ -17,7 +17,7 @@ public class ConnectionConfig implements Serializable {
 
 	public ConnectionConfig(P4BaseCredentials credential) {
 		this.p4port = credential.getP4port();
-		this.ssl = credential.isSsl();
+		this.ssl = credential.getSsl() != null;
 		this.trust = credential.getTrust();
 		this.serverUri = credential.getP4JavaUri();
 		this.timeout = credential.getTimeout();
@@ -44,7 +44,9 @@ public class ConnectionConfig implements Serializable {
 		return timeout;
 	}
 
-	public String getP4Host() { return p4host; }
+	public String getP4Host() {
+		return p4host;
+	}
 
 	public String toString() {
 		return serverUri;

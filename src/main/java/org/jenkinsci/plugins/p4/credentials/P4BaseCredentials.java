@@ -61,7 +61,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 
 	public String getP4JavaUri() {
 
-		if (isSsl()) {
+		if (ssl != null) {
 			return "p4javassl://" + p4port;
 		}
 		if (p4port.startsWith("rsh:")) {
@@ -73,6 +73,10 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 
 	public boolean isSsl() {
 		return (ssl == null) ? false : true;
+	}
+
+	public TrustImpl getSsl() {
+		return ssl;
 	}
 
 	@CheckForNull
