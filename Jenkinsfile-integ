@@ -17,27 +17,29 @@ pipeline {
 				sh 'mvn clean package -P enable-jacoco'
 			}
 		}
-
-		stage('Reporting') {
-			steps {
-				sh 'mvn surefire-report:report-only'
-
-				publishHTML target: [
-					allowMissing: false,
-					alwaysLinkToLastBuild: true,
-					keepAll: true,
-					reportDir: 'target/site/',
-					reportFiles: 'surefire-report.html',
-					reportName: 'TestReport'
-				]
-
-				publishCoverage adapters: [
-					jacocoAdapter('target/site/jacoco/jacoco.xml')
-				],
-				sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
-
-			}
-		}
-
 	}
+	post {
+        always {
+ 			sh 'mvn surefire-report:report-only'
+
+			publishHTML target: [
+				allowMissing: false,
+				alwaysLinkToLastBuild: true,
+				keepAll: true,
+				reportDir: 'target/site/',
+				reportFiles: 'surefire-report.html',
+				reportName: 'TestReport'
+			]
+
+			publishCoverage adapters: [
+				jacocoAdapter('target/site/jacoco/jacoco.xml')
+			],
+			sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+
+		}
+		success {
+		    archiveArtifacts artifacts: 'target/p4.hpi', fingerprint: true
+		}
+	}
+
 }
