@@ -1,45 +1,90 @@
 pipeline {
 
-	agent {
-		label 'p4java'
-	}
+	agent none
 
 	stages {
+		stage('Linux Build & Test') {
+			
+			agent {
+				label 'p4java'
+			}
+			
+			stages {
+				stage('Compile') {
+					steps {
+						sh 'mvn compiler:compile findbugs:check'
+					}
+				}
 
-		stage('Compile') {
-			steps {
-				sh 'mvn compiler:compile findbugs:check'
+				stage('Build and Test') {
+					steps {
+						sh 'mvn clean package -P enable-jacoco'
+					}
+				}
+			}
+			post {
+				always {
+					sh 'mvn surefire-report:report-only'
+
+					publishHTML target: [
+						allowMissing: false,
+						alwaysLinkToLastBuild: true,
+						keepAll: true,
+						reportDir: 'target/site/',
+						reportFiles: 'surefire-report.html',
+						reportName: 'LinuxTestReport'
+					]
+
+					publishCoverage adapters: [
+						jacocoAdapter('target/site/jacoco/jacoco.xml')
+					],
+					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+				}
+				success {
+					archiveArtifacts artifacts: 'target/p4.hpi', fingerprint: true
+				}
 			}
 		}
+		
+		stage('Windows Build & Test') {
+	
+			agent {
+				label 'p4java-win'
+			}
 
-		stage('Build and Test') {
+			stages {
+				stage('Compile') {
+					steps {
+						bat 'mvn compiler:compile findbugs:check'
+					}
+				}
+
+				stage('Build and Test') {
+					steps {
+						bat 'mvn clean package'
+					}
+				}
+			}
+			post {
+				always {
+					bat 'mvn surefire-report:report-only'
+
+					publishHTML target: [
+						allowMissing: false,
+						alwaysLinkToLastBuild: true,
+						keepAll: true,
+						reportDir: 'target/site/',
+						reportFiles: 'surefire-report.html',
+						reportName: 'WindowsTestReport'
+					]
+				}
+			}
+		}
+		
+		stage('Launch system tests') {
 			steps {
-				sh 'mvn clean package -P enable-jacoco'
+				build job: '/jenkins-system-tests/main', wait: false
 			}
 		}
 	}
-	post {
-        always {
- 			sh 'mvn surefire-report:report-only'
-
-			publishHTML target: [
-				allowMissing: false,
-				alwaysLinkToLastBuild: true,
-				keepAll: true,
-				reportDir: 'target/site/',
-				reportFiles: 'surefire-report.html',
-				reportName: 'TestReport'
-			]
-
-			publishCoverage adapters: [
-				jacocoAdapter('target/site/jacoco/jacoco.xml')
-			],
-			sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
-
-		}
-		success {
-		    archiveArtifacts artifacts: 'target/p4.hpi', fingerprint: true
-		}
-	}
-
 }
