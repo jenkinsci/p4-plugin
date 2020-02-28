@@ -1,7 +1,7 @@
 ## Release notes
 
 
-### Release 1.10.9 (major features/fixes)
+### Release 1.10.10 (major features/fixes)
 
 [@26294](https://swarm.workshop.perforce.com/changes/26294) - Merge pull request #116 from ajxb/ajb-trigger.  Get list of jobs immediately prior to probing
 
