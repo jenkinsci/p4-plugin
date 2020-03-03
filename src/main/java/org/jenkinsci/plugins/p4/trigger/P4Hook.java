@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.trigger;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
 import jenkins.model.Jenkins;
@@ -14,6 +15,7 @@ import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -23,6 +25,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
+
+import static hudson.Functions.checkPermission;
 
 @Extension
 public class P4Hook implements UnprotectedRootAction {
@@ -46,7 +50,10 @@ public class P4Hook implements UnprotectedRootAction {
 		return URLNAME;
 	}
 
+	@POST
 	public void doEvent(StaplerRequest req) throws ServletException, IOException {
+
+		checkPermission(Item.BUILD);
 
 		// exit early if no json
 		String contentType = req.getContentType();
@@ -66,7 +73,11 @@ public class P4Hook implements UnprotectedRootAction {
 		SCMHeadEvent.fireNow(new P4BranchSCMHeadEvent(eventType, payload, SCMEvent.originOf(req)));
 	}
 
-	public void doChange(StaplerRequest req) throws IOException {
+	@POST
+	public void doChange(StaplerRequest req) throws ServletException, IOException {
+
+		checkPermission(Item.BUILD);
+
 		String body = IOUtils.toString(req.getInputStream(), Charset.forName("UTF-8"));
 		String contentType = req.getContentType();
 		if (contentType != null && contentType.startsWith("application/json")) {
@@ -102,8 +113,10 @@ public class P4Hook implements UnprotectedRootAction {
 		}
 	}
 
-	public void doChangeSubmit(StaplerRequest req, StaplerResponse rsp)
-			throws IOException, ServletException {
+	@POST
+	public void doChangeSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+
+		checkPermission(Item.BUILD);
 
 		JSONObject formData = req.getSubmittedForm();
 		if (!formData.isEmpty()) {

@@ -23,6 +23,7 @@ import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.servlet.ServletException;
 import java.io.File;
@@ -84,6 +85,7 @@ public class TagAction extends AbstractScmTagAction {
 		return tags != null && !tags.isEmpty();
 	}
 
+	@POST
 	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
 
 		getACL().checkPermission(PerforceScm.TAG);
@@ -274,7 +276,7 @@ public class TagAction extends AbstractScmTagAction {
 		// Fetch all syncIDs and check for duplicates JENKINS-55075
 		List<String> syncList = new ArrayList<>();
 		for (TagAction action : actions) {
-			if(syncList.contains(action.getSyncID())) {
+			if (syncList.contains(action.getSyncID())) {
 				listener.getLogger().println("WARNING: duplicate syncID found: " + action.getSyncID());
 				logger.severe("WARNING: duplicate syncID found: " + action.getSyncID());
 			}

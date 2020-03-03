@@ -1,9 +1,9 @@
 package org.jenkinsci.plugins.p4.review;
 
-import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -17,6 +17,7 @@ import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -67,7 +68,10 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		return stringParameters;
 	}
 
+	@POST
 	public void doBuildSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+
+		project.checkPermission(Item.BUILD);
 
 		JSONObject formData = req.getSubmittedForm();
 		if (!formData.isEmpty()) {
@@ -75,9 +79,10 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		}
 	}
 
+	@POST
 	public void doBuild(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
 
-		project.checkPermission(AbstractProject.BUILD);
+		project.checkPermission(Item.BUILD);
 
 		List<ParameterValue> values = new ArrayList<ParameterValue>();
 		List<ParameterDefinition> defs = new ArrayList<ParameterDefinition>();
