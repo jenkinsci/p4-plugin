@@ -186,7 +186,12 @@ public abstract class AbstractTask implements Serializable {
 		} catch (Exception e) {
 			String msg = "P4: Task Exception: " + e.getMessage();
 			logger.severe(msg);
-			throw new AbortException(msg);
+			AbortException ae = new AbortException(msg);
+			// AbortExceptions don't have a constructor with a cause.  We want to include the cause for debugging
+			// purposes so advanced developers can print the stack trace without changing the legacy behavior of
+			// returning an AbortException (which has specific implications for Jenkins).
+			ae.initCause(e);
+			throw ae;
 		}
 	}
 
