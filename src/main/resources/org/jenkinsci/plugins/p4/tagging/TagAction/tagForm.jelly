@@ -40,7 +40,7 @@
 
 			<p><b>Create a Perforce Automatic label:</b></p>
 			<p>The Label's view is based on the workspace used during the build and Revision is set to change number: ${it.buildChange}.</p>
-			<form action="submit" method="get" name="label">
+			<form action="submit" method="post" name="label">
 				<table border="0" width="640">
 					<tr>
 						<td nowrap="nowrap"><b>Label Name:</b> </td>
