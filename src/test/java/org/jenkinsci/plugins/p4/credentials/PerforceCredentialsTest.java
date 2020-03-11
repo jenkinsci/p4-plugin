@@ -35,6 +35,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class PerforceCredentialsTest extends DefaultEnvironment {
@@ -68,7 +70,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		List<P4BaseCredentials> list = lookupCredentials();
 		assertEquals("localhost:1666", list.get(0).getP4port());
 		assertEquals("user", list.get(0).getUsername());
-		assertFalse(list.get(0).isSsl());
+		assertNull(list.get(0).getSsl());
 
 		String name = CredentialsNameProvider.name(credential);
 		assertEquals("user/****** (desc:passwd)", name);
@@ -89,7 +91,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertFalse(new SystemCredentialsProvider().getCredentials().isEmpty());
 
 		assertEquals("pass", credential.getPassword().getPlainText());
-		assertFalse(credential.isSsl());
+		assertNull(credential.getSsl());
 
 		AuthorisationConfig auth = new AuthorisationConfig(credential);
 		assertEquals(AuthorisationType.PASSWORD, auth.getType());
@@ -118,7 +120,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		SystemCredentialsProvider.getInstance().save();
 		assertFalse(new SystemCredentialsProvider().getCredentials().isEmpty());
 
-		assertTrue(credential.isSsl());
+		assertNotNull(credential.getSsl());
 		assertEquals("12345ABCD", credential.getTrust());
 	}
 

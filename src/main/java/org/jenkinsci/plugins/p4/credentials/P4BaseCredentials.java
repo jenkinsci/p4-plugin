@@ -71,10 +71,6 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		return "p4java://" + p4port;
 	}
 
-	public boolean isSsl() {
-		return (ssl == null) ? false : true;
-	}
-
 	public TrustImpl getSsl() {
 		return ssl;
 	}

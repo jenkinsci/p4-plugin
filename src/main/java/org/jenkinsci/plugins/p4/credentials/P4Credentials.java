@@ -10,9 +10,9 @@ public interface P4Credentials extends StandardUsernameCredentials {
 	public String getP4port();
 
 	/**
-	 * @return true if SSL is selected
+	 * @return SSL object if enabled
 	 */
-	public boolean isSsl();
+	public TrustImpl getSsl();
 
 	/**
 	 * @return The P4 trust fingerprint
