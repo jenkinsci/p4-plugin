@@ -103,8 +103,8 @@ public class PerforceScm extends SCM {
 	private final P4Ref revision;
 
 	private String script;
-	private TagAction tagAction = null;
 
+	private transient TagAction tagAction = null;
 	private transient P4Ref parentChange;
 	private transient P4Review review;
 
