@@ -1,5 +1,17 @@
 ## Release notes
 
+### Release 1.10.12 (major features/fixes)
+
+[@26364](https://swarm.workshop.perforce.com/changes/26364) - Merge pull request #118 from williambrode/InitCauseAbortExecption.  Initialize the cause of AbortException
+
+[@26363](https://swarm.workshop.perforce.com/changes/26363) - Merge pull request #117 from mlynnyk/tagAction-issue.  TagAction should not be written to config.xml
+
+[@26359](https://swarm.workshop.perforce.com/changes/26359) - Removed "isSsl()" method from P4Credentials due to it causing an issue with JCasC plugin.  JENKINS-58249
+
+[@26312](https://swarm.workshop.perforce.com/changes/26312) - Added a getSsl method into the Perforce credential classes to enable support for the Configuration as code plugin.  JENKINS-58249
+
+[@26356](https://swarm.workshop.perforce.com/changes/26356) - Reverting job list to original pre 1.10.10 release.  JENKINS-61156
+
 
 ### Release 1.10.11 (major features/fixes)
 
