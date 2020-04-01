@@ -329,22 +329,40 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	private long findLatestChange(P4Path path, TaskListener listener) throws Exception {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
-			// Changelist end limit (report up to this change)
-			String to = path.getRevision();
-			to = (to != null && !to.isEmpty()) ? to : "now";
+			// Changelist 'to' limit (report up to this change)
+			long to = getToLimit(p4, path.getRevision());
 
-			long change = p4.getHead(path.getPath() + "/..." + "@" + to);
+			// Constrained by headLimit see JENKINS-61745.
+			long rangeLimit = to - p4.getHeadLimit();
+			String limit = (rangeLimit > 0) ? "@" + rangeLimit + "," : "";
+
+			long change = p4.getHead(path.getPath() + "/..." + limit + "@" + to);
 
 			List<String> maps = path.getMappings();
 			if (maps != null && !maps.isEmpty()) {
 				for (String map : maps) {
-					if(map.startsWith("-")) {
+					if (map.startsWith("-")) {
 						continue;
 					}
-					long c = p4.getHead(map + "@" + to);
+					long c = p4.getHead(map + "@" + limit + to);
 					change = (c > change) ? c : change;
 				}
 			}
+			return change;
+		}
+	}
+
+	private long getToLimit(ConnectionHelper p4, String to) throws Exception {
+		String counter = p4.getCounter("change");
+		long change = Long.parseLong(counter);
+
+		if (to == null) {
+			return change;
+		}
+
+		try {
+			return Long.parseLong(to);
+		} catch (NumberFormatException e) {
 			return change;
 		}
 	}
