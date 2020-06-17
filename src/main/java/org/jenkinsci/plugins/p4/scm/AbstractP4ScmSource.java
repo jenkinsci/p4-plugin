@@ -344,7 +344,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					if (map.startsWith("-")) {
 						continue;
 					}
-					long c = p4.getHead(map + "@" + limit + to);
+					long c = p4.getHead(map + limit + "@" + to);
 					change = (c > change) ? c : change;
 				}
 			}
