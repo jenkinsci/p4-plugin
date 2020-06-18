@@ -3,8 +3,10 @@ package org.jenkinsci.plugins.p4.client;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.mapbased.server.Server;
 import com.perforce.p4java.server.IServer;
+import com.perforce.p4java.server.callback.ICommandCallback;
 import com.perforce.p4java.server.callback.IStreamingCallback;
 import hudson.model.TaskListener;
+import org.jenkinsci.plugins.p4.console.P4Logging;
 
 import java.util.Map;
 
@@ -75,6 +77,11 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 			return;
 		}
 
+		// Skip logging if quiet is set in the P4Logging callback handler.
+		if(isQuiet()) {
+			return;
+		}
+
 		StringBuffer msg = new StringBuffer();
 		String action = (map.get("action") == null) ? "" : (String) map.get("action");
 		String clientFile = (map.get("clientFile") == null) ? "" : (String) map.get("clientFile");
@@ -86,6 +93,18 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 		msg.append(clientFile + " ");
 		msg.append(action);
 		listener.getLogger().println(msg.toString());
+	}
+
+	private boolean isQuiet() {
+		// Have to fetch callback then reset it - need a getter in P4Java
+		ICommandCallback callback = server.registerCallback(null);
+		server.registerCallback(callback);
+
+		if(callback instanceof P4Logging) {
+			P4Logging logging = (P4Logging) callback;
+			return logging.isQuiet();
+		}
+		return false;
 	}
 
 }

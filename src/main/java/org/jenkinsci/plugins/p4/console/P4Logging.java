@@ -5,15 +5,20 @@ import hudson.model.TaskListener;
 
 import java.util.logging.Logger;
 
+import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.COMMAND;
+
 public class P4Logging implements ICommandCallback {
 
 	private static Logger logger = Logger.getLogger(P4Logging.class.getName());
 
 	private final TaskListener listener;
+	private final boolean quiet;
+
 	private static int MAX_LINE = 80;
 
-	public P4Logging(TaskListener listener) {
+	public P4Logging(TaskListener listener, boolean quiet) {
 		this.listener = listener;
+		this.quiet = quiet;
 	}
 
 	public void issuingServerCommand(int key, String commandString) {
@@ -21,11 +26,13 @@ public class P4Logging implements ICommandCallback {
 		if (commandString.length() > MAX_LINE) {
 			String cmd = commandString.substring(0, MAX_LINE);
 			cmd = cmd + "___";
-			log("(p4):cmd:" + "... p4 " + cmd);
+			log(COMMAND + "... p4 " + cmd);
 		} else {
-			log("(p4):cmd:" + "... p4 " + commandString);
+			log(COMMAND + "... p4 " + commandString);
 		}
-		log("p4 " + commandString + "\n");
+		if(!quiet) {
+			log("p4 " + commandString + "\n");
+		}
 	}
 
 	public void completedServerCommand(int key, long millisecsTaken) {
@@ -44,6 +51,10 @@ public class P4Logging implements ICommandCallback {
 
 	public TaskListener getListener() {
 		return listener;
+	}
+
+	public boolean isQuiet() {
+		return quiet;
 	}
 
 	private void log(String msg) {

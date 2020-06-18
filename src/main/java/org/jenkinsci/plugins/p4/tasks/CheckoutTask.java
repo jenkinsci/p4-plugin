@@ -3,6 +3,8 @@ package org.jenkinsci.plugins.p4.tasks;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IRepo;
 import com.perforce.p4java.impl.generic.core.Label;
+import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.callback.ICommandCallback;
 import hudson.AbortException;
 import hudson.FilePath.FileCallable;
 import hudson.model.Run;
@@ -14,6 +16,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -159,6 +162,12 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
+
+		// Create new logging callback with 'quiet' option from Populate
+		IOptionsServer server = p4.getConnection();
+		ICommandCallback logging = new P4Logging(getListener(), populate.isQuiet());
+		server.registerCallback(logging);
+
 		// Tidy the workspace before sync/build
 		p4.tidyWorkspace(populate);
 

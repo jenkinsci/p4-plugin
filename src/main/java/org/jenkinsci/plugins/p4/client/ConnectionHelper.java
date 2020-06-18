@@ -161,7 +161,7 @@ public class ConnectionHelper implements AutoCloseable {
 		this.connection.registerProgressCallback(progress);
 
 		// Register logging callback
-		ICommandCallback logging = new P4Logging(listener);
+		ICommandCallback logging = new P4Logging(listener, false);
 		this.connection.registerCallback(logging);
 
 		// Get Environment
