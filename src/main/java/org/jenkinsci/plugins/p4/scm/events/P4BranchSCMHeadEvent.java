@@ -46,7 +46,7 @@ public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 		String p4port = getField(getPayload(), ReviewProp.P4_PORT);
 		String id = source.getCredential();
 		P4BaseCredentials credential = ConnectionHelper.findCredential(id, scmSource.getOwner());
-		if (p4port == null || !p4port.equals(credential.getP4port())) {
+		if (p4port == null || !credential.getP4port().contains(p4port)) {
 			return Collections.emptyMap();
 		}
 

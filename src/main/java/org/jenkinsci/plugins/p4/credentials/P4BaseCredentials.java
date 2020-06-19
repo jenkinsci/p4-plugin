@@ -56,7 +56,10 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	}
 
 	public String getP4port() {
-		return p4port;
+		if(ssl == null) {
+			return p4port;
+		}
+		return "ssl:" + p4port;
 	}
 
 	public String getP4JavaUri() {
