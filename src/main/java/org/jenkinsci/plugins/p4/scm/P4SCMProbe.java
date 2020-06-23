@@ -8,6 +8,7 @@ import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -25,9 +26,9 @@ public class P4SCMProbe extends SCMProbe {
 
 	private final P4SCMHead head;
 
-	private transient ConnectionHelper p4;
+	private transient TempClientHelper p4;
 
-	public P4SCMProbe(ConnectionHelper p4, P4SCMHead head) {
+	public P4SCMProbe(TempClientHelper p4, P4SCMHead head) {
 		this.head = head;
 		this.p4 = p4;
 	}
@@ -41,9 +42,8 @@ public class P4SCMProbe extends SCMProbe {
 	public long lastModified() {
 		long last = 0L;
 		try {
-			P4Path path = head.getPath();
-			// TODO this may need to scan 'mappings' for HelixBranches
-			long change = p4.getHead(path.getPathBuilder("..."));
+			// use temp workspace and client syntax to get changes
+			long change = p4.getClientHead();
 			if (change > last) {
 				last = change;
 			}

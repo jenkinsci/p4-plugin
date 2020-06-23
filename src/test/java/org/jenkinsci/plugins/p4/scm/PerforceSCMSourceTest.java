@@ -6,6 +6,13 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import com.perforce.p4java.core.IMapEntry;
+import com.perforce.p4java.core.IStream;
+import com.perforce.p4java.core.IStreamSummary;
+import com.perforce.p4java.core.IStreamViewMapping;
+import com.perforce.p4java.core.ViewMap;
+import com.perforce.p4java.impl.generic.core.Stream;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Result;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
@@ -15,6 +22,7 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
@@ -367,6 +375,81 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
+
+	@Test
+	public void testMultiBranchStreamWithImports() throws Exception {
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams-imports");
+
+		CredentialsStore folderStore = getFolderStore(multi);
+		P4BaseCredentials inFolderCredentials = new P4PasswordImpl(
+				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", p4d.getRshPort(),
+				null, "jenkins", "0", "0", null, "jenkins");
+		folderStore.addCredentials(Domain.global(), inFolderCredentials);
+
+		// Get a connection
+		ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials);
+		IOptionsServer server = p4.getConnection();
+
+		// create a Mainline stream
+		IStream stream = new Stream();
+		stream.setStream("//stream/import");
+		stream.setName("import");
+		stream.setType(IStreamSummary.Type.MAINLINE);
+
+		// add a view with import+ mapping
+		ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
+		streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
+		streamView.addEntry(new Stream.StreamViewMapping(1, IStreamViewMapping.PathType.IMPORTPLUS, "imports/...", "//depot/import_test/..."));
+		stream.setStreamView(streamView);
+		server.createStream(stream);
+
+		// Create a Jenkinsfile
+		String pipeline = ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        script {\n"
+				+ "          if(!fileExists('imports/file1.txt'))   error 'missing import'\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+		submitStreamFile(jenkins, "//stream/import/Jenkinsfile", pipeline, "description");
+
+		// create a file to import
+		submitFile(jenkins, "//depot/import_test/file1.txt", "content");
+
+		// create multi-branch project with one branch
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/imp...";
+		StreamsScmSource source = new StreamsScmSource(inFolderCredentials.getId(), includes, null, format);
+		source.setPopulate(new AutoCleanImpl());
+
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+
+		// create a new change on the imported path
+		String change = submitFile(jenkins, "//depot/import_test/file2.txt", "content");
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowJob job = multi.getItem("import");
+		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
+		assertEquals(1, job.getLastBuild().getChangeSets().size());
+		P4ChangeSet changeSet1 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
+		assertEquals(1, changeSet1.getHistory().size());
+		assertEquals(change, changeSet1.getHistory().get(0).getId().toString());
+	}
+
+
 
 	@Test
 	public void testMultiBranchClassicUpdateEvent() throws Exception {

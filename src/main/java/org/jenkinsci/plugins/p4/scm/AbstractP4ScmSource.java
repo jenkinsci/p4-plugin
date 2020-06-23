@@ -26,7 +26,9 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -182,7 +184,9 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 					// get revision and add observe
 					observer.observe(head, revision);
 				} else {
-					try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+					P4Path p4Path = head.getPath();
+					Workspace workspace = getWorkspace(p4Path);
+					try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, workspace)) {
 						SCMSourceCriteria.Probe probe = new P4SCMProbe(p4, head);
 						if (criteria.isHead(probe, listener)) {
 							logger.fine("SCM: observer head: " + head + " revision: " + revision);
@@ -327,19 +331,23 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	}
 
 	private long findLatestChange(P4Path path, TaskListener listener) throws Exception {
-		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+		Workspace workspace = getWorkspace(path);
+		try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, workspace)) {
 
 			// Changelist 'to' limit (report up to this change)
 			long to = getToLimit(p4, path.getRevision());
+			P4Ref toRef = new P4ChangeRef(to);
 
 			// Constrained by headLimit see JENKINS-61745.
 			long rangeLimit = to - p4.getHeadLimit();
-			String limit = (rangeLimit > 0) ? "@" + rangeLimit + "," : "";
+			P4Ref fromRef = (rangeLimit > 0) ? new P4ChangeRef(rangeLimit) : null;
 
-			long change = p4.getHead(path.getPath() + "/..." + limit + "@" + to);
+			// Use temp client to map branches/streams when calculating change
+			long change = p4.getClientHead(fromRef, toRef);
 
 			List<String> maps = path.getMappings();
 			if (maps != null && !maps.isEmpty()) {
+				String limit = (rangeLimit > 0) ? "@" + rangeLimit + "," : "";
 				for (String map : maps) {
 					if (map.startsWith("-")) {
 						continue;
