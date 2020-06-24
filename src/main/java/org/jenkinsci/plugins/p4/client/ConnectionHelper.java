@@ -164,16 +164,13 @@ public class ConnectionHelper implements AutoCloseable {
 		ICommandCallback logging = new P4Logging(listener, false);
 		this.connection.registerCallback(logging);
 
-		// Get Environment
-		String ignore = ".p4ignore";
-		String os = System.getProperty("os.name").toLowerCase();
-		if (os.contains("win")) {
-			ignore = "p4ignore.txt";
-		}
-
-		// Set p4ignore file
+		// Check P4IGNORE Environment
 		Server server = (Server) this.connection;
-		server.setIgnoreFileName(ignore);
+		if (server.getIgnoreFileName() == null) {
+			String os = System.getProperty("os.name").toLowerCase();
+			String ignore = os.contains("win") ? "p4ignore.txt" : ".p4ignore";
+			server.setIgnoreFileName(ignore);
+		}
 
 		return true;
 	}
@@ -687,7 +684,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 *
 	 * @param path Perforce depot path //foo/...
 	 * @param from revision specifier
-	 * @param to revision specifier
+	 * @param to   revision specifier
 	 * @return change number
 	 * @throws Exception push up stack
 	 */
@@ -931,7 +928,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 	public long getHeadLimit() {
 		PerforceScm.DescriptorImpl scm = getP4SCM();
-		if(scm != null) {
+		if (scm != null) {
 			return scm.getHeadLimit();
 		}
 		return 0;
