@@ -1,5 +1,18 @@
 ## Release notes
 
+### Release 1.10.13 (major features/fixes)
+
+[@26587](https://swarm.workshop.perforce.com/changes/26587) - Use default P4IGNORE if unset.  Check if P4Java's environment has set P4IGNORE for the server connection, otherwise use OS defaults.  JENKINS-59726 JENKINS-54707
+
+[@26585](https://swarm.workshop.perforce.com/changes/26585) - Use a TempClientHelper to map the P4Path and then check for changes.  JENKINS-62259
+
+[@26581](https://swarm.workshop.perforce.com/changes/26581) - Return "ssl:" on P4PORT for SSL connections.  Use 'contains' check on trigger checks for backwards compatibility.  JENKINS-62253
+
+[@26579](https://swarm.workshop.perforce.com/changes/26579) - Prevent logging if Populate quiet flag is set.  Originally the Populate quiet flag was passed as a '-q' flag to the command, but some commands using callback streaming handlers still reported output.  JENKINS-59750
+
+[@26423](https://swarm.workshop.perforce.com/changes/26423) - Add range limit for MultiBranch head revision queries.  JENKINS-61745
+
+
 ### Release 1.10.12 (major features/fixes)
 
 [@26364](https://swarm.workshop.perforce.com/changes/26364) - Merge pull request #118 from williambrode/InitCauseAbortExecption.  Initialize the cause of AbortException
