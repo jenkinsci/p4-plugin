@@ -122,7 +122,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 				PerforceScm p4scm = PerforceScm.convertToPerforceScm(scmTrigger);
 				if (p4scm != null) {
 					String id = p4scm.getCredential();
-					P4BaseCredentials credential = ConnectionHelper.findCredential(id);
+					P4BaseCredentials credential = ConnectionHelper.findCredential(id, job);
 					if (credential != null
 							&& credential.getP4port() != null
 							&& credential.getP4port().contains(port)) {
