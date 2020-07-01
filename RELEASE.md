@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.10.14 (major features/fixes)
+
+[@26593](https://swarm.workshop.perforce.com/changes/26593) - P4Trigger support for Folder based credentials.  Avoid deprecated findCredential method and use the 'job' as the Item.  JENKINS-62811
+
+
 ### Release 1.10.13 (major features/fixes)
 
 [@26587](https://swarm.workshop.perforce.com/changes/26587) - Use default P4IGNORE if unset.  Check if P4Java's environment has set P4IGNORE for the server connection, otherwise use OS defaults.  JENKINS-59726 JENKINS-54707
