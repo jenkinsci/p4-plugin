@@ -82,11 +82,6 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	@ClassRule
 	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
 	
-	@BeforeClass
-	public static void setupVirtualStream() throws Exception {
-		createVirtualStream();
-	}
-	
 	@Before
 	public void buildCredentials() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
@@ -97,10 +92,15 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
-		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
+		StreamsScmSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams");
 		multi.getSourcesList().add(new BranchSource(source));
+
+		// Get a connection and create the virtual stream.
+		ConnectionHelper p4 = new ConnectionHelper(source.getOwner(), CREDENTIAL, null);
+		createVirtualStream(p4.getConnection());
+
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
@@ -1237,54 +1237,32 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	/**
 	 * create the virtual Stream //stream/Ace-virtual, name=Ace-virtual
 	 */
-	protected static void createVirtualStream() {
+	protected static void createVirtualStream(IOptionsServer server) throws P4JavaException {
 		String virtualStreamName = "//stream/Ace-virtual";
 		String parentName =	"//stream/Ace-main" ;
 
-		String p4Port = p4d.getRshPort().replace("rsh:", "p4jrsh://") + " --java";
-		IOptionsServer server = null;
+		// view mapping of "share ..."
+		ViewMap<IStreamViewMapping> view = new ViewMap<>();
+		Stream.StreamViewMapping sEntry = new Stream.StreamViewMapping();
+		sEntry.setPathType(IStreamViewMapping.PathType.SHARE);
+		sEntry.setViewPath("...");
+		sEntry.setOrder(0);
+		view.addEntry(sEntry);
 
-		try {
-			server = ServerFactory.getOptionsServer(p4Port, null);
-			server.connect();
-			server.setUserName("jenkins");
-			server.login("jenkins");
+		IStream stream = new Stream();
+		stream.setDescription("A simple Virtual Stream");
+		stream.setName("Ace-Virtual");
+		stream.setParent(parentName);
+		stream.setStream(virtualStreamName);
+		stream.setOwnerName(server.getUserName());
+		stream.setType(IStreamSummary.Type.VIRTUAL);
+		stream.setStreamView(view);
 
-			// view mapping of "share ..."
-			ViewMap<IStreamViewMapping> view = new ViewMap<>();
-			Stream.StreamViewMapping sEntry = new Stream.StreamViewMapping();
-			sEntry.setPathType(IStreamViewMapping.PathType.SHARE);
-			sEntry.setViewPath("...");
-			sEntry.setOrder(0);
-			view.addEntry(sEntry);
+		IStreamSummary.IOptions ssOptions = new StreamSummary.Options();
+		ssOptions.setNoToParent(true);
+		ssOptions.setNoFromParent(true);
+		stream.setOptions(ssOptions);
 
-			IStream stream = new Stream();
-			stream.setDescription("A simple Virtual Stream");
-			stream.setName("Ace-Virtual");
-			stream.setParent(parentName);
-			stream.setStream(virtualStreamName);
-			stream.setOwnerName(server.getUserName());
-			stream.setType(IStreamSummary.Type.VIRTUAL);
-			stream.setStreamView(view);
-
-			IStreamSummary.IOptions ssOptions = new StreamSummary.Options();
-			ssOptions.setNoToParent(true);
-			ssOptions.setNoFromParent(true);
-			stream.setOptions(ssOptions);
-			
-			String result = server.createStream(stream);
-			System.out.println("Virtual Stream creation result: " + result);
-
-		} catch (P4JavaException | URISyntaxException e) {
-			e.printStackTrace();
-		} finally {
-			if (server != null) {
-				try {
-					server.disconnect();
-				} catch (AccessException | ConnectionException e) {
-					// don't care.
-				}
-			}
-		}
+		String result = server.createStream(stream);
 	}
 }
