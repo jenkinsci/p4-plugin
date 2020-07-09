@@ -11,9 +11,15 @@ import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IStreamViewMapping;
 import com.perforce.p4java.core.ViewMap;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.ConnectionException;
+import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Stream;
+import com.perforce.p4java.impl.generic.core.StreamSummary;
 import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.ServerFactory;
 import hudson.model.Result;
+import java.net.URISyntaxException;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -59,6 +65,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -74,7 +81,12 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 	@ClassRule
 	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
-
+	
+	@BeforeClass
+	public static void setupVirtualStream() throws Exception {
+		createVirtualStream();
+	}
+	
 	@Before
 	public void buildCredentials() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
@@ -102,6 +114,17 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		assertThat("The branch was built", build, notNullValue());
 		assertThat("The branch was built", build.getNumber(), is(1));
+		
+		// Check for Virtual Stream
+		job = multi.getItem("Ace-virtual");	
+
+		assertThat("We now have a branch", job, notNullValue());
+		
+	    build = job.getLastBuild();
+
+		assertThat("The branch was built", build, notNullValue());
+		assertThat("The branch was built", build.getNumber(), is(1));
+		
 	}
 
 	@Test
@@ -1209,5 +1232,59 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		when(mockSwarm.getBranchesInProject(project)).thenReturn(swarmBranches);
 		return mockSwarm;
+	}
+	
+	/**
+	 * create the virtual Stream //stream/Ace-virtual, name=Ace-virtual
+	 */
+	protected static void createVirtualStream() {
+		String virtualStreamName = "//stream/Ace-virtual";
+		String parentName =	"//stream/Ace-main" ;
+
+		String p4Port = p4d.getRshPort().replace("rsh:", "p4jrsh://") + " --java";
+		IOptionsServer server = null;
+
+		try {
+			server = ServerFactory.getOptionsServer(p4Port, null);
+			server.connect();
+			server.setUserName("jenkins");
+			server.login("jenkins");
+
+			// view mapping of "share ..."
+			ViewMap<IStreamViewMapping> view = new ViewMap<>();
+			Stream.StreamViewMapping sEntry = new Stream.StreamViewMapping();
+			sEntry.setPathType(IStreamViewMapping.PathType.SHARE);
+			sEntry.setViewPath("...");
+			sEntry.setOrder(0);
+			view.addEntry(sEntry);
+
+			IStream stream = new Stream();
+			stream.setDescription("A simple Virtual Stream");
+			stream.setName("Ace-Virtual");
+			stream.setParent(parentName);
+			stream.setStream(virtualStreamName);
+			stream.setOwnerName(server.getUserName());
+			stream.setType(IStreamSummary.Type.VIRTUAL);
+			stream.setStreamView(view);
+
+			IStreamSummary.IOptions ssOptions = new StreamSummary.Options();
+			ssOptions.setNoToParent(true);
+			ssOptions.setNoFromParent(true);
+			stream.setOptions(ssOptions);
+			
+			String result = server.createStream(stream);
+			System.out.println("Virtual Stream creation result: " + result);
+
+		} catch (P4JavaException | URISyntaxException e) {
+			e.printStackTrace();
+		} finally {
+			if (server != null) {
+				try {
+					server.disconnect();
+				} catch (AccessException | ConnectionException e) {
+					// don't care.
+				}
+			}
+		}
 	}
 }
