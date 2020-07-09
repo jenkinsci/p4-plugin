@@ -662,21 +662,44 @@ public class ConnectionHelper implements AutoCloseable {
 	 * Get the latest change on the given path
 	 *
 	 * @param path Perforce depot path //foo/...
+	 * @param from From revision (change or label)
+	 * @param to To revision (change or label)
 	 * @return change number
 	 * @throws Exception push up stack
 	 */
-	public long getHead(String path) throws Exception {
-		logger.info("getHead: p4 changes " + path);
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+	public long getHead(String path, P4Ref from, P4Ref to) throws Exception {
+		String revisionPath = buildRevisionLimit(path, from, to);
+		logger.info("getHead: p4 changes " + revisionPath);
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(revisionPath);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(1);
-
 		List<IChangelistSummary> changes = connection.getChangelists(spec, opts);
+
 		if (!changes.isEmpty()) {
 			return changes.get(0).getId();
 		}
 		return -1;
+	}
+
+	/**
+	 * Build a revision limit spec.
+	 *
+	 * @param path Perforce depot or client path //foo/...
+	 * @param from From revision (change or label)
+	 * @param to To revision (change or label)
+	 * @return a Perforce Revision Spec
+	 */
+	protected String buildRevisionLimit(String path, P4Ref from, P4Ref to) {
+		String revisionPath = path;
+		if(from != null && to != null) {
+			revisionPath = revisionPath + "@" + from.toString() + "," + to.toString();
+		} else if(from == null && to != null) {
+			revisionPath = revisionPath + "@" + to.toString();
+		} else if(from != null && to == null) {
+			revisionPath = revisionPath + "@" + from.toString() + ",now";
+		}
+		return revisionPath;
 	}
 
 	/**
@@ -688,10 +711,10 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @return change number
 	 * @throws Exception push up stack
 	 */
-	public long getLowestHead(String path, String from, String to) throws Exception {
-		String rev = path + "@" + from + ",@" + to;
-		logger.info("getLowestHead: p4 changes " + rev);
-		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(rev);
+	public long getLowestHead(String path, P4Ref from, P4Ref to) throws Exception {
+		String revisionPath = buildRevisionLimit(path, from, to);
+		logger.info("getLowestHead: p4 changes " + revisionPath);
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(revisionPath);
 
 		List<IChangelistSummary> changes = connection.getChangelists(spec, null);
 		if (!changes.isEmpty()) {

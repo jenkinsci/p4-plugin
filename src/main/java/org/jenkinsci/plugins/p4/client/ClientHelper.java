@@ -1100,16 +1100,10 @@ public class ClientHelper extends ConnectionHelper {
 		long change = Long.parseLong(latestChange);
 
 		// build file revision spec
-		String ws = "//" + iclient.getName() + "/...";
-		if(from != null && to != null) {
-			ws = ws + "@" + from.toString() + "," + to.toString();
-		} else if(from == null && to != null) {
-			ws = ws + "@" + to.toString();
-		} else if(from != null && to == null) {
-			ws = ws + "@" + from.toString() + ",now";
-		}
+		String path = "//" + iclient.getName() + "/...";
+		String revisionPath = buildRevisionLimit(path, from, to);
 
-		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(ws);
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisionPath);
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setType(IChangelist.Type.SUBMITTED);
@@ -1120,9 +1114,9 @@ public class ClientHelper extends ConnectionHelper {
 			change = list.get(0).getId();
 		} else if ( to != null) {
 			change = to.getChange();
-			log("P4: no revisions under " + ws + " using change: " + change);
+			log("P4: no revisions under " + revisionPath + " using change: " + change);
 		} else {
-			log("P4: no revisions under " + ws + " using latest change: " + change);
+			log("P4: no revisions under " + revisionPath + " using latest change: " + change);
 		}
 		return change;
 	}

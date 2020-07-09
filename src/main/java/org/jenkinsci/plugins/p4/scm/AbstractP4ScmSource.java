@@ -21,12 +21,12 @@ import jenkins.scm.api.trait.SCMSourceTrait;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.TagSCMHeadCategory;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
-import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -347,12 +347,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 			List<String> maps = path.getMappings();
 			if (maps != null && !maps.isEmpty()) {
-				String limit = (rangeLimit > 0) ? "@" + rangeLimit + "," : "";
 				for (String map : maps) {
 					if (map.startsWith("-")) {
 						continue;
 					}
-					long c = p4.getHead(map + limit + "@" + to);
+					long c = p4.getHead(map, fromRef, toRef);
 					change = (c > change) ? c : change;
 				}
 			}
@@ -379,18 +378,19 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
 			// Calculate change revision range.
-			String to = path.getRevision();
-			to = (to != null && !to.isEmpty()) ? to : "now";
-			long change = ref.getChange();
-			String from = String.valueOf(change + 1);
+			String toStr = path.getRevision();
+			P4Ref toRef = (StringUtils.isEmpty(toStr)) ? null : new P4ChangeRef(Long.parseLong(toStr));
 
-			long c = p4.getLowestHead(path.getPath() + "/...", from, to);
+			long change = ref.getChange();
+			P4Ref fromRef = new P4ChangeRef(change + 1);
+
+			long c = p4.getLowestHead(path.getPath() + "/...", fromRef, toRef);
 			change = (c > change) ? c : change;
 
 			List<String> maps = path.getMappings();
 			if (maps != null && !maps.isEmpty()) {
 				for (String map : maps) {
-					c = p4.getLowestHead(map, from, to);
+					c = p4.getLowestHead(map, fromRef, toRef);
 					change = (c > change) ? c : change;
 				}
 			}
