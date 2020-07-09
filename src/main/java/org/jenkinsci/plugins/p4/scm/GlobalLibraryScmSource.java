@@ -12,6 +12,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -44,11 +45,14 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	@Override
 	protected SCMRevision retrieve(@NonNull final String thingName, @NonNull TaskListener listener)
 			throws IOException, InterruptedException {
-		try {
-			P4Path p4Path = new P4Path(path);
+
+		P4Path p4Path = new P4Path(path);
+		Workspace workspace = getWorkspace(p4Path);
+
+		try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, workspace)) {
 			p4Path.setRevision(thingName);
 			P4SCMHead head = new P4SCMHead(thingName, p4Path);
-			SCMRevision revision = getRevision(head, listener);
+			SCMRevision revision = getRevision(p4, head);
 			return revision;
 		} catch (Exception e) {
 			throw new IOException(e.getMessage());

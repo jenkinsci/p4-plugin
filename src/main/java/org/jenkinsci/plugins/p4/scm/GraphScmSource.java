@@ -18,6 +18,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.populate.PopulateDescriptor;
@@ -147,12 +148,10 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
-		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
-			P4Ref ref = p4.getGraphHead(head.getPath().getPath());
-			P4SCMRevision revision = new P4SCMRevision(head, ref);
-			return revision;
-		}
+	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) throws Exception {
+		P4Ref ref = p4.getGraphHead(head.getPath().getPath());
+		P4SCMRevision revision = new P4SCMRevision(head, ref);
+		return revision;
 	}
 
 	@Override
