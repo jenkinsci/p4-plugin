@@ -27,6 +27,7 @@ import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -152,57 +153,76 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
-
-		try {
+		try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, null)) {
 			List<P4SCMHead> heads = getHeads(listener);
 			List<P4SCMHead> tags = getTags(listener);
 			heads.addAll(tags);
 
 			for (P4SCMHead head : heads) {
 				logger.fine("SCM: retrieve Head: " + head);
-
-				// get SCMRevision from payload if trigger event, else build from head (latest)
-				SCMRevision revision = getRevision(head, listener);
-				if (event != null) {
-					JSONObject payload = (JSONObject) event.getPayload();
-					P4SCMRevision rev = getRevision(payload);
-					if (rev.getHead().equals(head)) {
-						revision = rev;
-						logger.fine("SCM: retrieve (trigger) Revision: " + revision);
-					} else {
-						if (rev.getHead() instanceof ChangeRequestSCMHead) {
-							if (((P4ChangeRequestSCMHead) rev.getHead()).getPath().getPath().equals(head.getPath().getPath())) {
-								revision = rev;
-								logger.fine("SCM: retrieve (trigger) Swarm Review: " + revision);
-							}
-						}
-					}
-				}
-
-				// null criteria means that all branches match.
-				if (criteria == null) {
-					// get revision and add observe
-					observer.observe(head, revision);
-				} else {
-					P4Path p4Path = head.getPath();
-					Workspace workspace = getWorkspace(p4Path);
-					try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, workspace)) {
-						SCMSourceCriteria.Probe probe = new P4SCMProbe(p4, head);
-						if (criteria.isHead(probe, listener)) {
-							logger.fine("SCM: observer head: " + head + " revision: " + revision);
-							if (revision != null) {
-								observer.observe(revision.getHead(), revision);
-							}
-						}
-					}
-				}
-				// check for user abort
-				checkInterrupt();
+				retrieveHead(p4, head, criteria, observer, event);
 			}
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
+
+	private void retrieveHead(TempClientHelper p4, P4SCMHead head, SCMSourceCriteria criteria, SCMHeadObserver observer, SCMHeadEvent<?> event) throws Exception {
+		P4Path p4Path = head.getPath();
+		Workspace workspace = getWorkspace(p4Path);
+		p4.update(workspace);
+
+		// get SCMRevision from payload if trigger event, else build from head (latest)
+		SCMRevision revision = getEventRevision(head, event);
+		if (revision == null) {
+			revision = getRevision(p4, head);
+		}
+
+		// null criteria means that all branches match.
+		if (criteria == null) {
+			// get revision and add observe
+			observer.observe(head, revision);
+		} else {
+			SCMSourceCriteria.Probe probe = new P4SCMProbe(p4, head);
+			if (criteria.isHead(probe, p4.getListener())) {
+				logger.fine("SCM: observer head: " + head + " revision: " + revision);
+				if (revision != null) {
+					observer.observe(revision.getHead(), revision);
+				}
+			}
+		}
+		// check for user abort
+		checkInterrupt();
+
+	}
+
+	/**
+	 * Get SCMRevision from payload if trigger event
+	 *
+	 * @param head  SCMHead
+	 * @param event Event
+	 * @return SCMRevision revision or null
+	 */
+	private SCMRevision getEventRevision(P4SCMHead head, SCMHeadEvent<?> event) {
+		if (event == null) {
+			return null;
+		}
+		JSONObject payload = (JSONObject) event.getPayload();
+		P4SCMRevision rev = getRevision(payload);
+		if (rev.getHead().equals(head)) {
+			logger.fine("SCM: retrieve (trigger) Revision: " + rev);
+			return rev;
+		} else {
+			if (rev.getHead() instanceof ChangeRequestSCMHead) {
+				if (((P4ChangeRequestSCMHead) rev.getHead()).getPath().getPath().equals(head.getPath().getPath())) {
+					logger.fine("SCM: retrieve (trigger) Swarm Review: " + rev);
+					return rev;
+				}
+			}
+		}
+		return null;
+	}
+
 
 	@Override
 	protected SCMProbe createProbe(@NonNull SCMHead head, @CheckForNull SCMRevision revision) throws IOException {
@@ -301,11 +321,10 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	 * Get the Latest change for the path specified in P4SCMHead.
 	 *
 	 * @param head     SCMHead
-	 * @param listener for logging
 	 * @return The latest change as a P4SCMRevision object
 	 * @throws Exception pushed up stack
 	 */
-	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
+	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) throws Exception {
 
 		// TODO look for graph revisions too
 
@@ -322,41 +341,37 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		 * first scan then the oldest un-built change.
 		 */
 		if (last == null || !perChange) {
-			change = findLatestChange(path, listener);
+			change = findLatestChange(p4, path);
 		} else {
-			change = findIncrementalChange(path, last.getRef(), listener);
+			change = findIncrementalChange(p4, path, last.getRef());
 		}
 
 		return new P4SCMRevision(head, new P4ChangeRef(change));
 	}
 
-	private long findLatestChange(P4Path path, TaskListener listener) throws Exception {
-		Workspace workspace = getWorkspace(path);
-		try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, workspace)) {
+	private long findLatestChange(ClientHelper p4, P4Path path) throws Exception {
+		// Changelist 'to' limit (report up to this change)
+		long to = getToLimit(p4, path.getRevision());
+		P4Ref toRef = new P4ChangeRef(to);
 
-			// Changelist 'to' limit (report up to this change)
-			long to = getToLimit(p4, path.getRevision());
-			P4Ref toRef = new P4ChangeRef(to);
+		// Constrained by headLimit see JENKINS-61745.
+		long rangeLimit = to - p4.getHeadLimit();
+		P4Ref fromRef = (rangeLimit > 0) ? new P4ChangeRef(rangeLimit) : null;
 
-			// Constrained by headLimit see JENKINS-61745.
-			long rangeLimit = to - p4.getHeadLimit();
-			P4Ref fromRef = (rangeLimit > 0) ? new P4ChangeRef(rangeLimit) : null;
+		// Use temp client to map branches/streams when calculating change
+		long change = p4.getClientHead(fromRef, toRef);
 
-			// Use temp client to map branches/streams when calculating change
-			long change = p4.getClientHead(fromRef, toRef);
-
-			List<String> maps = path.getMappings();
-			if (maps != null && !maps.isEmpty()) {
-				for (String map : maps) {
-					if (map.startsWith("-")) {
-						continue;
-					}
-					long c = p4.getHead(map, fromRef, toRef);
-					change = (c > change) ? c : change;
+		List<String> maps = path.getMappings();
+		if (maps != null && !maps.isEmpty()) {
+			for (String map : maps) {
+				if (map.startsWith("-")) {
+					continue;
 				}
+				long c = p4.getHead(map, fromRef, toRef);
+				change = (c > change) ? c : change;
 			}
-			return change;
 		}
+		return change;
 	}
 
 	private long getToLimit(ConnectionHelper p4, String to) throws Exception {
@@ -374,28 +389,25 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		}
 	}
 
-	private long findIncrementalChange(P4Path path, P4Ref ref, TaskListener listener) throws Exception {
-		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+	private long findIncrementalChange(ConnectionHelper p4, P4Path path, P4Ref ref) throws Exception {
+		// Calculate change revision range.
+		String toStr = path.getRevision();
+		P4Ref toRef = (StringUtils.isEmpty(toStr)) ? null : new P4ChangeRef(Long.parseLong(toStr));
 
-			// Calculate change revision range.
-			String toStr = path.getRevision();
-			P4Ref toRef = (StringUtils.isEmpty(toStr)) ? null : new P4ChangeRef(Long.parseLong(toStr));
+		long change = ref.getChange();
+		P4Ref fromRef = new P4ChangeRef(change + 1);
 
-			long change = ref.getChange();
-			P4Ref fromRef = new P4ChangeRef(change + 1);
+		long c = p4.getLowestHead(path.getPath() + "/...", fromRef, toRef);
+		change = (c > change) ? c : change;
 
-			long c = p4.getLowestHead(path.getPath() + "/...", fromRef, toRef);
-			change = (c > change) ? c : change;
-
-			List<String> maps = path.getMappings();
-			if (maps != null && !maps.isEmpty()) {
-				for (String map : maps) {
-					c = p4.getLowestHead(map, fromRef, toRef);
-					change = (c > change) ? c : change;
-				}
+		List<String> maps = path.getMappings();
+		if (maps != null && !maps.isEmpty()) {
+			for (String map : maps) {
+				c = p4.getLowestHead(map, fromRef, toRef);
+				change = (c > change) ? c : change;
 			}
-			return change;
 		}
+		return change;
 	}
 
 	/**

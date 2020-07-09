@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
@@ -132,7 +133,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public P4SCMRevision getRevision(P4SCMHead head, TaskListener listener) throws Exception {
+	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) throws Exception {
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead changeRequest = (P4ChangeRequestSCMHead) head;
 			String review = changeRequest.getReview();
@@ -141,7 +142,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			P4SCMRevision revision = new P4SCMRevision(head, new P4ChangeRef(change));
 			return revision;
 		}
-		return super.getRevision(head, listener);
+		return super.getRevision(p4, head);
 	}
 
 	/**
