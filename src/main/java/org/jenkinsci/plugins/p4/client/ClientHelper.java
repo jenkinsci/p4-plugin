@@ -193,6 +193,10 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append(view.getRight());
 				sb.append("\n");
 			}
+			if ( iclient.getStream() != null ) {
+				sb.append("...   Stream: " + iclient.getStream());
+				sb.append("\n");
+			}
 			sb.append("...   Root: " + iclient.getRoot());
 			sb.append("\n");
 			logger.finer(sb.toString());
