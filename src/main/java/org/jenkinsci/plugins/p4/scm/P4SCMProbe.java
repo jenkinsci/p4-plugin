@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import com.perforce.p4java.core.file.FileSpecBuilder;
+import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -10,6 +12,7 @@ import jenkins.scm.api.SCMProbeStat;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class P4SCMProbe extends SCMProbe {
@@ -59,7 +62,7 @@ public class P4SCMProbe extends SCMProbe {
 			String filePath = path.getPathBuilder(file); // Depot Path syntax
 
 			// When probing Streams, switch to use client path syntax.  This works for
-			// all streams, including virtual streams(JENKINS-62699).  
+			// all streams, including virtual streams(JENKINS-62699).
 			p4.log("Scanning for " + filePath);
 			String clientStream = p4.getClient().getStream();
 			if ( clientStream != null ) {
