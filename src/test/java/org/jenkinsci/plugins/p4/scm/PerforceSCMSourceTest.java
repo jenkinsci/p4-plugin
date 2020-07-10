@@ -52,9 +52,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -108,8 +113,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		job = multi.getItem("Ace-virtual");	
 
 		assertThat("We now have a branch", job, notNullValue());
-		
-	    build = job.getLastBuild();
+
+		build = job.getLastBuild();
 
 		assertThat("The branch was built", build, notNullValue());
 		assertThat("The branch was built", build.getNumber(), is(1));
