@@ -6,20 +6,15 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
-import com.perforce.p4java.core.IMapEntry;
 import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IStreamViewMapping;
 import com.perforce.p4java.core.ViewMap;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Stream;
 import com.perforce.p4java.impl.generic.core.StreamSummary;
 import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.ServerFactory;
 import hudson.model.Result;
-import java.net.URISyntaxException;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -57,15 +52,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import org.junit.BeforeClass;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -81,7 +70,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 	@ClassRule
 	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
-	
+
 	@Before
 	public void buildCredentials() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
