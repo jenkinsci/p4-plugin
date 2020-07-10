@@ -7,7 +7,6 @@ import hudson.model.Items;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMProbe;
 import jenkins.scm.api.SCMProbeStat;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 
 import java.io.IOException;
@@ -57,8 +56,17 @@ public class P4SCMProbe extends SCMProbe {
 	public SCMProbeStat stat(@NonNull String file) throws IOException {
 		try {
 			P4Path path = head.getPath();
-			String depotPath = path.getPathBuilder(file);
-			if (p4.hasFile(depotPath)) {
+			String filePath = path.getPathBuilder(file); // Depot Path syntax
+
+			// When probing Streams, switch to use client path syntax.  This works for
+			// all streams, including virtual streams(JENKINS-62699).
+			p4.log("Scanning for " + filePath);
+			String clientStream = p4.getClient().getStream();
+			if ( clientStream != null ) {
+				filePath = filePath.replaceFirst(clientStream, "//" + p4.getClientUUID());
+			}
+			
+			if (p4.hasFile(filePath)) {
 				return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
 			}
 		} catch (Exception e) {

@@ -320,7 +320,8 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	/**
 	 * Get the Latest change for the path specified in P4SCMHead.
 	 *
-	 * @param head     SCMHead
+	 * @param p4 TempClient instance
+	 * @param head SCMHead
 	 * @return The latest change as a P4SCMRevision object
 	 * @throws Exception pushed up stack
 	 */
