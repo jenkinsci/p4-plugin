@@ -219,7 +219,7 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	public String getPort() {
-		return p4credential.getP4port();
+		return p4credential.getFullP4port();
 	}
 
 	public String getTrust() throws Exception {

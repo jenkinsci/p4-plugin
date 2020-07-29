@@ -68,7 +68,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertEquals("id", credential.getId());
 
 		List<P4BaseCredentials> list = lookupCredentials();
-		assertEquals("localhost:1666", list.get(0).getP4port());
+		assertEquals("localhost:1666", list.get(0).getFullP4port());
 		assertEquals("user", list.get(0).getUsername());
 		assertNull(list.get(0).getSsl());
 

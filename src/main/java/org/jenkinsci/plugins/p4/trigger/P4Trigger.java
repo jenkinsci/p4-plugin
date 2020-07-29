@@ -124,8 +124,8 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 					String id = p4scm.getCredential();
 					P4BaseCredentials credential = ConnectionHelper.findCredential(id, job);
 					if (credential != null
-							&& credential.getP4port() != null
-							&& credential.getP4port().contains(port)) {
+							&& credential.getFullP4port() != null
+							&& credential.getFullP4port().contains(port)) {
 						return true;
 					}
 				}

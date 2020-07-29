@@ -43,7 +43,7 @@ public class P4CredentialsImpl {
 			sb.append(" (");
 			sb.append(c.getUsername());
 			sb.append(":");
-			sb.append(c.getP4port());
+			sb.append(c.getFullP4port());
 			sb.append(")");
 			list.add(sb.toString(), c.getId());
 		}

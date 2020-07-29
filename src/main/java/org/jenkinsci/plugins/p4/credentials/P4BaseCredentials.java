@@ -56,6 +56,13 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	}
 
 	public String getP4port() {
+		return p4port;
+	}
+
+	/**
+	 * @return p4port including 'ssl:' if set JENKINS-62253
+	 */
+	public String getFullP4port() {
 		if(ssl == null) {
 			return p4port;
 		}
@@ -77,6 +84,10 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	public TrustImpl getSsl() {
 		return ssl;
 	}
+
+    public boolean isSslEnabled() {
+        return (ssl == null) ? false : true;
+    }
 
 	@CheckForNull
 	public String getTrust() {

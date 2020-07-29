@@ -63,7 +63,7 @@ public class TagAction extends AbstractScmTagAction {
 
 		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, run);
 		this.credential = credential;
-		this.p4port = auth.getP4port();
+		this.p4port = auth.getFullP4port();
 		this.p4user = auth.getUsername();
 	}
 

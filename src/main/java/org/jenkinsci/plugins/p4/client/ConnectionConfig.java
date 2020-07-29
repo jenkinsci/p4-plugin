@@ -16,7 +16,7 @@ public class ConnectionConfig implements Serializable {
 	private final String p4host;
 
 	public ConnectionConfig(P4BaseCredentials credential) {
-		this.p4port = credential.getP4port();
+		this.p4port = credential.getFullP4port();
 		this.ssl = credential.getSsl() != null;
 		this.trust = credential.getTrust();
 		this.serverUri = credential.getP4JavaUri();
