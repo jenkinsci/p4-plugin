@@ -2,6 +2,8 @@ package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.perforce.p4java.impl.mapbased.server.Server;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -12,6 +14,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.Builder;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -127,6 +130,7 @@ abstract public class DefaultEnvironment {
 		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+            setP4Ignore(p4, "other");
 			Publish publish = new SubmitImpl(desc, false, false, false, false, null);
 			boolean open = p4.buildChange(publish);
 			if (open) {
@@ -137,6 +141,12 @@ abstract public class DefaultEnvironment {
 		}
 		return null;
 	}
+
+	private void setP4Ignore(ConnectionHelper p4, String p4ignore) {
+        IOptionsServer connection = p4.getConnection();
+        Server server = (Server) connection;
+        server.setIgnoreFileName(p4ignore);
+    }
 
 	private ManualWorkspaceImpl createWorkspace(String path) {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());

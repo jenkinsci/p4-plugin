@@ -410,6 +410,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		// create a Mainline stream
 		IStream stream = new Stream();
+		stream.setOwnerName(server.getUserName());
 		stream.setStream("//stream/import");
 		stream.setName("import");
 		stream.setType(IStreamSummary.Type.MAINLINE);
