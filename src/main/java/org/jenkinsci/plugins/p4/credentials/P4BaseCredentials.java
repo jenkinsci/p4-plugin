@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.impl.BaseStandardCredentials;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public abstract class P4BaseCredentials extends BaseStandardCredentials implements P4Credentials {
 
@@ -27,6 +28,14 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 
 	@CheckForNull
 	private final String p4host;
+
+	@CheckForNull
+	private String tick;
+
+	@DataBoundSetter
+	public void setTick(String tick) {
+		this.tick = tick;
+	}
 
 	/**
 	 * Constructor.
@@ -116,5 +125,13 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 
 	public String getP4host() {
 		return (p4host == null) ? "" : p4host;
+	}
+
+	public int getTick() {
+		if (tick != null && !tick.isEmpty()) {
+			return Integer.parseInt(tick);
+		} else {
+			return 0;
+		}
 	}
 }

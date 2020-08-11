@@ -73,7 +73,7 @@ public abstract class AbstractTask implements Serializable {
 	public abstract Object task(ClientHelper p4) throws Exception;
 
 	public P4BaseCredentials getCredential() throws P4InvalidCredentialException {
-		if(credential == null){
+		if (credential == null) {
 			throw new P4InvalidCredentialException();
 		}
 		return credential;
@@ -204,7 +204,7 @@ public abstract class AbstractTask implements Serializable {
 			t++;
 			try {
 				// Run the task
-				Object result = task(p4);
+				Object result = monitorTask(p4);
 
 				if (p4.hasAborted()) {
 					String msg = "P4: Task Aborted!";
@@ -229,5 +229,31 @@ public abstract class AbstractTask implements Serializable {
 		}
 
 		throw new Exception(last);
+	}
+
+	private Object monitorTask(ClientHelper p4) throws Exception {
+
+		int tick = p4.getTick();
+		if (tick == 0) {
+			return task(p4);
+		}
+
+		// JENKINS-58161 create background 'tick' to avoid 30s timeout
+		Thread thread = new Thread(() -> {
+			while (true) {
+				try {
+					p4.log("...tick...");
+					Thread.sleep(tick);
+				} catch (InterruptedException e) {
+					p4.log("...finished.");
+					return;
+				}
+			}
+		});
+
+		thread.start();
+		Object result = task(p4);
+		thread.interrupt();
+		return result;
 	}
 }
