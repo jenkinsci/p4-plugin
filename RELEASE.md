@@ -1,5 +1,23 @@
 ## Release notes
 
+### Release 1.11.0 (major features/fixes)
+
+#### Important Changes
+ * P4Java now defaults to TLSv1.2 for SSL connections (previously TLSv1) to use an older version please refer to our [KB article](https://community.perforce.com/s/article/2620).
+ * P4Java now implements P4IGNORE file directory traversal and ellipses wildcard support.
+ * Use of TempClients in MultiBranch to include Virtual streams in branch scan.
+
+[@26666](https://swarm.workshop.perforce.com/changes/26666) - Update P4Java to latest patch 2020.1.1999383.  Fixes for P4IGNORE, reconcile flags and performance improvements for ExtendedFileSpec operations.  JENKINS-59922 JENKINS-39094 JENKINS-51192
+
+[@26640](https://swarm.workshop.perforce.com/changes/26640) - Tick interval message to prevent timeout.  An advanced setting in the Credential sets a 'tick' interval to print out a 'waiting' message to the log during long running commands.  The value needs to be less than 30,000ms to avoid Jenkins automatic disconnect. JENKINS-58161
+
+[@26617](https://swarm.workshop.perforce.com/changes/26617) - Prevent `ssl:` string from appearing in the P4PORT Jelly field.  Jelly uses getP4port() method for binding the fields; adding the ssl prefix was causing issues. JENKINS-63246
+
+[@26603](https://swarm.workshop.perforce.com/changes/26603) - Merge pull request #119 from joel-f-brown/master Add virtual stream detection for MultiBranch pipeline.  JENKINS-62699
+
+[@26602](https://swarm.workshop.perforce.com/changes/26602) - Reuse temp client connections for the multi-branch scan.  TempClientHelper is set in retrieve and updated for different heads.
+
+
 ### Release 1.10.14 (major features/fixes)
 
 [@26593](https://swarm.workshop.perforce.com/changes/26593) - P4Trigger support for Folder based credentials.  Avoid deprecated findCredential method and use the 'job' as the Item.  JENKINS-62811
