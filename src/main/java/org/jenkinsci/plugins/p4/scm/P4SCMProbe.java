@@ -21,11 +21,10 @@ public class P4SCMProbe extends SCMProbe {
 
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = Logger.getLogger(P4SCMProbe.class.getName());
+	private final static Logger logger = Logger.getLogger(P4SCMProbe.class.getName());
 
 	private final P4SCMHead head;
-
-	private transient TempClientHelper p4;
+	private final transient TempClientHelper p4;
 
 	public P4SCMProbe(TempClientHelper p4, P4SCMHead head) {
 		this.head = head;
@@ -52,7 +51,8 @@ public class P4SCMProbe extends SCMProbe {
 		return last;
 	}
 
-	@Override
+	@NonNull
+    @Override
 	public SCMProbeStat stat(@NonNull String file) throws IOException {
 		try {
 			P4Path path = head.getPath();

@@ -88,7 +88,7 @@ public class P4PublishStep extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private transient P4PublishStep step;
+		private final transient P4PublishStep step;
 
 		protected P4PublishStepExecution(P4PublishStep step, @Nonnull StepContext context) {
 			super(context);

@@ -42,7 +42,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		String view = "//depot/Jam/... //" + format + "/...";
 		String cview = "//depot/Jam/...@10099";
 		WorkspaceSpec spec = new WorkspaceSpec(view, cview);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -65,7 +65,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Jam/... //" + format + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);

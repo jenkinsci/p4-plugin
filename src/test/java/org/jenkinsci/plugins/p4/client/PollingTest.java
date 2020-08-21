@@ -56,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 
 public class PollingTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(PollingTest.class.getName());
+	private static final Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
 	@Rule
@@ -78,7 +78,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingPin");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false, false, false, "auto15", null);
@@ -115,7 +115,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingInc");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl(true, true, false, false, false, "auto15", null);
@@ -155,7 +155,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingMask");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
@@ -196,7 +196,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PollingMaskExcl");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
@@ -242,7 +242,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternList");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
@@ -301,7 +301,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListCaseSensitive");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
@@ -381,7 +381,7 @@ public class PollingTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("PatternListInvalidPattern");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		List<Filter> filter = new ArrayList<Filter>();
@@ -466,7 +466,7 @@ public class PollingTest extends DefaultEnvironment {
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		FreeStyleProject project = jenkins.createFreeStyleProject("TriggerJobIfChanges");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 		// Pin at label auto15
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);

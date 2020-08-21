@@ -157,7 +157,7 @@ abstract public class DefaultEnvironment {
 		String line = "LOCAL";
 		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 		workspace.setExpand(new HashMap<String, String>());
 
 		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
@@ -209,7 +209,7 @@ abstract public class DefaultEnvironment {
 		String line = "LOCAL";
 		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, "graph", null, true);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// Populate with P4 scm
 		Populate populate = new GraphHybridImpl(false, null, null);

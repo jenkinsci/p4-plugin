@@ -74,7 +74,7 @@ public class GetP4Step extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private transient final GetP4Step step;
+		private final transient GetP4Step step;
 
 		Execution(GetP4Step step, StepContext context) {
 			super(context);

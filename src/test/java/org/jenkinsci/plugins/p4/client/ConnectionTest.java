@@ -156,13 +156,11 @@ public class ConnectionTest extends DefaultEnvironment {
 	public void testPinHost_ManualWs() throws Exception {
 
 		String client = "manual.ws";
-		String stream = null;
-		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec( view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
@@ -220,12 +218,12 @@ public class ConnectionTest extends DefaultEnvironment {
 		// the test is not required, however later assets have some use.  The pre20151
 		// bool 'fakes' the test and allows the other checks to pass.
 		boolean pre20151 = false;
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, !pre20151, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, !pre20151, false, stream, line, view, null, null, null, true);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("Manual_Modtime");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 		boolean isModtime = true;
-		Populate populate = new AutoCleanImpl(true, true, isModtime, false, null, null);
+		Populate populate = new AutoCleanImpl(true, true, false, isModtime, false, null, null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();

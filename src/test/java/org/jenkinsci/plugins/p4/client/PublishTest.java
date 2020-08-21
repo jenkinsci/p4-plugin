@@ -63,8 +63,8 @@ public class PublishTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// Populate with P4 scm
 		Populate populate = new AutoCleanImpl();
@@ -144,7 +144,7 @@ public class PublishTest extends DefaultEnvironment {
 		String client = "manual-publish-fail.ws";
 		String view = "//depot/Data/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// Populate with P4 scm
 		Populate populate = new AutoCleanImpl();

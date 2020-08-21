@@ -53,7 +53,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("CheckoutUnrestrictedView");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl(true, true, false, false, false, "", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -75,7 +75,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		Map<String, String> env = new HashMap<>();
-		scm.buildEnvVars(build, env);
+		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
 		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
@@ -89,7 +89,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("CheckoutRestrictedView");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl(true, true, false, false, false, "", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -111,7 +111,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		Map<String, String> env = new HashMap<>();
-		scm.buildEnvVars(build, env);
+		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
 		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);

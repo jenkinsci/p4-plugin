@@ -243,7 +243,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		String view = mappingsView + "\n" + jenkinsView;
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		return new ManualWorkspaceImpl(getCharset(), false, client, spec);
+		return new ManualWorkspaceImpl(getCharset(), false, client, spec, false);
 	}
 
 	protected boolean isCategoryEnabled(@NonNull SCMHeadCategory category) {

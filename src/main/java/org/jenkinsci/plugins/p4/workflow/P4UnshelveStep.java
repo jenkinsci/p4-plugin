@@ -120,7 +120,7 @@ public class P4UnshelveStep extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private transient P4UnshelveStep step;
+		private final transient P4UnshelveStep step;
 
 		protected P4UnshelveStepExecution(P4UnshelveStep step, @Nonnull StepContext context) {
 			super(context);

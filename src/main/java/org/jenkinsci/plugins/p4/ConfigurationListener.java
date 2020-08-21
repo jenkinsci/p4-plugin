@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 @Extension
 public class ConfigurationListener extends SaveableListener {
 
-	private static Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
+	private static final Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
 		Jenkins j = Jenkins.getInstance();
@@ -88,11 +88,10 @@ public class ConfigurationListener extends SaveableListener {
 
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, "", "LOCAL", view, null, null, null, true);
 
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec);
-		workspace.setExpand(new HashMap<String, String>());
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("utf8", false, clientName, spec, false);
+		workspace.setExpand(new HashMap<>());
 		workspace.setRootPath(rootPath);
 
-		ClientHelper p4 = new ClientHelper(Jenkins.getActiveInstance(), credential, listener, workspace);
-		return p4;
+		return new ClientHelper(Jenkins.getInstance(), credential, listener, workspace);
 	}
 }

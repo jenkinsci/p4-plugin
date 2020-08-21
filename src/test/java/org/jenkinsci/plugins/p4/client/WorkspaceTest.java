@@ -63,10 +63,10 @@ public class WorkspaceTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
@@ -353,7 +353,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Data/... //" + format + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, format, spec, false);
 
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);

@@ -271,7 +271,7 @@ public class PerforceScm extends SCM {
 
 		// If cannot retrieve item, check from root
 		P4BaseCredentials credentials = job == null
-				? ConnectionHelper.findCredential(scmCredential, Jenkins.getActiveInstance())
+				? ConnectionHelper.findCredential(scmCredential, Jenkins.getInstance())
 				: ConnectionHelper.findCredential(scmCredential, job);
 
 		if (credentials == null) {
@@ -711,14 +711,6 @@ public class PerforceScm extends SCM {
 		}
 
 		return list;
-	}
-
-	// Pre Jenkins 2.60
-	@Override
-	public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
-		super.buildEnvVars(build, env);
-		P4EnvironmentContributor.buildEnvironment(TagAction.getLastAction(build), env);
-		P4EnvironmentContributor.buildEnvironment(tagAction, env);
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885 JENKINS-52806 JENKINS-60074

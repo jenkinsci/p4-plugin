@@ -59,7 +59,7 @@ public class GraphTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("FreeGraph");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new GraphHybridImpl(false, "10279", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
@@ -92,7 +92,7 @@ public class GraphTest extends DefaultEnvironment {
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("FreeGraphPolling");
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new GraphHybridImpl(false, null, null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);

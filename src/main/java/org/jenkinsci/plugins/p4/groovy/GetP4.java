@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.groovy;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -49,7 +50,7 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher, TaskListener listener)
+	public void perform(Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
 		// Set environment

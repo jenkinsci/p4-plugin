@@ -42,6 +42,8 @@ public class SwarmQueryAction implements RootAction {
 		return "swarm";
 	}
 
+	// RootAction has no Item (Job, Run or MultiBranchProject) that can be use for context to look up a Credential
+	@SuppressWarnings("deprecation")
 	public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
 
 		String path = req.getRestOfPath();

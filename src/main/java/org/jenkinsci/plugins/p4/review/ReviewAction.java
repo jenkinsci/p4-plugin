@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Action {
 
@@ -112,13 +111,11 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		ParametersAction params = new SafeParametersAction(values, internalParams);
 
 		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			Queue queue = j.getQueue();
-			queue.schedule(project, delay.getTime(), params, cause);
+		Queue queue = j.getQueue();
+		queue.schedule(project, delay.getTimeInSeconds(), params, cause);
 
-			// send the user back to the job top page.
-			rsp.sendRedirect("../");
-		}
+		// send the user back to the job top page.
+		rsp.sendRedirect("../");
 	}
 
 	/**
@@ -160,6 +157,4 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 
 		return swarm;
 	}
-
-	final static Logger LOGGER = Logger.getLogger(ReviewAction.class.getName());
 }

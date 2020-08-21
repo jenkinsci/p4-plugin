@@ -68,8 +68,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -131,8 +131,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/Jenkinsfile //" + client + "/Jenkinsfile";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -196,8 +196,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/Jenkinsfile //" + client + "/Jenkinsfile";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -260,8 +260,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/Jenkinsfile //" + client + "/Jenkinsfile";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -360,8 +360,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String stream = null;
 		String line = "LOCAL";
 		String view = "//depot/Data/Jenkinsfile //" + client + "/Jenkinsfile";
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -456,8 +456,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		StringBuffer sb = new StringBuffer();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString());
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -493,8 +493,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		StringBuffer sb = new StringBuffer();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
-		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString());
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();

@@ -31,9 +31,9 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	private String name;
 	public WorkspaceSpec spec;
 
-	private static Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
+	private static final Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
-	private static String InitialViewExpandKey = "P4_INITIAL_VIEW";
+	private static final String InitialViewExpandKey = "P4_INITIAL_VIEW";
 
 	@Override
 	public String getName() {

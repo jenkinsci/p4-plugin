@@ -174,7 +174,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildCounter");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		String pin = "testCounter";
-		Populate populate = new AutoCleanImpl(false, false, false, true, pin, null);
+		Populate populate = new AutoCleanImpl(false, false, false,false, true, pin, null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();

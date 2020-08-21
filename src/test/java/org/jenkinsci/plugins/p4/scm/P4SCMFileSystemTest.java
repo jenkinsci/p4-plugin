@@ -55,14 +55,15 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		String client = "testNavigation.ws";
 		String view = "//depot/... //${P4_CLIENT}/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		workspace = new ManualWorkspaceImpl("none", false, client, spec);
+		workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 		workspace.setExpand(new HashMap<String, String>());
 	}
 
 	@Test
 	public void testAutoComplete() throws IOException {
 
-		new ConnectionHelper(CREDENTIAL, null); // Initialise default connection
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "autoComplete");
+		new ConnectionHelper(owner, CREDENTIAL, null); // Initialise default connection
 		NavigateHelper nav = new NavigateHelper(5);
 
 		AutoCompletionCandidates results = nav.getCandidates("//");
@@ -159,7 +160,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 				+ "//depot/Main/... //" + client + "/main/...";
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();
@@ -193,7 +194,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 				+ "//depot/Main/... //${P4_CLIENT}/main/...";
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
 		// SCM and Populate options
 		Populate populate = new AutoCleanImpl();

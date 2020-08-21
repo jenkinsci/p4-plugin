@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import com.google.common.collect.ImmutableSet;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -7,15 +9,13 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.tagging.TagNotifierStep;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.inject.Inject;
+import javax.annotation.Nonnull;
+import java.util.Set;
 
-public class P4TaggingStep extends AbstractStepImpl {
+public class P4TaggingStep extends Step {
 
 	private final String rawLabelName;
 	private final String rawLabelDesc;
@@ -34,12 +34,18 @@ public class P4TaggingStep extends AbstractStepImpl {
 		return rawLabelDesc;
 	}
 
+	@Override
+	public StepExecution start(StepContext context) {
+		return new P4TaggingStepExecution(context, this);
+	}
+
 	@Extension(optional = true)
 	@Symbol("label")
-	public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+	public static final class DescriptorImpl extends StepDescriptor {
 
-		public DescriptorImpl() {
-			super(P4TaggingStepExecution.class);
+		@Override
+		public Set<? extends Class<?>> getRequiredContext() {
+			return ImmutableSet.of(Run.class, FilePath.class, TaskListener.class, EnvVars.class);
 		}
 
 		@Override
@@ -54,30 +60,22 @@ public class P4TaggingStep extends AbstractStepImpl {
 
 	}
 
-	public static class P4TaggingStepExecution extends
-			AbstractSynchronousStepExecution<Void> {
+	public static class P4TaggingStepExecution extends SynchronousStepExecution<Void> {
 
 		private static final long serialVersionUID = 1L;
 
-		@Inject
-		private transient P4TaggingStep step;
-		@StepContextParameter
-		private transient Run<?, ?> run;
-		@StepContextParameter
-		private transient FilePath workspace;
-		@StepContextParameter
-		private transient TaskListener listener;
-		@StepContextParameter
-		private transient Launcher launcher;
+		private final transient P4TaggingStep step;
+
+		protected P4TaggingStepExecution(@Nonnull StepContext context, P4TaggingStep step) {
+			super(context);
+			this.step = step;
+		}
 
 		@Override
 		protected Void run() throws Exception {
-			TagNotifierStep notifier = new TagNotifierStep(
-					step.getRawLabelName(), step.getRawLabelDesc(), false);
-			notifier.perform(run, workspace, launcher, listener);
+			TagNotifierStep notifier = new TagNotifierStep(step.getRawLabelName(), step.getRawLabelDesc(), false);
+			notifier.perform(getContext().get(Run.class), getContext().get(FilePath.class), getContext().get(Launcher.class), getContext().get(TaskListener.class));
 			return null;
 		}
-
 	}
-
 }
