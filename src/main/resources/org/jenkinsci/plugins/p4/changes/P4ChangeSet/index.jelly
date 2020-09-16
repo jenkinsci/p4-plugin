@@ -15,17 +15,8 @@
                     </j:when>
 			
             
-                    <j:otherwise>
-                        <j:choose>
-                            <j:when test="${entry.shelved}">                                            
-                                <j:set var="divColor" value="background-color:white"/>
-                            </j:when>	
-                            <j:otherwise>
-                                <j:set var="divColor" value="background-color:#F5F0FA"/>
-                            </j:otherwise>
-                        </j:choose>
-                                                
-                        <div class="changeset-message" style="width: 650px; margin-bottom: 4px;${divColor}">  
+                    <j:otherwise>          
+                        <div class="changeset-message" style="width: 650px; margin-bottom: 4px; background-color: inherit">  
 
                             <a name="detail${loop.index}"></a>
                             <j:choose>
