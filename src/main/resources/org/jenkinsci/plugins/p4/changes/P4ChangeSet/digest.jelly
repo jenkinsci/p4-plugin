@@ -10,16 +10,7 @@
             </b>
             <br/>
             <j:forEach var="c" items="${it.history}" varStatus="loop">
-                <j:choose>
-                    <j:when test="${c.shelved}">                                            
-                        <j:set var="divColor" value="background-color:white"/>
-                    </j:when>	
-                    <j:otherwise>
-                        <j:set var="divColor" value="background-color:#F5F0FA"/>
-                    </j:otherwise>
-                </j:choose>
-            
-                <div class="changeset-message" style="width: 650px; margin-bottom: 4px;${divColor}">  
+                <div class="changeset-message" style="width: 650px; margin-bottom: 4px; background-color: inherit">  
                     	
                     <j:choose>
                         <j:when test="${c.id == null}">
