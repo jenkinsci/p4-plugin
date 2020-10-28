@@ -684,9 +684,16 @@ public class PerforceScm extends SCM {
 	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run, CheckoutTask task) {
 		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
 
-		// Look for all changes since the last (completed) build.
-		// The lastBuild from getPreviousBuild() may be in progress or blocked.
-		Run<?, ?> lastBuild = run.getPreviousCompletedBuild();
+		Run<?, ?> lastBuild;
+		PerforceScm.DescriptorImpl scm = getDescriptor();
+		if (scm != null && scm.isLastSuccess()) {
+			// JENKINS-64030 Include changes since last successful build
+			lastBuild = run.getPreviousSuccessfulBuild();
+		} else {
+			// JENKINS-40747 Look for all changes since the last (completed) build.
+			// The lastBuild from getPreviousBuild() may be in progress or blocked.
+			lastBuild = run.getPreviousCompletedBuild();
+		}
 
 		String syncID = task.getSyncID();
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
@@ -868,6 +875,8 @@ public class PerforceScm extends SCM {
 
 		private long headLimit = DEFAULT_HEAD_LIMIT;
 
+		private boolean lastSuccess;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -910,6 +919,14 @@ public class PerforceScm extends SCM {
 
 		public long getHeadLimit() {
 			return headLimit;
+		}
+
+		public boolean isLastSuccess() {
+			return lastSuccess;
+		}
+
+		public void setLastSuccess(boolean lastSuccess) {
+			this.lastSuccess = lastSuccess;
 		}
 
 		/**
@@ -991,6 +1008,13 @@ public class PerforceScm extends SCM {
 			} catch (JSONException e) {
 				logger.info("Unable to read query limits in configuration.");
 				headLimit = DEFAULT_HEAD_LIMIT;
+			}
+
+			try {
+				lastSuccess = json.getBoolean("lastSuccess");
+			} catch (JSONException e) {
+				logger.info("Unable to read lastSuccess change reporting option in configuration");
+				lastSuccess = false;
 			}
 
 			save();

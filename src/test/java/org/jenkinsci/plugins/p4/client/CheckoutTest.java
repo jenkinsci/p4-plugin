@@ -7,15 +7,25 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
+import hudson.util.LogTaskListener;
+import jenkins.branch.BranchSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
+import org.jenkinsci.plugins.p4.scm.BranchesScmSource;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,9 +36,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public class CheckoutTest extends DefaultEnvironment {
 
@@ -116,4 +131,177 @@ public class CheckoutTest extends DefaultEnvironment {
 		// Assert that the workspace sync'd the expected change
 		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
 	}
+
+	@Test
+	public void testChangesFromLastBuildPipeline() throws Exception {
+
+		String base = "//depot/changes";
+		String jfile = base + "/Jenkinsfile";
+		String tfile = base + "/test.txt";
+
+		String success = "\n"
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        echo \"Success\"\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		String fail = "\n"
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        error('Failed to build')\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, jfile, success);
+
+		// Manual workspace spec definition
+		String client = "changes.ws";
+		String view = base + "/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "testChangesFromLastBuildPipeline");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Run 1 (only one change on the first build) @45
+		submitFile(jenkins, jfile, "//change1" + success);
+		WorkflowRun run1 = job.scheduleBuild2(0).get();
+		assertEquals(1, run1.getChangeSets().size());
+		P4ChangeSet cs1 = (P4ChangeSet)run1.getChangeSets().get(0);
+		assertEquals(1, cs1.getHistory().size());
+
+		// Run 2  @46 @47
+		submitFile(jenkins, tfile, "//change2");
+		submitFile(jenkins, jfile, "//change3" + success);
+		WorkflowRun run2 = job.scheduleBuild2(0).get();
+		assertEquals(1, run1.getChangeSets().size());
+		P4ChangeSet cs2 = (P4ChangeSet)run2.getChangeSets().get(0);
+		assertEquals(2, cs2.getHistory().size());
+
+		// Run 3  @48
+		submitFile(jenkins, jfile, "//change4" + fail);
+		WorkflowRun run3 = job.scheduleBuild2(0).get();
+		assertEquals(1, run3.getChangeSets().size());
+		P4ChangeSet cs3 = (P4ChangeSet)run3.getChangeSets().get(0);
+		assertEquals(1, cs3.getHistory().size());
+
+		// Run 4  @49
+		submitFile(jenkins, jfile, "//change5" + fail);
+		WorkflowRun run4 = job.scheduleBuild2(0).get();
+		assertEquals(1, run4.getChangeSets().size());
+		P4ChangeSet cs4 = (P4ChangeSet)run4.getChangeSets().get(0);
+		assertEquals(1, cs4.getHistory().size());
+
+		// Run 4  @50
+		submitFile(jenkins, jfile, "//change6" + success);
+		WorkflowRun run5 = job.scheduleBuild2(0).get();
+		assertEquals(1, run5.getChangeSets().size());
+		P4ChangeSet cs5 = (P4ChangeSet)run5.getChangeSets().get(0);
+		assertEquals(1, cs5.getHistory().size());
+	}
+
+    @Test
+    public void testChangesFromLastSuccesssPipeline() throws Exception {
+
+		String base = "//depot/changes";
+		String jfile = base + "/Jenkinsfile";
+		String tfile = base + "/test.txt";
+
+		String success = "\n"
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        echo \"Success\"\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		String fail = "\n"
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        error('Failed to build')\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, jfile, success);
+
+		// Manual workspace spec definition
+		String client = "changes.ws";
+		String view = base + "/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		scm.getDescriptor().setLastSuccess(true);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "testChangesFromLastSuccesssPipeline");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// Run 1 (only one change on the first build) @45
+		submitFile(jenkins, jfile, "//change1" + success);
+		WorkflowRun run1 = job.scheduleBuild2(0).get();
+		assertEquals(1, run1.getChangeSets().size());
+		P4ChangeSet cs1 = (P4ChangeSet)run1.getChangeSets().get(0);
+		assertEquals(1, cs1.getHistory().size());
+
+		// Run 2  @46 @47
+		submitFile(jenkins, tfile, "//change2");
+		submitFile(jenkins, jfile, "//change3" + success);
+		WorkflowRun run2 = job.scheduleBuild2(0).get();
+		assertEquals(1, run1.getChangeSets().size());
+		P4ChangeSet cs2 = (P4ChangeSet)run2.getChangeSets().get(0);
+		assertEquals(2, cs2.getHistory().size());
+
+		// Run 3  @48
+		submitFile(jenkins, jfile, "//change4" + fail);
+		WorkflowRun run3 = job.scheduleBuild2(0).get();
+		assertEquals(1, run3.getChangeSets().size());
+		P4ChangeSet cs3 = (P4ChangeSet)run3.getChangeSets().get(0);
+		assertEquals(1, cs3.getHistory().size());
+
+		// Run 4  @48 @49
+		submitFile(jenkins, jfile, "//change5" + fail);
+		WorkflowRun run4 = job.scheduleBuild2(0).get();
+		assertEquals(1, run4.getChangeSets().size());
+		P4ChangeSet cs4 = (P4ChangeSet)run4.getChangeSets().get(0);
+		assertEquals(2, cs4.getHistory().size());
+
+		// Run 4  @48 @49 @50
+		submitFile(jenkins, jfile, "//change6" + success);
+		WorkflowRun run5 = job.scheduleBuild2(0).get();
+		assertEquals(1, run5.getChangeSets().size());
+		P4ChangeSet cs5 = (P4ChangeSet)run5.getChangeSets().get(0);
+		assertEquals(3, cs5.getHistory().size());
+    }
 }
