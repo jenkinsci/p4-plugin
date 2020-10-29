@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.11.1 (major features/fixes)
+
+[@26860](https://swarm.workshop.perforce.com/changes/26860) - Global option to include changes since last successful build.  JENKINS-64030
+
+[@26820](https://swarm.workshop.perforce.com/changes/26820) - Merge pull request #121 from KasperFranz/patch-1  Use Github as source of documentation
+
+[@26766](https://swarm.workshop.perforce.com/changes/26766) - Merge pull request #120 from VirtualTim/patch-1  Remove background colour for change list
+
+[@26673](https://swarm.workshop.perforce.com/changes/26673) - Code cleanup.  Deprecated classes like AbstractStepImpl, AbstractStepDescriptorImpl and AbstractSynchronousStepExecution for P4TaggingStep
+
+
 ### Release 1.11.0 (major features/fixes)
 
 #### Important Changes
