@@ -2,8 +2,11 @@ package org.jenkinsci.plugins.p4.scm;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.model.Action;
 import hudson.model.TaskListener;
-import jenkins.scm.api.SCMHeadCategory;
+import jenkins.scm.api.*;
+import jenkins.scm.api.metadata.ObjectMetadataAction;
+import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
@@ -29,6 +32,7 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,6 +93,21 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
+	protected List<Action> retrieveActions(SCMHead head, SCMHeadEvent event, TaskListener listener) throws IOException, InterruptedException {
+		List<Action> actions = super.retrieveActions(head, event, listener);
+		if (head instanceof ChangeRequestSCMHead) {
+			ChangeRequestSCMHead scmHead = ((ChangeRequestSCMHead)head);
+			try {
+				String changeUrl = getSwarm().getBaseUrl() + "/reviews/" + scmHead.getId();
+				actions.add(new ObjectMetadataAction(scmHead.getName(), null, changeUrl));
+			} catch (Exception e) {
+				listener.getLogger().println(e.getMessage());
+			}
+		}
+		return actions;
+	}
+
+	@Override
 	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 
 		List<P4SCMHead> list = new ArrayList<>();
@@ -104,9 +123,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 				if (p4Path != null) {
 					p4Path.setRevision(reviewID);
 
-					String trgName = reviewID;
-					P4SCMHead target = new P4SCMHead(trgName, p4Path);
-					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
+					P4SCMHead target = new P4SCMHead(reviewID, p4Path);
+					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(reviewID, reviewID, p4Path, target);
 					list.add(tag);
 				}
 			}
