@@ -1,13 +1,15 @@
 package org.jenkinsci.plugins.p4.scm;
 
 import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
+import jenkins.scm.api.mixin.ChangeRequestSCMHead2;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
-public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead {
+public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead, ChangeRequestSCMHead2 {
 
 	private static final long serialVersionUID = 1L;
 
@@ -45,5 +47,15 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 		P4Review review = new P4Review(getName(), CheckoutStatus.SHELVED);
 		scm.setReview(review);
 		return scm;
+	}
+
+	@Override
+	public ChangeRequestCheckoutStrategy getCheckoutStrategy() {
+		return ChangeRequestCheckoutStrategy.MERGE;
+	}
+
+	@Override
+	public String getOriginName() {
+		return ((P4SCMHead) getTarget()).getPath().getPath();
 	}
 }
