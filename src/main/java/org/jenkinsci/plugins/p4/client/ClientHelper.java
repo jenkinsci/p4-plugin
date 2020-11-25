@@ -85,11 +85,6 @@ public class ClientHelper extends ConnectionHelper {
 
 	private IClient iclient;
 
-	@Override
-	public IChangelistSummary getChangeSummary(long id) throws P4JavaException {
-		return super.getChangeSummary(id);
-	}
-
 	public ClientHelper(ItemGroup context, String credential, TaskListener listener, Workspace workspace) throws IOException {
 		super(context, credential, listener);
 		clientLogin(workspace);
