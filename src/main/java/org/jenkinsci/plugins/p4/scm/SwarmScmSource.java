@@ -7,6 +7,7 @@ import hudson.model.TaskListener;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
+import jenkins.scm.api.metadata.ContributorMetadataAction;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
@@ -97,13 +98,17 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	@Override
 	protected List<Action> retrieveActions(SCMHead head, SCMHeadEvent event, TaskListener listener) throws IOException, InterruptedException {
 		List<Action> actions = super.retrieveActions(head, event, listener);
-		if (head instanceof ChangeRequestSCMHead) {
-			ChangeRequestSCMHead scmHead = ((ChangeRequestSCMHead)head);
+		if (head instanceof P4ChangeRequestSCMHead) {
+			P4ChangeRequestSCMHead scmHead = ((P4ChangeRequestSCMHead)head);
 			try {
 				String changeUrl = getSwarm().getBaseUrl() + "/reviews/" + scmHead.getId();
 				actions.add(new ObjectMetadataAction(scmHead.getName(), null, changeUrl));
 			} catch (Exception e) {
 				listener.getLogger().println(e.getMessage());
+			}
+
+			if (scmHead.getAuthor() != null ) {
+				actions.add(new ContributorMetadataAction(scmHead.getAuthor(), scmHead.getAuthor(), null));
 			}
 		}
 		return actions;
@@ -126,7 +131,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 					p4Path.setRevision(reviewID);
 
 					P4SCMHead target = new P4SCMHead(reviewID, p4Path);
-					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(reviewID, reviewID, p4Path, target);
+					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(reviewID, reviewID, p4Path, target, review.getAuthor());
 					list.add(tag);
 				}
 			}

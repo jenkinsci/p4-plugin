@@ -15,11 +15,17 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 
 	private final SCMHead target;
 	private final String review;
+	private final String author;
 
 	P4ChangeRequestSCMHead(String name, String review, P4Path path, SCMHead target) {
+		this(name, review, path, target, null);
+	}
+
+	P4ChangeRequestSCMHead(String name, String review, P4Path path, SCMHead target, String author) {
 		super(name, path);
 		this.target = target;
 		this.review = review;
+		this.author = author;
 	}
 
 	@Override
@@ -29,6 +35,10 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 
 	public String getReview() {
 		return review;
+	}
+
+	public String getAuthor() {
+		return author;
 	}
 
 	/**
