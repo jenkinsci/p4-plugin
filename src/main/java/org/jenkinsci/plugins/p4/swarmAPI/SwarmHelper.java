@@ -177,7 +177,7 @@ public class SwarmHelper {
 
 		Map<String, Object> query = new HashMap<>();
 		query.put("max", "10");
-		query.put("fields", "id,state,changes");
+		query.put("fields", "id,state,changes,author");
 		query.put("project", project);
 
 		HttpResponse<String> res = Unirest.get(url)
@@ -201,7 +201,7 @@ public class SwarmHelper {
 		String url = getApiUrl() + "/reviews/" + review;
 
 		Map<String, Object> query = new HashMap<>();
-		query.put("fields", "projects,changes,commits");
+		query.put("fields", "projects,changes,commits,author");
 
 		HttpResponse<String> res = Unirest.get(url)
 				.basicAuth(user, ticket)

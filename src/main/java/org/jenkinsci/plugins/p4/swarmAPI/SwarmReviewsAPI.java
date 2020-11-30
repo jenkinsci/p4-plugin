@@ -9,6 +9,7 @@ public class SwarmReviewsAPI {
 	public static class Reviews {
 		private long id;
 		private List<Long> changes;
+		private String author;
 
 		public long getId() {
 			return id;
@@ -18,9 +19,14 @@ public class SwarmReviewsAPI {
 			return changes;
 		}
 
-		public Reviews(long id, List<Long> changes) {
+		public String getAuthor() {
+			return author;
+		}
+
+		public Reviews(long id, List<Long> changes, String author) {
 			this.id = id;
 			this.changes = changes;
+			this.author = author;
 		}
 	}
 

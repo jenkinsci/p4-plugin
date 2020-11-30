@@ -22,11 +22,17 @@ public class SwarmReviewAPI {
 		private List<Long> changes;
 		private List<Long> commits;
 		private HashMap<String, List<String>> projects;
+		private String author;
 
-		public Review(List<Long> changes, List<Long> commits, HashMap<String, List<String>> projects) {
+		public Review(List<Long> changes, List<Long> commits, HashMap<String, List<String>> projects, String author) {
 			this.changes = changes;
 			this.commits = commits;
 			this.projects = projects;
+			this.author = author;
+		}
+
+		public String getAuthor() {
+			return author;
 		}
 
 		public List<Long> getChanges() {
