@@ -122,7 +122,8 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 				long rangeLimit = buildChange.getChange() - p4.getHeadLimit();
 				rangeLimit = (rangeLimit < 0) ? 1 : rangeLimit;
 				P4ChangeRef limitRef = (p4.getHeadLimit() == 0) ? null : new P4ChangeRef(rangeLimit);
-				buildChange = new P4ChangeRef(p4.getClientHead(limitRef, buildChange));
+				long headChange = p4.getClientHead(limitRef, buildChange);
+				buildChange = (headChange == 0) ? buildChange : new P4ChangeRef(headChange);
 			}
 
 			// add buildChange to list of changes to builds

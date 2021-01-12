@@ -193,7 +193,7 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append(view.getRight());
 				sb.append("\n");
 			}
-			if ( iclient.getStream() != null ) {
+			if (iclient.getStream() != null) {
 				sb.append("...   Stream: " + iclient.getStream());
 				sb.append("\n");
 			}
@@ -717,8 +717,8 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		String[] array = rawPaths.split("\n\\s*");
-		for(String a : array) {
-			if(a.startsWith("//")) {
+		for (String a : array) {
+			if (a.startsWith("//")) {
 				list.add(a);
 			} else {
 				list.add(clientBase + a);
@@ -1089,16 +1089,11 @@ public class ClientHelper extends ConnectionHelper {
 	 * workspace view up to the specified revision
 	 *
 	 * @param from From revision (change or label)
-	 * @param to To revision (change or label)
+	 * @param to   To revision (change or label)
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
 	public long getClientHead(P4Ref from, P4Ref to) throws Exception {
-		// get last change in server
-		// This will also return shelved CLs
-		String latestChange = getConnection().getCounter("change");
-		long change = Long.parseLong(latestChange);
-
 		// build file revision spec
 		String path = "//" + iclient.getName() + "/...";
 		String revisionPath = buildRevisionLimit(path, from, to);
@@ -1111,25 +1106,29 @@ public class ClientHelper extends ConnectionHelper {
 		List<IChangelistSummary> list = getConnection().getChangelists(files, opts);
 
 		if (!list.isEmpty() && list.get(0) != null) {
-			change = list.get(0).getId();
-		} else if ( to != null) {
-			change = to.getChange();
-			log("P4: no revisions under " + revisionPath + " using change: " + change);
+			long change = list.get(0).getId();
+			log("P4: found " + change + " revision in " + revisionPath);
+			return change;
 		} else {
-			log("P4: no revisions under " + revisionPath + " using latest change: " + change);
+			log("P4: no revisions under " + revisionPath);
+			return 0L;
 		}
-		return change;
 	}
 
 	/**
 	 * Get the change number for the last change within the scope of the
-	 * workspace view.
+	 * workspace view. If there are no recent changes use the latest change.
 	 *
 	 * @return Perforce change
 	 * @throws Exception push up stack
 	 */
 	public long getClientHead() throws Exception {
-		return getClientHead(null, null);
+		// get last change in server, may return shelved CLs
+		String latestChange = getConnection().getCounter("change");
+		long latest = Long.parseLong(latestChange);
+		P4Ref to = new P4ChangeRef(latest);
+		long head = getClientHead(null, to);
+		return (head == 0L) ? latest : head;
 	}
 
 	public List<IChangelistSummary> getPendingChangelists(boolean includeLongDescription, String clientName) throws Exception {

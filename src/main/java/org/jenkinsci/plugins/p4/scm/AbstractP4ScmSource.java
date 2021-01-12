@@ -320,7 +320,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	/**
 	 * Get the Latest change for the path specified in P4SCMHead.
 	 *
-	 * @param p4 TempClient instance
+	 * @param p4   TempClient instance
 	 * @param head SCMHead
 	 * @return The latest change as a P4SCMRevision object
 	 * @throws Exception pushed up stack
@@ -338,12 +338,28 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		// Fetch last scan
 		P4SCMRevision last = getLastScan(head);
 
-		/* If 'Polling per Change' is disabled then get the latest change; otherwise use the latest change for the
-		 * first scan then the oldest un-built change.
+		/* Calculate changes to use for SCMRevision:
+		 *   If 'Polling per Change' use the next change on the code-line, else the latest change for the code-line.
+		 *   If there are no changes within the the scan limits (set by `Head change query limit`) the change will be 0;
+		 *   in these cases return the last built change, or for now projects the latest change.
 		 */
-		if (last == null || !perChange) {
+		if (last == null) {
+			// possibly a new project or broken configuration...
 			change = findLatestChange(p4, path);
+			if (change == 0) {
+				// no changes? - use the latest and trigger a build
+				change = p4.getClientHead();
+			}
+		} else if (!perChange) {
+			// Typical case...
+			change = findLatestChange(p4, path);
+			if (change == 0) {
+				// JENKINS-63494 and JENKINS-64193
+				// dormant project outside the change limits; use last built change
+				change = last.getRef().getChange();
+			}
 		} else {
+			// Polling per Change - get next change.
 			change = findIncrementalChange(p4, path, last.getRef());
 		}
 
