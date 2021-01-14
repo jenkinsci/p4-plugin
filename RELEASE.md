@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.11.2 (major features/fixes)
+
+[@27175](https://swarm.workshop.perforce.com/changes/27175) - Prevent dormant multi branch project continiously building.    The new behaviour uses the last build change if no changes are found (preventing a triggered build) or if there was no previous builds (in the case of new projects) then the latest changes is used to triggering a build. JENKINS-63494 and JENKINS-64193.
+
+[@26955](https://swarm.workshop.perforce.com/changes/26955) - Merge pull request #125 from dvilaverde/master Add ContributorMetadataAction to SwarmScmSource to enable CHANGE_AUTHOR env variable in build
+
+[@26938](https://swarm.workshop.perforce.com/changes/26938) - Merge pull request #122 from dvilaverde/master Have P4ChangeRequestSCMHead implement interface ChangeRequestSCMHead2
+
+[@26930](https://swarm.workshop.perforce.com/changes/26930) - Merge pull request #124 from dvilaverde/case-sensitive SwarmSCMSource#getHeads uses swarm id instead of name for P4SCMHead
+
+
 ### Release 1.11.1 (major features/fixes)
 
 [@26860](https://swarm.workshop.perforce.com/changes/26860) - Global option to include changes since last successful build.  JENKINS-64030
