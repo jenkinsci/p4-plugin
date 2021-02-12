@@ -873,6 +873,7 @@ public class PerforceScm extends SCM {
 		private boolean deleteFiles;
 
 		private boolean hideTicket;
+		private boolean hideMessages;
 
 		private int maxFiles = DEFAULT_FILE_LIMIT;
 		private int maxChanges = DEFAULT_CHANGE_LIMIT;
@@ -911,6 +912,10 @@ public class PerforceScm extends SCM {
 
 		public boolean isHideTicket() {
 			return hideTicket;
+		}
+
+		public boolean isHideMessages() {
+			return hideMessages;
 		}
 
 		public int getMaxFiles() {
@@ -1016,9 +1021,11 @@ public class PerforceScm extends SCM {
 
 			try {
 				lastSuccess = json.getBoolean("lastSuccess");
+				hideMessages = json.getBoolean("hideMessages");
 			} catch (JSONException e) {
-				logger.info("Unable to read lastSuccess change reporting option in configuration");
+				logger.info("Unable to read Reporting options in configuration");
 				lastSuccess = false;
+				hideMessages = false;
 			}
 
 			save();

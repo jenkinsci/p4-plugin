@@ -48,10 +48,13 @@
         </f:entry>
     </f:section>
 
-    <f:section title="Perforce: Change Reporting">
+    <f:section title="Perforce: Reporting">
 		<f:entry field="lastSuccess">
 			<f:checkbox title="${%Report Changes since last successful build}" default="false"/>
 		</f:entry>
+		<f:entry field="hideMessages">
+        	<f:checkbox title="${%Hide Server Messages for all Perforce commands}" default="false"/>
+        </f:entry>
     </f:section>
 	
 </j:jelly>

@@ -10,17 +10,19 @@ public class P4Progress implements IProgressCallback {
 
 	private final TaskListener listener;
 	private final ConnectionHelper p4;
+	private final boolean hideMessages;
 
 	public P4Progress(TaskListener listener, ConnectionHelper p4) {
 		this.listener = listener;
 		this.p4 = p4;
+		this.hideMessages = p4.getP4SCM().isHideMessages();
 	}
 
 	public void start(int key) {
 	}
 
 	public boolean tick(int key, String msg) {
-		if (msg != null && !msg.isEmpty()) {
+		if (!hideMessages && msg != null && !msg.isEmpty()) {
 			log(msg);
 		}
 
