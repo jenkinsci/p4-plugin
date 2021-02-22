@@ -1,10 +1,8 @@
 package org.jenkinsci.plugins.p4.console;
 
-import hudson.model.TaskListener;
-
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-
 import com.perforce.p4java.server.callback.IProgressCallback;
+import hudson.model.TaskListener;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
 public class P4Progress implements IProgressCallback {
 
@@ -15,7 +13,11 @@ public class P4Progress implements IProgressCallback {
 	public P4Progress(TaskListener listener, ConnectionHelper p4) {
 		this.listener = listener;
 		this.p4 = p4;
-		this.hideMessages = p4.getP4SCM().isHideMessages();
+		if (p4.getP4SCM() != null) {
+			this.hideMessages = p4.getP4SCM().isHideMessages();
+		} else {
+			this.hideMessages = false;
+		}
 	}
 
 	public void start(int key) {
