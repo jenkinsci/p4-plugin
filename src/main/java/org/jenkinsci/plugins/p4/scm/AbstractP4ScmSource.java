@@ -32,6 +32,7 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
@@ -330,7 +331,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		// TODO look for graph revisions too
 
 		// Check for 'Polling per Change' filter option
-		boolean perChange = PerforceScm.isIncremental(getFilter());
+		boolean perChange = FilterPerChangeImpl.isActive(getFilter());
 
 		long change;
 		P4Path path = head.getPath();

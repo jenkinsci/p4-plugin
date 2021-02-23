@@ -7,28 +7,28 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.Serializable;
 import java.util.List;
 
-public class FilterPerChangeImpl extends Filter implements Serializable {
+public class FilterLatestChangeImpl extends Filter implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	private final boolean perChange;
+	private final boolean latestChange;
 
 	@DataBoundConstructor
-	public FilterPerChangeImpl(boolean perChange) {
-		this.perChange = perChange;
+	public FilterLatestChangeImpl(boolean latestChange) {
+		this.latestChange = latestChange;
 	}
 
-	public boolean isPerChange() {
-		return perChange;
+	public boolean isLatestChange() {
+		return latestChange;
 	}
 
 	@Extension
-	@Symbol("incremental")
+	@Symbol("latest")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
 		@Override
 		public String getDisplayName() {
-			return "Polling per Change";
+			return "Polling latest Change";
 		}
 	}
 
@@ -37,8 +37,8 @@ public class FilterPerChangeImpl extends Filter implements Serializable {
 			return false;
 		}
 		for (Filter f : filter) {
-			if (f instanceof FilterPerChangeImpl) {
-				if (((FilterPerChangeImpl) f).isPerChange()) {
+			if (f instanceof FilterLatestChangeImpl) {
+				if (((FilterLatestChangeImpl) f).isLatestChange()) {
 					return true;
 				}
 			}

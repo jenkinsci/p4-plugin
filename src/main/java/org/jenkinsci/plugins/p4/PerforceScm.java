@@ -12,7 +12,6 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -50,6 +49,7 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterLatestChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -100,7 +100,8 @@ public class PerforceScm extends SCM {
 	private final List<Filter> filter;
 	private final Populate populate;
 	private final P4Browser browser;
-	private final P4Ref revision;
+
+	private P4Ref revision;
 
 	private String script;
 
@@ -186,7 +187,7 @@ public class PerforceScm extends SCM {
 	 */
 	@DataBoundConstructor
 	public PerforceScm(String credential, Workspace workspace, List<Filter> filter, Populate populate,
-	                   P4Browser browser) {
+					   P4Browser browser) {
 		this.credential = credential;
 		this.workspace = workspace;
 		this.filter = filter;
@@ -308,10 +309,9 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public SCMRevisionState calcRevisionsFromBuild(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher,
-	                                               TaskListener listener) throws IOException, InterruptedException {
-		// A baseline is not required... but a baseline object is, so we'll
-		// return the NONE object.
-		return SCMRevisionState.NONE;
+												   TaskListener listener) throws IOException, InterruptedException {
+		// return the Perforce change; this gets updated during polling...
+		return new PerforceRevisionState(new P4LabelRef("now"));
 	}
 
 	/**
@@ -321,7 +321,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public PollingResult compareRemoteRevisionWith(Job<?, ?> job, Launcher launcher, FilePath buildWorkspace,
-	                                               TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
+												   TaskListener listener, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		String jobName = job.getName();
 		logger.finer("P4: polling[" + jobName + "] started...");
@@ -332,18 +332,18 @@ public class PerforceScm extends SCM {
 		Run<?, ?> lastRun = job.getLastBuild();
 
 		Queue.Item[] items = Jenkins.getInstance().getQueue().getItems();
-		for(Queue.Item item : items) {
-			if(item.task instanceof WorkflowJob) {
+		for (Queue.Item item : items) {
+			if (item.task instanceof WorkflowJob) {
 				WorkflowJob task = (WorkflowJob) item.task;
-				if(task.equals(job)) {
-					if(item instanceof Queue.WaitingItem) {
+				if (task.equals(job)) {
+					if (item instanceof Queue.WaitingItem) {
 						logger.info("P4: polling[" + jobName + "] skipping WaitingItem");
 						return PollingResult.NO_CHANGES;
 					}
-					if(item instanceof Queue.BlockedItem) {
+					if (item instanceof Queue.BlockedItem) {
 						logger.finer("P4: polling[" + jobName + "] BlockedItem");
 					}
-					if(item instanceof Queue.BuildableItem) {
+					if (item instanceof Queue.BuildableItem) {
 						logger.finer("P4: polling[" + jobName + "] BuildableItem");
 					}
 				}
@@ -371,7 +371,7 @@ public class PerforceScm extends SCM {
 			if (isBuildParent(job)) {
 				// Poll PARENT only
 				EnvVars envVars = job.getEnvironment(node, listener);
-				state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
+				state = pollWorkspace(envVars, listener, buildWorkspace, lastRun, baseline);
 			} else {
 				// Poll CHILDREN only
 				MatrixProject matrixProj = (MatrixProject) job;
@@ -380,7 +380,7 @@ public class PerforceScm extends SCM {
 
 				for (MatrixConfiguration config : configs) {
 					EnvVars envVars = config.getEnvironment(node, listener);
-					state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
+					state = pollWorkspace(envVars, listener, buildWorkspace, lastRun, baseline);
 					// exit early if changes found
 					if (state == PollingResult.BUILD_NOW) {
 						logger.finer("P4: polling[" + jobName + "] exit (Matrix): " + state.change);
@@ -390,7 +390,7 @@ public class PerforceScm extends SCM {
 			}
 		} else {
 			EnvVars envVars = job.getEnvironment(node, listener);
-			state = pollWorkspace(envVars, listener, buildWorkspace, lastRun);
+			state = pollWorkspace(envVars, listener, buildWorkspace, lastRun, baseline);
 		}
 
 		logger.finer("P4: polling[" + jobName + "] exit: " + state.change);
@@ -410,7 +410,7 @@ public class PerforceScm extends SCM {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, Run<?, ?> lastRun)
+	private PollingResult pollWorkspace(EnvVars envVars, TaskListener listener, FilePath buildWorkspace, Run<?, ?> lastRun, SCMRevisionState baseline)
 			throws InterruptedException, IOException {
 
 		// set NODE_NAME to Node or default "master" if not set
@@ -438,12 +438,34 @@ public class PerforceScm extends SCM {
 		if (changes == null) {
 			listener.getLogger().println("P4: Polling error; no previous change.");
 			return PollingResult.NO_CHANGES;
-		} else if(changes.isEmpty()) {
+		} else if (changes.isEmpty()) {
 			listener.getLogger().println("P4: Polling no changes found.");
 			return PollingResult.NO_CHANGES;
 		} else {
 			changes.forEach((c) -> listener.getLogger().println("P4: Polling found change: " + c));
+			if (baseline instanceof PerforceRevisionState) {
+				PerforceRevisionState p4Baseline = (PerforceRevisionState) baseline;
+				setLatestChange(changes, listener, p4Baseline);
+			}
 			return PollingResult.BUILD_NOW;
+		}
+	}
+
+	/**
+	 * Update the baseline with the latest polled change.
+	 *
+	 * @param changes  changes found during poll
+	 * @param listener for logging
+	 * @param baseline the baseline storing the Perforce change
+	 */
+	private void setLatestChange(List<P4Ref> changes, TaskListener listener, PerforceRevisionState baseline) {
+		long change = 0L;
+		for (P4Ref c : changes) {
+			change = Math.max(change, c.getChange());
+		}
+		if (change > 0L && FilterLatestChangeImpl.isActive(getFilter())) {
+			listener.getLogger().println("P4: Setting Latest change to: " + change);
+			baseline.setChange(new P4ChangeRef(change));
 		}
 	}
 
@@ -494,7 +516,7 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public void checkout(Run<?, ?> run, Launcher launcher, FilePath buildWorkspace, TaskListener listener,
-	                     File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
+						 File changelogFile, SCMRevisionState baseline) throws IOException, InterruptedException {
 
 		String jobName = run.getParent().getName();
 		logger.finer("P4: checkout[" + jobName + "] started...");
@@ -528,7 +550,7 @@ public class PerforceScm extends SCM {
 		task.initialise();
 
 		// Override build change if polling per change.
-		if (isIncremental(getFilter())) {
+		if (FilterPerChangeImpl.isActive(getFilter())) {
 			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
 			/* Fix for JENKINS-58639
 			Check if a previous build is in progress. If yes, do not try and build the same change that is being built.
@@ -541,6 +563,15 @@ public class PerforceScm extends SCM {
 			}
 			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
 			task.setIncrementalChanges(changes);
+		}
+
+		// If the Latest Change filter is set, apply the baseline change to the checkout task.
+		if (FilterLatestChangeImpl.isActive(getFilter())) {
+			if (baseline instanceof PerforceRevisionState) {
+				PerforceRevisionState p4baseline = (PerforceRevisionState) baseline;
+				log.println("Baseline: " + p4baseline.getChange().toString());
+				task.setBuildChange(p4baseline.getChange());
+			}
 		}
 
 		// SCMRevision build per change
@@ -638,7 +669,7 @@ public class PerforceScm extends SCM {
 		}
 
 		CpsScmFlowDefinition cps = (CpsScmFlowDefinition) definition;
-		if(!this.equals(cps.getScm())) {
+		if (!this.equals(cps.getScm())) {
 			return null;
 		}
 
@@ -1072,25 +1103,6 @@ public class PerforceScm extends SCM {
 	 */
 	@Override
 	public boolean requiresWorkspaceForPolling() {
-		return false;
-	}
-
-	/**
-	 * Incremental polling filter is set
-	 *
-	 * @param filter List of filters to check for incrementaloption
-	 * @return true if set
-	 */
-	public static boolean isIncremental(List<Filter> filter) {
-		if (filter != null) {
-			for (Filter f : filter) {
-				if (f instanceof FilterPerChangeImpl) {
-					if (((FilterPerChangeImpl) f).isPerChange()) {
-						return true;
-					}
-				}
-			}
-		}
 		return false;
 	}
 }

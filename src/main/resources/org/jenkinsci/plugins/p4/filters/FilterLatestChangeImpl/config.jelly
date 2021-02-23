@@ -1,0 +1,8 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+ 
+ 	<f:entry field="latestChange">
+		<f:checkbox title="${%Enabled}"/>
+	</f:entry>
+		  
+</j:jelly>
