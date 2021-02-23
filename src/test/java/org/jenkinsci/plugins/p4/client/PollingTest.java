@@ -650,6 +650,55 @@ public class PollingTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testPollingLatestChangeFilter() throws Exception {
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PollingLatestChangeFilter");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        sleep 4\n"
+				+ "        checkout perforce(\n"
+				+ "          credential: '" + CREDENTIAL + "', \n"
+				+ "          filter: [latest(true)], \n"
+				+ "          populate: forceClean(quiet: true),\n"
+				+ "          workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "            spec: clientSpec(view: '//depot/main/... //${P4_CLIENT}/...')))\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}", false));
+
+		// enable SCM polling (even though we poll programmatically)
+		SCMTrigger cron = new SCMTrigger("* * * * *");
+		job.addTrigger(cron);
+
+		// disable concurrent builds
+		job.setConcurrentBuild(false);
+
+		// Base-line build
+		jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+
+		// Submit first change
+		String c1 = submitFile(jenkins, "//depot/main/file.001", "content");
+
+		// Poll for changes
+		cron.run();
+
+		// Submit additional change
+		submitFile(jenkins, "//depot/main/file.002", "content");
+		submitFile(jenkins, "//depot/main/file.003", "content");
+		jenkins.waitUntilNoActivity();
+
+		WorkflowRun run = job.getLastBuild();
+		assertEquals("Poll and trigger Build #2", 2, run.number);
+		assertEquals(Result.SUCCESS, run.getResult());
+		jenkins.assertLogContains("P4 Task: syncing files at change: " + c1, run);
+		jenkins.assertLogContains("Baseline: " + c1, run);
+	}
+
+	@Test
 	public void testPipelineFailedPolling() throws Exception {
 
 		String pass = ""
