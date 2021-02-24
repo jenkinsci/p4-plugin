@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.11.3 (major features/fixes)
+
+[@27492](https://swarm.workshop.perforce.com/changes/27492) - Add new Filter to build with the latest change found during polling.  JENKINS-63879
+
+[@27442](https://swarm.workshop.perforce.com/changes/27442) - Added global - hide Server messages option. JENKINS-59750
+
+[@27240](https://swarm.workshop.perforce.com/changes/27240) - Merge pull request #95 from lystor/bug-56248. JENKINS-56248: P4Plugin Polls Workspaces With Disabled Polling (poll: false)
+
+
 ### Release 1.11.2 (major features/fixes)
 
 [@27175](https://swarm.workshop.perforce.com/changes/27175) - Prevent dormant multi branch project continiously building.    The new behaviour uses the last build change if no changes are found (preventing a triggered build) or if there was no previous builds (in the case of new projects) then the latest changes is used to triggering a build. JENKINS-63494 and JENKINS-64193.
