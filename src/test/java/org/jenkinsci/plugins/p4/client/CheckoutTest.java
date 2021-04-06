@@ -1,5 +1,10 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.matrix.Axis;
+import hudson.matrix.AxisList;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixConfiguration;
+import hudson.matrix.MatrixProject;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -19,6 +24,7 @@ import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.scm.BranchesScmSource;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -304,4 +310,34 @@ public class CheckoutTest extends DefaultEnvironment {
 		P4ChangeSet cs5 = (P4ChangeSet)run5.getChangeSets().get(0);
 		assertEquals(3, cs5.getHistory().size());
     }
+
+	@Test
+	public void testMatrixConfigurationManualWorkspace() throws Exception {
+
+		// Multi-configuration project
+		MatrixProject project = jenkins.createProject(MatrixProject.class, "matrix");
+		AxisList axes = new AxisList();
+		axes.add(new Axis("VARIANT", "v1", "v2"));
+		project.setAxes(axes);
+
+		// Manual workspace spec definition
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-matrix";
+		String view = "//depot/${VARIANT}/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// Auto clean
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		submitFile(jenkins, "//depot/v1/src/file1", "content");
+		submitFile(jenkins, "//depot/v2/src/file2", "content");
+
+		project.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertEquals(Result.SUCCESS, project.getLastBuild().getResult());
+	}
 }

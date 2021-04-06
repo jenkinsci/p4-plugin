@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
+import hudson.EnvVars;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -8,6 +9,8 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.build.ExecutorHelper;
+import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -79,8 +82,14 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		build = project.scheduleBuild2(0, cause).get();
 		assertEquals(Result.SUCCESS, build.getResult());
 
+		// create pseudo environment (normally ClientHelper is called from Run)
+		EnvVars envVars = new EnvVars();
+		envVars.put("NODE_NAME", "NODE_NAME");
+		envVars.put("JOB_NAME", "JOB_NAME");
+		workspace.setExpand(envVars);
+
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(project.asItem(), CREDENTIAL, null, workspace);
+		ClientHelper p4 = new ClientHelper(project, CREDENTIAL, null, workspace);
 		p4.login();
 
 		// Test backup field in client spec

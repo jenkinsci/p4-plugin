@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.EnvVars;
 import hudson.model.Action;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
@@ -141,6 +142,12 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		// SCM Jenkinsfile job
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "diffClientsJenkinsfile");
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+
+		// create pseudo environment (normally ClientHelper is called from Run)
+		EnvVars envVars = new EnvVars();
+		envVars.put("NODE_NAME", "NODE_NAME");
+		envVars.put("JOB_NAME", "JOB_NAME");
+		workspace.setExpand(envVars);
 
 		// Get current change
 		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
@@ -292,6 +299,12 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
 
+		// create pseudo environment (normally ClientHelper is called from Run)
+		EnvVars envVars = new EnvVars();
+		envVars.put("NODE_NAME", "NODE_NAME");
+		envVars.put("JOB_NAME", "JOB_NAME");
+		workspace.setExpand(envVars);
+
 		// Get latest change
 		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
 		int head = Integer.parseInt(p4.getCounter("change"));
@@ -397,6 +410,11 @@ public class JenkinsfileTest extends DefaultEnvironment {
 				+ "}";
 
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", content2);
+
+		// create pseudo environment (normally ClientHelper is called from Run)
+		EnvVars envVars = new EnvVars();
+		envVars.put("JOB_NAME", "JOB_NAME");
+		workspace.setExpand(envVars);
 
 		// Get latest change
 		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);

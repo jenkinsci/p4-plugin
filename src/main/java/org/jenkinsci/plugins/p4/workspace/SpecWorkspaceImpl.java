@@ -64,7 +64,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		String clientName = getFullName();
 
 		// fetch spec
-		String specPathFull = getExpand().format(getSpecPath(), false);
+		String specPathFull = getExpand().format(getSpecPath(), true);
 		List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
@@ -72,7 +72,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 
 		// parse spec
 		String spec = IOUtils.toString(ins, "UTF-8");
-		spec = getExpand().format(spec, false);
+		spec = getExpand().format(spec, true);
 		if(!spec.contains(clientName)) {
 			throw new Exception("Spec file does not match client.");
 		}

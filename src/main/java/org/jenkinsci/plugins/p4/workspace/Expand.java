@@ -49,13 +49,19 @@ public class Expand implements Cloneable, Serializable {
 		return super.clone();
 	}
 
-	public String format(String format, boolean wildcard) {
+	public String format(String format, boolean useKey) {
 		if (formatTags != null) {
 			format = Util.replaceMacro(format, formatTags); // fails to replace undefined tags, just like before
 		}
 
 		// cleanup undefined tags
-		format = format.replaceAll("\\$\\{.+?\\}", wildcard ? "*" : ""); // strips undefined tags unless wildcard=true
+		if (useKey) {
+			// use key if no envVar defined (e.g. "${AXIS}" -> "AXIS")
+			format = format.replace("${", "");
+			format = format.replace("}", "");
+		} else {
+			format = format.replaceAll("\\$\\{.+?\\}", ""); // strips undefined tags
+		}
 		return format;
 	}
 
@@ -64,13 +70,13 @@ public class Expand implements Cloneable, Serializable {
 			for (Entry<String, String> entry : formatTags.entrySet()) {
 				String key = entry.getKey();
 				String value = entry.getValue();
-				if("NODE_NAME".equals(key)) {
+				if ("NODE_NAME".equals(key)) {
 					continue;
 				}
-				if("EXECUTOR_NUMBER".equals(key)) {
+				if ("EXECUTOR_NUMBER".equals(key)) {
 					continue;
 				}
-				if("BUILD_NUMBER".equals(key)) {
+				if ("BUILD_NUMBER".equals(key)) {
 					continue;
 				}
 				if (value != null) {

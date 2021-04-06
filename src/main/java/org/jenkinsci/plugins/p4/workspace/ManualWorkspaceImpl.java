@@ -83,7 +83,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		String clientName = getFullName();
 		ClientView clientView = new ClientView();
 		int order = 0;
-		String specString = getExpand().format(workspaceSpec.getView(), false);
+		String specString = getExpand().format(workspaceSpec.getView(), true);
 
 		// Split on new line and trim any following white space
 		for (String line : specString.split("\n\\s*")) {
@@ -108,7 +108,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		String view = workspaceSpec.getChangeView();
 		if (view != null) {
-			String specString = getExpand().format(view, false);
+			String specString = getExpand().format(view, true);
 			for (String line : specString.split("\\n")) {
 				changeView.add(line);
 			}
@@ -160,7 +160,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		// Expand Stream name
 		String streamFullName = getSpec().getStreamName();
 		if (streamFullName != null) {
-			streamFullName = getExpand().format(streamFullName, false);
+			streamFullName = getExpand().format(streamFullName, true);
 		}
 		iclient.setStream(streamFullName);
 

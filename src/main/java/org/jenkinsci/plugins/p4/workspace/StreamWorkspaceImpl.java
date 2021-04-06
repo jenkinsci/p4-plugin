@@ -72,7 +72,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 		iclient.setOwnerName(user);
 
 		// Expand Stream name
-		String streamFullName = getExpand().format(getStreamName(), false);
+		String streamFullName = getExpand().format(getStreamName(), true);
 		iclient.setStream(streamFullName);
 
 		// Set clobber on to ensure workspace is always good
