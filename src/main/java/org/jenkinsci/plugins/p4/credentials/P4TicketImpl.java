@@ -5,12 +5,14 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionConfig;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -68,6 +70,7 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 			return FormValidation.ok();
 		}
 
+		@POST
 		public FormValidation doTestConnection(@QueryParameter("p4port") String p4port,
 		                                       @QueryParameter("ssl") String ssl,
 		                                       @QueryParameter("trust") String trust,
@@ -77,6 +80,11 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 		                                       @QueryParameter("ticketValue") String ticketValue,
 		                                       @QueryParameter("ticketPath") String ticketPath)
 				throws IOException, ServletException {
+
+			if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+				return FormValidation.warning("Insufficient permissions");
+			}
+
 			try {
 				// Test connection path to Server
 				TrustImpl sslTrust = ("true".equals(ssl)) ? new TrustImpl(trust) : null;
