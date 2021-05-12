@@ -76,7 +76,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	public SwarmHelper getSwarm() throws Exception {
 		if (swarm == null) {
 			try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, null)) {
-				this.swarm = new SwarmHelper(p4, "4");
+				this.swarm = new SwarmHelper(p4, "9");
 			}
 		}
 		return swarm;

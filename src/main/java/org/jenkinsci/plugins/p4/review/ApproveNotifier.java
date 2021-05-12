@@ -91,7 +91,7 @@ public class ApproveNotifier extends Notifier {
 	}
 
 	protected boolean approveReview(ConnectionHelper p4, EnvVars env) throws Exception {
-		SwarmHelper swarm = new SwarmHelper(p4, "4");
+		SwarmHelper swarm = new SwarmHelper(p4, "9");
 
 		ApproveState state = ApproveState.parse(getStatus());
 		if (state == null) {
