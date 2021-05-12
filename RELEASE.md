@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.11.5 (major features/fixes)
+
+[@27768](https://swarm.workshop.perforce.com/changes/27768) - [SECURITY-2327]
+
+
 ### Release 1.11.4 (major features/fixes)
 
 [@27675](https://swarm.workshop.perforce.com/changes/27675) - Substitute missing Axes for Key Name. Added useKey option to substitute empty keys in client views, depot paths and stream paths.  JENKINS-55985
