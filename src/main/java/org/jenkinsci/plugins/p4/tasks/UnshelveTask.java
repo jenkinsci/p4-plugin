@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.tasks;
 
+import hudson.AbortException;
 import hudson.FilePath.FileCallable;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -52,9 +53,10 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");
-			String msg = "Unable to publish workspace: " + e;
-			logger.warning(msg);
-			throw e;
+			String err = "Unable to unshelve change: " + e;
+			p4.log(err);
+			logger.warning(err);
+			throw new AbortException(err);
 		}
 		return true;
 	}
