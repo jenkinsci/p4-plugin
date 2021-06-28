@@ -1295,7 +1295,7 @@ public class ClientHelper extends ConnectionHelper {
 
 	/**
 	 * Fetches a list of changes needed to update the workspace to the specified
-	 * limit. The limit could be a Perforce change number or label.
+	 * limit. The limit could be a Perforce change number, label or counter.
 	 *
 	 * @param fromRefs    List of from revisions
 	 * @param changeLimit To Revision
@@ -1305,7 +1305,10 @@ public class ClientHelper extends ConnectionHelper {
 	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs, P4Ref changeLimit) throws Exception {
 
 		P4Ref from = getSingleChange(fromRefs);
-
+                // convert changeLimit from counter to change value
+                if (isCounter(changeLimit.toString())) {
+                  changeLimit = new P4ChangeRef(Long.parseLong(getCounter(changeLimit.toString())));
+                }
 		// return empty array, if from and changeLimit are equal, or Perforce will report a change
 		if (from.equals(changeLimit)) {
 			return new ArrayList<P4Ref>();
