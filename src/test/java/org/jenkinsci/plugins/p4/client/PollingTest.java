@@ -145,6 +145,17 @@ public class PollingTest extends DefaultEnvironment {
 		build = project.scheduleBuild2(0, cause).get();
 		List<String> log = build.getLog(LOG_LIMIT);
 		assertTrue(log.contains("P4 Task: syncing files at change: 4"));
+
+		// JENKINS-66169: disable poll per change
+		List<ParameterValue> list2 = new ArrayList<>();
+		list2.add(new StringParameterValue("P4_INCREMENTAL", "false"));
+		Action actions2 = new SafeParametersAction(new ArrayList<ParameterValue>(), list2);
+
+		Cause.UserIdCause cause2 = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause2, actions2).get();
+		List<String> log2 = build.getLog(LOG_LIMIT);
+		assertEquals(Result.SUCCESS, build.getResult());
+		assertTrue(log2.contains("P4 Task: syncing files at change: 15"));
 	}
 
 	@Test
