@@ -13,6 +13,7 @@ import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractProject;
+import hudson.model.FreeStyleBuild;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
@@ -551,18 +552,27 @@ public class PerforceScm extends SCM {
 
 		// Override build change if polling per change.
 		if (FilterPerChangeImpl.isActive(getFilter())) {
-			Run<?, ?> lastRun = run.getPreviousBuiltBuild();
-			/* Fix for JENKINS-58639
-			Check if a previous build is in progress. If yes, do not try and build the same change that is being built.
-			To help lookForChanges() find the correct change to build, sending it the previousBuildInProgress
-			if not null else previousBuiltBuild.
-			 */
-			Run<?, ?> inProgressRun = run.getPreviousBuildInProgress();
-			if (inProgressRun != null) {
-				lastRun = inProgressRun;
+			String p4OneChangelist = null;
+
+			if (run instanceof FreeStyleBuild) {
+				EnvVars envVars = run.getEnvironment(listener);
+				p4OneChangelist = envVars.get("P4_INCREMENTAL");
 			}
-			List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
-			task.setIncrementalChanges(changes);
+
+			if (p4OneChangelist == null || p4OneChangelist.equals("true")) {
+				Run<?, ?> lastRun = run.getPreviousBuiltBuild();
+				/* Fix for JENKINS-58639
+				Check if a previous build is in progress. If yes, do not try and build the same change that is being built.
+				To help lookForChanges() find the correct change to build, sending it the previousBuildInProgress
+				if not null else previousBuiltBuild.
+				 */
+				Run<?, ?> inProgressRun = run.getPreviousBuildInProgress();
+				if (inProgressRun != null) {
+					lastRun = inProgressRun;
+				}
+				List<P4Ref> changes = lookForChanges(buildWorkspace, ws, lastRun, listener);
+				task.setIncrementalChanges(changes);
+			}
 		}
 
 		// If the Latest Change filter is set, apply the baseline change to the checkout task.
