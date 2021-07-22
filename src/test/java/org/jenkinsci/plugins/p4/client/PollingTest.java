@@ -70,6 +70,41 @@ public class PollingTest extends DefaultEnvironment {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
+        @Test
+        public void testPollingCounterPin() throws Exception {
+
+                String client = "PollingCounterPin.ws";
+                String view = "//depot/... //" + client + "/...";
+                WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+                FreeStyleProject project = jenkins.createFreeStyleProject("PollingCounterPin");
+                ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+                Populate populate = new AutoCleanImpl(true, true, false, false, false, "change", null);
+                PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+                project.setScm(scm);
+                project.save();
+
+                // Build at change 3
+                List<ParameterValue> list = new ArrayList<>();
+                list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+                list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
+                Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+                FreeStyleBuild build;
+                Cause.UserIdCause cause = new Cause.UserIdCause();
+                build = project.scheduleBuild2(0, cause, actions).get();
+                assertEquals(Result.SUCCESS, build.getResult());
+
+                // Poll for changes
+                Logger polling = Logger.getLogger("Polling");
+                TestHandler pollHandler = new TestHandler();
+                polling.addHandler(pollHandler);
+                LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+                project.poll(listener);
+                assertThat(pollHandler.getLogBuffer(), containsString("found change: 4"));
+                assertThat(pollHandler.getLogBuffer(), containsString("found change: 40"));
+        }
+
 	@Test
 	public void testPollingPin() throws Exception {
 
