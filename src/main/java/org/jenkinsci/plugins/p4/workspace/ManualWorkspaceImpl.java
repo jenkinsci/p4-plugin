@@ -3,6 +3,9 @@ package org.jenkinsci.plugins.p4.workspace;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.client.IClientViewMapping;
+import com.perforce.p4java.core.file.FileSpecBuilder;
+import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
@@ -13,6 +16,7 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
+import org.apache.commons.io.IOUtils;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
@@ -20,8 +24,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class ManualWorkspaceImpl extends Workspace implements Serializable {
@@ -79,11 +85,38 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return ws;
 	}
 
-	private ClientView getClientView(WorkspaceSpec workspaceSpec) throws Exception {
+	private ClientView getClientView(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception {
 		String clientName = getFullName();
 		ClientView clientView = new ClientView();
 		int order = 0;
 		String specString = getExpand().format(workspaceSpec.getView(), true);
+        if (specString.startsWith("@")) {
+            logger.info("P4: specString=" + specString);
+            String specPathFull = specString.substring(1).trim();
+            List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
+            GetFileContentsOptions printOpts = new GetFileContentsOptions();
+            printOpts.setNoHeaderLine(true);
+            InputStream ins = connection.getFileContents(file, printOpts);
+            String spec = IOUtils.toString(ins, "UTF-8");
+            logger.info("P4: specFromFile=" + spec);
+            spec = getExpand().format(spec, true);
+            logger.info("P4: specExpanded=" + spec);
+            int i1 = spec.indexOf("//", 0);
+            String template = "<ClientName>";
+            if (i1 >= 0) {
+                int i2 = spec.indexOf("//", i1+2);
+                if (i2 > i1) {
+                    int i3 = spec.indexOf("/", i2+2);
+                    if (i3>i2) {
+                        template = spec.substring(i2+2, i3);
+                    }
+                }
+            }
+            logger.info("P4: specTemplate=" + template);
+            spec = spec.replace(template, clientName);
+            logger.info("P4: specReplaced=" + spec);
+            specString = spec;
+        }
 
 		// Split on new line and trim any following white space
 		for (String line : specString.split("\n\\s*")) {
@@ -165,7 +198,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		iclient.setStream(streamFullName);
 
 		// Set Client view
-		iclient.setClientView(getClientView(getSpec()));
+		iclient.setClientView(getClientView(connection, getSpec()));
 
 		// Set Change view
 		if (connection.getServerVersionNumber() >= 20172) {
