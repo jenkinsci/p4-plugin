@@ -15,6 +15,7 @@ import hudson.matrix.MatrixProject;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Item;
+import hudson.model.FreeStyleBuild;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;
@@ -54,6 +55,7 @@ import org.jenkinsci.plugins.p4.filters.FilterLatestChangeImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.AbstractP4ScmSource;
@@ -525,8 +527,33 @@ public class PerforceScm extends SCM {
 		PrintStream log = listener.getLogger();
 		boolean success = true;
 
+		CheckoutTask task = null;
+
+		if (run instanceof FreeStyleBuild && populate instanceof SyncOnlyImpl) {
+			String p4CleanWorkspace;
+			EnvVars envVars = run.getEnvironment(listener);
+			p4CleanWorkspace = envVars.getOrDefault("P4_CLEANWORKSPACE", "false");
+
+			if (p4CleanWorkspace.equals("true")) {
+				listener.getLogger().println("P4: Wiping workspace...");
+				buildWorkspace.deleteRecursive();
+
+				Populate populateWithForceSync = new SyncOnlyImpl(
+						((SyncOnlyImpl) populate).isRevert(),
+						true,
+						true,
+						populate.isModtime(),
+						populate.isQuiet(),
+						populate.getPin(),
+						populate.getParallel());
+				task = new CheckoutTask(credential, run, listener, populateWithForceSync);
+			}
+		}
+
 		// Create task
-		CheckoutTask task = new CheckoutTask(credential, run, listener, populate);
+		if (task == null) {
+			task = new CheckoutTask(credential, run, listener, populate);
+		}
 
 		// Update credential tracking
 		try {
