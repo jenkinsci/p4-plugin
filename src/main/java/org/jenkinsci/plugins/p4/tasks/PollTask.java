@@ -151,10 +151,11 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 				List<IFileSpec> included = new ArrayList<IFileSpec>();
 
 				String viewMask = ((FilterViewMaskImpl) f).getViewMask();
+				String[] maskPaths = viewMask.split("\\R");
 				for (IFileSpec s : files) {
 					boolean isFileInViewMask = false;
 					String p = s.getDepotPathString();
-					for (String maskPath : viewMask.split("\n")) {
+					for (String maskPath : maskPaths) {
 						if (p.startsWith(maskPath)) {
 							isFileInViewMask = true;
 						}
