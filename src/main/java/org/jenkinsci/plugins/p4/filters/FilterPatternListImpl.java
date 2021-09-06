@@ -46,7 +46,7 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 			caseFlag = Pattern.CASE_INSENSITIVE;
 		}
 		
-		for (String line : patternText.split("\n")) {
+		for (String line : patternText.split("\\R")) {
 			// Try compiling each line into patterns. If we can't compile a line, skip it and log.
 			try {
 				patternList.add(Pattern.compile(line, caseFlag));
@@ -75,7 +75,7 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 			
 			int lineNumber = 1;
 			try {
-				for (String line: value.split("\n")) {
+				for (String line: value.split("\\R")) {
 					Pattern.compile(line);
 					lineNumber++;
 				}
