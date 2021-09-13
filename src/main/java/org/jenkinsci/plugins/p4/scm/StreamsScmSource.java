@@ -15,6 +15,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class StreamsScmSource extends AbstractP4ScmSource {
 
@@ -49,9 +50,18 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 		HashSet<P4SCMHead> list = new HashSet<P4SCMHead>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
+
+			Pattern excludesPattern = Pattern.compile(getExcludes());
+
 			List<IStreamSummary> specs = p4.getStreams(paths);
 			for (IStreamSummary s : specs) {
 				String name = s.getName();
+
+				// check the excludes
+				if (excludesPattern.matcher(name).matches()) {
+					continue;
+				}
+
 				String stream = s.getStream();
 				P4Path p4Path = new P4Path(stream);
 				P4SCMHead head = new P4SCMHead(name, p4Path);

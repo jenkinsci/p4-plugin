@@ -16,6 +16,10 @@
     </f:entry>
 
 	<f:advanced>
+        <f:entry title="Exclude Pattern" field="excludes">
+            <f:textbox default="${descriptor.defaultExcludes}"/>
+        </f:entry>
+
     	<f:entry title="${%Character Set}" field="charset">
     		<f:select default="none"/>
     	</f:entry>

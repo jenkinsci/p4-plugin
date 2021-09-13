@@ -73,6 +73,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	@Override
 	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 
+		Pattern excludesPattern = Pattern.compile(getExcludes());
 		List<String> paths = getIncludePaths();
 		List<P4SCMHead> list = new ArrayList<>();
 
@@ -94,6 +95,11 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 				// check the filters
 				if (!filterPattern.matcher(branch).matches()) {
+					continue;
+				}
+
+				// check the excludes
+				if (excludesPattern.matcher(branch).matches()) {
 					continue;
 				}
 
@@ -125,7 +131,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		// If there is only one view for external/local then external is treated as local
 		boolean external = false;
-		if((externalViews.size() + localViews.size()) > 1) {
+		if ((externalViews.size() + localViews.size()) > 1) {
 			external = true;
 		}
 

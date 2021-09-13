@@ -56,11 +56,15 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	private static Logger logger = Logger.getLogger(AbstractP4ScmSource.class.getName());
 
+	public static final String defaultExcludes = "a^"; // matches nothing
+
 	protected final String credential;
 
 	private List<SCMSourceTrait> traits = new ArrayList<>();
 
 	private String includes;
+	private String excludes = defaultExcludes;
+
 	private String charset;
 	private String format;
 	private Populate populate;
@@ -83,6 +87,11 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	@DataBoundSetter
 	public void setIncludes(String includes) {
 		this.includes = includes;
+	}
+
+	@DataBoundSetter
+	public void setExcludes(String excludes) {
+		this.excludes = excludes;
 	}
 
 	@DataBoundSetter
@@ -113,6 +122,13 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	public String getIncludes() {
 		return includes;
+	}
+
+	public String getExcludes() {
+		if (excludes == null || excludes.isEmpty()) {
+			return defaultExcludes;
+		}
+		return excludes;
 	}
 
 	public String getCharset() {

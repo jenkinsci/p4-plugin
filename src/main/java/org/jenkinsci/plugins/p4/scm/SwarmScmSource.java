@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
 import static org.jenkinsci.plugins.p4.review.ReviewProp.SWARM_BRANCH;
@@ -117,6 +118,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	@Override
 	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
 
+		Pattern excludesPattern = Pattern.compile(getExcludes());
+
 		List<P4SCMHead> list = new ArrayList<>();
 
 		List<SwarmReviewsAPI.Reviews> reviews = getSwarm().getActiveReviews(project);
@@ -125,6 +128,11 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 			List<String> branches = getBranchesInReview(reviewID, project);
 			for (String branch : branches) {
+				// check the excludes
+				if (excludesPattern.matcher(branch).matches()) {
+					continue;
+				}
+
 				// Get first Swarm path; it MUST include the Jenkinsfile
 				P4Path p4Path = getPathsInBranch(branch, project);
 				if (p4Path != null) {
@@ -143,10 +151,18 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	@Override
 	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 
+		Pattern excludesPattern = Pattern.compile(getExcludes());
+
 		List<P4SCMHead> list = new ArrayList<>();
 
 		List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
 		for (SwarmProjectAPI.Branch branch : branches) {
+
+			// check the excludes
+			if (excludesPattern.matcher(branch.getName()).matches()) {
+				continue;
+			}
+
 			// Get first Swarm path; it MUST include the Jenkinsfile
 			P4Path p4Path = branch.getPath();
 

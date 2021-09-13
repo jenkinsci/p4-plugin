@@ -58,6 +58,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -146,6 +147,59 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void testExcludesWithClassic() throws Exception {
+
+		String project = "excludeClassic";
+		String base = "//depot/" + project;
+		String[] branches = new String[]{"br1", "br2"};
+
+		sampleProject(base, branches, "Jenkinsfile");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+		source.setExcludes(".*2");
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, project);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		assertNotNull(multi.getItem("br1"));
+		assertEquals(1, multi.getItems().size());
+	}
+
+	@Test
+	public void testExcludesWithSwarm() throws Exception {
+
+		String project = "excludeSwarm";
+		String base = "//depot/" + project;
+		String[] branches = new String[]{"br1", "br2"};
+
+		sampleProject(base, branches, "Jenkinsfile");
+
+		SwarmHelper mockSwarm = sampleSwarmProject(project, base, branches);
+		assertNotNull(mockSwarm);
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		SwarmScmSource source = new SwarmScmSource(CREDENTIAL, null, format);
+		source.setProject(project);
+		source.setExcludes(".*2");
+		source.setSwarm(mockSwarm);
+		source.setPopulate(new AutoCleanImpl());
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, project);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		assertNotNull(multi.getItem("br1"));
+		assertEquals(1, multi.getItems().size());
+	}
+
+	@Test
 	public void testNoMultiStreams() throws Exception {
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -203,6 +257,62 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+	}
+
+	@Test
+	public void testExcludesStreams() throws Exception {
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "excludes-streams");
+
+		CredentialsStore folderStore = getFolderStore(multi);
+		P4BaseCredentials inFolderCredentials = new P4PasswordImpl(
+				CredentialsScope.GLOBAL, "idInFolder", "desc:passwd", p4d.getRshPort(),
+				null, "jenkins", "0", "0", null, "jenkins");
+		folderStore.addCredentials(Domain.global(), inFolderCredentials);
+
+		// Get a connection
+		ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials);
+		IOptionsServer server = p4.getConnection();
+
+		// create a Mainline stream
+		IStream stream = new Stream();
+		stream.setOwnerName(server.getUserName());
+		stream.setStream("//stream/Acme-main");
+		stream.setName("Acme-main");
+		stream.setType(IStreamSummary.Type.MAINLINE);
+
+		// add a view mapping
+		ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
+		streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
+		stream.setStreamView(streamView);
+		server.createStream(stream);
+
+		// Create a Jenkinsfile
+		String pipeline = ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        echo \"Hello\"\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+		submitStreamFile(jenkins, "//stream/Acme-main/Jenkinsfile", pipeline, "description");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = "//stream/...";
+		StreamsScmSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
+		source.setExcludes("Ace.*");
+
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
+		assertNotNull(multi.getItem("Acme-main"));
+		assertEquals(1, multi.getItems().size());
 	}
 
 	@Test
