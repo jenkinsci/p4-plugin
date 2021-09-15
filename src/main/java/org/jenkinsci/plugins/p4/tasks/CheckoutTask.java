@@ -107,6 +107,10 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 						// no change number in counter
 					}
 				}
+				// JENKINS-66648
+				if (label.equals("now")) {
+					buildChange = new P4ChangeRef(head);
+				}
 			} else {
 				// if change is bigger than head, use head
 				if (buildChange.getChange() > head) {
