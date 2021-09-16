@@ -11,6 +11,7 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.plugins.p4.build.ExecutorHelper;
 import org.jenkinsci.plugins.p4.build.NodeHelper;
+import org.jenkinsci.plugins.p4.tasks.AbstractTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -22,8 +23,8 @@ import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 public class GetP4 extends Builder implements SimpleBuildStep {
 
 	private final String credential;
-	private final Workspace workspace;
 
+	private Workspace workspace;
 	private P4Groovy p4Groovy;
 
 	public String getCredential() {
@@ -53,24 +54,15 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 	public void perform(Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
-		// Set environment
-		EnvVars envVars = run.getEnvironment(listener);
-		String nodeName = NodeHelper.getNodeName(buildWorkspace);
-		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
-		String executor = ExecutorHelper.getExecutorID(buildWorkspace, listener);
-		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
+		// Setup workspace used for the GroovyTask
+		workspace = AbstractTask.setup(run, workspace, buildWorkspace, listener);
 
-		workspace.setExpand(envVars);
-		workspace.setRootPath(buildWorkspace.getRemote());
-
-		GetP4Task task;
 		try {
-			task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
+			GetP4Task task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
+			p4Groovy = buildWorkspace.act(task);
 		} catch (P4InvalidCredentialException ex) {
 			// credential not found. 
 			throw new IOException(ex.getMessage(), ex);
 		}
-
-		p4Groovy = buildWorkspace.act(task);
 	}
 }

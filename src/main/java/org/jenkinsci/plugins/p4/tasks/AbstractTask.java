@@ -85,6 +85,11 @@ public abstract class AbstractTask implements Serializable {
 
 	public Workspace setEnvironment(Run<?, ?> run, Workspace wsType, FilePath buildWorkspace)
 			throws IOException, InterruptedException {
+		return setup(run, wsType, buildWorkspace, listener);
+	}
+
+	public static Workspace setup(Run<?, ?> run, Workspace wsType, FilePath buildWorkspace, TaskListener listener)
+			throws IOException, InterruptedException {
 
 		Workspace ws = wsType.deepClone();
 
