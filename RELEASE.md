@@ -1,5 +1,30 @@
 ## Release notes
 
+### Release 1.11.6 (major features/fixes)
+
+[@28022](https://swarm.workshop.perforce.com/changes/28022) - Merge pull request #134 from stuartrowe/JENKINS-66648  [JENKINS-66648] Replace 'now' label with the P4ChangeRef for the current head
+
+[@28021](https://swarm.workshop.perforce.com/changes/28021) - Alternative cleanup option. In some situations (Windows) we need to individually set the file to be writable and then delete. JENKINS-66089
+
+[@28018](https://swarm.workshop.perforce.com/changes/28018) - Workspace formatting for Groovy tasks. Allow the replacement of "@" in the Workspace root when running a Groovy Task.
+
+[@28015](https://swarm.workshop.perforce.com/changes/28015) - MultiBranch exclude filter. A regular expression exclude filter for Swarm branches, Stream names and Branch paths. JENKINS-58346 JENKINS-63625
+
+[@28012](https://swarm.workshop.perforce.com/changes/28012) - Update P4Java to 2021.1.2163843
+
+[@28009](https://swarm.workshop.perforce.com/changes/28009) - Merge pull request #130 from lleroy/manual-spec-from-file-in-perforce Implemented support for "Manual Spec" stored in a file in Perforce
+
+[@28008](https://swarm.workshop.perforce.com/changes/28008) - Merge pull request #129 from nephre/polling_per_change Add support for controlling polling per change filter behavior with build parameter.   JENKINS-66169
+
+[@28002](https://swarm.workshop.perforce.com/changes/28002) - Merge pull request #131 from jorgenpt/support-windows-linebreaks Add support for Windows linebreaks in filters
+
+[@27924](https://swarm.workshop.perforce.com/changes/27924) - Merge pull request #128 from bsmoyers/poll-at-counter allow polling scm when populate options in job are set to pin to counter name in addition to changelist or label
+
+[@27857](https://swarm.workshop.perforce.com/changes/27857) - Throw AbortException if Task fails. JENKINS-51562
+
+[@27770](https://swarm.workshop.perforce.com/changes/27770) - Update Swarm API to v9
+
+
 ### Release 1.11.5 (major features/fixes)
 
 [@27768](https://swarm.workshop.perforce.com/changes/27768) - [SECURITY-2327]
