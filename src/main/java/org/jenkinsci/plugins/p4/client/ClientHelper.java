@@ -68,6 +68,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,6 +78,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.COMMAND;
 import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.STOP;
@@ -484,7 +489,28 @@ public class ClientHelper extends ConnectionHelper {
 		try {
 			FileUtils.forceDelete(new File(root));
 		} catch (FileNotFoundException ignored) {
+			// ignore
+		} catch (IOException alt) {
+			log("Unable to delete, trying alternative method... " + alt.getLocalizedMessage());
 
+			List<Path> pathsToDelete = Files.walk(Paths.get(root))
+					.sorted(Comparator.reverseOrder())
+					.collect(Collectors.toList());
+			boolean success = true;
+			for (Path path : pathsToDelete) {
+				try {
+					path.toFile().setWritable(true);
+					Files.deleteIfExists(path);
+				} catch (IOException e) {
+					success = false;
+					log("Unable to delete path: " + path + " error: " + e.getLocalizedMessage());
+					// continue to delete other paths
+				}
+			}
+
+			if (!success) {
+				throw new IOException("Unable to delete all files (see log for details).");
+			}
 		}
 	}
 
@@ -1305,10 +1331,10 @@ public class ClientHelper extends ConnectionHelper {
 	public List<P4Ref> listHaveChanges(List<P4Ref> fromRefs, P4Ref changeLimit) throws Exception {
 
 		P4Ref from = getSingleChange(fromRefs);
-                // convert changeLimit from counter to change value
-                if (isCounter(changeLimit.toString())) {
-                  changeLimit = new P4ChangeRef(Long.parseLong(getCounter(changeLimit.toString())));
-                }
+		// convert changeLimit from counter to change value
+		if (isCounter(changeLimit.toString())) {
+			changeLimit = new P4ChangeRef(Long.parseLong(getCounter(changeLimit.toString())));
+		}
 		// return empty array, if from and changeLimit are equal, or Perforce will report a change
 		if (from.equals(changeLimit)) {
 			return new ArrayList<P4Ref>();
