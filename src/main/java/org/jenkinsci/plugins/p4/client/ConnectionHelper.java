@@ -58,12 +58,17 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
 
@@ -317,7 +322,24 @@ public class ConnectionHelper implements AutoCloseable {
 		}
 	}
 
+	private static long minLife = 1800000L; // 30mins in ms
+	public static Map<String, Long> loginCache = new HashMap<>();
+
 	private boolean isLogin() throws Exception {
+		String user = connection.getUserName();
+		if (loginCache.containsKey(user)) {
+			long expire = loginCache.get(user);
+			long remain = expire - System.currentTimeMillis() - minLife;
+			if (remain > 0) {
+				logger.info("Found loginCache entry for: " + user);
+				return true;
+			} else {
+				logger.info("Removing loginCache entry for: " + user);
+				loginCache.remove(user);
+			}
+		}
+
+		logger.info("No entry in loginCache for: " + user);
 		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
 
 		if (nonNull(resultMaps) && !resultMaps.isEmpty()) {
@@ -327,9 +349,11 @@ public class ConnectionHelper implements AutoCloseable {
 					continue;
 				}
 				if (status.contains("not necessary")) {
+					loginCache.put(user, Long.MAX_VALUE);
 					return true;
 				}
 				if (status.contains("ticket expires in")) {
+					loginCache.put(user, getExpiry(status));
 					return true;
 				}
 				// If there is a broker or something else that swallows the message
@@ -339,6 +363,26 @@ public class ConnectionHelper implements AutoCloseable {
 			}
 		}
 		return false;
+	}
+
+	private long getExpiry(String loginStatus) throws P4JavaException {
+		try {
+			String pattern = ".* expires in (\\d+) hours (\\d+) minutes.";
+			Pattern regex = Pattern.compile(pattern);
+			Matcher matcher = regex.matcher(loginStatus);
+
+			if (matcher.matches()) {
+				String hourStr = matcher.group(1);
+				String minStr = matcher.group(2);
+				int hours = Integer.parseInt(hourStr);
+				int minutes = Integer.parseInt(minStr);
+				long milli = ((hours * 60L * 60L) + (minutes * 60L)) * 1000L;
+				return System.currentTimeMillis() + milli;
+			}
+			throw new P4JavaException("Unable to parse expires time: " + loginStatus);
+		} catch (PatternSyntaxException | NumberFormatException e) {
+			throw new P4JavaException(e);
+		}
 	}
 
 	/**
@@ -667,7 +711,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 *
 	 * @param path Perforce depot path //foo/...
 	 * @param from From revision (change or label)
-	 * @param to To revision (change or label)
+	 * @param to   To revision (change or label)
 	 * @return change number
 	 * @throws Exception push up stack
 	 */
@@ -691,16 +735,16 @@ public class ConnectionHelper implements AutoCloseable {
 	 *
 	 * @param path Perforce depot or client path //foo/...
 	 * @param from From revision (change or label)
-	 * @param to To revision (change or label)
+	 * @param to   To revision (change or label)
 	 * @return a Perforce Revision Spec
 	 */
 	protected String buildRevisionLimit(String path, P4Ref from, P4Ref to) {
 		String revisionPath = path;
-		if(from != null && to != null) {
+		if (from != null && to != null) {
 			revisionPath = revisionPath + "@" + from.toString() + "," + to.toString();
-		} else if(from == null && to != null) {
+		} else if (from == null && to != null) {
 			revisionPath = revisionPath + "@" + to.toString();
-		} else if(from != null && to == null) {
+		} else if (from != null && to == null) {
 			revisionPath = revisionPath + "@" + from.toString() + ",now";
 		}
 		return revisionPath;

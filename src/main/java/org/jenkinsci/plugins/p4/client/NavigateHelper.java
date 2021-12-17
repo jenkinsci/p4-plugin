@@ -4,7 +4,9 @@ import com.perforce.p4java.core.IDepot;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
 import com.perforce.p4java.exception.P4JavaException;
+import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.option.server.GetDepotFilesOptions;
 import com.perforce.p4java.option.server.GetDirectoriesOptions;
 import com.perforce.p4java.server.IOptionsServer;
@@ -14,8 +16,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class NavigateHelper implements Closeable {
+
+	private static Logger logger = Logger.getLogger(NavigateHelper.class.getName());
 
 	private final int max;
 	private final IOptionsServer p4;
@@ -83,7 +88,12 @@ public class NavigateHelper implements Closeable {
 
 			listDirs(value);
 			listFiles(value);
+		} catch (RequestException | AccessException e) {
+			String user = p4.getUserName();
+			logger.info("Removing loginCache entry for: " + user);
+			ConnectionHelper.loginCache.remove(user);
 		} catch (P4JavaException e) {
+			logger.warning(e.getMessage());
 		}
 	}
 

@@ -109,9 +109,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		assertThat("The branch was built", build, notNullValue());
 		assertThat("The branch was built", build.getNumber(), is(1));
-		
+
 		// Check for Virtual Stream
-		job = multi.getItem("Ace-virtual");	
+		job = multi.getItem("Ace-virtual");
 
 		assertThat("We now have a branch", job, notNullValue());
 
@@ -119,7 +119,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		assertThat("The branch was built", build, notNullValue());
 		assertThat("The branch was built", build.getNumber(), is(1));
-		
+
 	}
 
 	@Test
@@ -312,7 +312,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 		assertNotNull(multi.getItem("Acme-main"));
-		assertEquals(1, multi.getItems().size());
+		assertNull(multi.getItem("Ace-main"));
 	}
 
 	@Test
@@ -576,8 +576,6 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals(1, changeSet1.getHistory().size());
 		assertEquals(change, changeSet1.getHistory().get(0).getId().toString());
 	}
-
-
 
 	@Test
 	public void testMultiBranchClassicUpdateEvent() throws Exception {
@@ -1338,13 +1336,13 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		when(mockSwarm.getBranchesInProject(project)).thenReturn(swarmBranches);
 		return mockSwarm;
 	}
-	
+
 	/**
 	 * create the virtual Stream //stream/Ace-virtual, name=Ace-virtual
 	 */
 	protected static void createVirtualStream(IOptionsServer server) throws P4JavaException {
 		String virtualStreamName = "//stream/Ace-virtual";
-		String parentName =	"//stream/Ace-main" ;
+		String parentName = "//stream/Ace-main";
 
 		// view mapping of "share ..."
 		ViewMap<IStreamViewMapping> view = new ViewMap<>();

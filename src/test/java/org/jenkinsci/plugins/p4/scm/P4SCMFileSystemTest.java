@@ -63,7 +63,11 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	public void testAutoComplete() throws IOException {
 
 		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "autoComplete");
-		new ConnectionHelper(owner, CREDENTIAL, null); // Initialise default connection
+
+		// Clear login cache then initialise default connection
+		ConnectionHelper.loginCache.remove("jenkins");
+		new ConnectionHelper(owner, CREDENTIAL, null);
+
 		NavigateHelper nav = new NavigateHelper(5);
 
 		AutoCompletionCandidates results = nav.getCandidates("//");

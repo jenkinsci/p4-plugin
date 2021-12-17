@@ -79,7 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.COMMAND;
 import static org.jenkinsci.plugins.p4.console.P4ConsoleAnnotator.STOP;
@@ -124,10 +123,16 @@ public class ClientHelper extends ConnectionHelper {
 				getConnection().setCharsetName(workspace.getCharset());
 			}
 
-			login();
-
 			// Setup/Create workspace based on type
-			iclient = workspace.setClient(getConnection(), getAuthorisationConfig().getUsername());
+			String user = getAuthorisationConfig().getUsername();
+			try {
+				login();
+				iclient = workspace.setClient(getConnection(), user);
+			} catch (RequestException | AccessException e) {
+				ConnectionHelper.loginCache.remove(user);
+				login();
+				iclient = workspace.setClient(getConnection(), user);
+			}
 
 			// Set as Current Client, or exit early if not defined
 			if (!isClientValid(workspace)) {
