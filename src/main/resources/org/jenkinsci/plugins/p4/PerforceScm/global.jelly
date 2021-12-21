@@ -34,7 +34,7 @@
 		<f:entry field="hideTicket">
 			<f:checkbox title="${%Hide TICKET}" default="false"/>
 		</f:entry>
-        <f:optionalBlock name="session" title="${%Enable user session}" checked="${instance.isSessionEnabled()}">
+        <f:optionalBlock inline="true" name="sessionEnabled" title="${%Enable user session}" checked="${instance.isSessionEnabled()}">
             <f:entry title="${%Minimum life (ms)}" field="minLife">
                 <f:textbox default="${descriptor.DEFAULT_MIN_LIFE}"/>
             </f:entry>
