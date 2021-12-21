@@ -65,7 +65,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "autoComplete");
 
 		// Clear login cache then initialise default connection
-		ConnectionHelper.loginCache.remove("jenkins");
+		ConnectionHelper.invalidateUser("jenkins");
 		new ConnectionHelper(owner, CREDENTIAL, null);
 
 		NavigateHelper nav = new NavigateHelper(5);

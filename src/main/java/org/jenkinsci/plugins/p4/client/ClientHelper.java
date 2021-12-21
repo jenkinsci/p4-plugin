@@ -129,7 +129,7 @@ public class ClientHelper extends ConnectionHelper {
 				login();
 				iclient = workspace.setClient(getConnection(), user);
 			} catch (RequestException | AccessException e) {
-				ConnectionHelper.loginCache.remove(user);
+				ConnectionHelper.invalidateUser(user);
 				login();
 				iclient = workspace.setClient(getConnection(), user);
 			}

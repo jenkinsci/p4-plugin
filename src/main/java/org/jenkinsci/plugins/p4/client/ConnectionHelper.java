@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.perforce.p4java.admin.IProperty;
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.IChangelistSummary;
@@ -43,10 +40,8 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.security.ACL;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
@@ -57,8 +52,6 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -72,29 +65,14 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
 
-public class ConnectionHelper implements AutoCloseable {
+public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
-	private final TaskListener listener;
-	private final P4BaseCredentials p4credential;
-	private final ConnectionConfig connectionConfig;
-	private final AuthorisationConfig authorisationConfig;
-	private final Validate validate;
-
-	private IOptionsServer connection;
-	private boolean abort = false;
-	private Boolean unicode = null;
 
 	@Deprecated
 	public ConnectionHelper(String credentialID, TaskListener listener) throws IOException {
-		this.listener = listener;
-		P4BaseCredentials credential = findCredential(credentialID);
-		this.p4credential = credential;
-		this.connectionConfig = new ConnectionConfig(credential);
-		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry();
-		validate = new Validate(listener);
+		super(credentialID, listener);
 	}
 
 	public ConnectionHelper(ItemGroup context, String credentialID, TaskListener listener) throws IOException {
@@ -110,280 +88,13 @@ public class ConnectionHelper implements AutoCloseable {
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential, TaskListener listener) throws IOException {
-		this.listener = listener;
-		this.p4credential = credential;
-		this.connectionConfig = new ConnectionConfig(credential);
-		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry();
-		validate = new Validate(listener);
+		super(credential, listener);
 	}
 
 	public ConnectionHelper(P4BaseCredentials credential) throws IOException {
-		this.listener = new LogTaskListener(logger, Level.INFO);
-		this.p4credential = credential;
-		this.connectionConfig = new ConnectionConfig(credential);
-		this.authorisationConfig = new AuthorisationConfig(credential);
-		connectionRetry();
-		validate = new Validate(listener);
+		super(credential, new LogTaskListener(logger, Level.INFO));
 	}
 
-	public TaskListener getListener() {
-		return listener;
-	}
-
-	public AuthorisationConfig getAuthorisationConfig() {
-		return authorisationConfig;
-	}
-
-	public Validate getValidate() {
-		return validate;
-	}
-
-	public IOptionsServer getConnection() {
-		return connection;
-	}
-
-	/**
-	 * Convenience wrapper to connect and report errors
-	 */
-	private boolean connect() throws Exception {
-		// Connect to the Perforce server
-		this.connection = ConnectionFactory.getConnection(connectionConfig);
-		logger.fine("P4: opened connection OK");
-
-		// Login to Perforce
-		try {
-			login();
-		} catch (Exception e) {
-			String err = "P4: Unable to login: " + e;
-			logger.severe(err);
-			log(err);
-			return false;
-		}
-
-		// Register progress callback
-		IProgressCallback progress = new P4Progress(listener, this);
-		this.connection.registerProgressCallback(progress);
-
-		// Register logging callback
-		ICommandCallback logging = new P4Logging(listener, false);
-		this.connection.registerCallback(logging);
-
-		// Check P4IGNORE Environment
-		Server server = (Server) this.connection;
-		if (server.getIgnoreFileName() == null) {
-			String os = System.getProperty("os.name").toLowerCase();
-			String ignore = os.contains("win") ? "p4ignore.txt" : ".p4ignore";
-			server.setIgnoreFileName(ignore);
-		}
-
-		return true;
-	}
-
-	/**
-	 * Retry Connection with back off for each failed attempt.
-	 */
-	private void connectionRetry() throws AbortException {
-
-		int trys = 0;
-		int attempt = getRetry();
-		String err = "P4: Invalid credentials. Giving up...";
-
-		while (trys <= attempt) {
-			try {
-				if (connect()) {
-					return;
-				}
-			} catch (Exception e) {
-				err = e.getMessage();
-			}
-			trys++;
-			String msg = "P4: Connection retry: " + trys;
-			logger.severe(msg);
-			log(msg);
-
-			// back off n^2 seconds, before retry
-			try {
-				TimeUnit.SECONDS.sleep(trys ^ 2);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-			}
-		}
-
-		logger.severe(err);
-		log(err);
-		throw new AbortException(err);
-	}
-
-	public int getRetry() {
-		return p4credential.getRetry();
-	}
-
-	public int getTick() {
-		return p4credential.getTick();
-	}
-
-	public String getUser() {
-		return p4credential.getUsername();
-	}
-
-	public String getPort() {
-		return p4credential.getFullP4port();
-	}
-
-	public String getTrust() throws Exception {
-		return connection.getTrust();
-	}
-
-	public String getTicket() {
-		try {
-			if (login()) {
-				return connection.getAuthTicket();
-			}
-		} catch (Exception e) {
-		}
-		return null;
-	}
-
-	public boolean isConnected() {
-		if (connection == null) {
-			return false;
-		}
-		return connection.isConnected();
-	}
-
-	public boolean isUnicode() throws ConnectionException, AccessException, RequestException {
-		return connection.supportsUnicode();
-	}
-
-	/**
-	 * Checks the Perforce server version number and returns true if greater
-	 * than or equal to the min version. The value of min must be of the form
-	 * 20092 or 20073 (corresponding to 2009.2 and 2007.3 respectively).
-	 *
-	 * @param min Minimum server version
-	 * @return true if version supported.
-	 */
-	public boolean checkVersion(int min) {
-		int ver = connection.getServerVersionNumber();
-		return (ver >= min);
-	}
-
-	public boolean login() throws Exception {
-		connection.setUserName(authorisationConfig.getUsername());
-
-		// CHARSET is not defined (only for client access)
-		if (isUnicode()) {
-			connection.setCharsetName("utf8");
-		}
-
-		// Exit early if logged in
-		if (isLogin()) {
-			return true;
-		}
-
-		switch (authorisationConfig.getType()) {
-			case PASSWORD:
-				String pass = authorisationConfig.getPassword();
-				boolean allHosts = authorisationConfig.isAllhosts();
-				connection.login(pass, allHosts);
-				break;
-
-			case TICKET:
-				String ticket = authorisationConfig.getTicketValue();
-				connection.setAuthTicket(ticket);
-				break;
-
-			case TICKETPATH:
-				String path = authorisationConfig.getTicketPath();
-				if (path == null || path.isEmpty()) {
-					path = connection.getTicketsFilePath();
-				}
-				connection.setTicketsFilePath(path);
-				break;
-
-			default:
-				throw new Exception("Unknown Authorisation type: " + authorisationConfig.getType());
-		}
-
-		// return login status...
-		if (isLogin()) {
-			return true;
-		} else {
-			String status = connection.getLoginStatus();
-			logger.info("P4: login failed '" + status + "'");
-			return false;
-		}
-	}
-
-	public void logout() throws Exception {
-		if (isLogin()) {
-			connection.logout();
-		}
-	}
-
-	private static long minLife = 1800000L; // 30mins in ms
-	public static Map<String, Long> loginCache = new HashMap<>();
-
-	private boolean isLogin() throws Exception {
-		String user = connection.getUserName();
-		if (loginCache.containsKey(user)) {
-			long expire = loginCache.get(user);
-			long remain = expire - System.currentTimeMillis() - minLife;
-			if (remain > 0) {
-				logger.info("Found loginCache entry for: " + user);
-				return true;
-			} else {
-				logger.info("Removing loginCache entry for: " + user);
-				loginCache.remove(user);
-			}
-		}
-
-		logger.info("No entry in loginCache for: " + user);
-		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
-
-		if (nonNull(resultMaps) && !resultMaps.isEmpty()) {
-			for (Map<String, Object> map : resultMaps) {
-				String status = ResultMapParser.getInfoStr(map);
-				if (status == null) {
-					continue;
-				}
-				if (status.contains("not necessary")) {
-					loginCache.put(user, Long.MAX_VALUE);
-					return true;
-				}
-				if (status.contains("ticket expires in")) {
-					loginCache.put(user, getExpiry(status));
-					return true;
-				}
-				// If there is a broker or something else that swallows the message
-				if (status.isEmpty()) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private long getExpiry(String loginStatus) throws P4JavaException {
-		try {
-			String pattern = ".* expires in (\\d+) hours (\\d+) minutes.";
-			Pattern regex = Pattern.compile(pattern);
-			Matcher matcher = regex.matcher(loginStatus);
-
-			if (matcher.matches()) {
-				String hourStr = matcher.group(1);
-				String minStr = matcher.group(2);
-				int hours = Integer.parseInt(hourStr);
-				int minutes = Integer.parseInt(minStr);
-				long milli = ((hours * 60L * 60L) + (minutes * 60L)) * 1000L;
-				return System.currentTimeMillis() + milli;
-			}
-			throw new P4JavaException("Unable to parse expires time: " + loginStatus);
-		} catch (PatternSyntaxException | NumberFormatException e) {
-			throw new P4JavaException(e);
-		}
-	}
 
 	/**
 	 * Gets a list of Dirs given a path (multi-branch?)
@@ -398,8 +109,8 @@ public class ConnectionHelper implements AutoCloseable {
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(paths);
 		GetDirectoriesOptions opts = new GetDirectoriesOptions();
 
-		List<IFileSpec> dirs = connection.getDirectories(spec, opts);
-		if (validate.check(dirs, "")) {
+		List<IFileSpec> dirs = getConnection().getDirectories(spec, opts);
+		if (getValidate().check(dirs, "")) {
 			return dirs;
 		}
 		return new ArrayList<IFileSpec>();
@@ -425,7 +136,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 	private List<String> getDepotsForDirs() throws Exception {
 		List<String> paths = new ArrayList<>();
-		List<IDepot> depots = connection.getDepots();
+		List<IDepot> depots = getConnection().getDepots();
 		for (IDepot depot : depots) {
 			String name = depot.getName();
 			paths.add("//" + name + "/*");
@@ -442,7 +153,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 */
 	public List<IStreamSummary> getStreams(List<String> paths) throws Exception {
 		GetStreamsOptions opts = new GetStreamsOptions();
-		List<IStreamSummary> streams = connection.getStreams(paths, opts);
+		List<IStreamSummary> streams = getConnection().getStreams(paths, opts);
 		return streams;
 	}
 
@@ -451,7 +162,7 @@ public class ConnectionHelper implements AutoCloseable {
 		GetChangelistsOptions cngOpts = new GetChangelistsOptions();
 		cngOpts.setLongDesc(true);
 		cngOpts.setMaxMostRecent(1);
-		List<IChangelistSummary> summary = connection.getChangelists(spec, cngOpts);
+		List<IChangelistSummary> summary = getConnection().getChangelists(spec, cngOpts);
 		if (summary.isEmpty()) {
 			return null;
 		}
@@ -461,7 +172,7 @@ public class ConnectionHelper implements AutoCloseable {
 	public List<IFix> getJobs(int id) throws P4JavaException {
 		GetFixesOptions opts = new GetFixesOptions();
 		opts.setChangelistId(id);
-		List<IFix> fixes = connection.getFixes(null, opts);
+		List<IFix> fixes = getConnection().getFixes(null, opts);
 		return fixes;
 	}
 
@@ -478,7 +189,7 @@ public class ConnectionHelper implements AutoCloseable {
 		}
 		try {
 			CounterOptions opts = new CounterOptions();
-			String counter = connection.getCounter(name, opts);
+			String counter = getConnection().getCounter(name, opts);
 			return (!"0".equals(counter));
 		} catch (RequestException e) {
 			return false;
@@ -494,7 +205,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 */
 	public String getCounter(String id) throws Exception {
 		CounterOptions opts = new CounterOptions();
-		String counter = connection.getCounter(id, opts);
+		String counter = getConnection().getCounter(id, opts);
 		return counter;
 	}
 
@@ -510,7 +221,7 @@ public class ConnectionHelper implements AutoCloseable {
 			return false;
 		}
 		try {
-			ILabel label = connection.getLabel(name);
+			ILabel label = getConnection().getLabel(name);
 			return (label != null);
 		} catch (RequestException e) {
 			return false;
@@ -577,7 +288,7 @@ public class ConnectionHelper implements AutoCloseable {
 			if (name == null) {
 				return false;
 			}
-			IClient client = connection.getClient(name);
+			IClient client = getConnection().getClient(name);
 			return (client != null);
 		} catch (RequestException e) {
 			return false;
@@ -592,11 +303,11 @@ public class ConnectionHelper implements AutoCloseable {
 	 */
 	public void deleteClient(String name) throws Exception {
 		DeleteClientOptions opts = new DeleteClientOptions();
-		connection.deleteClient(name, opts);
+		getConnection().deleteClient(name, opts);
 	}
 
 	public String getEmail(String userName) throws Exception {
-		IUser user = connection.getUser(userName);
+		IUser user = getConnection().getUser(userName);
 		if (user != null) {
 			String email = user.getEmail();
 			return email;
@@ -612,7 +323,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public Label getLabel(String id) throws Exception {
-		return (Label) connection.getLabel(id);
+		return (Label) getConnection().getLabel(id);
 	}
 
 	/**
@@ -622,10 +333,10 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public void setLabel(Label label) throws Exception {
-		// connection.createLabel(label);
-		String user = connection.getUserName();
+		// getConnection().createLabel(label);
+		String user = getConnection().getUserName();
 		label.setOwnerName(user);
-		connection.updateLabel(label);
+		getConnection().updateLabel(label);
 	}
 
 	/**
@@ -642,7 +353,7 @@ public class ConnectionHelper implements AutoCloseable {
 		GetDepotFilesOptions opts = new GetDepotFilesOptions();
 		opts.setMaxResults(limit);
 
-		List<IFileSpec> tagged = connection.getDepotFiles(spec, opts);
+		List<IFileSpec> tagged = getConnection().getDepotFiles(spec, opts);
 		return tagged;
 	}
 
@@ -652,9 +363,9 @@ public class ConnectionHelper implements AutoCloseable {
 		List<IFileSpec> files;
 		// Avoid describe -m for old servers JENKINS-48433
 		if (!checkVersion(20141)) {
-			files = connection.getChangelistFiles((int) id);
+			files = getConnection().getChangelistFiles((int) id);
 		} else {
-			files = connection.getChangelistFiles((int) id, limit);
+			files = getConnection().getChangelistFiles((int) id, limit);
 		}
 		return files;
 	}
@@ -670,7 +381,7 @@ public class ConnectionHelper implements AutoCloseable {
 		String cmd = CmdSpec.DESCRIBE.name();
 		String[] args = new String[]{"-s", "-S", "" + id};
 		List<Map<String, Object>> resultMaps;
-		resultMaps = connection.execMapCmdList(cmd, args, null);
+		resultMaps = getConnection().execMapCmdList(cmd, args, null);
 
 		List<IFileSpec> list = new ArrayList<IFileSpec>();
 
@@ -679,7 +390,7 @@ public class ConnectionHelper implements AutoCloseable {
 				Map<String, Object> map = resultMaps.get(0);
 				if (map.containsKey("shelved")) {
 					for (int i = 0; map.get("rev" + i) != null; i++) {
-						FileSpec fSpec = new FileSpec(map, connection, i);
+						FileSpec fSpec = new FileSpec(map, getConnection(), i);
 						fSpec.setChangelistId(id);
 						list.add(fSpec);
 					}
@@ -693,7 +404,7 @@ public class ConnectionHelper implements AutoCloseable {
 		GetPropertyOptions propOpts = new GetPropertyOptions();
 		String key = "P4.Swarm.URL";
 		propOpts.setName(key);
-		List<IProperty> values = connection.getProperty(propOpts);
+		List<IProperty> values = getConnection().getProperty(propOpts);
 		for (IProperty prop : values) {
 			if (key.equals(prop.getName())) {
 				String url = prop.getValue();
@@ -722,7 +433,7 @@ public class ConnectionHelper implements AutoCloseable {
 
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(1);
-		List<IChangelistSummary> changes = connection.getChangelists(spec, opts);
+		List<IChangelistSummary> changes = getConnection().getChangelists(spec, opts);
 
 		if (!changes.isEmpty()) {
 			return changes.get(0).getId();
@@ -764,7 +475,7 @@ public class ConnectionHelper implements AutoCloseable {
 		logger.info("getLowestHead: p4 changes " + revisionPath);
 		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(revisionPath);
 
-		List<IChangelistSummary> changes = connection.getChangelists(spec, null);
+		List<IChangelistSummary> changes = getConnection().getChangelists(spec, null);
 		if (!changes.isEmpty()) {
 			return changes.get(changes.size() - 1).getId();
 		}
@@ -775,16 +486,16 @@ public class ConnectionHelper implements AutoCloseable {
 	public boolean hasFile(String depotPath) throws Exception {
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
 		GetDepotFilesOptions opts = new GetDepotFilesOptions("-e");
-		List<IFileSpec> specs = connection.getDepotFiles(files, opts);
-		return validate.checkCatch(specs, "");
+		List<IFileSpec> specs = getConnection().getDepotFiles(files, opts);
+		return getValidate().checkCatch(specs, "");
 	}
 
 	public ICommit getGraphCommit(String sha, String repo) throws P4JavaException {
-		return connection.getCommitObject(sha, repo);
+		return getConnection().getCommitObject(sha, repo);
 	}
 
 	public List<IFileSpec> getCommitFiles(String repo, String sha) throws P4JavaException {
-		return connection.getCommitFiles(repo, sha);
+		return getConnection().getCommitFiles(repo, sha);
 	}
 
 	/**
@@ -799,7 +510,7 @@ public class ConnectionHelper implements AutoCloseable {
 		opts.setRepo(repo);
 		List<ICommit> list = null;
 		try {
-			list = connection.getGraphCommitLogList(opts);
+			list = getConnection().getGraphCommitLogList(opts);
 		} catch (P4JavaException e) {
 			log("P4: no commits under " + repo + " using HEAD.");
 			return new P4LabelRef("HEAD");
@@ -853,7 +564,7 @@ public class ConnectionHelper implements AutoCloseable {
 			opts.setCommitValue(range);
 			opts.setMaxResults(getMaxChangeLimit());
 
-			List<ICommit> logList = connection.getGraphCommitLogList(opts);
+			List<ICommit> logList = getConnection().getGraphCommitLogList(opts);
 
 			for (ICommit log : logList) {
 				P4Ref ref = new P4GraphRef(repo, log);
@@ -870,7 +581,7 @@ public class ConnectionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<IRepo> listAllRepos() throws Exception {
-		List<IRepo> repos = connection.getRepos();
+		List<IRepo> repos = getConnection().getRepos();
 		return repos;
 	}
 
@@ -884,107 +595,8 @@ public class ConnectionHelper implements AutoCloseable {
 	public List<IRepo> listRepos(String path) throws Exception {
 		ReposOptions opts = new ReposOptions();
 		opts.setNameFilter(path);
-		List<IRepo> repos = connection.getRepos(opts);
+		List<IRepo> repos = getConnection().getRepos(opts);
 		return repos;
-	}
-
-	/**
-	 * Disconnect from the Perforce Server.
-	 */
-	protected void disconnect() {
-		try {
-			connection.disconnect();
-			logger.fine("P4: closed connection OK");
-		} catch (Exception e) {
-			String err = "P4: Unable to close Perforce connection.";
-			logger.severe(err);
-			log(err);
-		}
-	}
-
-	/**
-	 * Finds a Perforce Credential based on the String id.
-	 *
-	 * @param id Credential ID
-	 * @return a P4StandardCredentials credential or null if not found.
-	 * @deprecated Use {@link #findCredential(String, ItemGroup)} or {@link #findCredential(String, Item)}
-	 */
-	@Deprecated
-	public static P4BaseCredentials findCredential(String id) {
-		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
-		Authentication acl = ACL.SYSTEM;
-		DomainRequirement domain = new DomainRequirement();
-
-		List<P4BaseCredentials> list;
-		list = CredentialsProvider.lookupCredentials(type, scope, acl, domain);
-
-		for (P4BaseCredentials c : list) {
-			if (c.getId().equals(id)) {
-				return c;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Finds a Perforce Credential based on the String id.
-	 *
-	 * @param credentialsId Credential ID
-	 * @param context       The context
-	 * @return a P4StandardCredentials credential or null if not found.
-	 */
-	public static P4BaseCredentials findCredential(String credentialsId, ItemGroup context) {
-		if (credentialsId == null) {
-			return null;
-		}
-		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, context,
-						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
-				CredentialsMatchers.allOf(
-						CredentialsMatchers.withId(credentialsId),
-						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
-		return credentials;
-	}
-
-	/**
-	 * Finds a Perforce Credential based on credentials ID and {@link Item}.
-	 * This also tracks usage of the credentials.
-	 *
-	 * @param credentialsId Credential ID
-	 * @param item          The {@link Item}
-	 * @return a P4StandardCredentials credential or null if not found.
-	 */
-	public static P4BaseCredentials findCredential(String credentialsId, Item item) {
-		if (credentialsId == null) {
-			return null;
-		}
-		if (item == null) {
-			return findCredential(credentialsId);
-		}
-		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
-						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
-				CredentialsMatchers.allOf(
-						CredentialsMatchers.withId(credentialsId),
-						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
-		return credentials;
-	}
-
-	/**
-	 * Finds a Perforce Credential based on the String id and {@link Run}.
-	 *
-	 * @param credentialsId Credential ID
-	 * @param run           The {@link Run}
-	 * @return a P4StandardCredentials credential or null if not found.
-	 */
-	public static P4BaseCredentials findCredential(String credentialsId, Run run) {
-		if (credentialsId == null) {
-			return null;
-		}
-		P4BaseCredentials credentials = CredentialsProvider.findCredentialById(credentialsId,
-				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
-		return credentials;
 	}
 
 	protected int getMaxChangeLimit() {
@@ -1003,33 +615,6 @@ public class ConnectionHelper implements AutoCloseable {
 			return scm.getHeadLimit();
 		}
 		return 0;
-	}
-
-	public PerforceScm.DescriptorImpl getP4SCM() {
-		Jenkins j = Jenkins.getInstance();
-		if (j != null) {
-			Descriptor dsc = j.getDescriptor(PerforceScm.class);
-			if (dsc instanceof PerforceScm.DescriptorImpl) {
-				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
-				return p4scm;
-			}
-		}
-		return null;
-	}
-
-	public void log(String msg) {
-		if (listener == null) {
-			return;
-		}
-		listener.getLogger().println(msg);
-	}
-
-	public boolean hasAborted() {
-		return abort;
-	}
-
-	public void abort() {
-		this.abort = true;
 	}
 
 	@Override

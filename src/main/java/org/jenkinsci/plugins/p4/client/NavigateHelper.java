@@ -91,7 +91,7 @@ public class NavigateHelper implements Closeable {
 		} catch (RequestException | AccessException e) {
 			String user = p4.getUserName();
 			logger.info("Removing loginCache entry for: " + user);
-			ConnectionHelper.loginCache.remove(user);
+			ConnectionHelper.invalidateUser(user);
 		} catch (P4JavaException e) {
 			logger.warning(e.getMessage());
 		}

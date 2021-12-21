@@ -3,14 +3,15 @@ package org.jenkinsci.plugins.p4.console;
 import com.perforce.p4java.server.callback.IProgressCallback;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
+import org.jenkinsci.plugins.p4.client.SessionHelper;
 
 public class P4Progress implements IProgressCallback {
 
 	private final TaskListener listener;
-	private final ConnectionHelper p4;
+	private final SessionHelper p4;
 	private final boolean hideMessages;
 
-	public P4Progress(TaskListener listener, ConnectionHelper p4) {
+	public P4Progress(TaskListener listener, SessionHelper p4) {
 		this.listener = listener;
 		this.p4 = p4;
 		if (p4.getP4SCM() != null) {
