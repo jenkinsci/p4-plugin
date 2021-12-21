@@ -24,7 +24,7 @@ public class P4SCMProbe extends SCMProbe {
 	private final static Logger logger = Logger.getLogger(P4SCMProbe.class.getName());
 
 	private final P4SCMHead head;
-	private final transient TempClientHelper p4;
+	private transient TempClientHelper p4 = null;
 
 	public P4SCMProbe(TempClientHelper p4, P4SCMHead head) {
 		this.head = head;

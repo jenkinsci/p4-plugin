@@ -9,7 +9,11 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.tagging.TagNotifierStep;
-import org.jenkinsci.plugins.workflow.steps.*;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
@@ -64,7 +68,7 @@ public class P4TaggingStep extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private final transient P4TaggingStep step;
+		private transient P4TaggingStep step = null;
 
 		protected P4TaggingStepExecution(@Nonnull StepContext context, P4TaggingStep step) {
 			super(context);

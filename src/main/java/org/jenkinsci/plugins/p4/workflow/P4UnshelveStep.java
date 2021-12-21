@@ -49,7 +49,7 @@ public class P4UnshelveStep extends Step {
 	public P4UnshelveStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
 		this(null, null, shelf, resolve, tidy, false);
 	}
-	
+
 	@Deprecated
 	public P4UnshelveStep(String shelf, String resolve) {
 		this(null, null, shelf, resolve, false, false);
@@ -79,8 +79,8 @@ public class P4UnshelveStep extends Step {
 	public boolean isTidy() {
 		return tidy;
 	}
-	
-	public boolean isIgnoreEmpty(){
+
+	public boolean isIgnoreEmpty() {
 		return ignoreEmpty;
 	}
 
@@ -120,7 +120,7 @@ public class P4UnshelveStep extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private final transient P4UnshelveStep step;
+		private transient P4UnshelveStep step = null;
 
 		protected P4UnshelveStepExecution(P4UnshelveStep step, @Nonnull StepContext context) {
 			super(context);

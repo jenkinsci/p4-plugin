@@ -103,7 +103,7 @@ public class P4ApproveStep extends Step {
 
 		private static final long serialVersionUID = 1L;
 
-		private final transient P4ApproveStep step;
+		private transient P4ApproveStep step = null;
 
 		protected P4ApproveStepExecution(P4ApproveStep step, @Nonnull StepContext context) {
 			super(context);
