@@ -14,6 +14,7 @@ import hudson.triggers.TimerTrigger;
 import hudson.util.LogTaskListener;
 import jenkins.branch.BranchSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.filters.Filter;
@@ -35,6 +36,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -59,8 +61,8 @@ public class PollingTest extends DefaultEnvironment {
 	private static final Logger logger = Logger.getLogger(PollingTest.class.getName());
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	@ClassRule
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
@@ -70,40 +72,40 @@ public class PollingTest extends DefaultEnvironment {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
-        @Test
-        public void testPollingCounterPin() throws Exception {
+	@Test
+	public void testPollingCounterPin() throws Exception {
 
-                String client = "PollingCounterPin.ws";
-                String view = "//depot/... //" + client + "/...";
-                WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		String client = "PollingCounterPin.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
-                FreeStyleProject project = jenkins.createFreeStyleProject("PollingCounterPin");
-                ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
-                Populate populate = new AutoCleanImpl(true, true, false, false, false, "change", null);
-                PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
-                project.setScm(scm);
-                project.save();
+		FreeStyleProject project = jenkins.createFreeStyleProject("PollingCounterPin");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl(true, true, false, false, false, "change", null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
 
-                // Build at change 3
-                List<ParameterValue> list = new ArrayList<>();
-                list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
-                list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-                Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		// Build at change 3
+		List<ParameterValue> list = new ArrayList<>();
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
 
-                FreeStyleBuild build;
-                Cause.UserIdCause cause = new Cause.UserIdCause();
-                build = project.scheduleBuild2(0, cause, actions).get();
-                assertEquals(Result.SUCCESS, build.getResult());
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
 
-                // Poll for changes
-                Logger polling = Logger.getLogger("Polling");
-                TestHandler pollHandler = new TestHandler();
-                polling.addHandler(pollHandler);
-                LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
-                project.poll(listener);
-                assertThat(pollHandler.getLogBuffer(), containsString("found change: 4"));
-                assertThat(pollHandler.getLogBuffer(), containsString("found change: 40"));
-        }
+		// Poll for changes
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		project.poll(listener);
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 4"));
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 40"));
+	}
 
 	@Test
 	public void testPollingPin() throws Exception {
@@ -302,7 +304,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
 		filter.add(pList);
-		
+
 		/* Should result in the follow changes captured:
 		 * 8: 0
 		 * 14: 0
@@ -444,7 +446,7 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Should only be one actual regex generated
 		assertEquals(1, pList.getPatternList().size());
-		
+
 		/* Should result in the follow changes captured:
 		 * 8: 0
 		 * 14: 0
