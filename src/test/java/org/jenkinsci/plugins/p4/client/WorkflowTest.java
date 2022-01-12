@@ -5,6 +5,7 @@ import com.perforce.p4java.core.IMapEntry;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
@@ -19,7 +20,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-WorkflowTest-p4root";
 
 	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	public ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);

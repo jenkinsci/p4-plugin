@@ -8,6 +8,7 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -24,7 +25,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.File;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-JenkinsfileTest-p4root";
 
 	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
