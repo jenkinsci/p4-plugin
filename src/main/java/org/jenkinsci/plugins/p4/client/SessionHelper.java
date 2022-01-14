@@ -37,7 +37,7 @@ public class SessionHelper extends CredentialsHelper {
 
 	private final ConnectionConfig connectionConfig;
 	private final Validate validate;
-	private final long minLife;
+	private final long sessionLife;
 	private final boolean sessionEnabled;
 
 	private IOptionsServer connection;
@@ -48,8 +48,8 @@ public class SessionHelper extends CredentialsHelper {
 	public SessionHelper(P4BaseCredentials credential, TaskListener listener) throws IOException {
 		super(credential, listener);
 		this.connectionConfig = new ConnectionConfig(getCredential());
-		this.minLife = getP4SCM().getMinLife();
-		this.sessionEnabled = getP4SCM().isSessionEnabled();
+		this.sessionLife = credential.getSessionLife();
+		this.sessionEnabled = credential.isSessionEnabled();
 		connectionRetry();
 		validate = new Validate(listener);
 	}
@@ -57,8 +57,8 @@ public class SessionHelper extends CredentialsHelper {
 	public SessionHelper(String credentialID, TaskListener listener) throws IOException {
 		super(credentialID, listener);
 		this.connectionConfig = new ConnectionConfig(getCredential());
-		this.minLife = getP4SCM().getMinLife();
-		this.sessionEnabled = getP4SCM().isSessionEnabled();
+		this.sessionLife = getCredential().getSessionLife();
+		this.sessionEnabled = getCredential().isSessionEnabled();
 		connectionRetry();
 		validate = new Validate(listener);
 	}
@@ -277,7 +277,7 @@ public class SessionHelper extends CredentialsHelper {
 		String user = connection.getUserName();
 		if (sessionEnabled && loginCache.containsKey(user)) {
 			long expire = loginCache.get(user);
-			long remain = expire - System.currentTimeMillis() - minLife;
+			long remain = expire - System.currentTimeMillis() - sessionLife;
 			if (remain > 0) {
 				logger.info("Found session entry for: " + user);
 				return true;

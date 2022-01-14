@@ -113,7 +113,6 @@ public class PerforceScm extends SCM {
 	public static final int DEFAULT_FILE_LIMIT = 50;
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
 	public static final long DEFAULT_HEAD_LIMIT = 1000;
-	public static final long DEFAULT_MIN_LIFE = 1800000L;
 
 	public String getCredential() {
 		return credential;
@@ -915,8 +914,6 @@ public class PerforceScm extends SCM {
 		private boolean deleteFiles;
 
 		private boolean hideTicket;
-		private boolean sessionEnabled;
-		private long minLife;
 		private boolean hideMessages;
 
 		private int maxFiles = DEFAULT_FILE_LIMIT;
@@ -956,14 +953,6 @@ public class PerforceScm extends SCM {
 
 		public boolean isHideTicket() {
 			return hideTicket;
-		}
-
-		public boolean isSessionEnabled() {
-			return sessionEnabled;
-		}
-
-		public long getMinLife() {
-			return minLife;
 		}
 
 		public boolean isHideMessages() {
@@ -1053,20 +1042,6 @@ public class PerforceScm extends SCM {
 			} catch (JSONException e) {
 				logger.info("Unable to read TICKET security configuration.");
 				hideTicket = false;
-			}
-
-			try {
-				sessionEnabled = json.getBoolean("sessionEnabled");
-			} catch (JSONException e) {
-				logger.info("Unable to read Session configuration.");
-				sessionEnabled = false;
-			}
-
-			try {
-				minLife = json.getLong("minLife");
-			} catch (JSONException e) {
-				logger.info("Unable to read Session life in configuration.");
-				headLimit = DEFAULT_MIN_LIFE;
 			}
 
 			try {

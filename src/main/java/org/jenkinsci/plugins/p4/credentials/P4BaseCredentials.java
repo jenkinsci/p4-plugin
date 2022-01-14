@@ -10,7 +10,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 public abstract class P4BaseCredentials extends BaseStandardCredentials implements P4Credentials {
 
 	private static final long serialVersionUID = 1L;
-
+	
 	@NonNull
 	private final String p4port;
 
@@ -35,6 +35,20 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	@DataBoundSetter
 	public void setTick(String tick) {
 		this.tick = tick;
+	}
+
+	private boolean sessionEnabled;
+
+	@DataBoundSetter
+	public void setSessionEnabled(boolean sessionEnabled) {
+		this.sessionEnabled = sessionEnabled;
+	}
+
+	private long sessionLife;
+
+	@DataBoundSetter
+	public void setSessionLife(long sessionLife) {
+		this.sessionLife = sessionLife;
 	}
 
 	/**
@@ -133,5 +147,13 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		} else {
 			return 0;
 		}
+	}
+
+	public boolean isSessionEnabled() {
+		return sessionEnabled;
+	}
+
+	public long getSessionLife() {
+		return sessionLife;
 	}
 }
