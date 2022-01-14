@@ -38,7 +38,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-WorkflowTest-p4root";
 
 	@Rule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	public ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
