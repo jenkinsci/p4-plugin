@@ -298,8 +298,9 @@ public class WorkflowTest extends DefaultEnvironment {
 				"}", false));
 		job.save();
 
+		// start two jobs in quick secession and wait for both to build
 		job.scheduleBuild2(0);
-		Thread.sleep(1);
+		Thread.sleep(100);
 		job.scheduleBuild2(0);
 
 		while (job.getLastBuild() == null) {
