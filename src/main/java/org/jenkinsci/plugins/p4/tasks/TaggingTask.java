@@ -65,6 +65,7 @@ public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 				String left = entry.getLeft();
 				LabelMapping lblMap = new LabelMapping();
 				lblMap.setLeft("\""+left+"\"");
+				lblMap.setType(entry.getType());  // Make sure type is carried forward
 				viewMapping.addEntry(lblMap);
 			}
 			label.setViewMapping(viewMapping);
