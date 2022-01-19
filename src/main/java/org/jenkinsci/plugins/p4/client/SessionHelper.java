@@ -37,17 +37,19 @@ public class SessionHelper extends CredentialsHelper {
 
 	private final ConnectionConfig connectionConfig;
 	private final Validate validate;
+	private final String sessionId;
 	private final long sessionLife;
 	private final boolean sessionEnabled;
 
 	private IOptionsServer connection;
 	private boolean abort = false;
 
-	private static Map<String, Long> loginCache = new HashMap<>();
+	private static Map<String, SessionEntry> loginCache = new HashMap<>();
 
 	public SessionHelper(P4BaseCredentials credential, TaskListener listener) throws IOException {
 		super(credential, listener);
 		this.connectionConfig = new ConnectionConfig(getCredential());
+		this.sessionId = credential.getId();
 		this.sessionLife = credential.getSessionLife();
 		this.sessionEnabled = credential.isSessionEnabled();
 		connectionRetry();
@@ -57,14 +59,28 @@ public class SessionHelper extends CredentialsHelper {
 	public SessionHelper(String credentialID, TaskListener listener) throws IOException {
 		super(credentialID, listener);
 		this.connectionConfig = new ConnectionConfig(getCredential());
+		this.sessionId = credentialID;
 		this.sessionLife = getCredential().getSessionLife();
 		this.sessionEnabled = getCredential().isSessionEnabled();
 		connectionRetry();
 		validate = new Validate(listener);
 	}
 
-	public static void invalidateUser(String user) {
-		loginCache.remove(user);
+	public void invalidateSession() {
+		loginCache.remove(sessionId);
+	}
+
+	/**
+	 * Remove all entries for a specific user.
+	 *
+	 * @param user p4user
+	 */
+	public static void invalidateSession(String user) {
+		for (Map.Entry<String, SessionEntry> entry : loginCache.entrySet()) {
+			if (entry.getValue().getUser().equals(user)) {
+				loginCache.remove(entry.getKey());
+			}
+		}
 	}
 
 	public IOptionsServer getConnection() {
@@ -82,6 +98,10 @@ public class SessionHelper extends CredentialsHelper {
 	public String getTicket() {
 		try {
 			if (login()) {
+				if (sessionEnabled && loginCache.containsKey(sessionId)) {
+					SessionEntry entry = loginCache.get(sessionId);
+					return entry.getTicket();
+				}
 				return connection.getAuthTicket();
 			}
 		} catch (Exception e) {
@@ -275,20 +295,22 @@ public class SessionHelper extends CredentialsHelper {
 
 	private boolean isLogin() throws Exception {
 		String user = connection.getUserName();
-		if (sessionEnabled && loginCache.containsKey(user)) {
-			long expire = loginCache.get(user);
+		if (sessionEnabled && loginCache.containsKey(sessionId)) {
+			SessionEntry entry = loginCache.get(sessionId);
+			long expire = entry.getExpire();
 			long remain = expire - System.currentTimeMillis() - sessionLife;
 			if (remain > 0) {
-				logger.info("Found session entry for: " + user);
+				logger.info("Found session entry for: " + sessionId + "(" + entry + ")");
 				return true;
 			} else {
-				logger.info("Removing session entry for: " + user);
-				loginCache.remove(user);
+				logger.info("Removing session entry for: " + sessionId + "(" + entry + ")");
+				loginCache.remove(sessionId);
 			}
 		}
 
 		logger.info("No entry in session for: " + user);
 		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
+		String ticket = connection.getAuthTicket();
 
 		if (nonNull(resultMaps) && !resultMaps.isEmpty()) {
 			for (Map<String, Object> map : resultMaps) {
@@ -297,11 +319,13 @@ public class SessionHelper extends CredentialsHelper {
 					continue;
 				}
 				if (status.contains("not necessary")) {
-					loginCache.put(user, Long.MAX_VALUE);
+					SessionEntry entry = new SessionEntry(user, ticket, Long.MAX_VALUE);
+					loginCache.put(sessionId, entry);
 					return true;
 				}
 				if (status.contains("ticket expires in")) {
-					loginCache.put(user, getExpiry(status));
+					SessionEntry entry = new SessionEntry(user, ticket, getExpiry(status));
+					loginCache.put(sessionId, entry);
 					return true;
 				}
 				// If there is a broker or something else that swallows the message

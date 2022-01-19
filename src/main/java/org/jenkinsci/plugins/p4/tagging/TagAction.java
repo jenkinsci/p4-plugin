@@ -216,7 +216,7 @@ public class TagAction extends AbstractScmTagAction {
 			return p4ticket;
 		}
 
-		logger.finer("TagAction:getTicket()");
+		logger.info("TagAction:getTicket()");
 		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, getRun());
 
 		try (ConnectionHelper p4 = new ConnectionHelper(auth, null)) {
