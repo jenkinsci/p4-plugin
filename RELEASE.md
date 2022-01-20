@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.12.0 (major features/fixes)
+
+[@28510](https://swarm.workshop.perforce.com/changes/28510) - Update P4Java 2021.2.2234376
+
+[@28508](https://swarm.workshop.perforce.com/changes/28508) - Cache P4TICKET in session. Session cache now keyed on Credential ID and stores: User, Expiry time and Ticket. JENKINS-60141
+
+
 ### Release 1.11.6 (major features/fixes)
 
 [@28022](https://swarm.workshop.perforce.com/changes/28022) - Merge pull request #134 from stuartrowe/JENKINS-66648  [JENKINS-66648] Replace 'now' label with the P4ChangeRef for the current head
