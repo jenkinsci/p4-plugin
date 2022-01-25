@@ -20,16 +20,15 @@ import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
 
 public class SessionHelper extends CredentialsHelper {
 
@@ -44,7 +43,7 @@ public class SessionHelper extends CredentialsHelper {
 	private IOptionsServer connection;
 	private boolean abort = false;
 
-	private static Map<String, SessionEntry> loginCache = new HashMap<>();
+	private static ConcurrentMap<String, SessionEntry> loginCache = new ConcurrentHashMap<>();
 
 	public SessionHelper(P4BaseCredentials credential, TaskListener listener) throws IOException {
 		super(credential, listener);
@@ -312,7 +311,7 @@ public class SessionHelper extends CredentialsHelper {
 		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
 		String ticket = connection.getAuthTicket();
 
-		if (nonNull(resultMaps) && !resultMaps.isEmpty()) {
+		if (resultMaps != null && !resultMaps.isEmpty()) {
 			for (Map<String, Object> map : resultMaps) {
 				String status = ResultMapParser.getInfoStr(map);
 				if (status == null) {
