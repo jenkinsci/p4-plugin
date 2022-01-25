@@ -141,13 +141,17 @@ public class SessionHelper extends CredentialsHelper {
 			connection.setCharsetName("utf8");
 		}
 
-		// Exit early if logged in
-		if (isLogin()) {
-			return true;
-		}
-
 		switch (getAuthorisationConfig().getType()) {
 			case PASSWORD:
+				// Exit early if logged in
+				if (sessionEnabled && isLogin()) {
+					if (connection.getAuthTicket() == null) {
+						SessionEntry entry = loginCache.get(sessionId);
+						logger.info("Setting connection's ticket from cache: " + entry.getTicket());
+						connection.setAuthTicket(entry.getTicket());
+					}
+					return true;
+				}
 				String pass = getAuthorisationConfig().getPassword();
 				boolean allHosts = getAuthorisationConfig().isAllhosts();
 				connection.login(pass, allHosts);
@@ -307,7 +311,9 @@ public class SessionHelper extends CredentialsHelper {
 			}
 		}
 
-		logger.info("No entry in session for: " + user);
+		if (sessionEnabled) {
+			logger.info("No entry in session for: " + sessionId );
+		}
 		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
 		String ticket = connection.getAuthTicket();
 
