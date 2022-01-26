@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.12.1 (major features/fixes)
+
+[@28528](https://swarm.workshop.perforce.com/changes/28528) - Merge pull request #136 from NotMyFault/chore/master/prep-for-icon-removal-from-core Preparation for core removing sunset icons: https://github.com/jenkinsci/jenkins/pull/5778/
+
+[@28526](https://swarm.workshop.perforce.com/changes/28526) - Merge pull request #137 from joel-f-brown/master If Credential ID exists in session cache, set the connection's Ticket
+
+[@28525](https://swarm.workshop.perforce.com/changes/28525) - Use ConcurrentHashMap for thread safety.
+
+
 ### Release 1.12.0 (major features/fixes)
 
 [@28510](https://swarm.workshop.perforce.com/changes/28510) - Update P4Java 2021.2.2234376
