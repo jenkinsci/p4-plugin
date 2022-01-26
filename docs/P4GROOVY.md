@@ -4,7 +4,7 @@ _Online documentation for [P4Groovy](https://www.perforce.com/manuals/jenkins/Co
 
 ## Introduction
 
-P4Groovy is a Groovy interface to P4Java that allows you to write Perforce commands in the pipleline DSL.
+P4Groovy is a Groovy interface to P4Java that allows you to write Perforce commands in the pipeline DSL.
 
 ## Setup
 
