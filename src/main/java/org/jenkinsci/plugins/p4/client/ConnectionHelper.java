@@ -11,15 +11,11 @@ import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.graph.ICommit;
 import com.perforce.p4java.impl.generic.core.Label;
 import com.perforce.p4java.impl.generic.core.file.FileSpec;
-import com.perforce.p4java.impl.mapbased.server.Server;
-import com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.option.server.DeleteClientOptions;
 import com.perforce.p4java.option.server.GetChangelistsOptions;
@@ -31,39 +27,24 @@ import com.perforce.p4java.option.server.GetStreamsOptions;
 import com.perforce.p4java.option.server.GraphCommitLogOptions;
 import com.perforce.p4java.option.server.ReposOptions;
 import com.perforce.p4java.server.CmdSpec;
-import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.callback.ICommandCallback;
-import com.perforce.p4java.server.callback.IProgressCallback;
-import hudson.AbortException;
-import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.LogTaskListener;
-import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
-import org.jenkinsci.plugins.p4.console.P4Logging;
-import org.jenkinsci.plugins.p4.console.P4Progress;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
-import static com.perforce.p4java.common.base.ObjectUtils.nonNull;
 
 public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 

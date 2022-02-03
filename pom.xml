@@ -60,7 +60,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2021.2.2234376</version>
+      <version>2021.2.2240592</version>
     </dependency>
 
     <dependency>
