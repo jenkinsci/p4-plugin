@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.12.2 (major features/fixes)
+
+[@28555](https://swarm.workshop.perforce.com/changes/28555) - Update p4java patch version 2021.2.2240592
+
+
 ### Release 1.12.1 (major features/fixes)
 
 [@28528](https://swarm.workshop.perforce.com/changes/28528) - Merge pull request #136 from NotMyFault/chore/master/prep-for-icon-removal-from-core Preparation for core removing sunset icons: https://github.com/jenkinsci/jenkins/pull/5778/
