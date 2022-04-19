@@ -435,10 +435,10 @@ public class PerforceScm extends SCM {
 		// Cleanup Perforce Client
 		cleanupPerforceClient(lastRun, buildWorkspace, listener, ws);
 
-		// Build if changes are found or report NO_CHANGE
+		// Build if changes are found or we can't determine the previous built change, or report NO_CHANGE
 		if (changes == null) {
 			listener.getLogger().println("P4: Polling error; no previous change.");
-			return PollingResult.NO_CHANGES;
+			return PollingResult.BUILD_NOW;
 		} else if (changes.isEmpty()) {
 			listener.getLogger().println("P4: Polling no changes found.");
 			return PollingResult.NO_CHANGES;
