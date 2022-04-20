@@ -225,6 +225,12 @@ public class P4ChangeParser extends ChangeLogParser {
 							return;
 						}
 
+						if (qName.equalsIgnoreCase("fileLimit")) {
+							entry.setFileLimit(elementText.equals("true"));
+							text.setLength(0);
+							return;
+						}
+
 						if (qName.equalsIgnoreCase("msg")) {
 							entry.setMsg(elementText);
 							text.setLength(0);
