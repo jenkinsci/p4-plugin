@@ -147,7 +147,7 @@ public class SessionHelper extends CredentialsHelper {
 				if (sessionEnabled && isLogin()) {
 					if (connection.getAuthTicket() == null) {
 						SessionEntry entry = loginCache.get(sessionId);
-						logger.info("Setting connection's ticket from cache: " + entry.getTicket());
+						logger.finer("Setting connection's ticket from session cache (" + sessionId + ")");
 						connection.setAuthTicket(entry.getTicket());
 					}
 					return true;
@@ -298,22 +298,23 @@ public class SessionHelper extends CredentialsHelper {
 
 	private boolean isLogin() throws Exception {
 		String user = connection.getUserName();
-		if (sessionEnabled && loginCache.containsKey(sessionId)) {
-			SessionEntry entry = loginCache.get(sessionId);
-			long expire = entry.getExpire();
-			long remain = expire - System.currentTimeMillis() - sessionLife;
-			if (remain > 0) {
-				logger.info("Found session entry for: " + sessionId + "(" + entry + ")");
-				return true;
+		if (sessionEnabled) {
+			if (loginCache.containsKey(sessionId)) {
+				SessionEntry entry = loginCache.get(sessionId);
+				long expire = entry.getExpire();
+				long remain = expire - System.currentTimeMillis() - sessionLife;
+				if (remain > 0) {
+					logger.finest("Found session entry for: " + sessionId + " (expires " + entry.getExpire() + ")");
+					return true;
+				} else {
+					logger.finest("Removing session entry for: " + sessionId );
+					loginCache.remove(sessionId);
+				}
 			} else {
-				logger.info("Removing session entry for: " + sessionId + "(" + entry + ")");
-				loginCache.remove(sessionId);
+				logger.finest("No entry in session for: " + sessionId);
 			}
 		}
 
-		if (sessionEnabled) {
-			logger.info("No entry in session for: " + sessionId );
-		}
 		List<Map<String, Object>> resultMaps = connection.execMapCmdList(CmdSpec.LOGIN, new String[]{"-s"}, null);
 		String ticket = connection.getAuthTicket();
 
