@@ -236,7 +236,7 @@ abstract public class DefaultEnvironment {
 	}
 
 	protected boolean waitForBuild(WorkflowJob job, int buildNumber) throws InterruptedException {
-		return waitForBuild(job, buildNumber, 50, 200L);
+		return waitForBuild(job, buildNumber, 170, 200L);
 	}
 
 	protected boolean waitForBuild(WorkflowJob job, int buildNumber, final int retry, long delay) throws InterruptedException {
