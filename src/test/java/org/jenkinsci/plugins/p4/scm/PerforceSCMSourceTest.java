@@ -46,10 +46,15 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -57,6 +62,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -168,6 +174,36 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 		assertNotNull(multi.getItem("br1"));
 		assertEquals(1, multi.getItems().size());
+	}
+
+	@Test
+	public void testAJobShouldNotCreateClientForOtherJobsInAMultibranchProject() throws Exception {
+
+		String project = "multi";
+		String base = "//depot/" + project;
+		String[] branches = new String[]{"br1", "br2"};
+
+		sampleProject(base, branches, "Jenkinsfile");
+
+		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String includes = base + "/...";
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
+
+		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, project);
+		multi.getSourcesList().add(new BranchSource(source));
+		multi.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+
+		WorkflowJob job = multi.getItem("br1");
+		File logFile = Objects.requireNonNull(job).getLastBuild().getLogFile();
+		BufferedReader br = new BufferedReader(new FileReader(logFile));
+		StringBuilder builder = new StringBuilder();
+		String line;
+		while((line = br.readLine()) !=null){
+			builder.append(line);
+		}
+		assertTrue("A Job should include its branch in console logs",builder.toString().contains("//depot/multi/br1"));
+		assertFalse("A job should not include other job branch in console logs",builder.toString().contains("//depot/multi/br2"));
 	}
 
 	@Test

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.jenkinsci.plugins.p4.review.ReviewProp.P4_CHANGE;
@@ -171,10 +172,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 	@Override
 	protected void retrieve(@CheckForNull SCMSourceCriteria criteria, @NonNull SCMHeadObserver observer, @CheckForNull SCMHeadEvent<?> event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 		try (TempClientHelper p4 = new TempClientHelper(getOwner(), credential, listener, null)) {
-			List<P4SCMHead> heads = getHeads(listener);
-			List<P4SCMHead> tags = getTags(listener);
-			heads.addAll(tags);
-
+			List<P4SCMHead> heads = getP4SCMHeads(observer, listener);
 			for (P4SCMHead head : heads) {
 				logger.fine("SCM: retrieve Head: " + head);
 				retrieveHead(p4, head, criteria, observer, event);
@@ -182,6 +180,20 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
+	}
+
+	private List<P4SCMHead> getP4SCMHeads(SCMHeadObserver observer, TaskListener listener) throws Exception {
+		List<P4SCMHead> heads = new ArrayList<>();
+		Set<SCMHead> includedHead = observer.getIncludes();
+		if (null != includedHead) {
+			for (SCMHead head : includedHead) {
+				heads.add((P4SCMHead) head);
+			}
+		} else {
+			heads.addAll(getHeads(listener));
+			heads.addAll(getTags(listener));
+		}
+		return heads;
 	}
 
 	private void retrieveHead(TempClientHelper p4, P4SCMHead head, SCMSourceCriteria criteria, SCMHeadObserver observer, SCMHeadEvent<?> event) throws Exception {
