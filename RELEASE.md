@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.12.3 (major features/fixes)
+
+[@28755](https://swarm.workshop.perforce.com/changes/28755) - Updating P4Java to 2021.2.2278127 JENKINS-67631 JENKINS-68006 JENKINS-67936 JENKINS-64739 JENKINS-54500 JENKINS-27877
+
+[@28735](https://swarm.workshop.perforce.com/changes/28735) - Merge pull request #142 from skumar7322/branchIndexing. Branch indexing occurring for every multibranch job JENKINS-64946
+
+[@28728](https://swarm.workshop.perforce.com/changes/28728) - Merge pull request #141 from joel-f-brown/master. User session cache logging level changed to finer/finest JENKINS-68006
+
+
 ### Release 1.12.2 (major features/fixes)
 
 [@28555](https://swarm.workshop.perforce.com/changes/28555) - Update p4java patch version 2021.2.2240592
