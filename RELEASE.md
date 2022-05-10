@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.12.4 (major features/fixes)
+
+[@28770](https://swarm.workshop.perforce.com/changes/28770) - Check Item is PerforceScm.DescriptorImpl onChange event. JENKINS-68378
+
+
 ### Release 1.12.3 (major features/fixes)
 
 [@28755](https://swarm.workshop.perforce.com/changes/28755) - Updating P4Java to 2021.2.2278127 JENKINS-67631 JENKINS-68006 JENKINS-67936 JENKINS-64739 JENKINS-54500 JENKINS-27877
