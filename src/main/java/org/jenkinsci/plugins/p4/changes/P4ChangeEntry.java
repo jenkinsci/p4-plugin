@@ -294,6 +294,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		affectedFiles.add(file);
 	}
 
+	public void setFileLimit(boolean value) {
+		fileLimit = value;
+	}
+
 	public boolean isFileLimit() {
 		return fileLimit;
 	}
