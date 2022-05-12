@@ -24,11 +24,14 @@ import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -42,6 +45,7 @@ import java.util.logging.Logger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class FreeStyleTest extends DefaultEnvironment {
 
@@ -241,5 +245,42 @@ public class FreeStyleTest extends DefaultEnvironment {
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
+	@Test
+	public void testFreeStyleProject_forceSyncOnDemand() throws Exception {
 
+
+		String client = "PollingInc.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("ForceSyncOnDemand");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+
+		Populate populate = new SyncOnlyImpl(false, true, false, false, true, "", null);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue("IRRELEVALT_PARAMETER", "9"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertFalse(log.contains("P4: Wiping workspace..."));
+
+		List<ParameterValue> list2 = new ArrayList<>();
+		list2.add(new StringParameterValue("P4_CLEANWORKSPACE", "true"));
+		Action actions2 = new SafeParametersAction(new ArrayList<ParameterValue>(), list2);
+
+		Cause.UserIdCause cause2 = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause2, actions2).get();
+		List<String> log2 = build.getLog(LOG_LIMIT);
+		assertEquals(Result.SUCCESS, build.getResult());
+		assertTrue(log2.contains("P4: Wiping workspace..."));
+	}
 }
