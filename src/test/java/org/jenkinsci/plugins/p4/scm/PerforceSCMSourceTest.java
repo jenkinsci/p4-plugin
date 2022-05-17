@@ -21,6 +21,7 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -44,12 +45,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,7 +77,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-ScmSourceTest-p4root";
 
 	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(10 * 60);
 
 	@ClassRule
 	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
