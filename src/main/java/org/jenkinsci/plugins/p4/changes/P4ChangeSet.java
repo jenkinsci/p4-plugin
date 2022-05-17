@@ -74,6 +74,8 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 					stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 
+					stream.println("\t\t<fileLimit>" + cl.isFileLimit() + "</fileLimit>");
+
 					stream.println("\t\t<files>");
 					Collection<P4AffectedFile> files = cl.getAffectedFiles();
 					if (files != null) {

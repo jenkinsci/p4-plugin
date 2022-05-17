@@ -2,10 +2,8 @@ package org.jenkinsci.plugins.p4;
 
 import hudson.Extension;
 import hudson.XmlFile;
-import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
-import hudson.scm.SCM;
 import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
@@ -15,6 +13,7 @@ import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,14 +24,15 @@ public class ConfigurationListener extends SaveableListener {
 	private static final Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
-		Jenkins j = Jenkins.getInstance();
+		if (!(o instanceof PerforceScm.DescriptorImpl)) {
+			// must be a PerforceScm
+			return;
+		}
 
-		@SuppressWarnings("unchecked")
-		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
-		DescriptorImpl p4scm = (DescriptorImpl) scm;
+		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) o;
 
 		// Exit early if disabled
-		if (p4scm == null || !p4scm.isAutoSave()) {
+		if (!p4scm.isAutoSave()) {
 			return;
 		}
 
@@ -58,12 +58,11 @@ public class ConfigurationListener extends SaveableListener {
 				p4.versionFile(file, publish, ChangelistID, p4scm.isAutoSubmitOnChange());
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.severe(e.getLocalizedMessage());
 		}
 	}
 
-	private ClientHelper getClientHelper(DescriptorImpl p4scm) throws Exception {
+	private ClientHelper getClientHelper(DescriptorImpl p4scm) throws IOException {
 
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 
@@ -72,12 +71,12 @@ public class ConfigurationListener extends SaveableListener {
 		String depotPath = p4scm.getDepotPath();
 
 		// check path ends with '/...'
-		if(!depotPath.endsWith("/...")) {
+		if (!depotPath.endsWith("/...")) {
 			depotPath = depotPath.endsWith("/") ? depotPath + "..." : depotPath + "/...";
 		}
 
-		// quote path it it has spaces
-		if(depotPath.contains(" ")) {
+		// quote path if it has spaces
+		if (depotPath.contains(" ")) {
 			depotPath = "\"" + depotPath + "\"";
 		}
 

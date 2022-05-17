@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.12.3-SNAPSHOT</version>
+  <version>1.12.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
@@ -60,7 +60,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2021.2.2240592</version>
+      <version>2021.2.2278127</version>
     </dependency>
 
     <dependency>
