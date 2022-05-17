@@ -9,6 +9,7 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Queue;
+import hudson.model.ChoiceParameterDefinition;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import jenkins.model.Jenkins;
@@ -148,7 +149,8 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		// Swarm parameters
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_REVIEW.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.P4_CHANGE.getProp(), null));
-		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_STATUS.getProp(), null));
+		swarm.add(new ChoiceParameterDefinition(ReviewProp.SWARM_STATUS.getProp(),
+							new String[]{"shelved", "committed", "submitted"}, "The review status"));
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_PASS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_FAIL.getProp(), null));
 
