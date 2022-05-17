@@ -586,7 +586,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		if (scm != null) {
 			max = scm.getMaxChanges();
 		}
-		max = (max > 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
+		max = (max >= 0) ? max : PerforceScm.DEFAULT_CHANGE_LIMIT;
 		return max;
 	}
 

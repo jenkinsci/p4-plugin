@@ -1235,6 +1235,11 @@ public class ClientHelper extends ConnectionHelper {
 			return new ArrayList<P4Ref>();
 		}
 
+		// JENKINS-68516: skip changelist calculation if maxChanges=0.
+		if (getMaxChangeLimit() <= 0) {
+			return new ArrayList<P4Ref>();
+		}
+
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
 		List<P4Ref> list = listChanges(ws);
 		if (!from.isLabel()) {
