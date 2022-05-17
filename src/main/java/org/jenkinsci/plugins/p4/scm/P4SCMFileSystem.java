@@ -7,11 +7,13 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.scm.SCM;
+import hudson.scm.SCMDescriptor;
 import hudson.util.LogTaskListener;
 import jenkins.scm.api.SCMFile;
 import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
+import jenkins.scm.api.SCMSourceDescriptor;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -74,6 +76,16 @@ public class P4SCMFileSystem extends SCMFileSystem {
 			if (source instanceof AbstractP4ScmSource) {
 				return true;
 			}
+			return false;
+		}
+
+		@Override
+		protected boolean supportsDescriptor(SCMDescriptor scmDescriptor) {
+			return false;
+		}
+
+		@Override
+		protected boolean supportsDescriptor(SCMSourceDescriptor scmSourceDescriptor) {
 			return false;
 		}
 
