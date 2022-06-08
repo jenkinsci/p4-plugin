@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IStreamViewMapping;
@@ -15,6 +16,7 @@ import com.perforce.p4java.impl.generic.core.Stream;
 import com.perforce.p4java.impl.generic.core.StreamSummary;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Result;
+import hudson.model.queue.QueueTaskFuture;
 import jenkins.branch.BranchSource;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
@@ -22,6 +24,7 @@ import jenkins.scm.api.SCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
+import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -30,6 +33,7 @@ import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
@@ -37,10 +41,14 @@ import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewAPI;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmReviewsAPI;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -953,6 +961,66 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + review, revRun);
 		jenkins.assertLogContains("P4 Task: unshelve review: " + review, revRun);
 		assertEquals(Result.SUCCESS, revRun.getResult());
+	}
+
+	@Test
+	@Issue("JENKINS-38781")
+	public void testUnshelvedChangesShouldGetDisplayedInJenkinsBuildChange() throws Exception {
+		String base = "//depot/UnshelveChange";
+		String jfile = base + "/Jenkinsfile";
+
+		String baseChange = sampleProject(base, new String[]{"Main"}, "Jenkinsfile");
+		assertNotNull(baseChange);
+
+		submitFile(jenkins, "//depot/UnshelveChange/sync/file1", "content");
+		String shelveId = shelveFile(jenkins, "//depot/UnshelveChange/unshelve/file2", "content");
+
+		String jFileContent = "pipeline {\n" +
+				"  agent { label 'master' }\n" +
+				"  stages {\n" +
+				"    stage(\"Repro\") {\n" +
+				"      steps {\n" +
+				"        script {\n" +
+				"          p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n" +
+				"            populate: autoClean(delete: true, replace: true),\n" +
+				"            source: depotSource('//depot/UnshelveChange/sync/...')\n" +
+				"          p4unshelve credential: '" + CREDENTIAL + "', resolve: 'at', shelf: '" + shelveId + "',\n" +
+				"            workspace: manualSpec(charset: 'none', name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-unshelve',\n" +
+				"            spec: clientSpec(backup: true, clobber: true, line: 'LOCAL', type: 'WRITABLE',\n" +
+				"              view: '//depot/UnshelveChange/unshelve/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-unshelve/unshelve/... '))\n" +
+				"        }\n" +
+				"      }\n" +
+				"    }\n" +
+				"  }\n" +
+				"}";
+
+		submitFile(jenkins, jfile, jFileContent);
+
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-unshelve/unshelve";
+		String view = base + "/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		scm.getDescriptor().setLastSuccess(true);
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "UnshelveChanges");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+		QueueTaskFuture<WorkflowRun> build = job.scheduleBuild2(0);
+		WorkflowRun run1 = build.get();
+		Assert.assertNotNull(run1);
+		waitForBuild(job, run1.getNumber());
+
+		jenkins.getInstance().reload();
+		HtmlPage page = jenkins.createWebClient().getPage(run1, "changes");
+		String text = page.asText();
+		assertTrue(text.contains("Shelved Files:"));
+		assertTrue(text.contains("//depot/UnshelveChange/unshelve/file2"));
+		assertTrue(text.contains("//depot/UnshelveChange/Jenkinsfile"));
+		assertTrue(text.contains("//depot/UnshelveChange/sync/file1"));
 	}
 
 	@Test
