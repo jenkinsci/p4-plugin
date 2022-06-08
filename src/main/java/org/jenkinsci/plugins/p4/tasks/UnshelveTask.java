@@ -31,7 +31,7 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 	private final String resolve;
 	private final boolean tidy;
 	private long shelf;
-	private final TagAction tagAction;
+	private final transient TagAction tagAction;
 
 	public UnshelveTask(String credential, Run<?, ?> run, TaskListener listener, String resolve, boolean tidy) {
 		super(credential, run, listener);
