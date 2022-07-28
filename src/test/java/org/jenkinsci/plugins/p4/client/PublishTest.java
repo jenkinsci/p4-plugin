@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.perforce.p4java.PropertyDefs.IGNORE_FILE_NAME_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -52,6 +53,8 @@ public class PublishTest extends DefaultEnvironment {
 	public void buildCredentials() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 		createCredentials("admin", "Password", p4d.getRshPort(), SUPER);
+
+		System.setProperty(IGNORE_FILE_NAME_KEY, "other");
 	}
 
 	@Test
@@ -165,7 +168,7 @@ public class PublishTest extends DefaultEnvironment {
 		triggers.add(entry1);
 		String message = p4.getConnection().createTriggerEntries(triggers);
 		assertNotNull(message);
-		assertNotNull("Triggers saved.");
+		assertEquals("Triggers saved.", message);
 
 		// Submit artifacts
 		SubmitImpl submit = new SubmitImpl("publish", true, true, false, true, "3");
