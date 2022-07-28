@@ -1,5 +1,27 @@
 ## Release notes
 
+
+### Release 1.13.0 (major features/fixes)
+
+[@28960](https://swarm.workshop.perforce.com/changes/28960) - Upgrade p4java 2021.2.2314547
+
+[@28892](https://swarm.workshop.perforce.com/changes/28892) - Update P4Java 2021.2.2293546.  Fixed parallel sync authentication issue on case-insensitive servers. JENKINS-48525 JENKINS-68104.
+
+[@28891](https://swarm.workshop.perforce.com/changes/28891) - Merge pull request #149 from skumar7322/JENKINS_38781_UnshelveIssue.  JENKINS-38781 : p4 unshelve not updating
+
+[@28865](https://swarm.workshop.perforce.com/changes/28865) - Merge pull request #146 from skumar7322/dependencyUpdate.  Update Jenkins version to 2.138.4
+
+[@28806](https://swarm.workshop.perforce.com/changes/28806) - Merge pull request #144 from VirtualTim/patch-1.  Change `status` to be a choice instead of a string
+
+[@28805](https://swarm.workshop.perforce.com/changes/28805) - Merge pull request #145 from joel-f-brown/master.  Allow option to not detect changelists for build, JENKINS-68516
+
+[@28786](https://swarm.workshop.perforce.com/changes/28786) - Merge pull request #133 from nephre/force_sync_when_p4cleanworkspace.  Force sync and populate have list on P4_CLEANWORKSPACE
+
+[@28785](https://swarm.workshop.perforce.com/changes/28785) - Merge pull request #135 from redsil/patch-1.  Fix bug where exclude paths are turned into include paths
+
+[@28784](https://swarm.workshop.perforce.com/changes/28784) - Merge pull request #140 from jorgenpt/fix-file-limit-not-persisting. Persist `fileLimit` when serializing a changeset
+
+
 ### Release 1.12.4 (major features/fixes)
 
 [@28770](https://swarm.workshop.perforce.com/changes/28770) - Check Item is PerforceScm.DescriptorImpl onChange event. JENKINS-68378
@@ -223,7 +245,7 @@
 
 [@25843](https://swarm.workshop.perforce.com/changes/25843) - MultiBranch support for Swarm path Exclusions in the project configuration.
 
-[@25826](https://swarm.workshop.perforce.com/changes/25826) - Global option to limit change query.  By default 'Head change query limit' is set to 1000 (0 is no limit) and the plugin will limit the query based on the workspace view.  For large servers set the value to a range based on commit rate and job queue duration. e.g. 200 global commits/hour and jobs are queued for no longer than 10 hours, so 2000 change query limit (200*10).  JENKINS-58116  JENKINS-57870
+[@25826](https://swarm.workshop.perforce.com/changes/25826) - Global option to limit [@query.  By default 'Head change query limit' is set to 1000 (0 is no limit) and the plugin will limit the query based on the workspace view.  For large servers set the value to a range based](https://swarm.workshop.perforce.com/changes/query.  By default 'Head change query limit' is set to 1000 (0 is no limit) and the plugin will limit the query based on the workspace view.  For large servers set the value to a range based)
 
 
 ### Release 1.10.2 (major features/fixes)
@@ -887,7 +909,7 @@ _and in 'main' you will now see the remote files in ' depot/external/main' along
 
 [@21133](https://swarm.workshop.perforce.com/changes/21133) - P4 Environment Variables for pipeline.  JENKINS-37584
 
-[@21077](https://swarm.workshop.perforce.com/changes/21077) - Switch polling back to build.xml - Change in Polling behaviour; use last build details in the build.xml file.  It gathers 'last' change details on the master thread and not a slave thread.  JENKINS-37462
+[@21077](https://swarm.workshop.perforce.com/changes/21077) - Switch polling back to build.xml - [@in Polling behaviour; use last build details in the build.xml file.  It gathers 'last' change details](https://swarm.workshop.perforce.com/changes/in Polling behaviour; use last build details in the build.xml file.  It gathers 'last' change details)
 
 [@21062](https://swarm.workshop.perforce.com/changes/21062) - Avoid dependency errors on WorkflowJob.
 
