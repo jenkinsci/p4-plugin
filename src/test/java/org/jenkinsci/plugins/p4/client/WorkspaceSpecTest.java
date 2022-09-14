@@ -1,6 +1,8 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.server.IOptionsServer;
+import com.perforce.p4java.server.ServerFactory;
 import hudson.EnvVars;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -20,6 +22,10 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -97,5 +103,29 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		assertNotNull(iclient);
 		assertEquals("disable", iclient.getBackup());
 		p4.disconnect();
+	}
+
+	/**
+	 * test for https://issues.jenkins.io/browse/JENKINS-69491
+ 	 */
+	@Test
+	public void viewFromFileTest() throws Exception {
+
+		String clientName = "CLIENT";
+		String view = "\n//depot/Jam/... //placeholder/...\n" +
+				"//depot/java/yo/...\n\n" +
+				"-//depot/java/stuff //otherStuff/java/stuff\n\n" +
+				"//products/no/where/rhs\n" ;
+		String expectedView = "//depot/Jam/... //CLIENT/...\n" +
+				"//depot/java/yo/... //CLIENT/java/yo/...\n" +
+				"-//depot/java/stuff //CLIENT/java/stuff\n" +
+				"//products/no/where/rhs //CLIENT/no/where/rhs" ;
+
+		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, clientName, spec,false);
+
+		String postView = workspace.cleanupViewFromFile(view, clientName) ;
+
+		assertEquals(expectedView, postView);
 	}
 }

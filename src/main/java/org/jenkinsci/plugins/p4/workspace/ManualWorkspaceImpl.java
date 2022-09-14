@@ -5,21 +5,22 @@ import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
 import com.perforce.p4java.client.IClientViewMapping;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.client.ClientOptions;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
 import com.perforce.p4java.impl.mapbased.client.Client;
+import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
-import org.apache.commons.io.IOUtils;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
+import org.jenkinsci.plugins.p4.client.ViewMapHelper;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -27,8 +28,11 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
@@ -87,42 +91,33 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	private ClientView getClientView(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception {
 		String clientName = getFullName();
-		ClientView clientView = new ClientView();
-		int order = 0;
 		String specString = getExpand().format(workspaceSpec.getView(), true);
-        if (specString.startsWith("@")) {
-            logger.info("P4: specString=" + specString);
-            String specPathFull = specString.substring(1).trim();
-            List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
-            GetFileContentsOptions printOpts = new GetFileContentsOptions();
-            printOpts.setNoHeaderLine(true);
-            InputStream ins = connection.getFileContents(file, printOpts);
-            String spec = IOUtils.toString(ins, "UTF-8");
-            logger.info("P4: specFromFile=" + spec);
-            spec = getExpand().format(spec, true);
-            logger.info("P4: specExpanded=" + spec);
-            int i1 = spec.indexOf("//", 0);
-            String template = "<ClientName>";
-            if (i1 >= 0) {
-                int i2 = spec.indexOf("//", i1+2);
-                if (i2 > i1) {
-                    int i3 = spec.indexOf("/", i2+2);
-                    if (i3>i2) {
-                        template = spec.substring(i2+2, i3);
-                    }
-                }
-            }
-            logger.info("P4: specTemplate=" + template);
-            spec = spec.replace(template, clientName);
-            logger.info("P4: specReplaced=" + spec);
-            specString = spec;
-        }
+
+		if (specString.startsWith("@")) {
+			// retrieve view from depot file and construct the view.
+			logger.fine("P4: specString=" + specString);
+			String specPathFull = specString.substring(1).trim();
+			List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
+			GetFileContentsOptions printOpts = new GetFileContentsOptions();
+			printOpts.setNoHeaderLine(true);
+			InputStream ins = connection.getFileContents(file, printOpts);
+			String spec;
+			try {
+				spec = IOUtils.toString(ins, "UTF-8");
+			} finally {
+				ins.close();
+			}
+			spec = getExpand().format(spec, true);
+
+			specString = cleanupViewFromFile(spec, clientName);
+		}
 
 		// Split on new line and trim any following white space
+		int order = 0;
+		ClientView clientView = new ClientView();
 		for (String line : specString.split("\n\\s*")) {
 			String origName = getExpand().format(getName(), false);
 			line = line.replace(origName, clientName);
-
 			try {
 				ClientViewMapping entry = new ClientViewMapping(order, line);
 				order++;
@@ -134,6 +129,52 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			}
 		}
 		return clientView;
+	}
+
+	// for matching the depot/clients paths in view line.
+	private static final Pattern PAT_DETECT = Pattern.compile("//([^/]*)/");
+
+	/**
+	 * Look at each line and substitute the clientname in the RHS.
+	 * If there is only a LHS, construct a RHS. so:
+	 * <pre>//depot/path/to/product/...</pre>
+	 * becomes:
+	 * <pre>//depot/path/to/product/... //CLIENT/path/to/product/...</pre>
+	 * @param spec line(s) of view.
+	 * @param clientName client name for RHS
+	 * @return
+	 */
+	public String cleanupViewFromFile(String spec, String clientName) {
+		logger.fine("P4: specFromFile=" + spec);
+		spec = getExpand().format(spec, true);
+
+		StringBuilder sb = new StringBuilder(100);
+		// substitute for clientName or construct RHS
+		for (String line : spec.split("\n\\s*")) {
+			Matcher matcher = PAT_DETECT.matcher(line);  // first found is depot name, optional second is clientname
+			String depot = null, client = null;
+			if (matcher.find()) {
+				depot = matcher.group(1);
+				if (matcher.find()) {
+					client = matcher.group(1);
+				}
+			}
+			if (depot != null && client == null) {
+				// compose RHS.
+				line = ViewMapHelper.getClientView(Arrays.asList(new String[]{line}), clientName, true, false);
+				// getClientView() adds the depot to the RHS so remove it here.
+				line = line.replace("//" + clientName + "/" + depot, "//" + clientName );
+			} else if (client != null) {
+				line = line.replace("//" + client, "//" + clientName );
+			}
+			if (sb.length() != 0) {
+				sb.append("\n");
+			}
+			sb.append(line);
+		}
+
+		logger.fine("P4: specReplaced=" + sb);
+		return sb.toString();
 	}
 
 	private ArrayList<String> getChangeView(WorkspaceSpec workspaceSpec) {
