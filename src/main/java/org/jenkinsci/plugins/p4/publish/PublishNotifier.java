@@ -8,6 +8,8 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Item;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -17,6 +19,7 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
+import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -84,7 +87,34 @@ public class PublishNotifier extends Notifier {
 		getPublish().setExpandedDesc(desc);
 
 		boolean success = buildWorkspace.act(task);
+
+		cleanupPerforceClient(build, buildWorkspace, listener);
+
 		return success;
+	}
+
+	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener)
+			throws InterruptedException, IOException {
+		Workspace ws = getWorkspace().deepClone();
+
+		if (!ws.isCleanup()) {
+			logger.info("PublishNotifier: cleanup disabled");
+			return;
+		}
+
+		logger.info("PublishNotifier: cleanup Client: " + ws.getFullName());
+
+		RemoveClientTask removeClientTask = new RemoveClientTask(getCredential(), run, listener);
+
+		// Override Global settings so that the client is deleted, but the files are preserved.
+		removeClientTask.setDeleteClient(true);
+		removeClientTask.setDeleteFiles(false);
+
+		// Set workspace used for the Task
+		ws = removeClientTask.setEnvironment(run, workspace, buildWorkspace);
+		removeClientTask.setWorkspace(ws);
+
+		buildWorkspace.act(removeClientTask);
 	}
 
 	public static DescriptorImpl descriptor() {
