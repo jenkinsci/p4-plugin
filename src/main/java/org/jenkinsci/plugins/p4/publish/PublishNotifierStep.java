@@ -49,5 +49,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 		getPublish().setExpandedDesc(desc);
 
 		buildWorkspace.act(task);
+
+		cleanupPerforceClient(run, buildWorkspace, listener);
 	}
 }
