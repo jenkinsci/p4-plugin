@@ -83,7 +83,7 @@ pipeline {
 		
 		stage('Launch system tests') {
 			steps {
-				build job: 'jenkins-system-tests/Main', wait: false
+				build job: 'jenkins-system-tests/main', wait: false
 			}
 		}
 	}
