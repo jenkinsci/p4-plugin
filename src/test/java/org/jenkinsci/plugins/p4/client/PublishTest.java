@@ -186,7 +186,7 @@ public class PublishTest extends DefaultEnvironment {
 	@Test
 	public void testHighAsciiDescriptions() throws Exception {
 
-		byte[] byteArray = new byte[] {'t', 'e', 's', 't', 5, '.'};
+		byte[] byteArray = new byte[]{'t', 'e', 's', 't', 5, '.'};
 		String desc = new String(byteArray, "UTF-8");
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content", desc);
 
@@ -204,8 +204,44 @@ public class PublishTest extends DefaultEnvironment {
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
 		assertEquals(Result.SUCCESS, run.getResult());
 
-		P4ChangeSet changeSet = (P4ChangeSet)run.getChangeSets().get(0);
+		P4ChangeSet changeSet = (P4ChangeSet) run.getChangeSets().get(0);
 		String msg = changeSet.getHistory().get(0).getMsg();
 		assertEquals("test?.", msg);
 	}
+	@Test
+	public void publishShouldCleanTheP4ClientWhenManualSpecCleanupIsTrue() throws Exception {
+		WorkflowJob project = jenkins.jenkins.createProject(WorkflowJob.class, "Publish-Cleanup");
+
+		project.setDefinition(new CpsFlowDefinition(" " +
+				"pipeline { \n" +
+				"  agent any\n" +
+				"  options { skipDefaultCheckout() } \n" +
+				"  stages { " +
+				"    stage (\"Submit\") { " +
+				"      steps { " +
+				"        script { " +
+				"          writeFile file: 'Test.log', text: \"${BUILD_NUMBER}\" \n" +
+				"          p4publish credential: '" + CREDENTIAL + "', " +
+				"          publish: submit(description: 'Submitted by Jenkins. Build: ${BUILD_TAG}'), " +
+				"          workspace: " +
+				"            manualSpec(" +
+				"              charset: 'none', cleanup: true," +
+				"              name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-submit', " +
+				"              spec: " +
+				"                clientSpec(" +
+				"                  clobber: true, line: 'LOCAL',type: 'WRITABLE', " +
+				"            	   view: '//depot/cleanup/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-submit/...'" +
+				"                )" +
+				"            ) " +
+				"        } " +
+				"      } " +
+				"    } " +
+				"  } " +
+				"}", false));
+
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: cleanup client:", run);
+		jenkins.assertLogContains("Client jenkins-master-Publish-Cleanup-0-submit deleted.", run);
+	}
+
 }
