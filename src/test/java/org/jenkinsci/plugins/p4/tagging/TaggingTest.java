@@ -4,13 +4,13 @@ import com.perforce.p4java.core.ILabel;
 import com.perforce.p4java.core.ILabelMapping;
 import com.perforce.p4java.core.ViewMap;
 import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.ServerFactory;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
-import java.util.Properties;
 
 import static com.perforce.p4java.core.IMapEntry.EntryType.EXCLUDE;
 import static com.perforce.p4java.core.IMapEntry.EntryType.INCLUDE;
@@ -69,9 +68,8 @@ public class TaggingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 		jenkins.assertLogContains("Label Label-1 saved.", build);
 
-		IOptionsServer server = ServerFactory.getOptionsServer(p4d.getP4JRshPort(), new Properties());
-		server.connect();
-		server.setUserName("jenkins");
+		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
+		IOptionsServer server = p4.getConnection();
 
 		ILabel label = server.getLabel("Label-1");
 		ViewMap<ILabelMapping> viewMapping = label.getViewMapping();
