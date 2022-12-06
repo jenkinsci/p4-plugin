@@ -68,11 +68,12 @@ public class TaggingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 		jenkins.assertLogContains("Label Label-1 saved.", build);
 
-		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
-		IOptionsServer server = p4.getConnection();
-
-		ILabel label = server.getLabel("Label-1");
-		ViewMap<ILabelMapping> viewMapping = label.getViewMapping();
+		ViewMap<ILabelMapping> viewMapping;
+		try (ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			IOptionsServer server = p4.getConnection();
+			ILabel label = server.getLabel("Label-1");
+			viewMapping = label.getViewMapping();
+		}
 
 		assertEquals(INCLUDE, viewMapping.getEntry(0).getType());
 		assertEquals(EXCLUDE, viewMapping.getEntry(1).getType());

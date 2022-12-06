@@ -61,15 +61,6 @@ public class SimpleTestServer {
 		return rsh;
 	}
 
-	public String getP4JRshPort() {
-		String rsh = "p4jrsh://" + p4d;
-		rsh += " -r " + p4root;
-		rsh += " -L log";
-		rsh += " -i ";
-
-		return rsh;
-	}
-
 	public void upgrade() throws Exception {
 		exec(new String[] { "-xu" });
 	}
