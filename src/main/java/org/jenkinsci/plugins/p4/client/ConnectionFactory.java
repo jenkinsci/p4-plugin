@@ -8,6 +8,7 @@ import com.perforce.p4java.option.UsageOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.ServerFactory;
 import hudson.util.FormValidation;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -51,7 +52,7 @@ public class ConnectionFactory {
 		try {
 			iserver.connect();
 		} catch (ConnectionException e) {
-			if (config.isSsl()) {
+			if (config.isSsl() && StringUtils.isNotEmpty(config.getTrust())) {
 				addTrust(iserver, config);
 				iserver.connect();
 			} else {
@@ -78,7 +79,7 @@ public class ConnectionFactory {
 		// Test for SSL connections
 		try {
 			IOptionsServer iserver = getRawConnection(config);
-			if (config.isSsl()) {
+			if (config.isSsl() && StringUtils.isNotEmpty(config.getTrust())) {
 				String serverTrust = iserver.getTrust();
 				if (!serverTrust.equalsIgnoreCase(config.getTrust())) {
 					return FormValidation.error("Trust mismatch! Server fingerprint: " + serverTrust);
