@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.unshelve;
 
+import com.perforce.p4java.core.IChangelistSummary;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -16,11 +17,18 @@ import hudson.util.ListBoxModel.Option;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.UnshelveTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class UnshelveBuilder extends Builder {
@@ -118,7 +126,38 @@ public class UnshelveBuilder extends Builder {
 		task.setShelf(change);
 		task.setWorkspace(ws);
 
-		return buildWorkspace.act(task);
+		boolean result = buildWorkspace.act(task);
+
+		// Jenkins instance is not available on slave machine. Update changelog only after build done
+		if (result) {
+			TagAction tagAction = run.getAction(TagAction.class);
+			updateChangeLog(task, workspace, tagAction, change);
+		}
+
+		return result;
+	}
+
+	private void updateChangeLog(UnshelveTask task, Workspace workspace, TagAction tagAction, long shelf) {
+		try (ClientHelper p4 = new ClientHelper(task.getCredential(), task.getListener(), workspace)) {
+			List<P4ChangeEntry> changes = new ArrayList<>();
+			changes.add(createP4ChangeEntry(p4, shelf));
+			for (P4Ref ref : tagAction.getRefChanges()) {
+				changes.add(createP4ChangeEntry(p4, ref.getChange()));
+			}
+			P4ChangeSet.store(tagAction.getChangelog(), changes);
+
+		} catch (Exception e) {
+			String err = "Unable to get full changes: " + e;
+			logger.severe(err);
+			e.printStackTrace();
+		}
+	}
+
+	private P4ChangeEntry createP4ChangeEntry(ClientHelper p4, long shelf) throws Exception {
+		P4ChangeEntry cl = new P4ChangeEntry();
+		IChangelistSummary changelistSummary = p4.getChange(shelf);
+		cl.setChange(p4, changelistSummary);
+		return cl;
 	}
 
 	public static DescriptorImpl descriptor() {
@@ -142,12 +181,7 @@ public class UnshelveBuilder extends Builder {
 		}
 
 		public static ListBoxModel doFillResolveItems() {
-			return new ListBoxModel(new Option("Resolve: None", "none"),
-					new Option("Resolve: Safe (-as)", "as"),
-					new Option("Resolve: Merge (-am)", "am"),
-					new Option("Resolve: Force Merge (-af)", "af"),
-					new Option("Resolve: Yours (-ay) -- keep your edits", "ay"),
-					new Option("Resolve: Theirs (-at) -- keep shelf content", "at"));
+			return new ListBoxModel(new Option("Resolve: None", "none"), new Option("Resolve: Safe (-as)", "as"), new Option("Resolve: Merge (-am)", "am"), new Option("Resolve: Force Merge (-af)", "af"), new Option("Resolve: Yours (-ay) -- keep your edits", "ay"), new Option("Resolve: Theirs (-at) -- keep shelf content", "at"));
 		}
 	}
 }

@@ -985,9 +985,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 				"            populate: autoClean(delete: true, replace: true),\n" +
 				"            source: depotSource('//depot/UnshelveChange/sync/...')\n" +
 				"          p4unshelve credential: '" + CREDENTIAL + "', resolve: 'at', shelf: '" + shelveId + "',\n" +
-				"            workspace: manualSpec(charset: 'none', name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-unshelve',\n" +
+				"            workspace: manualSpec(charset: 'none', name: 'jenkins-unshelve-issue-workspace',\n" +
 				"            spec: clientSpec(backup: true, clobber: true, line: 'LOCAL', type: 'WRITABLE',\n" +
-				"              view: '//depot/UnshelveChange/unshelve/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-unshelve/unshelve/... '))\n" +
+				"              view: '//depot/UnshelveChange/unshelve/... //jenkins-unshelve-issue-workspace/unshelve/... '))\n" +
 				"        }\n" +
 				"      }\n" +
 				"    }\n" +
