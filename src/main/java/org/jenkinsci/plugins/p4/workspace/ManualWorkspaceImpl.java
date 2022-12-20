@@ -135,18 +135,19 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 	/**
 	 * Support for old plugin view mappings, see JENKINS-69491.
-	 * Two possible actions:
+	 * Two possible actions:<br>
 	 * 1) If view has only a LHS, construct a RHS.
 	 * <pre>//depot/path/to/product/...</pre>
 	 * becomes:
 	 * <pre>//depot/path/to/product/... //CLIENT/path/to/product/...</pre>
-	 * Note that this is different from a p4sync constructed RHS.
+	 * Note that this is different from a p4sync constructed RHS.<br>
 	 * 2) if view came from a file, substitute the clientName in the RHS.  p4sync has already
 	 * created the RHS correctly so don't alter.
+	 * <br>
 	 * @param line       one line of a view
 	 * @param clientName client name for RHS
 	 * @param adjustClientName use true to fix clientName in RHS (for when RHS comes from a file)
-	 * @return
+	 * @return adjusted viewLine with RHS
 	 */
 	public String adjustViewLine(String line, String clientName, boolean adjustClientName) {
 		line = getExpand().format(line, true);
