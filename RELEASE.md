@@ -1,6 +1,6 @@
 ## Release notes
 
-### Release 1.13.2 (major features/fixes)
+### Release 1.13.3 (major features/fixes)
 
 [@29366](https://swarm.workshop.perforce.com/changes/29366) - Update p4java 2022.1.2390907.  Resolves file corruption for compressed text+C files over 64K.
 
