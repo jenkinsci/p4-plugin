@@ -2,6 +2,11 @@
 
 ### Release 1.13.2 (major features/fixes)
 
+[@29366](https://swarm.workshop.perforce.com/changes/29366) - Update p4java 2022.1.2390907.  Resolves file corruption for compressed text+C files over 64K.
+
+
+### Release 1.13.2 (major features/fixes)
+
 [@29321](https://swarm.workshop.perforce.com/changes/29321) - Merge pull request #165 from skumar7322/UnshelveIssue. Unable to unshelve change: java.lang.IllegalStateException: Expected 1 instance of hudson.model.User$AllUsers but got 0.  JENKINS-69172
 
 [@29237](https://swarm.workshop.perforce.com/changes/29237) - Merge pull request #157 from joel-f-brown/master.  Do not quote the path when creating label.  JENKINS-67631
