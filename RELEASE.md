@@ -1,5 +1,26 @@
 ## Release notes
 
+### Release 1.13.3 (major features/fixes)
+
+[@29366](https://swarm.workshop.perforce.com/changes/29366) - Update p4java 2022.1.2390907.  Resolves file corruption for compressed text+C files over 64K.
+
+
+### Release 1.13.2 (major features/fixes)
+
+[@29321](https://swarm.workshop.perforce.com/changes/29321) - Merge pull request #165 from skumar7322/UnshelveIssue. Unable to unshelve change: java.lang.IllegalStateException: Expected 1 instance of hudson.model.User$AllUsers but got 0.  JENKINS-69172
+
+[@29237](https://swarm.workshop.perforce.com/changes/29237) - Merge pull request #157 from joel-f-brown/master.  Do not quote the path when creating label.  JENKINS-67631
+
+[@29213](https://swarm.workshop.perforce.com/changes/29213) - Merge pull request #159 from joel-f-brown/bugsView.  For ManualWorkspace views from a file, construct RHS if missing.  JENKINS-69491
+
+[@29212](https://swarm.workshop.perforce.com/changes/29212) - Merge pull request #160 from pschlan/JENKINS-69808.  Cleanup client after publish, if enabled.  JENKINS-69808
+
+[@29210](https://swarm.workshop.perforce.com/changes/29210) - [SECURITY] Use HTTPS to resolve dependencies in Maven Build.  Use HTTPS instead of HTTP to resolve deps CVE-2021-26291
+
+[@29209](https://swarm.workshop.perforce.com/changes/29209) - Merge pull request #162 from skumar7322/master.  Update P4Java Version to 2022.1.2350821.  JENKINS-68551
+
+
+### ~~Release 1.13.1 (major features/fixes)~~ (skip)
 
 ### Release 1.13.0 (major features/fixes)
 
