@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.p4.trigger;
 
 import hudson.Extension;
 import hudson.Util;
-import hudson.console.AnnotatedLargeText;
 import hudson.model.Action;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -14,7 +13,6 @@ import hudson.triggers.TriggerDescriptor;
 import hudson.util.StreamTaskListener;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.triggers.SCMTriggerItem;
-import org.apache.commons.jelly.XMLOutput;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -24,7 +22,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.logging.Logger;
@@ -160,16 +157,6 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 			return Util.loadFile(getLogFile(job));
 		}
 
-		/**
-		 * Writes the annotated log to the given output.
-		 *
-		 * @param out XML output
-		 * @throws IOException pudh up stack
-		 */
-		public void writeLogTo(XMLOutput out) throws IOException {
-			new AnnotatedLargeText<P4TriggerAction>(getLogFile(job), Charset.defaultCharset(), true, this).writeHtmlTo(0,
-					out.asWriter());
-		}
 	}
 
 	@Override

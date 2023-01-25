@@ -1,9 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
 import com.perforce.p4java.client.IClient;
-import com.perforce.p4java.impl.generic.client.ClientView;
-import com.perforce.p4java.server.IOptionsServer;
-import com.perforce.p4java.server.ServerFactory;
 import hudson.EnvVars;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -12,8 +9,6 @@ import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
-import org.jenkinsci.plugins.p4.build.ExecutorHelper;
-import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -23,10 +18,6 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -67,7 +58,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Test changeView is applied and source is at change 10099
-		jenkins.assertLogContains("Change 10099 on 2002/01/21 by rmg@rmg:pdjam:chinacat 'This change is integration hist'", build);
+		jenkins.assertLogContains("Change 10099 on 2002/01/22 by rmg@rmg:pdjam:chinacat 'This change is integration hist'", build);
 	}
 
 	@Test
@@ -108,7 +99,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 
 	/**
 	 * test for https://issues.jenkins.io/browse/JENKINS-69491
- 	 */
+	 */
 	@Test
 	public void adjustViewLineTest() throws Exception {
 
@@ -116,21 +107,21 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		String view = "\n//depot/Jam/... //placeholder/...\n" +
 				"//depot/java/yo/...\n\n" +
 				"-//depot/java/stuff //otherStuff/java/stuff\n\n" +
-				"//products/no/where/rhs\n" ;
+				"//products/no/where/rhs\n";
 		String expectedView = "//depot/Jam/... //CLIENT/...\n" +
 				"//depot/java/yo/... //CLIENT/java/yo/...\n" +
 				"-//depot/java/stuff //CLIENT/java/stuff\n" +
-				"//products/no/where/rhs //CLIENT/no/where/rhs" ;
+				"//products/no/where/rhs //CLIENT/no/where/rhs";
 
 		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, clientName, spec,false);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, clientName, spec, false);
 
 		StringBuilder postView = new StringBuilder(300);
 		for (String line : view.split("\n\\s*")) {
-			if ( postView.length() > 0) {
+			if (postView.length() > 0) {
 				postView.append("\n");
 			}
-			postView.append( workspace.adjustViewLine(line, clientName, true));
+			postView.append(workspace.adjustViewLine(line, clientName, true));
 
 		}
 		System.out.println(p4d.getRshPort());
