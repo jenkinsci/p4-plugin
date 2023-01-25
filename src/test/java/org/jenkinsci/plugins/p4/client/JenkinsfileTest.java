@@ -445,8 +445,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(3, job.getLastBuild().getNumber());
 
 		List<String> log = job.getLastBuild().getLog(1000);
-		assertTrue(log.contains("[first_branch] Found last change " + head + " on syncID jenkins-master-multiParallelSyncPoll-1"));
-		assertTrue(log.contains("[second_branch] Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2"));
+		assertTrue(log.contains("Found last change " + head + " on syncID jenkins-master-multiParallelSyncPoll-1"));
+		assertTrue(log.contains("Found last change 9 on syncID jenkins-master-multiParallelSyncPoll-2"));
 
 		// Test trigger, no change
 		trigger.poke(job, p4d.getRshPort());
