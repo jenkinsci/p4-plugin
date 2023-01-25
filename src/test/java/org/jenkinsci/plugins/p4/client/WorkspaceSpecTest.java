@@ -58,7 +58,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Test changeView is applied and source is at change 10099
-		jenkins.assertLogContains("Change 10099 on 2002/01/21 by rmg@rmg:pdjam:chinacat 'This change is integration hist'", build);
+		jenkins.assertLogContains("Change 10099 on 2002/01/22 by rmg@rmg:pdjam:chinacat 'This change is integration hist'", build);
 	}
 
 	@Test
