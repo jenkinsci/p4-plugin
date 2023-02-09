@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.trigger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.console.AnnotatedLargeText;
@@ -164,8 +165,9 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		 * Writes the annotated log to the given output.
 		 *
 		 * @param out XML output
-		 * @throws IOException pudh up stack
+		 * @throws IOException push up stack
 		 */
+		@SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED", justification = "This is called from P4TriggerAction Jelly")
 		public void writeLogTo(XMLOutput out) throws IOException {
 			new AnnotatedLargeText<P4TriggerAction>(getLogFile(job), Charset.defaultCharset(), true, this).writeHtmlTo(0,
 					out.asWriter());

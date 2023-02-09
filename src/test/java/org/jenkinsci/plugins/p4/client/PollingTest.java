@@ -731,6 +731,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Submit first change
 		String c1 = submitFile(jenkins, "//depot/main/file.001", "content");
 
+		Thread.sleep(60);
 		// Poll for changes
 		cron.run();
 
