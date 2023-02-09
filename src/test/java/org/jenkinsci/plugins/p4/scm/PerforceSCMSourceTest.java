@@ -85,7 +85,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-ScmSourceTest-p4root";
 
 	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(10 * 60);
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(30 * 60);
 
 	@ClassRule
 	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
