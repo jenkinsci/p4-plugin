@@ -688,8 +688,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Poll for changes multiple times
 		for (int i = 0; i < 300; i++) {
-			cron.run();
 			Thread.sleep(40);
+			cron.run();
 		}
 		jenkins.waitUntilNoActivity();
 
@@ -731,6 +731,7 @@ public class PollingTest extends DefaultEnvironment {
 		// Submit first change
 		String c1 = submitFile(jenkins, "//depot/main/file.001", "content");
 
+		Thread.sleep(60);
 		// Poll for changes
 		cron.run();
 

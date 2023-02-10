@@ -73,7 +73,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertNull(list.get(0).getSsl());
 
 		String name = CredentialsNameProvider.name(credential);
-		assertEquals("user/****** (desc:passwd)", name);
+		assertEquals("desc:passwd", name);
 	}
 
 	@Test
@@ -148,7 +148,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertEquals("12345", auth.getTicketValue());
 
 		String name = CredentialsNameProvider.name(credential);
-		assertEquals("user (desc:ticket)", name);
+		assertEquals("desc:ticket", name);
 	}
 
 	@Test

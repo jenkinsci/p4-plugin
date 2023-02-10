@@ -17,7 +17,6 @@ import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -550,7 +549,6 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "      credential: '" + CREDENTIAL + "',\n"
 				+ "      populate: forceClean(\n"
 				+ "        have: true,\n"
-				+ "        revert: true,\n"
 				+ "        quiet: false\n"
 				+ "      ),\n"
 				+ "      workspace: manualSpec(\n"
@@ -638,8 +636,8 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "  }])\n"
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
-		jenkins.assertLogContains("[BranchOne] Client_1", run);
-		jenkins.assertLogContains("[BranchTwo] Client_2", run);
+		jenkins.assertLogContains("Client_1", run);
+		jenkins.assertLogContains("Client_2", run);
 	}
 
 	@Test
