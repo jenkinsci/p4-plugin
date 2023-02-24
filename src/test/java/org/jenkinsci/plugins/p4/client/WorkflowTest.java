@@ -541,7 +541,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "manualStream");
 		job.setDefinition(new CpsFlowDefinition(""
-				+ "node('master') {\n"
+				+ "node('built-in') {\n"
 				+ "  checkout(\n"
 				+ "    changelog: false,\n"
 				+ "    poll: false,\n"
