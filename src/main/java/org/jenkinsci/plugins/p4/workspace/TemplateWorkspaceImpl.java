@@ -5,6 +5,7 @@ import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.SwitchClientViewOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
@@ -21,7 +22,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	private final String templateName;
 	private String format;
 
-	private static Logger logger = Logger.getLogger(TemplateWorkspaceImpl.class
+	private static final Logger logger = Logger.getLogger(TemplateWorkspaceImpl.class
 			.getName());
 
 	public String getTemplateName() {
@@ -49,7 +50,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public TemplateWorkspaceImpl(String charset, boolean pinHost,
-	                             String templateName, String format) {
+								 String templateName, String format) {
 		super(charset, pinHost, false);
 		this.templateName = templateName;
 		this.format = format;
@@ -59,7 +60,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	public IClient setClient(IOptionsServer connection, String user)
 			throws Exception {
 
-		String template = getTemplateClient(connection);
+		String template = getTemplateClient();
 
 		// Check template exists or exit early
 		IClient itemplate = connection.getClient(template);
@@ -78,6 +79,8 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 			implClient.setOwnerName(user);
 			connection.createClient(implClient);
 			iclient = connection.getClient(clientName);
+			// Root required to switch view; must reload values in iclient.
+			iclient.setRoot(getRootPath());
 		}
 
 		// Owner set for use with p4maven
@@ -93,8 +96,6 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 		// set options explicitly (JENKINS-30546)
 		iclient.setOptions(clientOpts);
 
-		// Root required to switch view; must reload values in iclient.
-		iclient.setRoot(getRootPath());
 		iclient.update();
 
 		// Use template with client
@@ -105,15 +106,14 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 		return iclient;
 	}
 
-	private String getTemplateClient(IOptionsServer connection) throws Exception {
+	private String getTemplateClient() {
 		// Expand env variables in Template name
 		Expand expand = getExpand();
-		String template = expand.format(getTemplateName(), false);
-		return template;
+		return expand.format(getTemplateName(), false);
 	}
 
 	public boolean templateExists(IOptionsServer connection) throws Exception {
-		String template = getTemplateClient(connection);
+		String template = getTemplateClient();
 		return (connection.getClient(template) != null);
 	}
 
@@ -122,6 +122,7 @@ public class TemplateWorkspaceImpl extends Workspace implements Serializable {
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
 		@Override
+		@NonNull
 		public String getDisplayName() {
 			return "Template (view generated for each node)";
 		}
