@@ -55,24 +55,6 @@
     </pluginRepository>
   </pluginRepositories>
 
-  <!--
-  New version of jenkins have bom plugin to help with dependency management.
-  bom-2.346.x will get all compatible dependencies for the version 2.346.3
-  Reference: https://www.jenkins.io/doc/developer/plugin-development/dependency-management/
-  -->
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.346.x</artifactId>
-        <version>1742.vb_70478c1b_25f</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-
   <dependencies>
 
     <dependency>
@@ -169,7 +151,6 @@
       <version>716.vc692a_e52371b_</version>
     </dependency>
 
-    <!--Need to update version because of MEND -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
@@ -189,6 +170,7 @@
     </dependency>
 
     <!-- Optional dependencies -->
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
@@ -201,12 +183,6 @@
       <artifactId>mailer</artifactId>
       <version>435.v79ef3972b_5c7</version>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>io.jenkins.plugins</groupId>
-      <artifactId>plugin-util-api</artifactId>
-      <version>2.20.0</version>
     </dependency>
 
     <!-- Test scope dependencies -->
@@ -255,9 +231,9 @@
     </dependency>
 
     <!--
-    Overriding versions from parent pom
-    These are added to remove mend warnings could be deleted in future updates
-    -->
+      Overriding versions from parent pom
+      Required because of MEND warning, could be removed in next update
+     -->
 
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
@@ -287,6 +263,18 @@
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
       <version>6.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.11.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.15</version>
     </dependency>
 
     <dependency>
