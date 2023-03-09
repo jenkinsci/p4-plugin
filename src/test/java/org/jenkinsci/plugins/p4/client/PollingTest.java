@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.server.IOptionsServer;
+import hudson.EnvVars;
 import hudson.model.Action;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
@@ -8,6 +11,7 @@ import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
+import hudson.model.queue.QueueTaskFuture;
 import hudson.scm.PollingResult;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
@@ -29,6 +33,7 @@ import org.jenkinsci.plugins.p4.scm.BranchesScmSource;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
+import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
@@ -39,21 +44,21 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class PollingTest extends DefaultEnvironment {
@@ -90,7 +95,7 @@ public class PollingTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -127,7 +132,7 @@ public class PollingTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -167,7 +172,7 @@ public class PollingTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		FreeStyleBuild build = project.scheduleBuild2(0, cause, actions).get();
@@ -186,7 +191,7 @@ public class PollingTest extends DefaultEnvironment {
 		// JENKINS-66169: disable poll per change
 		List<ParameterValue> list2 = new ArrayList<>();
 		list2.add(new StringParameterValue("P4_INCREMENTAL", "false"));
-		Action actions2 = new SafeParametersAction(new ArrayList<ParameterValue>(), list2);
+		Action actions2 = new SafeParametersAction(new ArrayList<>(), list2);
 
 		Cause.UserIdCause cause2 = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause2, actions2).get();
@@ -206,7 +211,7 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<Filter>();
+		List<Filter> filter = new ArrayList<>();
 
 		// Filter changes outside of //depot/Data path
 		FilterViewMaskImpl mask = new FilterViewMaskImpl("//depot/Data");
@@ -216,10 +221,10 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -247,25 +252,24 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<Filter>();
+		List<Filter> filter = new ArrayList<>();
 
 		// Filter changes outside of //depot/Main and also under //depot/Main/TPI-83
-		StringBuilder sb = new StringBuilder();
-		sb.append("//depot/Main");
-		sb.append("\n");
-		sb.append("-//depot/Main/TPI-83");
+		String sb = "//depot/Main" +
+				"\n" +
+				"-//depot/Main/TPI-83";
 
-		FilterViewMaskImpl mask = new FilterViewMaskImpl(sb.toString());
+		FilterViewMaskImpl mask = new FilterViewMaskImpl(sb);
 		filter.add(mask);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
 		project.setScm(scm);
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -293,16 +297,14 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<Filter>();
-
-		StringBuilder sb = new StringBuilder();
+		List<Filter> filter = new ArrayList<>();
 
 		// Only poll on 0 && .dat files's
-		sb.append("//depot/main/[a-z]+-0\\.txt");
-		sb.append("\n");
-		sb.append(".*\\.dat$");
+		String sb = "//depot/main/[a-z]+-0\\.txt" +
+				"\n" +
+				".*\\.dat$";
 
-		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
+		FilterPatternListImpl pList = new FilterPatternListImpl(sb, false);
 		filter.add(pList);
 
 		/* Should result in the follow changes captured:
@@ -319,10 +321,10 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -352,7 +354,7 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<Filter>();
+		List<Filter> filter = new ArrayList<>();
 
 		// Only poll on a main with lower case 'm' (doesn't actually exist) -- ensure case sensitive is TRUE!
 		FilterPatternListImpl pList = new FilterPatternListImpl("//depot/main/file-.*\\.txt", true);
@@ -363,10 +365,10 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -432,16 +434,14 @@ public class PollingTest extends DefaultEnvironment {
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		Populate populate = new AutoCleanImpl();
-		List<Filter> filter = new ArrayList<Filter>();
-
-		StringBuilder sb = new StringBuilder();
+		List<Filter> filter = new ArrayList<>();
 
 		// Constuct a correct regex for File-0.txt, but test a broken regex for .dat files
-		sb.append("//depot/main/[a-z]+-0\\.txt");
-		sb.append("\n");
-		sb.append("{a-z\\}+\\.dat"); // Should be using []'s, not {}'s!
+		String sb = "//depot/main/[a-z]+-0\\.txt" +
+				"\n" +
+				"{a-z\\}+\\.dat"; // Should be using []'s, not {}'s!
 
-		FilterPatternListImpl pList = new FilterPatternListImpl(sb.toString(), false);
+		FilterPatternListImpl pList = new FilterPatternListImpl(sb, false);
 		filter.add(pList);
 
 		// Should only be one actual regex generated
@@ -461,10 +461,10 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Build at change 3
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "3"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -505,7 +505,8 @@ public class PollingTest extends DefaultEnvironment {
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
-		assertEquals("Shouldn't have triggered a build if no change", 1, project.getLastBuild().getNumber());
+		int lastBuildNumber = Objects.requireNonNull(project.getLastBuild()).getNumber();
+		assertEquals("Shouldn't have triggered a build if no change", 1, lastBuildNumber);
 	}
 
 	@Test
@@ -525,13 +526,13 @@ public class PollingTest extends DefaultEnvironment {
 		project.save();
 
 		// Checkout at commit 9
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
 		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		// Run once
-		Run lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
+		Run<FreeStyleProject, FreeStyleBuild> lastRun = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0, new Cause.UserIdCause(), actions));
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", lastRun);
 
@@ -541,7 +542,8 @@ public class PollingTest extends DefaultEnvironment {
 		TimeUnit.SECONDS.sleep(project.getQuietPeriod());
 		jenkins.waitUntilNoActivity();
 
-		assertEquals("Should have triggered a build on change", 2, project.getLastBuild().getNumber());
+		int lastBuildNumber = Objects.requireNonNull(project.getLastBuild()).getNumber();
+		assertEquals("Should have triggered a build on change", 2, lastBuildNumber);
 	}
 
 	@Test
@@ -555,10 +557,10 @@ public class PollingTest extends DefaultEnvironment {
 				+ "}", false));
 
 		// Set review to build change 9
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		// Add a trigger
 		P4Trigger trigger = new P4Trigger();
@@ -566,7 +568,8 @@ public class PollingTest extends DefaultEnvironment {
 		job.addTrigger(trigger);
 		job.save();
 
-		WorkflowRun run = job.scheduleBuild2(0, actions).get();
+		QueueTaskFuture<WorkflowRun> workFlowRunFuture = Objects.requireNonNull(job.scheduleBuild2(0, actions));
+		WorkflowRun run = workFlowRunFuture.get();
 		jenkins.assertBuildStatusSuccess(run);
 		jenkins.waitUntilNoActivity();
 		jenkins.assertLogContains("P4 Task: syncing files at change", run);
@@ -875,5 +878,55 @@ public class PollingTest extends DefaultEnvironment {
 		Thread.sleep(500);
 		jenkins.waitUntilNoActivity();
 		assertEquals(2, job.getLastBuild().number);
+	}
+
+	@Test
+	public void testTemplateWorkspacePollingShouldNotSetClientRootNull() throws Exception {
+		String client = "test.ws";
+		String format = "jenkins-${JOB_NAME}.ws";
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("Jenkins59300");
+		TemplateWorkspaceImpl workspace = new TemplateWorkspaceImpl("none", true, client, format);
+
+		EnvVars envVars = new EnvVars();
+		envVars.put("JOB_NAME", "Jenkins59300");
+		workspace.setExpand(envVars);
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		String workspaceExpandedName = workspace.getFullName();
+
+
+		try (ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			// Connect to p4d server
+			IOptionsServer p4Connection = p4.getConnection();
+			// Get workspace root on p4d before polling
+			IClient p4Client = p4Connection.getClient(workspaceExpandedName);
+			String workspaceRootBeforePoll = p4Client.getRoot();
+
+			// Submit a file
+			submitFile(jenkins, "//depot/test59300", "content");
+
+			// Trigger Polling
+			Logger polling = Logger.getLogger("IncPolling");
+			TestHandler pollHandler = new TestHandler();
+			polling.addHandler(pollHandler);
+			LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+			project.poll(listener);
+
+
+			// Get workspace root on p4d after polling
+			p4Client = p4Connection.getClient(workspaceExpandedName);
+			String workspaceRootAfterPoll = p4Client.getRoot();
+
+			assertEquals(workspaceRootBeforePoll, workspaceRootAfterPoll);
+		}
+
 	}
 }
