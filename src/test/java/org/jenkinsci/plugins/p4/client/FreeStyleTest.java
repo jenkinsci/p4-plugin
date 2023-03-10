@@ -90,11 +90,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
-		String text = page.asText();
+		String text = page.asNormalizedText();
 		assertTrue(text.contains("9 by jenkins (jenkins.data.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
-		text = page.asText();
+		text = page.asNormalizedText();
 		assertTrue(text.contains("//depot/Main/file-11.txt #4"));
 
 		// Check workspace descriptors
@@ -147,11 +147,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
-		String text = page.asText();
+		String text = page.asNormalizedText();
 		assertTrue(text.contains("15 by jenkins (jenkins.data.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
-		text = page.asText();
+		text = page.asNormalizedText();
 		assertTrue(text.contains("//depot/Main/file-14.txt #7"));
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
@@ -160,7 +160,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		input.click();
 
 		page = jenkins.createWebClient().getPage(build, "tagBuild");
-		text = page.asText();
+		text = page.asNormalizedText();
 		assertTrue(text.contains("Build-1\tJenkinsBuild: #1\tjenkins\t@15"));
 
 		// Check browser
@@ -229,11 +229,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 
 		// Check web pages for changes
 		HtmlPage page = jenkins.createWebClient().getPage(build);
-		String text = page.asText();
+		String text = page.asNormalizedText();
 		assertTrue(text.contains("19 by admin (admin.ws)"));
 
 		page = jenkins.createWebClient().getPage(build, "changes");
-		text = page.asText();
+		text = page.asNormalizedText();
 		assertTrue(text.contains("Shelved Files:"));
 
 		// Check browser

@@ -15,9 +15,12 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.generic.core.Stream;
 import com.perforce.p4java.impl.generic.core.StreamSummary;
 import com.perforce.p4java.server.IOptionsServer;
+import hudson.model.Hudson;
+import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import jenkins.branch.BranchSource;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
@@ -366,6 +369,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "path-classic");
+		multi.getLastBuiltOn().setLabelString("master");
 		multi.getSourcesList().add(new BranchSource(source));
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
@@ -382,6 +386,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "star-classic");
 		multi.getSourcesList().add(new BranchSource(source));
+		multi.getLastBuiltOn().setLabelString("master");
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
@@ -1016,7 +1021,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		jenkins.getInstance().reload();
 		HtmlPage page = jenkins.createWebClient().getPage(run1, "changes");
-		String text = page.asText();
+		String text = page.asNormalizedText();
 		assertTrue(text.contains("Shelved Files:"));
 		assertTrue(text.contains("//depot/UnshelveChange/unshelve/file2"));
 		assertTrue(text.contains("//depot/UnshelveChange/Jenkinsfile"));

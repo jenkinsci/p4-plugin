@@ -358,7 +358,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
-		FreeStyleProject project = jenkins.createFreeStyleProject("Folder/test");
+		FreeStyleProject project = jenkins.createFreeStyleProject("Folder test");
 		project.setScm(scm);
 		project.save();
 
