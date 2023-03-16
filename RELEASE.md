@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.14.0 (major features/fixes)
+
+[@29476](https://swarm.workshop.perforce.com/changes/29476) - Merge pull request #174 from skumar7322/UpdateJenkins346.  Update Jenkins Version to 2.346.3
+
+[@29472](https://swarm.workshop.perforce.com/changes/29472) - Merge pull request #173 from skumar7322/TemplateWorkspaceIssue.  Polling should not set client root to Null.  JENKINS-59300
+
+[@29440](https://swarm.workshop.perforce.com/changes/29440) - Merge pull request #172 from skumar7322/ReconcileWithT.  Add '-t' flag to reconcile command.  JENKINS-59922
+
+[@29411](https://swarm.workshop.perforce.com/changes/29411) - Merge pull request #171 from skumar7322/SecurityPatch.  Security Patch : Update Jenkins Version and Other Dependencies 
+
+
 ### Release 1.13.3 (major features/fixes)
 
 [@29366](https://swarm.workshop.perforce.com/changes/29366) - Update p4java 2022.1.2390907.  Resolves file corruption for compressed text+C files over 64K.
