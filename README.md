@@ -21,7 +21,7 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 
 ## Requirements
 
-* Jenkins 2.138.4 or greater.
+* Jenkins 2.346.3 or greater.
 * Helix Core Server 2019.1 or greater.
 * Minimum Perforce Protection of `open` for the Jenkins user.
 * Review Build feature requires Helix Swarm 2019.1 or greater.
