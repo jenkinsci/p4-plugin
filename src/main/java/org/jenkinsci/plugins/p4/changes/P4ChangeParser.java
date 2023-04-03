@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  */
 public class P4ChangeParser extends ChangeLogParser {
 
-	private static Logger logger = Logger.getLogger(P4ChangeParser.class.getName());
+	private static final Logger logger = Logger.getLogger(P4ChangeParser.class.getName());
 
 	private final String credential;
 
@@ -48,11 +48,11 @@ public class P4ChangeParser extends ChangeLogParser {
 			throws IOException, SAXException {
 		try (ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 			SAXParser parser = factory.newSAXParser();
 			ChangeLogHandler handler = new ChangeLogHandler(run, browser, p4);
 			parser.parse(file, handler);
-			P4ChangeSet changeSet = handler.getChangeLogSet();
-			return changeSet;
+			return handler.getChangeLogSet();
 		} catch (Exception e) {
 			logger.severe("Could not parse Perforce changelog: " + file.toString());
 		}
@@ -60,8 +60,8 @@ public class P4ChangeParser extends ChangeLogParser {
 	}
 
 	public static class ChangeLogHandler extends DefaultHandler {
-		private Stack<P4ChangeEntry> objects = new Stack<P4ChangeEntry>();
-		private StringBuffer text = new StringBuffer();
+		private final Stack<P4ChangeEntry> objects = new Stack<>();
+		private final StringBuffer text = new StringBuffer();
 
 		private List<P4ChangeEntry> changeEntries;
 		private P4ChangeSet changeSet;
@@ -90,23 +90,22 @@ public class P4ChangeParser extends ChangeLogParser {
 		}
 
 		@Override
-		public void characters(char[] ch, int start, int length) throws SAXException {
+		public void characters(char[] ch, int start, int length) {
 			text.append(ch, start, length);
 		}
 
 		@Override
-		public void startDocument() throws SAXException {
-			changeEntries = new ArrayList<P4ChangeEntry>();
+		public void startDocument() {
+			changeEntries = new ArrayList<>();
 			changeSet = new P4ChangeSet(run, browser, changeEntries);
 		}
 
 		@Override
-		public void endDocument() throws SAXException {
+		public void endDocument() {
 		}
 
 		@Override
-		public void startElement(String uri, String localName, String qName, Attributes attributes)
-				throws SAXException {
+		public void startElement(String uri, String localName, String qName, Attributes attributes) {
 
 			if (qName.equalsIgnoreCase("changelog")) {
 				// this is the root, so don't do anything
@@ -119,7 +118,7 @@ public class P4ChangeParser extends ChangeLogParser {
 				return;
 			}
 			if (objects.peek() instanceof P4ChangeEntry) {
-				P4ChangeEntry entry = (P4ChangeEntry) objects.peek();
+				P4ChangeEntry entry = objects.peek();
 				try {
 					if (qName.equalsIgnoreCase("file")) {
 
@@ -161,7 +160,7 @@ public class P4ChangeParser extends ChangeLogParser {
 		}
 
 		@Override
-		public void endElement(String uri, String localName, String qName) throws SAXException {
+		public void endElement(String uri, String localName, String qName) {
 
 			if (qName.equalsIgnoreCase("changelog")) {
 				// this is the root, so don't do anything
@@ -169,14 +168,14 @@ public class P4ChangeParser extends ChangeLogParser {
 			}
 
 			if (qName.equalsIgnoreCase("entry")) {
-				P4ChangeEntry entry = (P4ChangeEntry) objects.pop();
+				P4ChangeEntry entry = objects.pop();
 				changeEntries.add(entry);
 				return;
 			}
 
 			// if we are in the entry element
 			if (objects.peek() instanceof P4ChangeEntry) {
-				P4ChangeEntry entry = (P4ChangeEntry) objects.peek();
+				P4ChangeEntry entry = objects.peek();
 				try {
 
 					if (text.toString().trim().length() != 0
@@ -257,7 +256,6 @@ public class P4ChangeParser extends ChangeLogParser {
 					}
 
 					text.setLength(0);
-					return;
 				} catch (Exception e) {
 					entry = null;
 				}
