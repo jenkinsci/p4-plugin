@@ -1,5 +1,10 @@
 ## Release notes
 
+### Release 1.14.1 (major features/fixes)
+
+[@29505](https://swarm.workshop.perforce.com/changes/29505) - Merge pull request #177 from skumar7322/UpdateP4Java221P2.  Update P4 Java Version to "2022.1.2423241"
+
+
 ### Release 1.14.0 (major features/fixes)
 
 [@29476](https://swarm.workshop.perforce.com/changes/29476) - Merge pull request #174 from skumar7322/UpdateJenkins346.  Update Jenkins Version to 2.346.3
