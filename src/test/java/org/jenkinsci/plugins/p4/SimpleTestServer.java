@@ -60,6 +60,9 @@ public class SimpleTestServer {
 
 		return rsh;
 	}
+	public String getLogPath() {
+		return p4root + File.separator + "log";
+	}
 
 	public void upgrade() throws Exception {
 		exec(new String[] { "-xu" });
