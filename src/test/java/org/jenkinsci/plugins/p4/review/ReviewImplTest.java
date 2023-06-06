@@ -1,7 +1,7 @@
 package org.jenkinsci.plugins.p4.review;
 
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;

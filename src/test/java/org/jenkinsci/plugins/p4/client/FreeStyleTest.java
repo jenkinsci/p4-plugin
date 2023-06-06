@@ -1,8 +1,8 @@
 package org.jenkinsci.plugins.p4.client;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Action;
