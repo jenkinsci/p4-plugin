@@ -6,7 +6,7 @@ pipeline {
 		stage('Linux Build & Test') {
 
 		    environment {
-                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64/jre'
+                JAVA_HOME = '/usr/lib/jvm/java-8-openjdk-amd64'
             }
 			
 			agent {
