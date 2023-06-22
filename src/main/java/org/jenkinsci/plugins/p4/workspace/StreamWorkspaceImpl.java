@@ -80,6 +80,9 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 		options.setClobber(true);
 		iclient.setOptions(options);
 
+		// Remove StreamAtChange
+		iclient.setStreamAtChange(-1);
+
 		return iclient;
 	}
 

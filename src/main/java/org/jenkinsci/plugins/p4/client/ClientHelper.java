@@ -184,12 +184,13 @@ public class ClientHelper extends ConnectionHelper {
 		// exit early if no change
 		String clientName = iclient.getName();
 		IClient original = getConnection().getClient(clientName);
+		ClientView clientView = iclient.getClientView();
 		if (diffClient(original, iclient)) {
 			return;
 		}
 
 		iclient.update();
-		ClientView clientView = iclient.getClientView();
+
 
 		// Log client view...
 		if (clientView != null) {
@@ -202,6 +203,11 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append(" ");
 				sb.append(view.getRight());
 				sb.append("\n");
+			}
+			if (iclient.getStreamAtChange()!=-1) {
+				sb.append("...   StreamAtChange: " + iclient.getStreamAtChange());
+				sb.append("\n");
+				log("...   StreamAtChange: " + iclient.getStreamAtChange());
 			}
 			if (iclient.getStream() != null) {
 				sb.append("...   Stream: " + iclient.getStream());
@@ -248,8 +254,16 @@ public class ClientHelper extends ConnectionHelper {
 			map.remove(key);
 		}
 
-		List<String> values = new ArrayList(map.values());
-		values.removeAll(Collections.singleton(null));
+		List<Object> _values = new ArrayList(map.values());
+		_values.removeAll(Collections.singleton(null));
+
+		// map values can be non strings so we first need to convert them
+		List<String> values = new ArrayList<String>(){};
+		for (Object i : _values) {
+			// Add string representation of item
+			values.add(i.toString());
+		}
+
 		values.removeAll(Collections.singleton(""));
 		Collections.sort(values);
 
@@ -298,7 +312,7 @@ public class ClientHelper extends ConnectionHelper {
 			String label = buildChange.toString();
 			try {
 				int change = Integer.parseInt(label);
-				log("P4 Task: label is a number! syncing files at change: " + change);
+				log("P4 Task: label is a number! syncing files at change: " + change);				
 			} catch (NumberFormatException e) {
 				if (!label.equals("now") && !isLabel(label) && !isClient(label) && !isCounter(label)) {
 					String msg = "P4: Unable to find client/label/counter: " + label;
@@ -310,7 +324,7 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		} else {
-			log("P4 Task: syncing files at change: " + buildChange);
+			log("P4 Task: syncing files at change: " + buildChange);			
 		}
 
 		// Sync changes/labels

@@ -66,12 +66,7 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutTask;
 import org.jenkinsci.plugins.p4.tasks.PollTask;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
 import org.jenkinsci.plugins.p4.tasks.WhereTask;
-import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.SpecWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
-import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.*;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -251,6 +246,11 @@ public class PerforceScm extends SCM {
 		}
 		if (workspace instanceof StreamWorkspaceImpl) {
 			StreamWorkspaceImpl ws = (StreamWorkspaceImpl) workspace;
+			key.append(ws.getStreamName());
+			key.append(ws.getName());
+		}
+		if (workspace instanceof StreamAtChangeWorkspaceImpl) {
+			StreamAtChangeWorkspaceImpl ws = (StreamAtChangeWorkspaceImpl) workspace;
 			key.append(ws.getStreamName());
 			key.append(ws.getName());
 		}
