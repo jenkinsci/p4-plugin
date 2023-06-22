@@ -184,13 +184,12 @@ public class ClientHelper extends ConnectionHelper {
 		// exit early if no change
 		String clientName = iclient.getName();
 		IClient original = getConnection().getClient(clientName);
-		ClientView clientView = iclient.getClientView();
 		if (diffClient(original, iclient)) {
 			return;
 		}
 
 		iclient.update();
-
+		ClientView clientView = iclient.getClientView();
 
 		// Log client view...
 		if (clientView != null) {
