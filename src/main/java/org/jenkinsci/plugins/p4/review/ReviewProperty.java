@@ -1,9 +1,9 @@
 package org.jenkinsci.plugins.p4.review;
 
 import hudson.Extension;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.TransientProjectActionFactory;
-import hudson.model.AbstractProject;
 
 import java.util.Collection;
 import java.util.Collections;

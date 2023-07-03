@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.client;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
-import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;

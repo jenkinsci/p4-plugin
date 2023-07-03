@@ -2,16 +2,14 @@ package org.jenkinsci.plugins.p4.tasks;
 
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
+import jenkins.security.Roles;
+import org.jenkinsci.remoting.RoleChecker;
+import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
-
-import jenkins.security.Roles;
-
-import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 public class HostnameTask implements FileCallable<String>, Serializable {
 
