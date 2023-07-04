@@ -15,7 +15,6 @@ import hudson.matrix.MatrixProject;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Item;
-import hudson.model.FreeStyleBuild;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Queue;

@@ -48,6 +48,9 @@ public class P4ChangeParser extends ChangeLogParser {
 			throws IOException, SAXException {
 		try (ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
 			SAXParserFactory factory = SAXParserFactory.newInstance();
+			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+			factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 			SAXParser parser = factory.newSAXParser();
 			ChangeLogHandler handler = new ChangeLogHandler(run, browser, p4);
 			parser.parse(file, handler);

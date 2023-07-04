@@ -2,7 +2,6 @@ package org.jenkinsci.plugins.p4.console;
 
 import com.perforce.p4java.server.callback.IProgressCallback;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.SessionHelper;
 
 public class P4Progress implements IProgressCallback {
