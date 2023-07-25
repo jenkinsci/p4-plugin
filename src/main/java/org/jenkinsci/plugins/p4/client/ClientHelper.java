@@ -123,6 +123,29 @@ public class ClientHelper extends ConnectionHelper {
 				getConnection().setCharsetName(workspace.getCharset());
 			}
 
+			// If the client already has the current buildTag, it can be used immediately.
+			// A client is supposed to have only one definition in a build job.
+			// There is no need to recreate that definition every time a ClientHelper is used.
+			// Use this optimization only when sessions are enabled.
+			String buildTag = workspace.getExpand().get("BUILD_TAG");
+			if (getCredential().isSessionEnabled()) {
+				if (buildTag != null) {
+					getConnection().connect();
+					IClient iclientCache = getConnection().getClient(workspace.getFullName());
+					if (iclientCache != null) {
+						String clientDesc = iclientCache.getDescription();
+						boolean equalBuildTag = (clientDesc != null) && (buildTag.compareTo(clientDesc) == 0);
+						if (equalBuildTag) {
+							// We have a client for the current build job.
+							// Use it, because we do not expect the client to change during a build job.
+							iclient = iclientCache;
+							getConnection().setCurrentClient(iclient);
+							return;
+						}
+					}
+				}
+			}
+
 			// Setup/Create workspace based on type
 			String user = getAuthorisationConfig().getUsername();
 			try {
@@ -155,10 +178,17 @@ public class ClientHelper extends ConnectionHelper {
 				iclient.setHostName(workspace.getHostName());
 			}
 
+			if (getCredential().isSessionEnabled()) {
+				// Add the buildTag, to recognize this client as up-to-date for this workspace.
+				if (buildTag != null) {
+					iclient.setDescription(buildTag);
+				}
+			}
+
 			// Set client Server ID if not already defined in the client spec.
 			String serverId = iclient.getServerId();
 			if (serverId == null || serverId.isEmpty()) {
-				IServerInfo info = getConnection().getServerInfo();
+				IServerInfo info = getConnection().getCurrentServerInfo();
 				String services = getServerServices();
 				serverId = info.getServerId();
 				if (serverId != null && !serverId.isEmpty() && isEdgeType(services)) {
@@ -311,7 +341,7 @@ public class ClientHelper extends ConnectionHelper {
 			String label = buildChange.toString();
 			try {
 				int change = Integer.parseInt(label);
-				log("P4 Task: label is a number! syncing files at change: " + change);				
+				log("P4 Task: label is a number! syncing files at change: " + change);
 			} catch (NumberFormatException e) {
 				if (!label.equals("now") && !isLabel(label) && !isClient(label) && !isCounter(label)) {
 					String msg = "P4: Unable to find client/label/counter: " + label;
@@ -323,7 +353,7 @@ public class ClientHelper extends ConnectionHelper {
 				}
 			}
 		} else {
-			log("P4 Task: syncing files at change: " + buildChange);			
+			log("P4 Task: syncing files at change: " + buildChange);
 		}
 
 		// Sync changes/labels
