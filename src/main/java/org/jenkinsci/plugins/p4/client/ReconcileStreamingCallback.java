@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.client;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.impl.mapbased.server.cmd.ResultListBuilder;
-import com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser;
 import com.perforce.p4java.server.IServer;
 import hudson.model.TaskListener;
 

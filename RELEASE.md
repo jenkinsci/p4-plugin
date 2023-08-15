@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.14.2 (major features/fixes)
+
+[@29672](https://swarm.workshop.perforce.com/changes/29672) - Merge pull request #180 from skumar7322/UpdateP4JavaVersion.  Update p4Java version to: 2022.2.2444480
+
+[@29668](https://swarm.workshop.perforce.com/changes/29668) - Update Json Version to 20230227
+
+
 ### Release 1.14.1 (major features/fixes)
 
 [@29505](https://swarm.workshop.perforce.com/changes/29505) - Merge pull request #177 from skumar7322/UpdateP4Java221P2.  Update P4 Java Version to "2022.1.2423241"

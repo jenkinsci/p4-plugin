@@ -4,13 +4,12 @@ import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IFileSpec;
 import hudson.AbortException;
 import hudson.model.TaskListener;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.apache.commons.lang.StringUtils;
 
 public class Validate {
 
