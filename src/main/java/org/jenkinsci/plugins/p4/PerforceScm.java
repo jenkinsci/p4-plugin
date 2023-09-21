@@ -498,7 +498,7 @@ public class PerforceScm extends SCM {
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
 			// Check earlier runs if the lastRun had no changes (JENKINS-64800)
-			Run<?, ?> lastLastRun = lastRun.getPreviousBuild();
+			Run<?, ?> lastLastRun = lastRun != null ? lastRun.getPreviousBuild() : null;
 			if (lastLastRun != null) {
 				return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
 			}
