@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterLatestWithPinImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
@@ -54,8 +55,11 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 	public Object task(ClientHelper p4) throws Exception {
 		List<P4Ref> changes = new ArrayList<P4Ref>();
 
+		//Fix for https://issues.jenkins.io/browse/JENKINS-63879
+		boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
+
 		// find changes...
-		if (pin != null && !pin.isEmpty()) {
+		if (pin != null && !pin.isEmpty() && !pollLatestWithPin) {
 			changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
 		} else {
 			changes = p4.listHaveChanges(lastRefs);
