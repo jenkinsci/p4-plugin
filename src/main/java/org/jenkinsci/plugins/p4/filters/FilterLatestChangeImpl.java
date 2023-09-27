@@ -28,7 +28,7 @@ public class FilterLatestChangeImpl extends Filter implements Serializable {
 
 		@Override
 		public String getDisplayName() {
-			return "Polling latest Change";
+			return "Polling latest change";
 		}
 	}
 

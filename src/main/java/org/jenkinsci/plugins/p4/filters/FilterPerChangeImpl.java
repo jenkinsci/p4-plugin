@@ -28,7 +28,7 @@ public class FilterPerChangeImpl extends Filter implements Serializable {
 
 		@Override
 		public String getDisplayName() {
-			return "Polling per Change";
+			return "Polling per change";
 		}
 	}
 
