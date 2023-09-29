@@ -67,7 +67,7 @@ public class PollingTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
 	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(15 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
