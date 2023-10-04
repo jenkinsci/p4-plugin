@@ -168,6 +168,10 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		if (name.equals("now")) {
 			return false;
 		}
+		// JENKINS-70219 - numeric counters are illegal in p4d
+		if (name.matches("(\\d*)")) {
+			return false;
+		}
 		try {
 			CounterOptions opts = new CounterOptions();
 			String counter = getConnection().getCounter(name, opts);
