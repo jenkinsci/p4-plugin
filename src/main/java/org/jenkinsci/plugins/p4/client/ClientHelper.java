@@ -495,6 +495,8 @@ public class ClientHelper extends ConnectionHelper {
 			FileUtils.forceDelete(new File(root));
 		} catch (FileNotFoundException ignored) {
 			// ignore
+		} catch (NoSuchFileException ignored) {
+			// ignore
 		} catch (IOException alt) {
 			log("Unable to delete, trying alternative method... " + alt.getLocalizedMessage());
 
