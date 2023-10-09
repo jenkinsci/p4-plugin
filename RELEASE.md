@@ -1,5 +1,12 @@
 ## Release notes
 
+### Release 1.14.3 (major features/fixes)
+
+[@29812](https://swarm.workshop.perforce.com/changes/29812) - Merge pull request #178 from joel-f-brown/master. Do not call "p4 counter" for integer counter name. JENKINS-70219
+
+[@29794](https://swarm.workshop.perforce.com/changes/29794) - Merge pull request #191 from jenkinsci/PollingToLatest. Add new feature to detect change beyond pinned changelist and trigger the build. JENKINS-65246, JENKINS-63879
+
+
 ### Release 1.14.2 (major features/fixes)
 
 [@29672](https://swarm.workshop.perforce.com/changes/29672) - Merge pull request #180 from skumar7322/UpdateP4JavaVersion.  Update p4Java version to: 2022.2.2444480
