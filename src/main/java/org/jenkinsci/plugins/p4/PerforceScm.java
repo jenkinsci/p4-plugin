@@ -705,7 +705,7 @@ public class PerforceScm extends SCM {
 		}
 
 		CpsScmFlowDefinition cps = (CpsScmFlowDefinition) definition;
-		if (!this.equals(cps.getScm())) {
+		if (!(cps.getScm() instanceof PerforceScm)) {
 			return null;
 		}
 

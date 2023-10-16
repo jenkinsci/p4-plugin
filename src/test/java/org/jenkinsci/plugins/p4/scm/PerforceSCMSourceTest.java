@@ -1136,6 +1136,48 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	public void jenkinsFilePathShouldBeAvailableWhenLightweightAndSkipDefaultCheckoutSet() throws Exception {
+
+	String pipeline = ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  options { skipDefaultCheckout() }\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+			    + "        checkout perforce(credential: '" + CREDENTIAL + "',populate: autoClean(quiet: true), workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', spec: clientSpec(view: '//depot/data/... //${P4_CLIENT}/...')))\n"
+				+ "        script {\n"
+				+ "         echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\"\n"
+				+ "        }\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/data/Jenkinsfile", pipeline);
+
+		// Manual workspace spec definition
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}";
+		String view = ""
+				+ "//depot/data/Jenkinsfile //${P4_CLIENT}/Jenkinsfile" ;
+
+
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "lightWeightWorkflow");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+		jenkins.assertLogContains("The jenkinsfile path is: //depot/data/Jenkinsfile",job.scheduleBuild2(0).get());
+	}
+
+	@Test
 	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
 		// Setup sample Multi Branch Project
