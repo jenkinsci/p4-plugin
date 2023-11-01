@@ -207,6 +207,10 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append("...   Stream: " + iclient.getStream());
 				sb.append("\n");
 			}
+			if (iclient.getStreamAtChange() > 0) {
+				sb.append("...   Stream at change: " + iclient.getStreamAtChange());
+				sb.append("\n");
+			}
 			sb.append("...   Root: " + iclient.getRoot());
 			sb.append("\n");
 			logger.finer(sb.toString());
@@ -243,7 +247,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// remove set fields
-		String[] set = new String[]{"Type"};
+		String[] set = new String[]{"Type", "StreamAtChange"};
 		for (String key : set) {
 			map.remove(key);
 		}
@@ -778,7 +782,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setOutsideEdit(true);
 		statusOpts.setRemoved(delete);
-		if(checkVersion(20191)){
+		if (checkVersion(20191)) {
 			statusOpts.setFileType(true);
 		}
 
