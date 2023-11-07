@@ -30,6 +30,7 @@ public class P4Step extends SCMStep {
 	private final String credential;
 
 	private String stream = "";
+	private String streamAtChange = "";
 	private String depotPath = "";
 	private String template = "";
 
@@ -49,11 +50,22 @@ public class P4Step extends SCMStep {
 		return stream;
 	}
 
+	public String getStreamAtChange() {
+		return streamAtChange;
+	}
+
 	@DataBoundSetter
 	public void setStream(String stream) {
 		this.stream = stream;
-		if (stream != null && !stream.isEmpty()) {
-			source = new StreamSource(stream);
+	}
+
+	@DataBoundSetter
+	public void setStreamAtChange(String streamAtChange) {
+		this.streamAtChange = streamAtChange;
+		if (stream != null && !stream.isEmpty() && !streamAtChange.isEmpty()) {
+			StreamSource streamSource = new StreamSource(stream);
+			streamSource.setStreamAtChange(streamAtChange);
+			source = streamSource;
 		}
 	}
 

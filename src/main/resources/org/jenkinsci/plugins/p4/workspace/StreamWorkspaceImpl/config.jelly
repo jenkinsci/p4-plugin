@@ -8,6 +8,10 @@
 	<f:entry title="Stream Codeline" field="streamName">
 		<f:textbox />
 	</f:entry>
+
+	<f:entry title="Stream at change" field="streamAtChange">
+		<f:textbox />
+	</f:entry>
 	
 	<f:entry field="pinHost">
 		<f:checkbox title="${%Pin the workspace to the build host}" default="false"/>
