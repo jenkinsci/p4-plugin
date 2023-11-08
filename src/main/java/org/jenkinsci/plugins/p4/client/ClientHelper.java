@@ -69,6 +69,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLDecoder;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -497,7 +498,7 @@ public class ClientHelper extends ConnectionHelper {
 	private void silentlyForceDelete(String root) throws IOException {
 		try {
 			FileUtils.forceDelete(new File(root));
-		} catch (FileNotFoundException ignored) {
+		} catch (FileNotFoundException | NoSuchFileException ignored) {
 			// ignore
 		} catch (IOException alt) {
 			log("Unable to delete, trying alternative method... " + alt.getLocalizedMessage());
