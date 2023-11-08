@@ -501,9 +501,14 @@ public class ClientHelper extends ConnectionHelper {
 		} catch (FileNotFoundException | NoSuchFileException ignored) {
 			// ignore
 		} catch (IOException alt) {
+			Path pathToDelete = Paths.get(root);
+			if (!Files.exists(pathToDelete)) {
+				return;
+			}
+
 			log("Unable to delete, trying alternative method... " + alt.getLocalizedMessage());
 
-			List<Path> pathsToDelete = Files.walk(Paths.get(root))
+			List<Path> pathsToDelete = Files.walk(pathToDelete)
 					.sorted(Comparator.reverseOrder())
 					.collect(Collectors.toList());
 			boolean success = true;
