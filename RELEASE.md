@@ -1,5 +1,16 @@
 ## Release notes
 
+### Release 1.14.4 (major features/fixes)
+
+[@29870](https://swarm.workshop.perforce.com/changes/29870) - Merge pull request #194 from kjs104901/bugfix. Fixed bug where client cant sync global libraries on Windows JENKINS-72098
+
+[@29848](https://swarm.workshop.perforce.com/changes/29848), [@29868](https://swarm.workshop.perforce.com/changes/29868) - Merge pull request #195, #196 from jenkinsci/StreamAtChange. Add new feature to support stream at change for stream depot. JENKINS-70378
+
+[@29829](https://swarm.workshop.perforce.com/changes/29829) - Fixed bug where JENKINSFILE_PATH is not available in pipeline when lightweight checkout and skipDefaultCheckout are set. JENKINS-39107
+
+[@29869](https://swarm.workshop.perforce.com/changes/29869) - Handle NoSuchFileException to support forward compatibility with apache Commons IO 2.13.0
+
+
 ### Release 1.14.3 (major features/fixes)
 
 [@29812](https://swarm.workshop.perforce.com/changes/29812) - Merge pull request #178 from joel-f-brown/master. Do not call "p4 counter" for integer counter name. JENKINS-70219
