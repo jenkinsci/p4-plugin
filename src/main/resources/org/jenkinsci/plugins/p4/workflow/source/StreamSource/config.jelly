@@ -4,5 +4,9 @@
 	<f:entry title="Stream" field="stream">
     	<f:textbox/>
     </f:entry>
+
+	<f:entry title="Stream at change" field="streamAtChange">
+		<f:textbox/>
+	</f:entry>
 	
 </j:jelly>

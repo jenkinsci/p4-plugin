@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.p4.client;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.junit.Test;
 
 import java.util.logging.Logger;
 
-import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class ViewMapHelperTest extends DefaultEnvironment {
     private static Logger logger = Logger.getLogger(ViewMapHelperTest.class.getName());

@@ -31,15 +31,20 @@ the path in another Workspaces View, or 'Depot path' to refer to a classic depot
 This generated the following snippet...
 
 ```groovy
-p4sync(charset: 'none',
-  credential: 'phooey1666', 
-  populate: [$class: 'AutoCleanImpl', 
-    delete: true, 
-    modtime: false, 
-    pin: '',
-    quiet: true,
-    replace: true],
-  stream: '//streams/st1-main')
+p4sync(
+        charset: 'none',
+        credential: 'Local Perforce 20231',
+        format: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}',
+        populate: autoClean(
+                delete: true,
+                modtime: false,
+                parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'],
+                pin: '',
+                quiet: true,
+                replace: true,
+                tidy: false),
+        source: streamSource('//streams-depot/StreamA')
+)
 ```
 
 and you can paste it into a basic script. For example:
@@ -47,16 +52,21 @@ and you can paste it into a basic script. For example:
 ```groovy
 node {
   stage('Sync') {
-    // sync files from //streams/st1-main/...
-    p4sync(charset: 'none',
-      credential: 'phooey1666', 
-      populate: [$class: 'AutoCleanImpl', 
-        delete: true, 
-        modtime: false, 
-        pin: '',
-        quiet: true,
-        replace: true],
-      stream: '//streams/st1-main')
+    // sync files from //streams-depot/StreamA/...
+     p4sync(
+             charset: 'none',
+             credential: 'Local Perforce 20231',
+             format: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}',
+             populate: autoClean(
+                     delete: true,
+                     modtime: false,
+                     parallel: [enable: false, minbytes: '1024', minfiles: '1', threads: '4'],
+                     pin: '',
+                     quiet: true,
+                     replace: true,
+                     tidy: false),
+             source: streamSource('//streams-depot/StreamA')
+     )
   }
 }
 ```

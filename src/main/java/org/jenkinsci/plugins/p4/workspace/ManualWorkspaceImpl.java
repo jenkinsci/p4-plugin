@@ -18,6 +18,7 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
@@ -232,6 +233,12 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			streamFullName = getExpand().format(streamFullName, true);
 		}
 		iclient.setStream(streamFullName);
+
+		String streamAtChange = getSpec().getStreamAtChange();
+		if(StringUtils.isNotEmpty(streamAtChange)){
+			streamAtChange = getExpand().format(streamAtChange,true);
+			iclient.setStreamAtChange(Integer.parseInt(streamAtChange));
+		}
 
 		// Set Client view
 		iclient.setClientView(getClientView(connection, getSpec()));

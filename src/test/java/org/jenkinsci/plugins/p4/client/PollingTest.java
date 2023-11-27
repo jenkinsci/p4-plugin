@@ -67,7 +67,7 @@ public class PollingTest extends DefaultEnvironment {
 	private static final String P4ROOT = "tmp-PollingTest-p4root";
 
 	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(15 * 60);
 
 	@Rule
 	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
@@ -927,6 +927,111 @@ public class PollingTest extends DefaultEnvironment {
 
 			assertEquals(workspaceRootBeforePoll, workspaceRootAfterPoll);
 		}
+	}
 
+	@Test
+	public void pollingShouldPollToLatestWithPin() throws Exception {
+		// Submit a change. Create a job and pin to this changelist. latestWithPin = true
+		String pinChangelist = submitFile(jenkins, "//depot/main/incPoll.001", "content");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PollLatestWithPin");
+		job.setDefinition(new CpsFlowDefinition("node {\n"
+				+ "checkout perforce(\n"
+				+ "  credential: '" + CREDENTIAL + "', \n"
+				+ "  filter: [latestWithPin(true)], \n"
+				+ "  populate: forceClean(have: false, pin: '" + pinChangelist + "', quiet: true), \n"
+				+ "  workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "    pinHost: false, \n"
+				+ "    spec: clientSpec(view: '//depot/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		WorkflowRun build1 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", build1);
+
+		// Submit new change
+		String newChange = submitFile(jenkins, "//depot/main/inc.002", "content");
+
+		// Add polling log listener and poll
+		Logger polling = Logger.getLogger("PollLatestWithPin");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		job.poll(listener);
+
+		// As latestWithPin is true, polling should poll till new change even checkout is pinned to old change
+		assertThat(pollHandler.getLogBuffer(), containsString("P4: Polling found change: " + newChange));
+	}
+
+	@Test
+	public void pollingShouldNotPollToLatestWithPin() throws Exception {
+		// Submit a change. Create a job and pin to this changelist. latestWithPin = false
+		String pinChangelist = submitFile(jenkins, "//depot/main/incPoll.001", "content");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PollPinnedChange");
+		job.setDefinition(new CpsFlowDefinition("node {\n"
+				+ "checkout perforce(\n"
+				+ "  credential: '" + CREDENTIAL + "', \n"
+				+ "  filter: [latestWithPin(false)], \n"
+				+ "  populate: forceClean(have: false, pin: '" + pinChangelist + "', quiet: true), \n"
+				+ "  workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "    pinHost: false, \n"
+				+ "    spec: clientSpec(view: '//depot/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		WorkflowRun build1 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", build1);
+
+		// Submit new change
+		String newChange = submitFile(jenkins, "//depot/main/inc.002", "content");
+
+		// Add polling log listener and poll
+		Logger polling = Logger.getLogger("IncPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		job.poll(listener);
+
+		// latestWithPin is false, existing behaviour polling should restrict to pinned change
+		assertThat(pollHandler.getLogBuffer(), containsString("Found last change " + pinChangelist));
+		assertThat(pollHandler.getLogBuffer(), containsString("P4: Polling no changes found."));
+		assertThat(pollHandler.getLogBuffer(), not(containsString("P4: Polling found change: " + newChange)));
+	}
+
+	@Test
+	public void pollToLatestWithMultipleCheckout() throws Exception {
+		// Submit a change. Create a job with multiple checkout steps
+		String pinChangelist = submitFile(jenkins, "//depot/main/incPoll.001", "content");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PollWithMultiCheckout");
+		job.setDefinition(new CpsFlowDefinition("node {\n"
+				+ "checkout perforce(\n"
+				+ "  credential: '" + CREDENTIAL + "', \n"
+				+ "  filter: [latestWithPin(true)], \n"
+				+ "  populate: forceClean(have: false, pin: '" + pinChangelist + "', quiet: true), \n"
+				+ "  workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "    pinHost: false, \n"
+				+ "    spec: clientSpec(view: '//depot/... //${P4_CLIENT}/...')))\n"
+				+ "checkout perforce(\n"
+				+ "  credential: '" + CREDENTIAL + "', \n"
+				+ "  filter: [latestWithPin(false)], \n"
+				+ "  populate: forceClean(have: false, pin: '" + pinChangelist + "', quiet: true), \n"
+				+ "  workspace: manualSpec(name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}', \n"
+				+ "    pinHost: false, \n"
+				+ "    spec: clientSpec(view: '//depot/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		WorkflowRun build1 = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", build1);
+
+		// Submit new change
+		String newChange = submitFile(jenkins, "//depot/main/inc.002", "content");
+
+		// Add polling log listener and poll
+		Logger polling = Logger.getLogger("IncPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		job.poll(listener);
+
+		assertThat(pollHandler.getLogBuffer(), containsString("P4: Polling with range: "+pinChangelist+",now"));
+		assertThat(pollHandler.getLogBuffer(), containsString("P4: Polling with range: "+pinChangelist+","+pinChangelist));
+		assertThat(pollHandler.getLogBuffer(), containsString("P4: Polling found change: " + newChange));
 	}
 }

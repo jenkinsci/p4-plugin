@@ -7,7 +7,6 @@ import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
-import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 

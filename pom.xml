@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.14.2-SNAPSHOT</version>
+  <version>1.14.5-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>P4 Plugin</name>
@@ -43,7 +43,7 @@
     <repository>
       <id>artifactory.bnr.perforce.com</id>
       <name>artifactory.bnr.perforce.com-snapshots</name>
-      <url>https://artifactory.bnr.perforce.com:8443/artifactory/snapshots</url>
+      <url>https://artifactory.bnr.perforce.com/artifactory/snapshots</url>
     </repository>
   </repositories>
 
@@ -59,7 +59,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2022.1.2423241</version>
+      <version>2022.2.2444480</version>
     </dependency>
 
     <dependency>
@@ -285,7 +285,7 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20220320</version>
+      <version>20230227</version>
     </dependency>
 
     <dependency>
