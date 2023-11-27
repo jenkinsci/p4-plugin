@@ -52,7 +52,7 @@ public class SwarmQueryAction implements RootAction {
 			String credentialID = req.getParameter("credential");
 
 			try (ConnectionHelper p4 = new ConnectionHelper(credentialID, null)) {
-				SwarmHelper swarm = new SwarmHelper(p4, "9");
+				SwarmHelper swarm = new SwarmHelper(p4, "11");
 				List<String> list = swarm.getProjects();
 
 				Gson gson = new Gson();
@@ -75,7 +75,7 @@ public class SwarmQueryAction implements RootAction {
 			}
 
 			try (ConnectionHelper p4 = new ConnectionHelper(credentialID, null)) {
-				SwarmHelper swarm = new SwarmHelper(p4, "9");
+				SwarmHelper swarm = new SwarmHelper(p4, "11");
 
 				String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 				SwarmScmSource source = new SwarmScmSource(credentialID, null, format);
