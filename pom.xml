@@ -17,7 +17,7 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.version>2.364</jenkins.version>
+    <jenkins.version>2.361.4</jenkins.version>
   </properties>
 
   <scm>
