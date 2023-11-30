@@ -16,7 +16,7 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-						sh 'mvn compiler:compile findbugs:check'
+						sh 'mvn compiler:compile spotbugs:check'
 					}
 				}
 
@@ -59,7 +59,7 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-						bat 'mvn compiler:compile findbugs:check'
+						bat 'mvn compiler:compile spotbugs:check'
 					}
 				}
 
