@@ -8,7 +8,7 @@ pipeline {
 		    environment {
                 JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
             }
-			
+
 			agent {
 				label 'p4java'
 			}
@@ -16,36 +16,32 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-						sh 'mvn compiler:compile spotbugs:check'
+						sh './gradlew clean compileJava'
 					}
 				}
 
 				stage('Build and Test') {
 					steps {
-						sh 'mvn clean package -P enable-jacoco'
+						sh './gradlew clean build'
 					}
 				}
 			}
 			post {
 				always {
-					sh 'mvn surefire-report:report-only'
-
+				    jacoco(execPattern: '**/build/jacoco/*.exec')
 					publishHTML target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'target/site/',
-						reportFiles: 'surefire-report.html',
+						reportDir: 'build/reports/tests/test',
+						reportFiles: 'index.html',
 						reportName: 'LinuxTestReport'
 					]
 
-					publishCoverage adapters: [
-						jacocoAdapter('target/site/jacoco/jacoco.xml')
-					],
 					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 				success {
-					archiveArtifacts artifacts: 'target/p4.hpi', fingerprint: true
+					archiveArtifacts artifacts: 'build/p4.hpi', fingerprint: true
 				}
 			}
 		}
