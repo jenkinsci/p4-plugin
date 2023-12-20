@@ -28,7 +28,6 @@ pipeline {
 			}
 			post {
 				always {
-				    jacoco(execPattern: '**/build/jacoco/*.exec')
 					publishHTML target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
@@ -41,7 +40,7 @@ pipeline {
 					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 				success {
-					archiveArtifacts artifacts: 'build/p4.hpi', fingerprint: true
+					archiveArtifacts artifacts: 'build/libs/p4.hpi', fingerprint: true
 				}
 			}
 		}

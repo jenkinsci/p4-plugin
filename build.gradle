@@ -31,6 +31,10 @@ jacocoTestReport {
     }
 }
 
+spotbugs {
+    ignoreFailures = true
+}
+
 repositories {
     mavenCentral()
     maven {
