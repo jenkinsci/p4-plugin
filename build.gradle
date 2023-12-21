@@ -3,7 +3,7 @@
  */
 
 plugins {
-    id 'java'
+    id 'java-library'
     id 'maven-publish'
     id 'jacoco'
     id 'org.jenkins-ci.jpi' version '0.50.0'
