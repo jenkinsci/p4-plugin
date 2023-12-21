@@ -137,6 +137,9 @@ publishing {
     }
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+
+tasks.withType(Javadoc) {
+    (options as StandardJavadocDocletOptions).addStringOption("Xmaxwarns", "500")
+    (options as StandardJavadocDocletOptions).addStringOption("Xmaxerrs", "500")
 }
+
