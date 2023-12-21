@@ -22,7 +22,7 @@ pipeline {
 
 				stage('Build and Test') {
 					steps {
-						sh './gradlew javadoc --stacktrace'
+						sh './gradlew build --stacktrace'
 					}
 				}
 			}
