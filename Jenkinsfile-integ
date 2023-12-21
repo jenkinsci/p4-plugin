@@ -22,7 +22,7 @@ pipeline {
 
 				stage('Build and Test') {
 					steps {
-						sh './gradlew clean javadoc --info'
+						sh './gradlew clean javadoc --stacktrace'
 					}
 				}
 			}
