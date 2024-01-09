@@ -22,8 +22,7 @@ pipeline {
 
 				stage('Build and Test') {
 					steps {
-					    sh './gradlew stop'
-						sh './gradlew build --stacktrace'
+					   sh './gradlew build --stacktrace --info'
 					}
 				}
 			}
