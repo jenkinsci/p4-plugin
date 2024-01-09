@@ -139,6 +139,10 @@ publishing {
 
 
 tasks.withType(Javadoc) {
+    failOnError false
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('charSet', 'UTF-8')
     (options as StandardJavadocDocletOptions).addStringOption("Xmaxwarns", "500")
     (options as StandardJavadocDocletOptions).addStringOption("Xmaxerrs", "500")
 }

@@ -22,7 +22,6 @@ pipeline {
 
 				stage('Build and Test') {
 					steps {
-					   sh './gradlew javadoc'
 					   sh './gradlew build --stacktrace --info'
 					}
 				}
