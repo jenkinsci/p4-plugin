@@ -16,13 +16,13 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-						sh './gradlew clean compileJava'
+						sh './gradlew clean assemble'
 					}
 				}
 
 				stage('Build and Test') {
 					steps {
-					   sh './gradlew build --stacktrace --info'
+					   sh './gradlew clean build --stacktrace --info'
 					}
 				}
 			}
