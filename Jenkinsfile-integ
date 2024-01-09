@@ -5,11 +5,7 @@ pipeline {
 	stages {
 		stage('Linux Build & Test') {
 
-		    environment {
-                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
-            }
-
-			agent {
+		    agent {
 				label 'p4java'
 			}
 			
