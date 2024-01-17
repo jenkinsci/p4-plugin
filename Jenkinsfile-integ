@@ -56,28 +56,27 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-						bat 'mvn compiler:compile spotbugs:check'
+					bat label: '', script: 'gradlew clean assemble'
 					}
 				}
 
 				stage('Build and Test') {
 					steps {
-						bat 'mvn clean package'
+						bat label: '', script: 'gradlew clean build'
 					}
 				}
 			}
 			post {
-				always {
-					bat 'mvn surefire-report:report-only'
-
+                always {
 					publishHTML target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'target/site/',
-						reportFiles: 'surefire-report.html',
+						reportDir: 'build/reports/tests/test',
+						reportFiles: 'index.html',
 						reportName: 'WindowsTestReport'
 					]
+					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 			}
 		}
