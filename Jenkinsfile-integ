@@ -36,7 +36,14 @@ pipeline {
 						reportFiles: 'index.html',
 						reportName: 'LinuxTestReport'
 					]
-
+					publishHTML target: [
+                    	allowMissing: false,
+                    	alwaysLinkToLastBuild: true,
+                    	keepAll: true,
+                    	reportDir: 'build/jacocoHtml',
+                    	reportFiles: 'index.html',
+                    	reportName: 'CodeCoverageReport'
+                    ]
 					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 				success {
