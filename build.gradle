@@ -19,13 +19,20 @@ ext{
 
 jenkinsPlugin{
     jenkinsVersion = '2.361.4'
-    url = 'https://plugins.jenkins.io/p4/'
+    url = 'https://github.com/jenkinsci/p4-plugin'
+    displayName = 'P4 Plugin'
+    scmTag = 'p4-1.14.4'
 
     developers {
         developer {
             id 'p4paul'
             name 'Paul Allen'
             email 'pallen@perforce.com'
+        }
+        developer {
+            id 'skumar7322'
+            name 'Sandeep Kumar'
+            email 'skumar@perforce.com'
         }
     }
 }
