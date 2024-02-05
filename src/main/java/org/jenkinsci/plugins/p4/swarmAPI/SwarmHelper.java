@@ -146,12 +146,19 @@ public class SwarmHelper {
 				.body(body)
 				.asJson();
 
+		JSONObject responseBody = res.getBody().getObject();
 		if (res.getStatus() == 200) {
-			p4.log("Swarm review id: " + id + " voted: " + vote);
+			JSONObject data = (JSONObject) responseBody.get("data");
+			JSONArray updatedVote = data.getJSONArray("vote");
+			if(updatedVote.isEmpty()){
+				p4.log("A user cannot vote on a review they have created themselves. User: "+user);
+			}else{
+				p4.log("Swarm review id: " + id + " voted: " + vote);
+			}
 			return postComment(id, description);
 		} else {
 			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
-			String error = res.getBody().getObject().getString("error");
+			String error = responseBody.getString("error");
 			p4.log("Swarm error message: " + error);
 			throw new SwarmException(res);
 		}
