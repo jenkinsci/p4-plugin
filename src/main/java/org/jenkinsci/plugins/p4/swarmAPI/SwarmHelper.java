@@ -149,10 +149,10 @@ public class SwarmHelper {
 		JSONObject responseBody = res.getBody().getObject();
 		if (res.getStatus() == 200) {
 			JSONObject data = (JSONObject) responseBody.get("data");
-			JSONArray updatedVote = data.getJSONArray("vote");
-			if(updatedVote.isEmpty()){
-				p4.log("A user cannot vote on a review they have created themselves. User: "+user);
-			}else{
+			Object updatedVote = data.get("vote");
+			if (updatedVote instanceof JSONArray && ((JSONArray) updatedVote).isEmpty()) {
+				p4.log("A user cannot vote on a review they have created themselves. User: " + user);
+			} else {
 				p4.log("Swarm review id: " + id + " voted: " + vote);
 			}
 			return postComment(id, description);
