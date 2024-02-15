@@ -190,7 +190,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 				printOpts.setNoHeaderLine(true);
 				InputStream ins = null;
 				try {
-					connection.getFileContents(file, printOpts);
+					ins = connection.getFileContents(file, printOpts);
 					specString = IOUtils.toString(ins, "UTF-8");
 				} finally {
 					if (ins != null) {
