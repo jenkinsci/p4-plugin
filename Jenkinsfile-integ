@@ -8,50 +8,48 @@ pipeline {
 		    environment {
                 JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
             }
-
+			
 			agent {
 				label 'p4java'
 			}
-
+			
 			stages {
 				stage('Compile') {
 					steps {
-						sh './gradlew clean assemble'
+						sh 'mvn compiler:compile spotbugs:check'
 					}
 				}
 
 				stage('Build and Test') {
 					steps {
-					   sh './gradlew clean build'
+						sh 'mvn clean package -P enable-jacoco'
 					}
 				}
 			}
 			post {
 				always {
+					sh 'mvn surefire-report:report-only'
+
 					publishHTML target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'build/reports/tests/test',
-						reportFiles: 'index.html',
+						reportDir: 'target/site/',
+						reportFiles: 'surefire-report.html',
 						reportName: 'LinuxTestReport'
 					]
-					publishHTML target: [
-                    	allowMissing: false,
-                    	alwaysLinkToLastBuild: true,
-                    	keepAll: true,
-                    	reportDir: 'build/jacocoHtml',
-                    	reportFiles: 'index.html',
-                    	reportName: 'CodeCoverageReport'
-                    ]
+
+					publishCoverage adapters: [
+						jacocoAdapter('target/site/jacoco/jacoco.xml')
+					],
 					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 				success {
-					archiveArtifacts artifacts: 'build/libs/p4.hpi', fingerprint: true
+					archiveArtifacts artifacts: 'target/p4.hpi', fingerprint: true
 				}
 			}
 		}
-
+		
 		stage('Windows Build & Test') {
 		    environment {
                 JAVA_HOME = "C:\\Program Files\\Java\\jdk-11.0.16.1"
@@ -63,27 +61,28 @@ pipeline {
 			stages {
 				stage('Compile') {
 					steps {
-					bat label: '', script: 'gradlew clean assemble'
+						bat 'mvn compiler:compile spotbugs:check'
 					}
 				}
 
 				stage('Build and Test') {
 					steps {
-						bat label: '', script: 'gradlew clean build'
+						bat 'mvn clean package'
 					}
 				}
 			}
 			post {
-                always {
+				always {
+					bat 'mvn surefire-report:report-only'
+
 					publishHTML target: [
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'build/reports/tests/test',
-						reportFiles: 'index.html',
+						reportDir: 'target/site/',
+						reportFiles: 'surefire-report.html',
 						reportName: 'WindowsTestReport'
 					]
-					sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
 				}
 			}
 		}

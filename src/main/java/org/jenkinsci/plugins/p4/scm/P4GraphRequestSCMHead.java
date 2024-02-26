@@ -34,7 +34,7 @@ public class P4GraphRequestSCMHead extends P4SCMHead implements ChangeRequestSCM
 	/**
 	 * Branch to which this change would be merged or applied if it were accepted.
 	 *
-	 * @return a "target" or "base" branch
+	 * @return a “target” or “base” branch
 	 */
 	@Override
 	public SCMHead getTarget() {
