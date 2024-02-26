@@ -179,10 +179,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		String view = workspaceSpec.getChangeView();
 		if (view != null) {
 			String specString = getExpand().format(view, true);
-			boolean fromFile = false;
 			if (specString.startsWith("@")) {
 				// extract View from file:	JENKINS-69491.
-				fromFile = true;
 				logger.fine("P4: view from file=" + specString);
 				String specPathFull = specString.substring(1).trim();
 				List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
