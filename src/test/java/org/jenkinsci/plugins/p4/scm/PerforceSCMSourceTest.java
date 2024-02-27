@@ -764,7 +764,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		HashMap<String, List<String>> projects = new HashMap<>();
 		projects.put(project, Arrays.asList("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -836,7 +836,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		HashMap<String, List<String>> projects = new HashMap<>();
 		projects.put(project, Arrays.asList("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -913,7 +913,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		HashMap<String, List<String>> projects = new HashMap<>();
 		projects.put(project, Arrays.asList("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(mockReview));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
 
 		List<SwarmReviewsAPI.Reviews> mockReviewsList = new ArrayList<>();
 		SwarmReviewsAPI.Reviews mockReviews = new SwarmReviewsAPI.Reviews(Long.parseLong(review), changes, "author");

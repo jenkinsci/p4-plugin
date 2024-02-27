@@ -5,17 +5,17 @@ import java.util.List;
 
 public class SwarmReviewAPI {
 
-	private Review review;
+	private List<Review> reviews;
 
 	public SwarmReviewAPI() {
 	}
 
-	public SwarmReviewAPI(Review review) {
-		this.review = review;
+	public SwarmReviewAPI(List<Review> reviews) {
+		this.reviews = reviews;
 	}
 
-	public Review getReview() {
-		return review;
+	public List<Review> getReview() {
+		return reviews;
 	}
 
 	public static class Review {

@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.ApproveState;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +51,7 @@ public class SwarmHelper {
 				.basicAuth(user, ticket)
 				.asJson();
 
-		if (res.getStatus() != 200) {
-			throw new SwarmException(res);
-		}
+		handleAPICallExceptions(res);
 
 		JSONArray json = res.getBody().getObject().getJSONArray("apiVersions");
 		for (int i = 0; i < json.length(); i++) {
@@ -89,26 +88,13 @@ public class SwarmHelper {
 	}
 
 	private boolean patchReview(String id, ApproveState state, String description) throws Exception {
+		String url = getApiUrl() + "/reviews/" + id + "/transitions";
+		JSONObject body = new JSONObject();
+		body.put("transition", state.getId());
 
-		String url = getApiUrl() + "/reviews/" + id + "/state";
-
-		Map<String, Object> parameters = new HashedMap();
-		parameters.put("state", state.getId());
-
-		// If commit is used add extra commit parameter
-		if (state.isCommit()) {
-			parameters.put("commit", "1");
-		}
-
-		// If defined, expand description and add parameter
-		if (description != null && !description.isEmpty()) {
-			parameters.put("description", description);
-		}
-
-		// Send PATCH request to Swarm
-		HttpResponse<JsonNode> res = Unirest.patch(url)
+		HttpResponse<JsonNode> res = Unirest.post(url)
 				.basicAuth(user, ticket)
-				.fields(parameters)
+				.body(body)
 				.asJson();
 
 		if (res.getStatus() == 200) {
@@ -127,13 +113,10 @@ public class SwarmHelper {
 			return true;
 		}
 
-		String url = getApiUrl() + "/comments/";
-
+		String url = getApiUrl() + "/comments/reviews/" + id;
 		Map<String, Object> parameters = new HashedMap();
-		parameters.put("topic", "reviews/" + id);
 		parameters.put("body", description);
 
-		// Send COMMENT request to Swarm
 		HttpResponse<JsonNode> res = Unirest.post(url)
 				.basicAuth(user, ticket)
 				.fields(parameters)
@@ -151,93 +134,83 @@ public class SwarmHelper {
 	}
 
 	private boolean postVote(String id, ApproveState state, String description) throws Exception {
-
 		String vote = state.getId();
-		String url = getBaseUrl() + "/reviews/" + id + "/vote/" + vote;
+		String url = getApiUrl() + "/reviews/" + id + "/vote";
+
+		JSONObject body = new JSONObject();
+		body.put("vote", vote);
 
 		// Send VOTE request to Swarm
 		HttpResponse<JsonNode> res = Unirest.post(url)
 				.basicAuth(user, ticket)
+				.body(body)
 				.asJson();
 
+		JSONObject responseBody = res.getBody().getObject();
 		if (res.getStatus() == 200) {
-			p4.log("Swarm review id: " + id + " voted: " + vote);
+			JSONObject data = (JSONObject) responseBody.get("data");
+			Object updatedVote = data.get("vote");
+			if (updatedVote instanceof JSONArray && ((JSONArray) updatedVote).isEmpty()) {
+				p4.log("A user cannot vote on a review they have created themselves. User: " + user);
+			} else {
+				p4.log("Swarm review id: " + id + " voted: " + vote);
+			}
 			return postComment(id, description);
 		} else {
 			p4.log("Swarm Error - url: " + url + " code: " + res.getStatus());
-			String error = res.getBody().getObject().getString("error");
+			String error = responseBody.getString("error");
 			p4.log("Swarm error message: " + error);
 			throw new SwarmException(res);
 		}
 	}
 
 	public List<SwarmReviewsAPI.Reviews> getActiveReviews(String project) throws Exception {
-
 		String url = getApiUrl() + "/reviews";
-
 		Map<String, Object> query = new HashMap<>();
 		query.put("max", "10");
 		query.put("fields", "id,state,changes,author");
 		query.put("project", project);
-
-		HttpResponse<String> res = Unirest.get(url)
+		HttpResponse<JsonNode> res = Unirest.get(url)
 				.basicAuth(user, ticket)
 				.queryString(query)
 				.queryString("state[]", "needsReview")
 				.queryString("state[]", "needsRevision")
-				.asString();
-
-		if (res.getStatus() != 200) {
-			throw new SwarmException(res);
-		}
-
+				.asJson();
+		handleAPICallExceptions(res);
+		JSONObject data = getDataFromSwarmResponse(res);
 		Gson gson = new Gson();
-		SwarmReviewsAPI api = gson.fromJson(res.getBody(), SwarmReviewsAPI.class);
+		SwarmReviewsAPI api = gson.fromJson(data.toString(), SwarmReviewsAPI.class);
 		return api.getReviews();
 	}
 
 	public SwarmReviewAPI getSwarmReview(String review) throws Exception {
-
 		String url = getApiUrl() + "/reviews/" + review;
-
 		Map<String, Object> query = new HashMap<>();
 		query.put("fields", "projects,changes,commits,author");
-
-		HttpResponse<String> res = Unirest.get(url)
+		HttpResponse<JsonNode> res = Unirest.get(url)
 				.basicAuth(user, ticket)
 				.queryString(query)
-				.asString();
-
-		if (res.getStatus() != 200) {
-			throw new SwarmException(res);
-		}
-
+				.asJson();
+		handleAPICallExceptions(res);
 		Gson gson = new Gson();
-		SwarmReviewAPI api = gson.fromJson(res.getBody(), SwarmReviewAPI.class);
+		SwarmReviewAPI api = gson.fromJson(getDataFromSwarmResponse(res).toString(), SwarmReviewAPI.class);
 		return api;
 	}
 
 	public List<SwarmProjectAPI.Branch> getBranchesInProject(String project) throws Exception {
-
 		String url = getApiUrl() + "/projects/" + project;
-
 		Map<String, Object> query = new HashMap<>();
 		query.put("fields", "branches");
-
-		HttpResponse<String> res = Unirest.get(url)
+		HttpResponse<JsonNode> res = Unirest.get(url)
 				.basicAuth(user, ticket)
 				.queryString(query)
-				.asString();
+				.asJson();
 
-		if (res.getStatus() != 200) {
-			throw new SwarmException(res);
-		}
-
+		handleAPICallExceptions(res);
+		JSONObject data = getDataFromSwarmResponse(res);
 		Gson gson = new Gson();
-		SwarmProjectAPI api = gson.fromJson(res.getBody(), SwarmProjectAPI.class);
-
-		List<SwarmProjectAPI.Branch> branches = api.getProject().getBranches();
-		return branches;
+		SwarmProjectAPI api = gson.fromJson(data.toString(), SwarmProjectAPI.class);
+		return api.getProject().get(0).getBranches();
 	}
 
 	/**
@@ -247,26 +220,30 @@ public class SwarmHelper {
 	 * @throws Exception API or connection errors
 	 */
 	public List<String> getProjects() throws Exception {
-
 		String url = getApiUrl() + "/projects";
-
 		Map<String, Object> query = new HashMap<>();
 		query.put("fields", "id,members,owners");
 
-		HttpResponse<String> res = Unirest.get(url)
+		HttpResponse<JsonNode> res = Unirest.get(url)
 				.basicAuth(user, ticket)
 				.queryString(query)
-				.asString();
+				.asJson();
+		handleAPICallExceptions(res);
+		Gson gson = new Gson();
+		SwarmProjectsAPI api = gson.fromJson(getDataFromSwarmResponse(res).toString(), SwarmProjectsAPI.class);
+		return api.getIDsByUser(user);
+	}
 
+	private static JSONObject getDataFromSwarmResponse(HttpResponse<JsonNode> res) {
+		return res.getBody()
+				.getObject()
+				.getJSONObject("data");
+	}
+
+	private static void handleAPICallExceptions(HttpResponse<JsonNode> res) throws SwarmException {
 		if (res.getStatus() != 200) {
 			throw new SwarmException(res);
 		}
-
-		Gson gson = new Gson();
-		SwarmProjectsAPI api = gson.fromJson(res.getBody(), SwarmProjectsAPI.class);
-
-		List<String> projects = api.getIDsByUser(user);
-		return projects;
 	}
 
 	private static class SwarmException extends Exception {

@@ -6,17 +6,17 @@ import java.util.List;
 
 public class SwarmProjectAPI {
 
-	private Project project;
+	private List<Project> projects;
 
 	public SwarmProjectAPI() {
 	}
 
-	public SwarmProjectAPI(Project project) {
-		this.project = project;
+	public SwarmProjectAPI(List<Project> projects) {
+		this.projects = projects;
 	}
 
-	public Project getProject() {
-		return project;
+	public List<Project> getProject() {
+		return projects;
 	}
 
 	public static class Project {
