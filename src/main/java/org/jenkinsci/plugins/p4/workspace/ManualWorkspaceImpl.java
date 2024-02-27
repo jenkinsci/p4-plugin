@@ -173,12 +173,32 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 
-	private ArrayList<String> getChangeView(WorkspaceSpec workspaceSpec) {
+	private ArrayList<String> getChangeView(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception
+    {
 		ArrayList<String> changeView = new ArrayList<>();
 
 		String view = workspaceSpec.getChangeView();
 		if (view != null) {
 			String specString = getExpand().format(view, true);
+			if (specString.startsWith("@")) {
+				// extract View from file:	JENKINS-69491.
+				logger.fine("P4: view from file=" + specString);
+				String specPathFull = specString.substring(1).trim();
+				List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
+				GetFileContentsOptions printOpts = new GetFileContentsOptions();
+				printOpts.setNoHeaderLine(true);
+				InputStream ins = null;
+				try {
+					ins = connection.getFileContents(file, printOpts);
+					specString = IOUtils.toString(ins, "UTF-8");
+				} finally {
+					if (ins != null) {
+						ins.close();
+					}
+				}
+				specString = getExpand().format(specString, true);
+			}
+
 			for (String line : specString.split("\\n")) {
 				changeView.add(line);
 			}
@@ -245,7 +265,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
 		// Set Change view
 		if (connection.getServerVersionNumber() >= 20172) {
-			iclient.setChangeView(getChangeView(getSpec()));
+			iclient.setChangeView(getChangeView(connection, getSpec()));
 		}
 
 		// Allow change between GRAPH and WRITEABLE
