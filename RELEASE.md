@@ -1,5 +1,14 @@
 ## Release notes
 
+### Release 1.15.1 (major features/fixes)
+
+[@30143](https://swarm.workshop.perforce.com/changes/30143) - Merge pull request #[197] from [skumar7322/SwarmAPI] Changed version of Swarm API to v11.
+
+[@30144](https://swarm.workshop.perforce.com/changes/30144) - Merge pull request #[184] from [lleroy/manual-spec-from-file-in-perforce-view] . Enhanced the functionality to read "Change View" mapping from a file.
+
+[@30145](https://swarm.workshop.perforce.com/changes/30145) - Update P4Java Version to 2023.2.2553500
+
+
 ### Release 1.14.4 (major features/fixes)
 
 [@29870](https://swarm.workshop.perforce.com/changes/29870) - Merge pull request #194 from kjs104901/bugfix. Fixed bug where client cant sync global libraries on Windows JENKINS-72098
