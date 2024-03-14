@@ -35,7 +35,7 @@ public class P4CredentialsImpl {
 				acl, domain);
 
 		if (credentials.isEmpty()) {
-			list.add("Select credential...", null);
+			list.add("Select credential...", "");
 		}
 		for (P4BaseCredentials c : credentials) {
 			StringBuffer sb = new StringBuffer();
