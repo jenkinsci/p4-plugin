@@ -793,7 +793,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		getValidate().check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
+		getValidate().check(status, "No file(s) to reconcile", "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
 
 	public String publishChange(Publish publish) throws Exception {
