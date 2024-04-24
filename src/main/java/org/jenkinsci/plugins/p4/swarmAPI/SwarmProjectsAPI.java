@@ -5,7 +5,7 @@ import java.util.List;
 
 public class SwarmProjectsAPI {
 
-	private List<SwarmProjectAPI.Project> projects;
+	private List<SwarmProjectAPI.Project> projects = new ArrayList<>();
 
 	public SwarmProjectsAPI() {
 	}

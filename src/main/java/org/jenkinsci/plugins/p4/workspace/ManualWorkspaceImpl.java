@@ -40,7 +40,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String name;
-	public WorkspaceSpec spec;
+	private WorkspaceSpec spec;
 
 	private static final Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
