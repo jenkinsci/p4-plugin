@@ -37,17 +37,38 @@ public class Validate {
 	 * Only return boolean; false is returned for an exception.
 	 *
 	 * @param fileSpecs List of Perforce file specs
+	 * @param quiet    Flag controlling if unknown messages are logged
 	 * @param ignore    Parameter list of messages to ignore (case insensitive)
 	 * @return true if no errors or exceptions
 	 */
-	public boolean checkCatch(List<IFileSpec> fileSpecs, String... ignore) {
+	public boolean checkCatch(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) {
 		try {
-			return check(fileSpecs, true, ignore);
+			return check(fileSpecs, quiet, ignore);
 		} catch (Exception e) {
 			return false;
 		}
 	}
 
+	/**
+	 * Only return boolean; false is returned for an exception.
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param ignore    Parameter list of messages to ignore (case insensitive)
+	 * @return true if no errors or exceptions
+	 */
+	public boolean checkCatch(List<IFileSpec> fileSpecs, String... ignore) {
+		return checkCatch(fileSpecs, true, ignore);
+	}
+
+	/**
+	 * Look for a message in the returned FileSpec from operation.
+	 *
+	 * @param fileSpecs List of Perforce file specs
+	 * @param quiet    Flag controlling if unknown messages are logged
+	 * @param ignore    Parameter list of messages to ignore (case insensitive)
+	 * @return true if no errors.
+	 * @throws Exception push up stack
+	 */
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
