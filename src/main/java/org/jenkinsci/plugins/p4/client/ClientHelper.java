@@ -1167,12 +1167,15 @@ public class ClientHelper extends ConnectionHelper {
 	 * @throws Exception push up stack
 	 */
 	public long getClientHead() throws Exception {
+		// try to find last change
+		long head = getClientHead(null, null);
+		if (head != 0L) {
+			return head;
+		}
+
 		// get last change in server, may return shelved CLs
 		String latestChange = getConnection().getCounter("change");
-		long latest = Long.parseLong(latestChange);
-		P4Ref to = new P4ChangeRef(latest);
-		long head = getClientHead(null, to);
-		return (head == 0L) ? latest : head;
+		return Long.parseLong(latestChange);
 	}
 
 	public List<IChangelistSummary> getPendingChangelists(boolean includeLongDescription, String clientName) throws Exception {
