@@ -978,7 +978,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		String shelveId = shelveFile(jenkins, "//depot/UnshelveChange/unshelve/file2", "content");
 
 		String jFileContent = "pipeline {\n" +
-				"  agent { label 'master' }\n" +
+				"  agent any\n" +
 				"  stages {\n" +
 				"    stage(\"Repro\") {\n" +
 				"      steps {\n" +

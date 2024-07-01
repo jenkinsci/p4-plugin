@@ -632,6 +632,7 @@ public class PerforceScm extends SCM {
 		Optional<TagAction> previousAction = getActionWithJenkinsFilePath(run);
 		if (actions.isPresent()) {
 			jenkinsPath = actions.get().getJenkinsPath();
+			run.removeAction(actions.get());
 		} else if (previousAction.isPresent()) {
 			jenkinsPath = previousAction.get().getJenkinsPath();
 		} else {
