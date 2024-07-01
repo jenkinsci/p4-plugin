@@ -4,6 +4,8 @@ import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IExtendedFileSpec;
 import com.perforce.p4java.core.file.IFileSpec;
+import com.perforce.p4java.exception.AccessException;
+import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.option.server.GetExtendedFilesOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
@@ -137,14 +139,22 @@ public class P4SCMFile extends SCMFile {
 	public InputStream content() throws IOException, InterruptedException {
 		ConnectionHelper p4 = fs.getConnection();
 		List<IFileSpec> file = getFileSpec();
-
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
-
+		addJenkinsFilePathToTagAction(p4, file);
 		try {
 			return p4.getConnection().getFileContents(file, printOpts);
 		} catch (P4JavaException e) {
 			throw new IOException(e);
+		}
+	}
+
+	private void addJenkinsFilePathToTagAction(ConnectionHelper p4, List<IFileSpec> file) throws IOException, InterruptedException {
+		try {
+			List<IFileSpec> where = p4.getConnection().getCurrentClient().where(file);
+			fs.addJenkinsFilePath(where.get(0).getDepotPathString());
+		} catch (ConnectionException | AccessException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
