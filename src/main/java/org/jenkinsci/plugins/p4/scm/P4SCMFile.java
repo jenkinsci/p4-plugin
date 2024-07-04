@@ -1,15 +1,15 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IExtendedFileSpec;
 import com.perforce.p4java.core.file.IFileSpec;
-import com.perforce.p4java.exception.AccessException;
-import com.perforce.p4java.exception.ConnectionException;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.option.server.GetExtendedFilesOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
@@ -82,7 +82,7 @@ public class P4SCMFile extends SCMFile {
 		GetExtendedFilesOptions exOpts = new GetExtendedFilesOptions();
 		try {
 			List<IExtendedFileSpec> fstat = p4.getConnection().getExtendedFiles(file, exOpts);
-			if(fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
+			if (fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
 				Date date = fstat.get(0).getHeadModTime();
 				return date.getTime();
 			}
@@ -103,7 +103,7 @@ public class P4SCMFile extends SCMFile {
 	 */
 	@Override
 	protected Type type() throws IOException, InterruptedException {
-		if(isDir) {
+		if (isDir) {
 			return Type.DIRECTORY;
 		}
 
@@ -113,9 +113,9 @@ public class P4SCMFile extends SCMFile {
 		GetExtendedFilesOptions exOpts = new GetExtendedFilesOptions();
 		try {
 			List<IExtendedFileSpec> fstat = p4.getConnection().getExtendedFiles(file, exOpts);
-			if(fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
+			if (fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
 				String type = fstat.get(0).getHeadType();
-				if(type.startsWith("symlink")) {
+				if (type.startsWith("symlink")) {
 					return Type.LINK;
 				}
 				return Type.REGULAR_FILE;
@@ -150,12 +150,12 @@ public class P4SCMFile extends SCMFile {
 	}
 
 	private void addJenkinsFilePathToTagAction(ConnectionHelper p4, List<IFileSpec> file) throws IOException, InterruptedException {
-		try {
-			List<IFileSpec> where = p4.getConnection().getCurrentClient().where(file);
-			fs.addJenkinsFilePath(where.get(0).getDepotPathString());
-		} catch (ConnectionException | AccessException e) {
-			throw new RuntimeException(e);
-		}
+		Jenkins j = Jenkins.getInstanceOrNull();
+		String rootPath = j.getRootDir().getCanonicalPath();
+		IClient currentClient = p4.getConnection().getCurrentClient();
+		currentClient.setRoot(rootPath);
+		List<IFileSpec> where = currentClient.localWhere(file);
+		fs.addJenkinsFilePath(where.get(0).getDepotPathString());
 	}
 
 	private List<IFileSpec> getFileSpec() {
