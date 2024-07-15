@@ -68,6 +68,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -489,7 +490,8 @@ public class ClientHelper extends ConnectionHelper {
 		syncFiles(revisions, clean);
 
 		// remove all files from workspace
-		String root = URLDecoder.decode(iclient.getRoot(), "UTF-8");
+		String encodedRoot = iclient.getRoot().replace("+", "%2B");
+		String root = URLDecoder.decode(encodedRoot, StandardCharsets.UTF_8);
 		log("... rm -rf " + root);
 		log("");
 		silentlyForceDelete(root);
