@@ -16,6 +16,9 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
+import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
+import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Before;
@@ -73,7 +76,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 		// Manual workspace spec definition
 		String client = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String view = ""
-				+ "//depot/data/Jenkinsfile //${P4_CLIENT}/Jenkinsfile" ;
+				+ "//depot/data/Jenkinsfile //${P4_CLIENT}/Jenkinsfile";
 
 
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -88,8 +91,9 @@ public class EnvVariableTest extends DefaultEnvironment {
 		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
-		jenkins.assertLogContains("The jenkinsfile path is: //depot/data/Jenkinsfile",job.scheduleBuild2(0).get());
+		jenkins.assertLogContains("The jenkinsfile path is: //depot/data/Jenkinsfile", job.scheduleBuild2(0).get());
 	}
+
 	@Test
 	@Issue("JENKINS-54382")
 	public void testMultiBranchDeepJenkinsfile() throws Exception {
@@ -199,6 +203,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + branch + "/" + scriptPath, build);
 	}
+
 	@Test
 	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 
@@ -446,6 +451,103 @@ public class EnvVariableTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 		P4ChangeSet changes2 = (P4ChangeSet) job.getLastBuild().getChangeSets().get(0);
 		assertEquals(change2, changes2.getHistory().get(0).getId().toString());
+	}
+
+	@Test
+	public void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock_lightweight() throws Exception {
+		//https://issues.jenkins.io/browse/JENKINS-39107
+		GlobalLibraries globalLib = setGlobalLibraryForPipeline();
+		String base = "//depot/default";
+		String scriptPath = "Jenkinsfiles/Jenkinsfile-Repro-JENKINS-39107";
+		submitJenkinsFile(base, scriptPath);
+
+		// Manual workspace spec definition
+		String client = "manual.ws";
+		String view = "//depot/default/... //" + client + "/... ";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false,
+				null, "LOCAL", view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "jenkinsfileLocationLightweight");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(new PerforceScm(CREDENTIAL, workspace, new AutoCleanImpl()), scriptPath);
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+		WorkflowRun workflowRun = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=" + base + "/" + scriptPath, workflowRun);
+		jenkins.assertLogContains("Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=" + base + "/" + scriptPath, workflowRun);
+		globalLib.setLibraries(new ArrayList<>());
+	}
+
+	@Test
+	public void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock() throws Exception {
+		GlobalLibraries globalLib = setGlobalLibraryForPipeline();
+		String base = "//depot/default";
+		String scriptPath = "Jenkinsfiles/Jenkinsfile-Repro-JENKINS-39107";
+		submitJenkinsFile(base, scriptPath);
+
+		// Manual workspace spec definition
+		String client = "manual.ws";
+		String view = "//depot/default/... //" + client + "/... ";
+		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false,
+				null, "LOCAL", view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "jenkinsfileLocation");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(new PerforceScm(CREDENTIAL, workspace, new AutoCleanImpl()), scriptPath);
+		job.setDefinition(cpsScmFlowDefinition);
+		WorkflowRun workflowRun = job.scheduleBuild2(0).get();
+		jenkins.assertLogContains("Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=" + base + "/" + scriptPath, workflowRun);
+		jenkins.assertLogContains("Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=" + base + "/" + scriptPath, workflowRun);
+		globalLib.setLibraries(new ArrayList<>());
+	}
+
+	private void submitJenkinsFile(String base, String scriptPath) throws Exception {
+		submitFile(jenkins, base + "/" + scriptPath,
+				"@Library('stream-lib')\n" +
+						"import org.foo.lib.* \n" +
+						"echo \"Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\"\n" +
+						"pipeline {\n" +
+						" agent any\n" +
+						" stages {\n" +
+						"  stage(\"Repro\") {\n" +
+						"   steps {\n" +
+						"    script {\n" +
+						"       echo \"Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\" \n" +
+						"   }\n" +
+						"  }\n" +
+						" }\n" +
+						"}\n" +
+						"}");
+	}
+
+	private GlobalLibraries setGlobalLibraryForPipeline() throws Exception {
+		String libContent = "package org.foo;\n" +
+				"\n" +
+				"def dispEnv ()\n" +
+				"{\n" +
+				"  echo \"All Environment Variables\"\n" +
+				"  if (isUnix()) {\n" +
+				"    sh 'env'\n" +
+				"  }\n" +
+				"  else {\n" +
+				"    bat 'set'\n" +
+				"  }\n" +
+				"return this;";
+		submitFile(jenkins, "//depot/library/src/org/foo/lib.groovy", libContent);
+
+		String path = "//depot/library/...";
+		GlobalLibraryScmSource scm = new GlobalLibraryScmSource(CREDENTIAL, null, path);
+		SCMSourceRetriever source1 = new SCMSourceRetriever(scm);
+		LibraryConfiguration config = new LibraryConfiguration("stream-lib", source1);
+		config.setImplicit(true);
+		config.setDefaultVersion("now");
+
+		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
+		assertNotNull(globalLib);
+		globalLib.setLibraries(List.of(config));
+		return globalLib;
 	}
 
 	private String sampleProject(String base, String[] branches, String jfile) throws Exception {

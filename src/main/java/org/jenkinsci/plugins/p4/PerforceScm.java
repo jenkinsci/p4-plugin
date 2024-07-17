@@ -31,6 +31,7 @@ import hudson.util.LogTaskListener;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
@@ -90,6 +91,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -623,10 +626,20 @@ public class PerforceScm extends SCM {
 		tag.setRefChanges(task.getSyncChange());
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
-		// JENKINS-39107: Make Depot location of Jenkinsfile available
-		WhereTask where = new WhereTask(credential, run, listener, getScriptPath(run));
-		where.setWorkspace(ws);
-		String jenkinsPath = buildWorkspace.act(where);
+		// JENKINS-39107: Make Depot location of Jenkins file available
+		String jenkinsPath;
+		Optional<TagAction> actions = getTagActionWithNullWorkspace(run);
+		Optional<TagAction> previousAction = getActionWithJenkinsFilePath(run);
+		if (actions.isPresent()) {
+			jenkinsPath = actions.get().getJenkinsPath();
+			run.removeAction(actions.get());
+		} else if (previousAction.isPresent()) {
+			jenkinsPath = previousAction.get().getJenkinsPath();
+		} else {
+			WhereTask where = new WhereTask(credential, run, listener, getScriptPath(run));
+			where.setWorkspace(ws);
+			jenkinsPath = buildWorkspace.act(where);
+		}
 		tag.setJenkinsPath(jenkinsPath);
 		tagAction = tag;
 		run.addAction(tag);
@@ -678,6 +691,18 @@ public class PerforceScm extends SCM {
 		cleanupPerforceClient(run, buildWorkspace, listener, ws);
 
 		logger.finer("P4: checkout[" + jobName + "] finished.");
+	}
+
+	private static Optional<TagAction> getActionWithJenkinsFilePath(Run<?, ?> run) {
+		return run.getActions(TagAction.class).stream()
+				.filter(action -> StringUtils.isNotEmpty(action.getJenkinsPath()))
+				.findAny();
+	}
+
+	private static Optional<TagAction> getTagActionWithNullWorkspace(Run<?, ?> run) {
+		return run.getActions(TagAction.class).stream()
+				.filter(action -> Objects.isNull(action.getWorkspace()))
+				.findAny();
 	}
 
 	private String getScriptPath(Run<?, ?> run) {
