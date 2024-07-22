@@ -52,7 +52,7 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		this.p4 = new TempClientHelper(owner, credential, null, ws);
 	}
 
-	public void addJenkinsFilePath(String path) throws IOException, InterruptedException {
+	public void addJenkinsFilePath(String path) {
 		if (_job == null || _job.getLastBuild() == null) {
 			return;
 		}
@@ -61,10 +61,14 @@ public class P4SCMFileSystem extends SCMFileSystem {
 			return;
 		}
 		if (StringUtils.isNotEmpty(definition.getScriptPath()) && definition.isLightweight()) {
-			Run<?, ?> build = _job.getLastBuild();
-			TagAction tag = new TagAction(build, credential);
-			tag.setJenkinsPath(path);
-			build.addAction(tag);
+			try {
+				Run<?, ?> build = _job.getLastBuild();
+				TagAction tag = new TagAction(build, credential);
+				tag.setJenkinsPath(path);
+				build.addAction(tag);
+			} catch (IOException | InterruptedException e) {
+				logger.warning("P4: Failed to create temporary TagAction for JENKINSFILE_PATH.");
+			}
 		}
 	}
 

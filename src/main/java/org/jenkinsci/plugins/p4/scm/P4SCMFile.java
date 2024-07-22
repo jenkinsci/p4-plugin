@@ -9,7 +9,6 @@ import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.option.server.GetExtendedFilesOptions;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import jenkins.model.Jenkins;
 import jenkins.scm.api.SCMFile;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
@@ -19,11 +18,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class P4SCMFile extends SCMFile {
 
 	private final P4SCMFileSystem fs;
 	private final boolean isDir;
+
+	private static Logger logger = Logger.getLogger(P4SCMFile.class.getName());
 
 	public P4SCMFile(P4SCMFileSystem fs) {
 		this.fs = fs;
@@ -149,13 +151,16 @@ public class P4SCMFile extends SCMFile {
 		}
 	}
 
-	private void addJenkinsFilePathToTagAction(ConnectionHelper p4, List<IFileSpec> file) throws IOException, InterruptedException {
-		Jenkins j = Jenkins.getInstanceOrNull();
-		String rootPath = j.getRootDir().getCanonicalPath();
-		IClient currentClient = p4.getConnection().getCurrentClient();
-		currentClient.setRoot(rootPath);
-		List<IFileSpec> where = currentClient.localWhere(file);
-		fs.addJenkinsFilePath(where.get(0).getDepotPathString());
+	private void addJenkinsFilePathToTagAction(ConnectionHelper p4, List<IFileSpec> file) {
+		try {
+			IClient currentClient = p4.getConnection().getCurrentClient();
+			currentClient.refresh();
+			List<IFileSpec> where = currentClient.localWhere(file);
+			fs.addJenkinsFilePath(where.get(0).getDepotPathString());
+		} catch (Exception e) {
+			logger.warning("P4: Error retrieving depot path for the Jenkins file.");
+		}
+
 	}
 
 	private List<IFileSpec> getFileSpec() {
