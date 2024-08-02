@@ -1,5 +1,17 @@
 ## Release notes
 
+### Release 1.16.0 (major features/fixes)
+
+[@30466](https://swarm.workshop.perforce.com/changes/30466) - Merge pull request #209 from jenkinsci/skumar_jenkinsfilePath JENKINSFILE_PATH variable should be available outside of the pipeline tag.
+
+[@30453](https://swarm.workshop.perforce.com/changes/30453) - Merge pull request #205 from stuartrowe:validate-check-catch-log. Expose quiet field to Validate.checkCatch() 
+
+[@30451](https://swarm.workshop.perforce.com/changes/30451) - Merge pull request #206 from austin987:JENKINS-72335. The reconcile command should ignore the summary messages from the server for multiple paths in the reconcile command. 
+
+[@30450](https://swarm.workshop.perforce.com/changes/30450) - Merge pull request #207 from hjain-perforce:master.Fixed a bug where the character "+" in the workspace name was being replaced with a space (" ").
+
+[@30513](https://swarm.workshop.perforce.com/changes/30513) - Update P4Java Version to 2024.1.2612262.
+
 ### Release 1.15.1 (major features/fixes)
 
 [@30143](https://swarm.workshop.perforce.com/changes/30143) - Merge pull request #[197] from [skumar7322/SwarmAPI] Changed version of Swarm API to v11.
