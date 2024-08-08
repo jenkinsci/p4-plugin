@@ -249,10 +249,20 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// remove set fields
-		String[] set = new String[]{"Type", "StreamAtChange"};
+		String[] set = new String[]{"Type"};
 		for (String key : set) {
 			map.remove(key);
 		}
+
+		// convert int fields
+		String[] intFields = new String[]{"StreamAtChange"};
+		for (String key : intFields) {
+			Object value=map.remove(key);
+			if (value != null) {
+				map.put(key, value.toString());
+			}
+		}
+
 
 		List<String> values = new ArrayList(map.values());
 		values.removeAll(Collections.singleton(null));
