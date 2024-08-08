@@ -58,7 +58,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public StreamWorkspaceImpl(String charset, boolean pinHost,
-	                           String streamName, String format) {
+							   String streamName, String format) {
 		super(charset, pinHost, false);
 		this.streamName = streamName;
 		this.format = format;
@@ -90,6 +90,11 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 		if(StringUtils.isNotEmpty(streamAtChange)){
 			String atChange = getExpand().format(streamAtChange, true);
 			iclient.setStreamAtChange(Integer.parseInt(atChange));
+		}
+		else
+		{
+			// Need to remove the streamAtChange value if not set to cater for previous set values
+			iclient.setStreamAtChange(-1);
 		}
 
 		// Set clobber on to ensure workspace is always good
