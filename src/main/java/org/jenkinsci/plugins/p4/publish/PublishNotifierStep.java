@@ -50,6 +50,8 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 
 		buildWorkspace.act(task);
 
+		run.addAction(new P4PublishEnvironmentContributingAction(task.getPublishedChangeID()));
+
 		cleanupPerforceClient(run, buildWorkspace, listener);
 	}
 }

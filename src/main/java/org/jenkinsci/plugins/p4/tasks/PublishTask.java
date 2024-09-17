@@ -23,6 +23,8 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 
 	private final Publish publish;
 
+	private String publishedChangeID = "Default";
+
 	public PublishTask(String credential, Run<?, ?> run, TaskListener listener, Publish publish) {
 		super(credential, run, listener);
 		this.publish = publish;
@@ -43,7 +45,7 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 			// Look for changes and add to change-list, then publish
 			boolean open = p4.buildChange(publish);
 			if (open) {
-				p4.publishChange(publish);
+				this.publishedChangeID = p4.publishChange(publish);
 			}
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");
@@ -57,5 +59,9 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		checker.check(this, Roles.SLAVE);
+	}
+
+	public String getPublishedChangeID() {
+		return publishedChangeID;
 	}
 }
