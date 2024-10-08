@@ -16,6 +16,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
@@ -86,11 +87,11 @@ public class PublishNotifier extends Notifier {
 		desc = ws.getExpand().format(desc, false);
 		getPublish().setExpandedDesc(desc);
 
-		boolean success = buildWorkspace.act(task);
+		String publishedChangeId = buildWorkspace.act(task);
 
 		cleanupPerforceClient(build, buildWorkspace, listener);
 
-		return success;
+		return StringUtils.isNotEmpty(publishedChangeId);
 	}
 
 	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener)
