@@ -1,5 +1,51 @@
 ## Release notes
 
+### Release 1.16.0 (major features/fixes)
+
+[@30466](https://swarm.workshop.perforce.com/changes/30466) - Merge pull request #209 from jenkinsci/skumar_jenkinsfilePath JENKINSFILE_PATH variable should be available outside of the pipeline tag.
+
+[@30453](https://swarm.workshop.perforce.com/changes/30453) - Merge pull request #205 from stuartrowe:validate-check-catch-log. Expose quiet field to Validate.checkCatch() 
+
+[@30451](https://swarm.workshop.perforce.com/changes/30451) - Merge pull request #206 from austin987:JENKINS-72335. The reconcile command should ignore the summary messages from the server for multiple paths in the reconcile command. 
+
+[@30450](https://swarm.workshop.perforce.com/changes/30450) - Merge pull request #207 from hjain-perforce:master.Fixed a bug where the character "+" in the workspace name was being replaced with a space (" ").
+
+[@30513](https://swarm.workshop.perforce.com/changes/30513) - Update P4Java Version to 2024.1.2612262.
+
+### Release 1.15.1 (major features/fixes)
+
+[@30143](https://swarm.workshop.perforce.com/changes/30143) - Merge pull request #[197] from [skumar7322/SwarmAPI] Changed version of Swarm API to v11.
+
+[@30144](https://swarm.workshop.perforce.com/changes/30144) - Merge pull request #[184] from [lleroy/manual-spec-from-file-in-perforce-view] . Enhanced the functionality to read "Change View" mapping from a file.
+
+[@30145](https://swarm.workshop.perforce.com/changes/30145) - Update P4Java Version to 2023.2.2553500
+
+
+### Release 1.14.4 (major features/fixes)
+
+[@29870](https://swarm.workshop.perforce.com/changes/29870) - Merge pull request #194 from kjs104901/bugfix. Fixed bug where client cant sync global libraries on Windows JENKINS-72098
+
+[@29848](https://swarm.workshop.perforce.com/changes/29848), [@29868](https://swarm.workshop.perforce.com/changes/29868) - Merge pull request #195, #196 from jenkinsci/StreamAtChange. Add new feature to support stream at change for stream depot. JENKINS-70378
+
+[@29829](https://swarm.workshop.perforce.com/changes/29829) - Fixed bug where JENKINSFILE_PATH is not available in pipeline when lightweight checkout and skipDefaultCheckout are set. JENKINS-39107
+
+[@29869](https://swarm.workshop.perforce.com/changes/29869) - Handle NoSuchFileException to support forward compatibility with apache Commons IO 2.13.0
+
+
+### Release 1.14.3 (major features/fixes)
+
+[@29812](https://swarm.workshop.perforce.com/changes/29812) - Merge pull request #178 from joel-f-brown/master. Do not call "p4 counter" for integer counter name. JENKINS-70219
+
+[@29794](https://swarm.workshop.perforce.com/changes/29794) - Merge pull request #191 from jenkinsci/PollingToLatest. Add new feature to detect change beyond pinned changelist and trigger the build. JENKINS-65246, JENKINS-63879
+
+
+### Release 1.14.2 (major features/fixes)
+
+[@29672](https://swarm.workshop.perforce.com/changes/29672) - Merge pull request #180 from skumar7322/UpdateP4JavaVersion.  Update p4Java version to: 2022.2.2444480
+
+[@29668](https://swarm.workshop.perforce.com/changes/29668) - Update Json Version to 20230227
+
+
 ### Release 1.14.1 (major features/fixes)
 
 [@29505](https://swarm.workshop.perforce.com/changes/29505) - Merge pull request #177 from skumar7322/UpdateP4Java221P2.  Update P4 Java Version to "2022.1.2423241"

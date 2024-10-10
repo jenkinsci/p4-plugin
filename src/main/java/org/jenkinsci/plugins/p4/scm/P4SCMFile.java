@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
 import com.perforce.p4java.core.file.IExtendedFileSpec;
@@ -17,11 +18,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class P4SCMFile extends SCMFile {
 
 	private final P4SCMFileSystem fs;
 	private final boolean isDir;
+
+	private static Logger logger = Logger.getLogger(P4SCMFile.class.getName());
 
 	public P4SCMFile(P4SCMFileSystem fs) {
 		this.fs = fs;
@@ -80,7 +84,7 @@ public class P4SCMFile extends SCMFile {
 		GetExtendedFilesOptions exOpts = new GetExtendedFilesOptions();
 		try {
 			List<IExtendedFileSpec> fstat = p4.getConnection().getExtendedFiles(file, exOpts);
-			if(fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
+			if (fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
 				Date date = fstat.get(0).getHeadModTime();
 				return date.getTime();
 			}
@@ -101,7 +105,7 @@ public class P4SCMFile extends SCMFile {
 	 */
 	@Override
 	protected Type type() throws IOException, InterruptedException {
-		if(isDir) {
+		if (isDir) {
 			return Type.DIRECTORY;
 		}
 
@@ -111,9 +115,9 @@ public class P4SCMFile extends SCMFile {
 		GetExtendedFilesOptions exOpts = new GetExtendedFilesOptions();
 		try {
 			List<IExtendedFileSpec> fstat = p4.getConnection().getExtendedFiles(file, exOpts);
-			if(fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
+			if (fstat.get(0).getOpStatus().equals(FileSpecOpStatus.VALID)) {
 				String type = fstat.get(0).getHeadType();
-				if(type.startsWith("symlink")) {
+				if (type.startsWith("symlink")) {
 					return Type.LINK;
 				}
 				return Type.REGULAR_FILE;
@@ -137,15 +141,26 @@ public class P4SCMFile extends SCMFile {
 	public InputStream content() throws IOException, InterruptedException {
 		ConnectionHelper p4 = fs.getConnection();
 		List<IFileSpec> file = getFileSpec();
-
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
 		printOpts.setNoHeaderLine(true);
-
+		addJenkinsFilePathToTagAction(p4, file);
 		try {
 			return p4.getConnection().getFileContents(file, printOpts);
 		} catch (P4JavaException e) {
 			throw new IOException(e);
 		}
+	}
+
+	private void addJenkinsFilePathToTagAction(ConnectionHelper p4, List<IFileSpec> file) {
+		try {
+			IClient currentClient = p4.getConnection().getCurrentClient();
+			currentClient.refresh();
+			List<IFileSpec> where = currentClient.localWhere(file);
+			fs.addJenkinsFilePath(where.get(0).getDepotPathString());
+		} catch (Exception e) {
+			logger.warning("P4: Error retrieving depot path for the Jenkins file.");
+		}
+
 	}
 
 	private List<IFileSpec> getFileSpec() {

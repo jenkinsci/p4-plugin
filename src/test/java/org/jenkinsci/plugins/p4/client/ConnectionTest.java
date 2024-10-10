@@ -36,6 +36,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -44,8 +45,10 @@ import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ConnectionTest extends DefaultEnvironment {
 
@@ -157,7 +160,7 @@ public class ConnectionTest extends DefaultEnvironment {
 
 		String client = "manual.ws";
 		String view = "//depot/Data/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec( view, null);
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 
 		FreeStyleProject project = jenkins.createFreeStyleProject("Manual-Head");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
@@ -248,5 +251,51 @@ public class ConnectionTest extends DefaultEnvironment {
 
 		long epoch = file.lastModified();
 		assertEquals(1397049803000L, epoch);
+	}
+
+
+	@Test
+	public void testIsCounter() throws Exception {
+
+		ConnectionHelper cHelper = new ConnectionHelper(auth, null);
+
+		String cName = "change";  // always exists.
+		try {
+			boolean isCounter = cHelper.isCounter(cName);
+			assertTrue("counter '" + cName + "'not found", isCounter);
+		} catch (Exception e) {
+			fail("exception checking counter " + cName + ": " + e.getMessage());
+		}
+
+		cName = "thisDoesNotExist";
+		try {
+			boolean isCounter = cHelper.isCounter(cName);
+			assertFalse("counter '" + cName + "' found", isCounter);
+		} catch (Exception e) {
+			fail("exception checking counter " + cName + ": " + e.getMessage());
+		}
+
+		cName = "666111"; // JENKINS-70219
+		Scanner scanner = null;
+		try {
+			boolean isCounter = cHelper.isCounter(cName);
+			assertFalse("counter '" + cName + "' found", isCounter);
+
+			// check log for "user-counter NNN" command.
+			String lookFor = "user-counter " + cName;
+			scanner = new Scanner(new File(p4d.getLogPath()));
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				if (line.indexOf(lookFor) >= 0) {
+					fail("Found numeric counter '" + cName + "' in log: " + line);
+				}
+			}
+		} catch (Exception e) {
+			fail("exception checking counter " + cName + ": " + e.getMessage());
+		} finally {
+			if (scanner != null) {
+				scanner.close();
+			}
+		}
 	}
 }

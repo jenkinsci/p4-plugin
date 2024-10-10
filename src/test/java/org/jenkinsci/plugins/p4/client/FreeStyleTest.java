@@ -1,8 +1,5 @@
 package org.jenkinsci.plugins.p4.client;
 
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.perforce.p4java.option.server.CounterOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Action;
@@ -17,6 +14,9 @@ import hudson.model.StringParameterValue;
 import hudson.scm.RepositoryBrowser;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlInput;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -43,9 +43,9 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 
 public class FreeStyleTest extends DefaultEnvironment {
 
@@ -178,7 +178,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildCounter");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		String pin = "testCounter";
-		Populate populate = new AutoCleanImpl(false, false, false,false, true, pin, null);
+		Populate populate = new AutoCleanImpl(false, false, false, false, true, pin, null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();

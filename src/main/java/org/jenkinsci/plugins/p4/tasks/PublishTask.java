@@ -6,6 +6,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.publish.Publish;
 import org.jenkinsci.remoting.RoleChecker;
@@ -15,7 +16,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-public class PublishTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
+public class PublishTask extends AbstractTask implements FileCallable<String>, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -28,22 +29,23 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 		this.publish = publish;
 	}
 
-	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
-		return (Boolean) tryTask();
+	public String invoke(File workspace, VirtualChannel channel) throws IOException {
+		return (String) tryTask();
 	}
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
+		String publishedChangeID = StringUtils.EMPTY;
 		try {
 			// Check connection (might be on remote slave)
 			if (!checkConnection(p4)) {
-				return false;
+				return StringUtils.EMPTY;
 			}
 
 			// Look for changes and add to change-list, then publish
 			boolean open = p4.buildChange(publish);
 			if (open) {
-				p4.publishChange(publish);
+				publishedChangeID = p4.publishChange(publish);
 			}
 		} catch (Exception e) {
 			p4.log("(p4):stop:exception\n");
@@ -52,10 +54,11 @@ public class PublishTask extends AbstractTask implements FileCallable<Boolean>, 
 			logger.warning(err);
 			throw new AbortException(err);
 		}
-		return true;
+		return publishedChangeID;
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		checker.check(this, Roles.SLAVE);
 	}
+
 }

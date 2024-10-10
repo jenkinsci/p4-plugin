@@ -5,8 +5,10 @@ import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.Serializable;
 import java.util.logging.Logger;
@@ -16,6 +18,8 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final String streamName;
+
+	private String streamAtChange = StringUtils.EMPTY;
 	private String format;
 
 	private static Logger logger = Logger.getLogger(StreamWorkspaceImpl.class
@@ -23,6 +27,14 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 
 	public String getStreamName() {
 		return streamName;
+	}
+
+	public String getStreamAtChange() {
+		return streamAtChange;
+	}
+	@DataBoundSetter
+	public void setStreamAtChange(String streamAtChange) {
+		this.streamAtChange = streamAtChange;
 	}
 
 	public String getFormat() {
@@ -46,7 +58,7 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 
 	@DataBoundConstructor
 	public StreamWorkspaceImpl(String charset, boolean pinHost,
-	                           String streamName, String format) {
+							   String streamName, String format) {
 		super(charset, pinHost, false);
 		this.streamName = streamName;
 		this.format = format;
@@ -74,6 +86,16 @@ public class StreamWorkspaceImpl extends Workspace implements Serializable {
 		// Expand Stream name
 		String streamFullName = getExpand().format(getStreamName(), true);
 		iclient.setStream(streamFullName);
+
+		if(StringUtils.isNotEmpty(streamAtChange)){
+			String atChange = getExpand().format(streamAtChange, true);
+			iclient.setStreamAtChange(Integer.parseInt(atChange));
+		}
+		else
+		{
+			// Need to remove the streamAtChange value if not set to cater for previous set values
+			iclient.setStreamAtChange(-1);
+		}
 
 		// Set clobber on to ensure workspace is always good
 		IClientOptions options = iclient.getOptions();

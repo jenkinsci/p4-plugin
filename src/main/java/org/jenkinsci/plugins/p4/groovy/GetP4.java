@@ -1,7 +1,6 @@
 package org.jenkinsci.plugins.p4.groovy;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -9,16 +8,12 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.plugins.p4.build.ExecutorHelper;
-import org.jenkinsci.plugins.p4.build.NodeHelper;
+import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.tasks.AbstractTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 
 public class GetP4 extends Builder implements SimpleBuildStep {
 

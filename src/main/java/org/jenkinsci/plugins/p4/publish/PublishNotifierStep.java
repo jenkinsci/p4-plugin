@@ -7,6 +7,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepMonitor;
 import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -17,7 +18,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 
 	@DataBoundConstructor
 	public PublishNotifierStep(String credential, Workspace workspace,
-	                           Publish publish) {
+							   Publish publish) {
 		super(credential, workspace, publish);
 	}
 
@@ -28,7 +29,7 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 
 	@Override
 	public void perform(Run<?, ?> run, FilePath buildWorkspace,
-	                    Launcher launcher, TaskListener listener)
+						Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
 
 		// return early if publish not required
@@ -48,7 +49,10 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 		desc = ws.getExpand().format(desc, false);
 		getPublish().setExpandedDesc(desc);
 
-		buildWorkspace.act(task);
+		String publishedChangeID = buildWorkspace.act(task);
+		if (StringUtils.isNotEmpty(publishedChangeID)) {
+			run.addAction(new P4PublishEnvironmentContributingAction(publishedChangeID));
+		}
 
 		cleanupPerforceClient(run, buildWorkspace, listener);
 	}

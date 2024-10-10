@@ -23,11 +23,11 @@ public class P4WebBrowser extends P4Browser {
 	private static final long serialVersionUID = 1L;
 
 	// 'ac' stands for action and corresponds to a unique screen in P4Web
-	public final String p4FileEnd = "?ac=22"; // file contents screen
-	public final String p4DiffEnd = "?ac=19"; // file comparison screen
-	public final String p4ChangeEnd = "?ac=10"; // change list content screen
-	public final String p4JobEnd = "?ac=111"; // job content screen
-	public final String p4LabelEnd = "?ac=16"; // label content screen
+	public final static String p4FileEnd = "?ac=22"; // file contents screen
+	public final static String p4DiffEnd = "?ac=19"; // file comparison screen
+	public final static String p4ChangeEnd = "?ac=10"; // change list content screen
+	public final static String p4JobEnd = "?ac=111"; // job content screen
+	public final static String p4LabelEnd = "?ac=16"; // label content screen
 
 	@DataBoundConstructor
 	public P4WebBrowser(String url) {

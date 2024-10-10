@@ -24,6 +24,10 @@
 		<f:textbox id="id.streamName" />
     </f:entry>
 
+	<f:entry title="${%Stream at change}" field="streamAtChange">
+		<f:textbox id="id.streamAtChange" />
+	</f:entry>
+
 	<f:entry title="${%View Mappings}" field="view">
 		<f:textarea id="id.view" />
 	</f:entry>

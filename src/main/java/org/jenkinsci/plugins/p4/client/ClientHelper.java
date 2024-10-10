@@ -68,7 +68,9 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -207,6 +209,10 @@ public class ClientHelper extends ConnectionHelper {
 				sb.append("...   Stream: " + iclient.getStream());
 				sb.append("\n");
 			}
+			if (iclient.getStreamAtChange() > 0) {
+				sb.append("...   Stream at change: " + iclient.getStreamAtChange());
+				sb.append("\n");
+			}
 			sb.append("...   Root: " + iclient.getRoot());
 			sb.append("\n");
 			logger.finer(sb.toString());
@@ -247,6 +253,16 @@ public class ClientHelper extends ConnectionHelper {
 		for (String key : set) {
 			map.remove(key);
 		}
+
+		// convert int fields
+		String[] intFields = new String[]{"StreamAtChange"};
+		for (String key : intFields) {
+			Object value=map.remove(key);
+			if (value != null) {
+				map.put(key, value.toString());
+			}
+		}
+
 
 		List<String> values = new ArrayList(map.values());
 		values.removeAll(Collections.singleton(null));
@@ -484,7 +500,8 @@ public class ClientHelper extends ConnectionHelper {
 		syncFiles(revisions, clean);
 
 		// remove all files from workspace
-		String root = URLDecoder.decode(iclient.getRoot(), "UTF-8");
+		String encodedRoot = iclient.getRoot().replace("+", "%2B");
+		String root = URLDecoder.decode(encodedRoot, StandardCharsets.UTF_8);
 		log("... rm -rf " + root);
 		log("");
 		silentlyForceDelete(root);
@@ -493,12 +510,17 @@ public class ClientHelper extends ConnectionHelper {
 	private void silentlyForceDelete(String root) throws IOException {
 		try {
 			FileUtils.forceDelete(new File(root));
-		} catch (FileNotFoundException ignored) {
+		} catch (FileNotFoundException | NoSuchFileException ignored) {
 			// ignore
 		} catch (IOException alt) {
+			Path pathToDelete = Paths.get(root);
+			if (!Files.exists(pathToDelete)) {
+				return;
+			}
+
 			log("Unable to delete, trying alternative method... " + alt.getLocalizedMessage());
 
-			List<Path> pathsToDelete = Files.walk(Paths.get(root))
+			List<Path> pathsToDelete = Files.walk(pathToDelete)
 					.sorted(Comparator.reverseOrder())
 					.collect(Collectors.toList());
 			boolean success = true;
@@ -778,12 +800,12 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideAdd(true);
 		statusOpts.setOutsideEdit(true);
 		statusOpts.setRemoved(delete);
-		if(checkVersion(20191)){
+		if (checkVersion(20191)) {
 			statusOpts.setFileType(true);
 		}
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
-		getValidate().check(status, "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
+		getValidate().check(status, "No file(s) to reconcile", "- no file(s) to reconcile", "instead of", "empty, assuming text", "also opened by");
 	}
 
 	public String publishChange(Publish publish) throws Exception {

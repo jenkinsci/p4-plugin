@@ -9,7 +9,6 @@ import jenkins.scm.api.SCMHeadCategory;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.metadata.ContributorMetadataAction;
 import jenkins.scm.api.metadata.ObjectMetadataAction;
-import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
 import jenkins.scm.impl.UncategorizedSCMHeadCategory;
 import jenkins.util.NonLocalizable;
@@ -77,7 +76,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	public SwarmHelper getSwarm() throws Exception {
 		if (swarm == null) {
 			try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, null)) {
-				this.swarm = new SwarmHelper(p4, "9");
+				this.swarm = new SwarmHelper(p4, "11");
 			}
 		}
 		return swarm;
@@ -294,7 +293,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	private List<String> getBranchesInReview(String review, String project) throws Exception {
 		SwarmReviewAPI api = getSwarm().getSwarmReview(review);
 
-		HashMap<String, List<String>> projects = api.getReview().getProjects();
+		HashMap<String, List<String>> projects = api.getReview().get(0).getProjects();
 		List<String> branches = projects.get(project);
 
 		return branches;
@@ -303,7 +302,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	private long getLastChangeInReview(String review) throws Exception {
 		SwarmReviewAPI api = getSwarm().getSwarmReview(review);
 
-		List<Long> changes = api.getReview().getChanges();
+		List<Long> changes = api.getReview().get(0).getChanges();
 
 		long lastChange = 0;
 		for (Long change : changes) {

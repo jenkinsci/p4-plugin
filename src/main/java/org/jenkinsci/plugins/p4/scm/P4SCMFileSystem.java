@@ -14,9 +14,12 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMSource;
 import jenkins.scm.api.SCMSourceDescriptor;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
 import java.io.IOException;
@@ -29,20 +32,44 @@ public class P4SCMFileSystem extends SCMFileSystem {
 
 	private TempClientHelper p4;
 
+	private WorkflowJob _job = null;
+
+	private String credential;
+
 	protected P4SCMFileSystem(@NonNull Item owner, @NonNull PerforceScm scm, @CheckForNull P4SCMRevision rev) throws Exception {
 		super(rev);
-		String credential = scm.getCredential();
+		credential = scm.getCredential();
 		Workspace ws = scm.getWorkspace().deepClone();
 
 		// Set environment in Workspace
 		if (owner instanceof WorkflowJob) {
-			WorkflowJob _job = (WorkflowJob) owner;
+			_job = (WorkflowJob) owner;
 			Run<?,?> build = _job.getLastBuild();
 			EnvVars env = build.getEnvironment(new LogTaskListener(logger, Level.INFO));
 			ws.setExpand(env);
 		}
 
 		this.p4 = new TempClientHelper(owner, credential, null, ws);
+	}
+
+	public void addJenkinsFilePath(String path) {
+		if (_job == null || _job.getLastBuild() == null) {
+			return;
+		}
+		CpsScmFlowDefinition definition = (CpsScmFlowDefinition) _job.getDefinition();
+		if (definition == null) {
+			return;
+		}
+		if (StringUtils.isNotEmpty(definition.getScriptPath()) && definition.isLightweight()) {
+			try {
+				Run<?, ?> build = _job.getLastBuild();
+				TagAction tag = new TagAction(build, credential);
+				tag.setJenkinsPath(path);
+				build.addAction(tag);
+			} catch (IOException | InterruptedException e) {
+				logger.warning("P4: Failed to create temporary TagAction for JENKINSFILE_PATH.");
+			}
+		}
 	}
 
 	@Override

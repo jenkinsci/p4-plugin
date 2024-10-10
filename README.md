@@ -1,8 +1,8 @@
 # P4 Plugin
 
-[![Jenkins Version](https://img.shields.io/badge/Jenkins-2.138.4%2B-green.svg)](https://jenkins.io/download/)
-[![Helix Core](https://img.shields.io/badge/Helix%20Core-2019.1%2B-green.svg)](https://www.perforce.com/products/helix-core)
-[![Helix Swarm](https://img.shields.io/badge/Helix%20Swarm-2019.1%2B-green.svg)](https://www.perforce.com/products/helix-swarm)
+[![Jenkins Version](https://img.shields.io/badge/Jenkins-2.387.3%2B-green.svg)](https://jenkins.io/download/)
+[![Helix Core](https://img.shields.io/badge/Helix%20Core-2020.1%2B-green.svg)](https://www.perforce.com/products/helix-core)
+[![Helix Swarm](https://img.shields.io/badge/Helix%20Swarm-2022.1%2B-green.svg)](https://www.perforce.com/products/helix-swarm)
 
 Jenkins plugin for a Perforce Helix Core Server (P4D).
 
@@ -21,10 +21,10 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 
 ## Requirements
 
-* Jenkins 2.346.3 or greater.
-* Helix Core Server 2019.1 or greater.
+* Jenkins 2.387.3 or greater.
+* Helix Core Server 2020.1 or greater.
 * Minimum Perforce Protection of `open` for the Jenkins user.
-* Review Build feature requires Helix Swarm 2019.1 or greater.
+* Review Build feature requires Helix Swarm 2022.1 or greater.
 
 ## Known Limitations
 - One Jenkins job per Helix Swarm branch. 

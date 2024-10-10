@@ -18,6 +18,7 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
@@ -39,7 +40,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private String name;
-	public WorkspaceSpec spec;
+	private WorkspaceSpec spec;
 
 	private static final Logger logger = Logger.getLogger(ManualWorkspaceImpl.class.getName());
 
@@ -172,12 +173,32 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	}
 
 
-	private ArrayList<String> getChangeView(WorkspaceSpec workspaceSpec) {
+	private ArrayList<String> getChangeView(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception
+    {
 		ArrayList<String> changeView = new ArrayList<>();
 
 		String view = workspaceSpec.getChangeView();
 		if (view != null) {
 			String specString = getExpand().format(view, true);
+			if (specString.startsWith("@")) {
+				// extract View from file:	JENKINS-69491.
+				logger.fine("P4: view from file=" + specString);
+				String specPathFull = specString.substring(1).trim();
+				List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
+				GetFileContentsOptions printOpts = new GetFileContentsOptions();
+				printOpts.setNoHeaderLine(true);
+				InputStream ins = null;
+				try {
+					ins = connection.getFileContents(file, printOpts);
+					specString = IOUtils.toString(ins, "UTF-8");
+				} finally {
+					if (ins != null) {
+						ins.close();
+					}
+				}
+				specString = getExpand().format(specString, true);
+			}
+
 			for (String line : specString.split("\\n")) {
 				changeView.add(line);
 			}
@@ -233,12 +254,18 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 		iclient.setStream(streamFullName);
 
+		String streamAtChange = getSpec().getStreamAtChange();
+		if(StringUtils.isNotEmpty(streamAtChange)){
+			streamAtChange = getExpand().format(streamAtChange,true);
+			iclient.setStreamAtChange(Integer.parseInt(streamAtChange));
+		}
+
 		// Set Client view
 		iclient.setClientView(getClientView(connection, getSpec()));
 
 		// Set Change view
 		if (connection.getServerVersionNumber() >= 20172) {
-			iclient.setChangeView(getChangeView(getSpec()));
+			iclient.setChangeView(getChangeView(connection, getSpec()));
 		}
 
 		// Allow change between GRAPH and WRITEABLE

@@ -57,7 +57,8 @@ Click the **Add a new build filter** button and select a filter from the dropdow
 - **Exclude changes from outside Java pattern:** Changes can be filtered to not trigger a build if none of the files within a change match the Java patterns (regular expression) listed. For examples, see [Exclude Changes From Outside Java Pattern](POLLBUILDFILTEREXCJAVAPATTERN.md). 
 - **Exclude changes outside view mask:** Changes can be filtered to not trigger a build if none of the files within a change are contained in the view mask. For examples, see [Exclude Changes Outside view mask](POLLBUILDFILTEREXCVIEWMASK.md).  
 - **Polling per Change:** A build is carried out for every change that is submitted. The polling event will only return the oldest unbuilt change, resulting in incremental builds. 
-
+- **Polling latest change:** A build is carried out for the latest change found during polling.
+- **Polling latest change with pin:** In case of a pinned checkout, polling ignores the pin or the label specified in the checkout step and polls till the latest change.
 ### Repository browser
 Repository browsing allows Jenkins to use an external browser, to navigate files and changes associated with a Jenkins build. The Helix Swam browser is recommended.  
 To enable the feature select the browser from the **Repository browser** dropdown list, and provide the full URL to the browser.

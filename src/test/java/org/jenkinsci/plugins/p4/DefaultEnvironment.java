@@ -48,6 +48,8 @@ abstract public class DefaultEnvironment {
 	protected final static String R17_1 = "r17.1";
 	protected final static String R18_1 = "r18.1";
 
+	protected final static String R19_1 = "r19.1";
+
 	protected final static String CREDENTIAL = "id";
 	protected final static int HTTP_PORT = 1888;
 	protected final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
@@ -130,7 +132,7 @@ abstract public class DefaultEnvironment {
 		FilePath filePath = createFilePath(path, content, workspace);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-            setP4Ignore(p4, "other");
+			setP4Ignore(p4, "other");
 			Publish publish = new SubmitImpl(desc, false, false, false, false, null);
 			boolean open = p4.buildChange(publish);
 			if (open) {
@@ -143,10 +145,10 @@ abstract public class DefaultEnvironment {
 	}
 
 	private void setP4Ignore(ConnectionHelper p4, String p4ignore) {
-        IOptionsServer connection = p4.getConnection();
-        Server server = (Server) connection;
-        server.setIgnoreFileName(p4ignore);
-    }
+		IOptionsServer connection = p4.getConnection();
+		Server server = (Server) connection;
+		server.setIgnoreFileName(p4ignore);
+	}
 
 	private ManualWorkspaceImpl createWorkspace(String path) {
 		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
