@@ -98,18 +98,14 @@ public class P4Hook implements UnprotectedRootAction {
 			}
 
 			// Use an executor to prevent blocking the trigger during polling
-			executorService.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						probeJobs(port, jobs);
-					} catch (IOException e) {
-						LOGGER.severe("Error on Polling Thread.");
-						e.printStackTrace();
-					}
-				}
-			});
+			executorService.submit(() -> {
+                try {
+                    probeJobs(port, jobs);
+                } catch (IOException e) {
+                    LOGGER.severe("Error on Polling Thread : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            });
 		}
 	}
 
