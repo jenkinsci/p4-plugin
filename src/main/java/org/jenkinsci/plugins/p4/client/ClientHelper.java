@@ -332,8 +332,9 @@ public class ClientHelper extends ConnectionHelper {
 		// Sync changes/labels
 		if (buildChange instanceof P4ChangeRef || buildChange instanceof P4LabelRef) {
 			// build file revision spec
-			String path = iclient.getRoot() + "/...";
-			String revisions = path + "@" + buildChange;
+			String localPath = iclient.getRoot() + "/...";
+			String depotPath = where(localPath);
+			String revisions = depotPath + "@" + buildChange;
 
 			// Sync files
 			if (populate instanceof CheckOnlyImpl) {
@@ -460,22 +461,23 @@ public class ClientHelper extends ConnectionHelper {
 	public void tidyWorkspace(Populate populate) throws Exception {
 		// relies on workspace view for scope.
 		log("");
-		String path = iclient.getRoot() + "/...";
+		String localPath = iclient.getRoot() + "/...";
+		String depotPath = where(localPath);
 
 		if (populate instanceof AutoCleanImpl) {
-			tidyAutoCleanImpl(path, populate);
+			tidyAutoCleanImpl(depotPath, populate);
 		}
 
 		if (populate instanceof ForceCleanImpl) {
-			tidyForceSyncImpl(path, populate);
+			tidyForceSyncImpl(depotPath, populate);
 		}
 
 		if (populate instanceof GraphHybridImpl) {
-			tidyForceSyncImpl(path, populate);
+			tidyForceSyncImpl(depotPath, populate);
 		}
 
 		if (populate instanceof SyncOnlyImpl) {
-			tidySyncOnlyImpl(path, populate);
+			tidySyncOnlyImpl(depotPath, populate);
 		}
 	}
 
@@ -492,7 +494,7 @@ public class ClientHelper extends ConnectionHelper {
 		tidyPending(path);
 
 		// remove all versioned files (clean have list)
-		String revisions = iclient.getRoot() + "/...#0";
+		String revisions = path + "#0";
 
 		// Only use quiet populate option to insure a clean sync
 		boolean quiet = populate.isQuiet();
