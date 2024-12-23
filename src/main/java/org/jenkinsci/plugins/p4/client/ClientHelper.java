@@ -6,6 +6,7 @@ import com.perforce.p4java.client.IClientViewMapping;
 import com.perforce.p4java.core.IChangelist;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IRepo;
+import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.FileSpecOpStatus;
@@ -79,6 +80,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -257,7 +259,7 @@ public class ClientHelper extends ConnectionHelper {
 		// convert int fields
 		String[] intFields = new String[]{"StreamAtChange"};
 		for (String key : intFields) {
-			Object value=map.remove(key);
+			Object value = map.remove(key);
 			if (value != null) {
 				map.put(key, value.toString());
 			}
@@ -993,8 +995,38 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		List<IFileSpec> dSpec = FileSpecBuilder.makeFileSpecList(depotPath);
 		List<IFileSpec> lSpec = iclient.where(dSpec);
-		String path = lSpec.get(0).getDepotPathString();
-		return path;
+
+		return getDepotPathSpecificToWorkspaceStream(lSpec);
+	}
+
+	private String getDepotPathSpecificToWorkspaceStream(List<IFileSpec> lSpec) {
+		String stream = iclient.getStream();
+		if (lSpec.isEmpty()) {
+			return "";
+		} else if (stream != null) {
+			// For sparse streams and overlays
+			try {
+				IStreamSummary iStreamSummary = this.getStreams(Collections.singletonList(stream)).get(0);
+				IStreamSummary.Type type = iStreamSummary.getType();
+				if (type.equals(IStreamSummary.Type.VIRTUAL)) {
+					stream = iStreamSummary.getParent();
+				}
+			} catch (Exception e) {
+				throw new RuntimeException("P4JAVA: Error in finding type of stream." + e);
+			}
+
+			String finalStream = stream;
+			Optional<IFileSpec> first = lSpec.stream()
+					.filter(spec -> spec.getDepotPathString().contains(finalStream))
+					.findFirst();
+			if (first.isPresent()) {
+				return first.get().getDepotPathString();
+			} else {
+				return "";
+			}
+		} else {
+			return lSpec.get(0).getDepotPathString();
+		}
 	}
 
 	private void deleteFile(String rev) throws Exception {
