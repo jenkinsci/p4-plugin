@@ -16,7 +16,9 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.version>2.462.3</jenkins.version>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.462</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
   <scm>
@@ -57,7 +59,7 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.462.x</artifactId>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
         <version>3814.v9563d972079a_</version>
         <scope>import</scope>
         <type>pom</type>
