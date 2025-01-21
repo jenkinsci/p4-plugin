@@ -7,6 +7,7 @@ public enum ReviewProp {
 	SWARM_REVIEW("review", true),
 	SWARM_PASS("pass", true),
 	SWARM_FAIL("fail", true),
+	SWARM_UPDATE("update", true),
 
 	// Extended Swarm Review properties
 	SWARM_PROJECT("swarm_project", true),
@@ -24,6 +25,7 @@ public enum ReviewProp {
 	public static final String NAMESPACE = "p4.";
 	final private String prop;
 	final private boolean load;
+
 
 	ReviewProp(String prop, boolean load) {
 		this.prop = prop;

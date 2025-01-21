@@ -276,6 +276,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 			IClient client = getConnection().getClient(name);
 			return (client != null);
 		} catch (RequestException e) {
+			logger.info("getClient exception " + e.getMessage());
 			return false;
 		}
 	}
