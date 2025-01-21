@@ -153,6 +153,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 							new String[]{"shelved", "committed", "submitted"}, "The review status"));
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_PASS.getProp(), null));
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_FAIL.getProp(), null));
+		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_UPDATE.getProp(), null));
 
 		// Custom parameters
 		swarm.add(new StringParameterDefinition(ReviewProp.P4_LABEL.toString(), null));

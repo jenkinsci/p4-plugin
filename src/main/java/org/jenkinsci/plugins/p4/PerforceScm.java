@@ -936,7 +936,7 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} catch (Exception e) {
-			logger.warning("P4: Not able to get connection");
+			logger.warning("P4: Not able to get connection: " + e.getMessage());
 			return false;
 		}
 
@@ -984,6 +984,8 @@ public class PerforceScm extends SCM {
 		private boolean hideTicket;
 		private boolean hideMessages;
 
+		private boolean useSwarmUpdateUrl;
+
 		private int maxFiles = DEFAULT_FILE_LIMIT;
 		private int maxChanges = DEFAULT_CHANGE_LIMIT;
 
@@ -1025,6 +1027,10 @@ public class PerforceScm extends SCM {
 
 		public boolean isHideMessages() {
 			return hideMessages;
+		}
+
+		public boolean isUseSwarmUpdateUrl() {
+			return useSwarmUpdateUrl;
 		}
 
 		public int getMaxFiles() {
@@ -1112,6 +1118,12 @@ public class PerforceScm extends SCM {
 				hideTicket = false;
 			}
 
+			try {
+				useSwarmUpdateUrl = json.getBoolean("useSwarmUpdateUrl");
+			} catch (JSONException e) {
+				logger.info("Unable to read Use Update Url configuration.");
+				useSwarmUpdateUrl = true;
+			}
 			try {
 				maxFiles = json.getInt("maxFiles");
 				maxChanges = json.getInt("maxChanges");
