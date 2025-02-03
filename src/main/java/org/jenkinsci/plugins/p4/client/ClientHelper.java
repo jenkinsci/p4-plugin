@@ -80,7 +80,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -1000,33 +999,36 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private String getDepotPathSpecificToWorkspaceStream(List<IFileSpec> lSpec) {
-		String stream = iclient.getStream();
-		if (lSpec.isEmpty()) {
+		if (null == lSpec || lSpec.isEmpty()) {
 			return "";
-		} else if (stream != null) {
-			// For sparse streams and overlays
+		}
+		String stream = iclient.getStream();
+
+		if (null != stream && !stream.isEmpty()) {
 			try {
-				IStreamSummary iStreamSummary = this.getStreams(Collections.singletonList(stream)).get(0);
-				IStreamSummary.Type type = iStreamSummary.getType();
-				if (type.equals(IStreamSummary.Type.VIRTUAL)) {
-					stream = iStreamSummary.getParent();
+				// If virtual stream, return path with parent stream name.
+				List<IStreamSummary> streamSummaries = this.getStreams(Collections.singletonList(stream));
+				if (null != streamSummaries && !streamSummaries.isEmpty()) {
+					IStreamSummary summary = streamSummaries.get(0);
+					IStreamSummary.Type type = summary.getType();
+					if (type.equals(IStreamSummary.Type.VIRTUAL)) {
+						stream = summary.getParent();
+					}
 				}
 			} catch (Exception e) {
-				throw new RuntimeException("P4JAVA: Error in finding type of stream." + e);
+				// Log the exception without failing the build
+				log("P4JAVA: Error in finding type of stream. " + e);
 			}
 
 			String finalStream = stream;
-			Optional<IFileSpec> first = lSpec.stream()
-					.filter(spec -> spec.getDepotPathString().contains(finalStream))
-					.findFirst();
-			if (first.isPresent()) {
-				return first.get().getDepotPathString();
-			} else {
-				return "";
-			}
-		} else {
-			return lSpec.get(0).getDepotPathString();
+			return lSpec.stream()
+					.filter(spec -> spec != null && spec.getDepotPathString() != null)
+					.map(IFileSpec::getDepotPathString)
+					.filter(path -> path.contains(finalStream))
+					.findFirst()
+					.orElse("");
 		}
+		return lSpec.get(0).getDepotPathString();
 	}
 
 	private void deleteFile(String rev) throws Exception {
