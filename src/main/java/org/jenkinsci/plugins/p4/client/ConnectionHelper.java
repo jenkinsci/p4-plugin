@@ -300,6 +300,10 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		return "";
 	}
 
+	public IUser getUser(String userName) throws Exception {
+		return getConnection().getUser(userName);
+	}
+
 	/**
 	 * Get Perforce Label
 	 *
