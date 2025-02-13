@@ -67,7 +67,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 					stream.println("\t\t<clientId>" + cl.getClientId() + "</clientId>");
 
 					stream.println("\t\t<msg>" + P4Escaper.filter().translate(StringEscapeUtils.escapeXml(cl.getMsg())) + "</msg>");
-					stream.println("\t\t<changeUser>" + StringEscapeUtils.escapeXml(cl.getAuthor().getDisplayName())
+					stream.println("\t\t<changeUser>" + StringEscapeUtils.escapeXml(cl.getAuthor().getId())
 							+ "</changeUser>");
 
 					stream.println("\t\t<changeTime>" + StringEscapeUtils.escapeXml(cl.getChangeTime()) + "</changeTime>");
