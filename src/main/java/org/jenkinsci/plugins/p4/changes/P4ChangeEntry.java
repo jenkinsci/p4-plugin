@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.p4.changes;
 import com.perforce.p4java.core.ChangelistStatus;
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.IFix;
-import com.perforce.p4java.core.IUser;
 import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.graph.ICommit;
@@ -18,7 +17,6 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.email.P4UserProperty;
 import org.kohsuke.stapler.export.Exported;
 
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -59,52 +57,6 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		getFileCountLimit();
 	}
 
-	protected User findOrCreateUser(ConnectionHelper p4, String username) {
-		if (username == null) {
-			return null;
-		}
-
-		IUser p4User = null;
-		try {
-			p4User = p4.getUser(username);
-		} catch(Exception ex) {
-			logger.severe("Failed to look up IUser for username: " + username);
-			return null;
-		}
-		
-		// attempt to look up the user by using the p4 login name as the user id
-		// which is much faster than trying to look up the user by fullname
-		User user = null;
-		String loginName = p4User.getLoginName();
-		if (loginName != null) {
-			user = User.getById(loginName, false);
-		}
-
-		if (user == null) {
-			user = User.getOrCreateByIdOrFullName(username);
-		}
-
-		String email = p4User.getEmail();
-		if (user != null && email != null && !email.isEmpty()) {
-			try {
-				P4UserProperty p4prop = new P4UserProperty(email);
-				user.addProperty(p4prop);
-				logger.fine("Setting email for user: " + user + ":" + email);
-
-				// Set default email for Jenkins user if not defined
-				UserProperty prop = author.getProperty(UserProperty.class);
-				if (prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
-					prop = new UserProperty(email);
-					user.addProperty(prop);
-					logger.fine("Setting default user: " + user + ":" + email);
-				}
-			} catch (IOException e) {
-				logger.severe("Failed to set email by user property. " + e.getMessage());
-			}
-		}
-		return user;
-	}
-
 	public void setChange(ConnectionHelper p4, IChangelistSummary changelist) throws Exception {
 
 		// set id
@@ -112,8 +64,24 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		id = new P4ChangeRef(changeId);
 
 		// set author
-		String username = changelist.getUsername();
-		author = findOrCreateUser(p4, username);
+		String user = changelist.getUsername();
+		author = User.get(user);
+
+		// set email property on user
+		String email = p4.getEmail(user);
+		if (email != null && !email.isEmpty()) {
+			P4UserProperty p4prop = new P4UserProperty(email);
+			author.addProperty(p4prop);
+			logger.fine("Setting email for user: " + user + ":" + email);
+
+			// Set default email for Jenkins user if not defined
+			UserProperty prop = author.getProperty(UserProperty.class);
+			if (prop == null || prop.getAddress() == null || prop.getAddress().isEmpty()) {
+				prop = new UserProperty(email);
+				author.addProperty(prop);
+				logger.fine("Setting default user: " + user + ":" + email);
+			}
+		}
 
 		// set date of change
 		date = changelist.getDate();
@@ -157,8 +125,9 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		id = new P4LabelRef(labelId);
 
 		// set author
-		String username = label.getOwnerName();
-		author = (username != null && !username.isEmpty()) ? findOrCreateUser(p4, username) : User.getUnknown();
+		String user = label.getOwnerName();
+		user = (user != null && !user.isEmpty()) ? user : "unknown";
+		author = User.get(user);
 
 		// set date of change
 		date = label.getLastAccess();
@@ -204,8 +173,9 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		id = new P4GraphRef(repo, commit);
 
 		// set author
-		String username = commit.getAuthor();
-		author = (username != null && !username.isEmpty()) ? findOrCreateUser(p4, username) : User.getUnknown();
+		String user = commit.getAuthor();
+		user = (user != null && !user.isEmpty()) ? user : "unknown";
+		author = User.get(user);
 
 		// set date of change
 		date = commit.getDate();
@@ -260,8 +230,8 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		return author;
 	}
 
-	public void setAuthor(ConnectionHelper p4, String value) {
-		author = (value != null && !value.isEmpty()) ? findOrCreateUser(p4, value) : User.getUnknown();
+	public void setAuthor(String value) {
+		author = User.get(value);
 	}
 
 	public Date getDate() {

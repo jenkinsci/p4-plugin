@@ -247,7 +247,7 @@ public class P4ChangeParser extends ChangeLogParser {
 						}
 
 						if (qName.equalsIgnoreCase("changeUser")) {
-							entry.setAuthor(p4, elementText);
+							entry.setAuthor(elementText);
 							text.setLength(0);
 							return;
 						}
