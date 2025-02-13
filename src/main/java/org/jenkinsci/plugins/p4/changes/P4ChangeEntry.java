@@ -65,7 +65,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set author
 		String user = changelist.getUsername();
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set email property on user
 		String email = p4.getEmail(user);
@@ -127,7 +127,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		// set author
 		String user = label.getOwnerName();
 		user = (user != null && !user.isEmpty()) ? user : "unknown";
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set date of change
 		date = label.getLastAccess();
@@ -175,7 +175,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		// set author
 		String user = commit.getAuthor();
 		user = (user != null && !user.isEmpty()) ? user : "unknown";
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set date of change
 		date = commit.getDate();
@@ -231,7 +231,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public void setAuthor(String value) {
-		author = User.get(value);
+		author = User.getOrCreateByIdOrFullName(value);
 	}
 
 	public Date getDate() {
