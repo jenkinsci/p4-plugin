@@ -28,6 +28,11 @@ public class ShelveImpl extends Publish implements Serializable {
 		super.setPaths(paths);
 	}
 
+	@DataBoundSetter
+	public void setArchiveArtifacts(boolean archiveArtifacts) {
+		super.setArchiveArtifacts(archiveArtifacts);
+	}
+
 	@Extension
 	@Symbol("shelve")
 	public static final class DescriptorImpl extends PublishDescriptor {

@@ -10,6 +10,7 @@ import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import jenkins.util.VirtualFile;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -36,6 +37,7 @@ import java.util.logging.Logger;
 import static com.perforce.p4java.PropertyDefs.IGNORE_FILE_NAME_KEY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class PublishTest extends DefaultEnvironment {
 
@@ -242,6 +244,46 @@ public class PublishTest extends DefaultEnvironment {
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0));
 		jenkins.assertLogContains("P4 Task: cleanup client:", run);
 		jenkins.assertLogContains("Client jenkins-master-Publish-Cleanup-0-submit deleted.", run);
+	}
+
+	@Test
+	public void publishStepShouldSubmitGeneratedArtifacts() throws Exception {
+		WorkflowJob project = jenkins.jenkins.createProject(WorkflowJob.class, "Publish-Artifact");
+		String artifactName = "Test.log";
+		project.setDefinition(new CpsFlowDefinition(" " +
+				"pipeline { \n" +
+				"  agent any\n" +
+				"  options { skipDefaultCheckout() } \n" +
+				"  stages { " +
+				"    stage (\"Submit\") { " +
+				"      steps { " +
+				"        script { " +
+				"          writeFile file: '" + artifactName + "', text: \"${BUILD_NUMBER}\" \n" +
+				"          p4publish credential: '" + CREDENTIAL + "', " +
+				"          publish: submit(description: 'Submitted by Jenkins. Build: ${BUILD_TAG}',archiveArtifacts: true), " +
+				"          workspace: " +
+				"            manualSpec(" +
+				"              charset: 'none', cleanup: false," +
+				"              name: 'jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-submit', " +
+				"              spec: " +
+				"                clientSpec(" +
+				"                  clobber: true, line: 'LOCAL',type: 'WRITABLE', " +
+				"            	   view: '//depot/cleanup/... //jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}-submit/...'" +
+				"                )" +
+				"            ) " +
+				"        } " +
+				"      } " +
+				"    } " +
+				"  } " +
+				"}", false));
+
+		WorkflowRun run = jenkins.assertBuildStatusSuccess(project.scheduleBuild2(0));
+		assertTrue(run.getHasArtifacts());
+
+		VirtualFile submittedArtifact = run.pickArtifactManager().root().child(artifactName);
+		assertNotNull(submittedArtifact);
+		assertTrue(submittedArtifact.toString().contains(artifactName));
+
 	}
 
 }
