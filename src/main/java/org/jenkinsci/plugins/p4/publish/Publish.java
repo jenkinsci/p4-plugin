@@ -15,6 +15,7 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 	private final boolean onlyOnSuccess;
 	private final boolean delete;
 	private final boolean modtime;
+	private boolean archiveArtifacts;
 
 	private String expandedDesc;
 	private String paths;
@@ -33,6 +34,14 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 
 	public boolean isModtime() {
 		return modtime;
+	}
+
+	public boolean isArchiveArtifacts() {
+		return archiveArtifacts;
+	}
+
+	public void setArchiveArtifacts(boolean archiveArtifacts) {
+		this.archiveArtifacts = archiveArtifacts;
 	}
 
 	public Publish(String description, boolean onlyOnSuccess, boolean delete, boolean modtime) {

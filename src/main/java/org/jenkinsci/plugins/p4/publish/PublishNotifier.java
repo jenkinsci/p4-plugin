@@ -27,6 +27,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class PublishNotifier extends Notifier {
@@ -87,15 +90,38 @@ public class PublishNotifier extends Notifier {
 		desc = ws.getExpand().format(desc, false);
 		getPublish().setExpandedDesc(desc);
 
-		String publishedChangeId = buildWorkspace.act(task);
+		Map<String, List<String>> idArtifactsMap = buildWorkspace.act(task);
+		Map.Entry<String, List<String>> entry = idArtifactsMap.entrySet().iterator().next();
+		String publishedChangeId = entry.getKey();
+		if (StringUtils.isNotEmpty(publishedChangeId)) {
+			build.addAction(new P4PublishEnvironmentContributingAction(publishedChangeId));
+		}
 
+		List<String> artifacts = entry.getValue();
+		if (!artifacts.isEmpty()) {
+			Map<String, String> artifactsDirMap = mapArtifactsToLocalPaths(artifacts, buildWorkspace);
+			if (!artifactsDirMap.isEmpty()) {
+				build.pickArtifactManager().archive(buildWorkspace, launcher, listener, artifactsDirMap);
+			}
+		}
 		cleanupPerforceClient(build, buildWorkspace, listener);
-
 		return StringUtils.isNotEmpty(publishedChangeId);
 	}
 
-	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener)
-			throws InterruptedException, IOException {
+	protected Map<String, String> mapArtifactsToLocalPaths(List<String> artifactLocalPaths, FilePath buildWorkspace) {
+		String root = buildWorkspace.getRemote();
+		Map<String, String> archiveDirMapping = new HashMap<>();
+		for (String localPath : artifactLocalPaths) {
+			if (!localPath.startsWith(root)) {
+				continue;
+			}
+			String relativePath = localPath.substring(root.length() + 1);
+			archiveDirMapping.put(relativePath, relativePath);
+		}
+		return archiveDirMapping;
+	}
+
+	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener) throws InterruptedException, IOException {
 		Workspace ws = getWorkspace().deepClone();
 
 		if (!ws.isCleanup()) {

@@ -22,6 +22,11 @@ public class SubmitImpl extends Publish implements Serializable {
 		return purge;
 	}
 
+	@DataBoundSetter
+	public void setArchiveArtifacts(boolean archiveArtifacts) {
+		super.setArchiveArtifacts(archiveArtifacts);
+	}
+
 	public int getPurgeValue() {
 		int keep = 0;
 		if (purge != null && !purge.isEmpty()) {
