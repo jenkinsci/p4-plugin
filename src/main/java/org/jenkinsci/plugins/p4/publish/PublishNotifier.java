@@ -87,11 +87,11 @@ public class PublishNotifier extends Notifier {
 		desc = ws.getExpand().format(desc, false);
 		getPublish().setExpandedDesc(desc);
 
-		String publishedChangeId = buildWorkspace.act(task);
+		buildWorkspace.act(task);
 
 		cleanupPerforceClient(build, buildWorkspace, listener);
 
-		return StringUtils.isNotEmpty(publishedChangeId);
+		return true;
 	}
 
 	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener)
