@@ -3,16 +3,13 @@ package org.jenkinsci.plugins.p4.review;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.matrix.MatrixRun;
-import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
-import hudson.scm.SCM;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.workflow.source.P4SwarmUpdateAction;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +31,6 @@ import java.util.logging.Logger;
 public class ReviewNotifier extends RunListener<Run> {
 
 	private static final Logger logger = Logger.getLogger(ReviewNotifier.class.getName());
-	private boolean isUpdateURLEnabled = true; // global config can be class variable
 
 	@Override
 	public void onCompleted(Run run, TaskListener listener) {
@@ -52,7 +48,7 @@ public class ReviewNotifier extends RunListener<Run> {
 			String buildURL = getBuildURL(run);
 			EnvVars env = run.getEnvironment(listener);
 			String updateCallback = env.get(ReviewProp.SWARM_UPDATE.getProp());
-			if (isUpdateURLEnabled && StringUtils.isNotEmpty(updateCallback)) {
+			if (StringUtils.isNotEmpty(updateCallback)) {
 				String status = (result.equals(Result.SUCCESS)) ? "pass" : "fail";
 				List<P4SwarmUpdateAction> actions = run.getActions(P4SwarmUpdateAction.class);
 				if (!CollectionUtils.isEmpty(actions) || result.equals(Result.FAILURE)) {
@@ -81,16 +77,11 @@ public class ReviewNotifier extends RunListener<Run> {
 		if (j == null) {
 			return;
 		}
-		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
-		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) scm;
-		if (p4scm != null) {
-			isUpdateURLEnabled = p4scm.isUseSwarmUpdateUrl();
-		}
 
 		try {
 			EnvVars env = run.getEnvironment(listener);
 			String updateCallback = env.get(ReviewProp.SWARM_UPDATE.getProp());
-			if (isUpdateURLEnabled && StringUtils.isNotEmpty(updateCallback)) {
+			if (StringUtils.isNotEmpty(updateCallback)) {
 				// onStarted() is only called once when build is stated. A scheduled task required to get message and notify update periodically
 				Timer timer = new Timer();
 
@@ -116,7 +107,7 @@ public class ReviewNotifier extends RunListener<Run> {
 				};
 				timer.scheduleAtFixedRate(task, 2000, 10000);
 			} else {
-				logger.log(Level.INFO, "Skipping job onStarted because use update url is disabled");
+				logger.log(Level.INFO, "Skipping job onStarted because use update url id empty.");
 			}
 		} catch (Exception e) {
 			logger.log(Level.INFO, "onStarted Unable to Notify Review: " + e.getMessage(), e);
@@ -186,14 +177,13 @@ public class ReviewNotifier extends RunListener<Run> {
 	 * Lookup parameters necessary to post back.
 	 *
 	 * @param run
-	 * @param listener
 	 * @throws Exception
 	 */
 	private String getBuildURL(Run run) throws Exception {
 		Jenkins j = Jenkins.getInstanceOrNull();
 		if (j == null) {
 			// should never be here.
-			logger.warning("Internal failure onCompleted:  no jenkins instance, assuming useUpdateUrl=" + isUpdateURLEnabled);
+			logger.warning("Internal failure onCompleted:  no jenkins instance.");
 			return "";
 		} else {
 			String rootUrl = j.getRootUrl();

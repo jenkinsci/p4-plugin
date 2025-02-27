@@ -57,10 +57,4 @@
         </f:entry>
     </f:section>
 
-	<f:section title="Perforce: Review Build Update Url">
-		<f:entry field="useSwarmUpdateUrl">
-			<f:checkbox title="${%Use Swarm Update URL}" default="true"/>
-		</f:entry>
-	</f:section>
-
 </j:jelly>
