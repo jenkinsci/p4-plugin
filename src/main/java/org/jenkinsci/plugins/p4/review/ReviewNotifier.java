@@ -142,10 +142,10 @@ public class ReviewNotifier extends RunListener<Run> {
 	 * @param messages zero or more messages to send
 	 */
 	private void notifySwarmUpdate(String callback, String status, List<String> messages, String buildUrl) throws Exception {
-		logger.info("ReviewNotifier set status=" + status + " to " + callback);
 		if (StringUtils.isEmpty(callback)) {
 			return;
 		}
+		logger.info("ReviewNotifier set status=" + status + " to " + callback);
 		JSONObject jo = new JSONObject();
 		jo.put("url", buildUrl);
 		jo.put("status", status);
@@ -158,10 +158,10 @@ public class ReviewNotifier extends RunListener<Run> {
 	}
 
 	private void notifySwarmPassFail(String callback, String buildUrl) throws Exception {
-		logger.info("ReviewNotifier to " + callback + " with url=" + buildUrl);
 		if (StringUtils.isEmpty(callback)) {
 			return;
 		}
+		logger.info("ReviewNotifier to " + callback + " with url=" + buildUrl);
 		String postContent = "url=" + buildUrl;
 		HttpURLConnection http = postRequest(callback, postContent);
 		int response = http.getResponseCode();
