@@ -5,9 +5,12 @@ import hudson.init.Initializer;
 import hudson.model.Items;
 import jenkins.scm.api.SCMRevision;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class P4SCMRevision extends SCMRevision {
@@ -39,6 +42,7 @@ public class P4SCMRevision extends SCMRevision {
 		p4Path.setRevision(ref.toString());
 		p4Path.setMappings(mappings);
 		P4SCMHead head = new P4SCMHead(branch, p4Path);
+		head.setSwarmParams(createSwarmParameters(branch, ref));
 		return new P4SCMRevision(head, ref);
 	}
 
@@ -52,6 +56,7 @@ public class P4SCMRevision extends SCMRevision {
 		String trgName = reviewID;
 		P4SCMHead target = new P4SCMHead(trgName, p4Path);
 		P4ChangeRequestSCMHead head = new P4ChangeRequestSCMHead(trgName, reviewID, p4Path, target);
+		head.setSwarmParams(createSwarmParameters(branch, ref));
 		return new P4SCMRevision(head, ref);
 	}
 
@@ -90,5 +95,12 @@ public class P4SCMRevision extends SCMRevision {
 			return "undefined";
 		}
 		return ref.toString();
+	}
+
+	private static Map<String, String> createSwarmParameters(String branch, P4Ref ref) {
+		Map<String, String> swarmParameters = new HashMap<>();
+		swarmParameters.put(ReviewProp.SWARM_BRANCH.toString(), branch);
+		swarmParameters.put(ReviewProp.P4_CHANGE.toString(), ref.toString());
+		return swarmParameters;
 	}
 }
