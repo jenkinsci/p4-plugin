@@ -6,7 +6,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
-import org.htmlunit.html.HtmlPage;
 import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IStreamViewMapping;
@@ -22,6 +21,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import net.sf.json.JSONObject;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
@@ -55,12 +55,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -69,7 +69,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -328,17 +327,18 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		server.createStream(stream);
 
 		// Create a Jenkinsfile
-		String pipeline = ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Hello\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String pipeline = """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        echo "Hello"
+				      }
+				    }
+				  }
+				}""";
 		submitStreamFile(jenkins, "//stream/Acme-main/Jenkinsfile", pipeline, "description");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -424,21 +424,22 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content");
 		submitFile(jenkins, "//depot/classic/A/tests/fileB", "content");
-		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('fileA'))       error 'missing fileA'\n"
-				+ "          if(!fileExists('fileB'))       error 'missing fileB'\n"
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'
+				          if(!fileExists('fileA'))       error 'missing fileA'
+				          if(!fileExists('fileB'))       error 'missing fileB'
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//depot/classic/...";
@@ -575,19 +576,20 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		server.createStream(stream);
 
 		// Create a Jenkinsfile
-		String pipeline = ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "          if(!fileExists('imports/file1.txt'))   error 'missing import'\n"
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String pipeline = """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				          if(!fileExists('imports/file1.txt'))   error 'missing import'
+				        }
+				      }
+				    }
+				  }
+				}""";
 		submitStreamFile(jenkins, "//stream/import/Jenkinsfile", pipeline, "description");
 
 		// create a file to import
@@ -662,7 +664,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
 		assertEquals("Main has built", 2, build.number);
-		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals("Dev has not built", 1, multi.getItem("Dev").getLastBuild().number);
 	}
 
 	@Test
@@ -713,7 +715,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertEquals("Main has built", 2, runMain.number);
 		assertEquals(Result.SUCCESS, runMain.getResult());
 
-		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals("Dev has not built", 1, multi.getItem("Dev").getLastBuild().number);
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
 	}
 
@@ -759,9 +761,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(commit));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -780,7 +782,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals("Dev should not build", 1, multi.getItem("Dev").getLastBuild().number);
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
 		assertEquals("Main should have built", 2, runMain.number);
@@ -831,9 +833,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(commit));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -860,7 +862,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals("Dev should not build", 1, multi.getItem("Dev").getLastBuild().number);
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
 		assertEquals("Main should have built", 2, runMain.number);
@@ -912,9 +914,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(review));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		List<SwarmReviewsAPI.Reviews> mockReviewsList = new ArrayList<>();
 		SwarmReviewsAPI.Reviews mockReviews = new SwarmReviewsAPI.Reviews(Long.parseLong(review), changes, "author");
@@ -959,8 +961,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not built", multi.getItem("Dev").getLastBuild().number == 1);
-		assertTrue("Main should not built", multi.getItem("Main").getLastBuild().number == 1);
+		assertEquals("Dev should not built", 1, multi.getItem("Dev").getLastBuild().number);
+		assertEquals("Main should not built", 1, multi.getItem("Main").getLastBuild().number);
 
 		WorkflowRun revRun = revJob.getLastBuild();
 		assertNotNull(revJob);

@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClient;
 import com.perforce.p4java.server.IOptionsServer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
@@ -9,10 +10,12 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class StaticWorkspaceImpl extends Workspace implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String name;
@@ -57,6 +60,7 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 	@Symbol("staticSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Static (static view, master only)";

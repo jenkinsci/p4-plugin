@@ -1,16 +1,19 @@
 package org.jenkinsci.plugins.p4.populate;
 
 import com.perforce.p4java.option.client.ParallelSyncOptions;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final boolean enable;
@@ -68,6 +71,7 @@ public class ParallelSync extends AbstractDescribableImpl<ParallelSync> implemen
 	@Symbol("parallel")
 	public static class DescriptorImpl extends Descriptor<ParallelSync> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce Parallel Sync";

@@ -12,6 +12,7 @@ import com.perforce.p4java.impl.generic.client.ClientView.ClientViewMapping;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
@@ -27,9 +28,11 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.InputStream;
+import java.io.Serial;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -37,6 +40,7 @@ import java.util.regex.Pattern;
 
 public class ManualWorkspaceImpl extends Workspace implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String name;
@@ -104,11 +108,8 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 			GetFileContentsOptions printOpts = new GetFileContentsOptions();
 			printOpts.setNoHeaderLine(true);
-			InputStream ins = connection.getFileContents(file, printOpts);
-			try {
-				specString = IOUtils.toString(ins, "UTF-8");
-			} finally {
-				ins.close();
+			try (InputStream ins = connection.getFileContents(file, printOpts)) {
+				specString = IOUtils.toString(ins, StandardCharsets.UTF_8);
 			}
 			specString = getExpand().format(specString, true);
 		}
@@ -162,7 +163,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		}
 		if (depot != null && client == null) {
 			// compose RHS.
-			line = ViewMapHelper.getClientView(Arrays.asList(new String[]{line}), clientName, true, false);
+			line = ViewMapHelper.getClientView(List.of(line), clientName, true, false);
 			// getClientView() adds the depot to the RHS:  we remove it here.
 			line = line.replace("//" + clientName + "/" + depot, "//" + clientName);
 		}
@@ -187,21 +188,13 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 				List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
 				GetFileContentsOptions printOpts = new GetFileContentsOptions();
 				printOpts.setNoHeaderLine(true);
-				InputStream ins = null;
-				try {
-					ins = connection.getFileContents(file, printOpts);
-					specString = IOUtils.toString(ins, "UTF-8");
-				} finally {
-					if (ins != null) {
-						ins.close();
-					}
+				try (InputStream ins = connection.getFileContents(file, printOpts)) {
+					specString = IOUtils.toString(ins, StandardCharsets.UTF_8);
 				}
 				specString = getExpand().format(specString, true);
 			}
 
-			for (String line : specString.split("\\n")) {
-				changeView.add(line);
-			}
+			Collections.addAll(changeView, specString.split("\\n"));
 		}
 		return changeView;
 	}
@@ -318,6 +311,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 	@Symbol("manualSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Manual (custom view)";
@@ -345,7 +339,7 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 			IOptionsServer p4 = ConnectionFactory.getConnection();
 			IClient c = p4.getClient(client);
 
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			for (IClientViewMapping view : c.getClientView()) {
 				sb.append(view.toString(" ", true));
 				sb.append("\n");

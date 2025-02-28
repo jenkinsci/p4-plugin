@@ -16,7 +16,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.SampleServerRule;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
@@ -28,6 +27,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.springframework.security.core.Authentication;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -177,11 +177,11 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 
 	private List<P4BaseCredentials> lookupCredentials() {
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
-		Authentication acl = ACL.SYSTEM;
+		Jenkins scope = Jenkins.get();
+		Authentication acl = ACL.SYSTEM2;
 		DomainRequirement domain = new DomainRequirement();
 
-		return CredentialsProvider.lookupCredentials(type, scope, acl, domain);
+		return CredentialsProvider.lookupCredentialsInItemGroup(type, scope, acl, List.of(domain));
 	}
 
 	@Test
@@ -222,8 +222,8 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		SystemCredentialsProvider.getInstance().save();
 		assertFalse(new SystemCredentialsProvider().getCredentials().isEmpty());
 
-		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentials(P4BaseCredentials.class,
-				job, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentialsInItem(P4BaseCredentials.class,
+				job, ACL.SYSTEM2, Collections.emptyList());
 		assertEquals(1, list.size());
 		assertEquals(globalCredentials.getId(), list.get(0).getId());
 	}
@@ -255,8 +255,8 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		folder.save();
 		assertFalse(folderStore.getCredentials(Domain.global()).isEmpty());
 
-		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentials(P4BaseCredentials.class,
-				folder.getItemGroup(), ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentialsInItemGroup(P4BaseCredentials.class,
+				folder.getItemGroup(), ACL.SYSTEM2, Collections.emptyList());
 		assertEquals(2, list.size());
 		assertEquals(inFolderCredentials.getId(), list.get(0).getId());
 		assertEquals(globalCredentials.getId(), list.get(1).getId());
@@ -348,11 +348,12 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	public void testInvalidCredentials() throws Exception {
 
 		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidCredentials");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: 'Invalid', template: 'test.ws'\n"
-				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}", false));
+		job.setDefinition(new CpsFlowDefinition("""
+				\
+				node {
+				   p4sync credential: 'Invalid', template: 'test.ws'
+				   println "P4_CHANGELIST: ${env.P4_CHANGELIST}"
+				}""", false));
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.FAILURE, run.getResult());
 		jenkins.assertLogContains("Unable to checkout: org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException: Invalid credentials", run);
@@ -363,11 +364,12 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		createCredentials("user", "password", "localhos:1666", "idBad");
 
 		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidPort");
-		job.setDefinition(new CpsFlowDefinition(""
-				+ "node {\n"
-				+ "   p4sync credential: 'idBad', template: 'test.ws'\n"
-				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}", false));
+		job.setDefinition(new CpsFlowDefinition("""
+				\
+				node {
+				   p4sync credential: 'idBad', template: 'test.ws'
+				   println "P4_CHANGELIST: ${env.P4_CHANGELIST}"
+				}""", false));
 		WorkflowRun run = job.scheduleBuild2(0).get();
 		assertEquals(Result.FAILURE, run.getResult());
 		jenkins.assertLogContains("Unable to ", run);

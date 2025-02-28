@@ -12,6 +12,7 @@ import hudson.model.ParametersAction;
 import hudson.model.Queue;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn.ParameterizedJob;
 import jenkins.util.TimeDuration;
@@ -20,7 +21,6 @@ import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -57,7 +57,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	 * @return List of Parameters
 	 */
 	public List<StringParameterValue> getAvailableParameters() {
-		List<StringParameterValue> stringParameters = new ArrayList<StringParameterValue>();
+		List<StringParameterValue> stringParameters = new ArrayList<>();
 
 		for (ParameterDefinition parameterDefinition : getParameterDefinitions()) {
 			StringParameterValue stringParameter = new StringParameterValue(parameterDefinition.getName(),
@@ -80,12 +80,12 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	}
 
 	@POST
-	public void doBuild(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
+	public void doBuild(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
 
 		project.checkPermission(Item.BUILD);
 
-		List<ParameterValue> values = new ArrayList<ParameterValue>();
-		List<ParameterDefinition> defs = new ArrayList<ParameterDefinition>();
+		List<ParameterValue> values = new ArrayList<>();
+		List<ParameterDefinition> defs = new ArrayList<>();
 
 		Enumeration<?> names = req.getParameterNames();
 		while (names.hasMoreElements()) {
@@ -98,7 +98,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 			if (value == null || value.getValue() == null) {
 				continue;
 			}
-			String s = (String) value.getValue();
+			String s = value.getValue();
 			if (s != null && !s.isEmpty()) {
 				values.add(value);
 			}
@@ -111,7 +111,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 		List<ParameterValue> internalParams = extractAndRemoveInternalParameters(values);
 		ParametersAction params = new SafeParametersAction(values, internalParams);
 
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		Queue queue = j.getQueue();
 		queue.schedule(project, delay.getTimeInSeconds(), params, cause);
 
@@ -127,7 +127,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	 * @return internal parameters values
 	 */
 	private List<ParameterValue> extractAndRemoveInternalParameters(List<ParameterValue> values) {
-		List<ParameterValue> internal = new ArrayList<ParameterValue>();
+		List<ParameterValue> internal = new ArrayList<>();
 		List<ParameterDefinition> parameterDefinitions = getParameterDefinitions();
 		Iterator<ParameterValue> it = values.iterator();
 		while (it.hasNext()) {
@@ -144,7 +144,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	}
 
 	private List<ParameterDefinition> getParameterDefinitions() {
-		List<ParameterDefinition> swarm = new ArrayList<ParameterDefinition>();
+		List<ParameterDefinition> swarm = new ArrayList<>();
 
 		// Swarm parameters
 		swarm.add(new StringParameterDefinition(ReviewProp.SWARM_REVIEW.getProp(), null));

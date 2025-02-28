@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow;
 
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -21,6 +22,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.Serial;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -46,6 +48,7 @@ public class P4SwarmUpdateStep extends Step {
 			return "p4SwarmUpdate";
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4 Swarm Update";
@@ -66,12 +69,13 @@ public class P4SwarmUpdateStep extends Step {
 	}
 
 	@Override
-	public StepExecution start(StepContext context) throws Exception {
+	public StepExecution start(StepContext context) {
 		return new P4SwarmUpdateStepExecution(this, context);
 	}
 
 	private class P4SwarmUpdateStepExecution extends SynchronousStepExecution<Void> {
 
+		@Serial
 		private static final long serialVersionUID = 1L;
 		private final P4SwarmUpdateStep step;
 

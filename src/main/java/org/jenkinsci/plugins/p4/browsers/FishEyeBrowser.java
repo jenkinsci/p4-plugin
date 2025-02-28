@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -15,13 +16,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 public class FishEyeBrowser extends P4Browser {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -73,7 +75,7 @@ public class FishEyeBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getJobLink(String job) throws Exception {
+	public URL getJobLink(String job) {
 		// Not implemented for FishEye
 		return null;
 	}
@@ -105,13 +107,13 @@ public class FishEyeBrowser extends P4Browser {
 		private static final Pattern URL_PATTERN = Pattern
 				.compile(".+/browse/[^/]+/");
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "FishEye browser";
 		}
 
-		public FormValidation doCheck(@QueryParameter final String value)
-				throws IOException, ServletException {
+		public FormValidation doCheck(@QueryParameter final String value) {
 
 			String url = Util.fixEmpty(value);
 			if (url == null) {
@@ -128,7 +130,7 @@ public class FishEyeBrowser extends P4Browser {
 		}
 
 		@Override
-		public FishEyeBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
+		public FishEyeBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) {
 			return (req == null) ? null : req.bindJSON(FishEyeBrowser.class, jsonObject);
 		}
 	}

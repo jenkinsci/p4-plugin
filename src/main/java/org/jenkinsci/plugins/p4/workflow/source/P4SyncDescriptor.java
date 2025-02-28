@@ -24,7 +24,7 @@ public abstract class P4SyncDescriptor extends Descriptor<AbstractSource> {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
 		try {
 			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null && value.length() > 0) {
+			if (iserver != null && !value.isEmpty()) {
 				List<ILabelSummary> list;
 				GetLabelsOptions opts = new GetLabelsOptions();
 				opts.setMaxResults(10);

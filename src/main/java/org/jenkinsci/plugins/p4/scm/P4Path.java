@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class P4Path implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String path;
@@ -73,7 +75,7 @@ public class P4Path implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer(getPath());
+		StringBuilder sb = new StringBuilder(getPath());
 		String rev = getRevision();
 		rev = (rev == null) ? "latest" : rev;
 		sb.append("@");

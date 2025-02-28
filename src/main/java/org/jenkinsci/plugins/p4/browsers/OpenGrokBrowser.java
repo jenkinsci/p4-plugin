@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -14,12 +15,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
-import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class OpenGrokBrowser extends P4Browser {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -62,8 +65,8 @@ public class OpenGrokBrowser extends P4Browser {
 			return null;
 		}
 
-		String r1 = "r1=" + URLEncoder.encode(path + "#" + (rev - 1), "UTF-8");
-		String r2 = "r2=" + URLEncoder.encode(path + "#" + rev, "UTF-8");
+		String r1 = "r1=" + URLEncoder.encode(path + "#" + (rev - 1), StandardCharsets.UTF_8);
+		String r2 = "r2=" + URLEncoder.encode(path + "#" + rev, StandardCharsets.UTF_8);
 
 		return new URL(getSafeUrl(), "source/diff/" + projectName + "/build.properties?"
 				+ r2 + "&" + r1 + getRelativeFilename(file));
@@ -76,7 +79,7 @@ public class OpenGrokBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getJobLink(String job) throws Exception {
+	public URL getJobLink(String job) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -90,7 +93,7 @@ public class OpenGrokBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getChangeSetLink(P4ChangeEntry changeSet) throws IOException {
+	public URL getChangeSetLink(P4ChangeEntry changeSet) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -99,6 +102,7 @@ public class OpenGrokBrowser extends P4Browser {
 	@Symbol("openGrok")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "OpenGrok";
@@ -117,7 +121,7 @@ public class OpenGrokBrowser extends P4Browser {
 		}
 
 		@Override
-		public OpenGrokBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
+		public OpenGrokBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) {
 			return (req == null) ? null : req.bindJSON(OpenGrokBrowser.class, jsonObject);
 		}
 	}

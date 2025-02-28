@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -30,6 +31,7 @@ public class GraphSource extends DepotSource {
 		public DescriptorImpl() {
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Graph Source(s)";

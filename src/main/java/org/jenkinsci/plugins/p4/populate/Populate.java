@@ -5,10 +5,12 @@ import hudson.ExtensionPoint;
 import hudson.model.Describable;
 import jenkins.model.Jenkins;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public abstract class Populate implements ExtensionPoint, Describable<Populate>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final boolean have; // ! sync '-p'
@@ -52,12 +54,12 @@ public abstract class Populate implements ExtensionPoint, Describable<Populate>,
 	}
 
 	public PopulateDescriptor getDescriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		return (PopulateDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<Populate, PopulateDescriptor> all() {
-		Jenkins j = Jenkins.getInstance();
-		return j.<Populate, PopulateDescriptor> getDescriptorList(Populate.class);
+		Jenkins j = Jenkins.get();
+		return j.getDescriptorList(Populate.class);
 	}
 }

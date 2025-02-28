@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -94,7 +95,7 @@ public class PublishTest extends DefaultEnvironment {
 		List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList("//depot/Data/artifact.1");
 		GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
 		List<IExtendedFileSpec> eSpec = p4.getConnection().getExtendedFiles(fileSpec, opts);
-		assertEquals(eSpec.get(0).getHeadType(), "text+S3");
+		assertEquals("text+S3", eSpec.get(0).getHeadType());
 	}
 
 	@Test
@@ -187,7 +188,7 @@ public class PublishTest extends DefaultEnvironment {
 	public void testHighAsciiDescriptions() throws Exception {
 
 		byte[] byteArray = new byte[]{'t', 'e', 's', 't', 5, '.'};
-		String desc = new String(byteArray, "UTF-8");
+		String desc = new String(byteArray, StandardCharsets.UTF_8);
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content", desc);
 
 

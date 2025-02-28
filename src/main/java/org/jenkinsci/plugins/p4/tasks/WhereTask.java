@@ -7,16 +7,17 @@ import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class WhereTask extends AbstractTask implements FilePath.FileCallable<String>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String script;
@@ -36,7 +37,7 @@ public class WhereTask extends AbstractTask implements FilePath.FileCallable<Str
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 
 	@Override

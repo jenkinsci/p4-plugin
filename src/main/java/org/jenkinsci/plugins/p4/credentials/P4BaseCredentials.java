@@ -7,10 +7,13 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.Serial;
+
 public abstract class P4BaseCredentials extends BaseStandardCredentials implements P4Credentials {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
-	
+
 	@NonNull
 	private final String p4port;
 
@@ -78,6 +81,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		this.p4host = p4host;
 	}
 
+	@NonNull
 	public String getP4port() {
 		return p4port;
 	}
@@ -98,7 +102,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 			return "p4javassl://" + p4port;
 		}
 		if (p4port.startsWith("rsh:")) {
-			String trim = p4port.substring(4, p4port.length());
+			String trim = p4port.substring(4);
 			return "p4jrsh://" + trim + " --java";
 		}
 		return "p4java://" + p4port;
@@ -109,7 +113,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 	}
 
     public boolean isSslEnabled() {
-        return (ssl == null) ? false : true;
+	    return ssl != null;
     }
 
 	@CheckForNull
@@ -117,6 +121,7 @@ public abstract class P4BaseCredentials extends BaseStandardCredentials implemen
 		return (ssl == null) ? null : ssl.getTrust();
 	}
 
+	@NonNull
 	public String getUsername() {
 		return username;
 	}
