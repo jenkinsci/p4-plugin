@@ -12,7 +12,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
 import java.net.URL;
@@ -117,7 +117,7 @@ public class OpenGrokBrowser extends P4Browser {
 		}
 
 		@Override
-		public OpenGrokBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+		public OpenGrokBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
 			return (req == null) ? null : req.bindJSON(OpenGrokBrowser.class, jsonObject);
 		}
 	}

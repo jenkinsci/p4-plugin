@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.88</version>
+    <version>5.17</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -17,7 +17,7 @@
 
   <properties>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.462</jenkins.baseline>
+    <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
@@ -60,7 +60,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3814.v9563d972079a_</version>
+        <version>4948.vcf1d17350668</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -82,28 +82,19 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.17.0</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.17.0</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-exec</artifactId>
-      <version>1.3</version>
+      <version>1.4.0</version>
     </dependency>
 
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.9.0</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>gson-api</artifactId>
     </dependency>
 
     <dependency>
@@ -187,7 +178,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
-      <version>0.6</version>
+      <version>0.8</version>
       <optional>true</optional>
     </dependency>
 
@@ -237,9 +228,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20240303</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>json-api</artifactId>
     </dependency>
 
   </dependencies>
