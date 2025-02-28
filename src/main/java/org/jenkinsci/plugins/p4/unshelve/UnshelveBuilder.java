@@ -131,7 +131,7 @@ public class UnshelveBuilder extends Builder {
 		// Jenkins instance is not available on slave machine. Update changelog only after build done
 		if (result) {
 			TagAction tagAction = run.getAction(TagAction.class);
-			updateChangeLog(task, workspace, tagAction, change);
+			updateChangeLog(task, ws, tagAction, change);
 		}
 
 		return result;
