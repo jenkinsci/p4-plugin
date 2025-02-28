@@ -8,10 +8,10 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.tasks.AbstractTask;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 public class P4GroovyTask extends AbstractTask implements FileCallable<Map<String, Object>[]>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(P4GroovyTask.class.getName());
@@ -56,7 +57,7 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 			sb.append("P4: Unable to execute p4 groovy task: ");
 			sb.append(cmd == null ? "[null]" : cmd).append(" ");
 			sb.append(args == null ? "[null]" : Arrays.toString(args)).append(": ");
-			sb.append(e.toString());
+			sb.append(e);
 
 			String err = sb.toString();
 			logger.severe(err);
@@ -67,6 +68,6 @@ public class P4GroovyTask extends AbstractTask implements FileCallable<Map<Strin
 
 	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }

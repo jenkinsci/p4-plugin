@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.publish;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -16,7 +17,6 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
@@ -119,7 +119,7 @@ public class PublishNotifier extends Notifier {
 	}
 
 	public static DescriptorImpl descriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		if (j != null) {
 			j.getDescriptorByType(PublishNotifier.DescriptorImpl.class);
 		}
@@ -135,6 +135,7 @@ public class PublishNotifier extends Notifier {
 			return true;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: Publish assets";

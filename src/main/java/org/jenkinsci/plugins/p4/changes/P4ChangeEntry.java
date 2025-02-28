@@ -48,8 +48,8 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		super();
 		setParent(parent);
 
-		jobs = new ArrayList<IFix>();
-		affectedFiles = new ArrayList<P4AffectedFile>();
+		jobs = new ArrayList<>();
+		affectedFiles = new ArrayList<>();
 		getFileCountLimit();
 	}
 
@@ -65,7 +65,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 		// set author
 		String user = changelist.getUsername();
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set email property on user
 		String email = p4.getEmail(user);
@@ -107,7 +107,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 
 		// set list of affected paths/files
-		affectedFiles = new ArrayList<P4AffectedFile>();
+		affectedFiles = new ArrayList<>();
 		if (files != null) {
 			for (IFileSpec item : files) {
 				affectedFiles.add(new P4AffectedFile(item));
@@ -119,7 +119,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public void setLabel(ConnectionHelper p4, String labelId) throws Exception {
-		Label label = (Label) p4.getLabel(labelId);
+		Label label = p4.getLabel(labelId);
 
 		// set id
 		id = new P4LabelRef(labelId);
@@ -127,7 +127,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		// set author
 		String user = label.getOwnerName();
 		user = (user != null && !user.isEmpty()) ? user : "unknown";
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set date of change
 		date = label.getLastAccess();
@@ -146,7 +146,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		}
 
 		// set list of affected files
-		affectedFiles = new ArrayList<P4AffectedFile>();
+		affectedFiles = new ArrayList<>();
 		for (IFileSpec item : files) {
 			affectedFiles.add(new P4AffectedFile(item));
 		}
@@ -175,7 +175,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 		// set author
 		String user = commit.getAuthor();
 		user = (user != null && !user.isEmpty()) ? user : "unknown";
-		author = User.get(user);
+		author = User.getOrCreateByIdOrFullName(user);
 
 		// set date of change
 		date = commit.getDate();
@@ -231,7 +231,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	}
 
 	public void setAuthor(String value) {
-		author = User.get(value);
+		author = User.getOrCreateByIdOrFullName(value);
 	}
 
 	public Date getDate() {
@@ -266,7 +266,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	public int getRows() {
 		String[] lines = msg.split("\r\n|\r|\n");
 		int rows = lines.length;
-		rows = (rows > 10) ? 10 : rows;
+		rows = Math.min(rows, 10);
 		return rows;
 	}
 
@@ -277,7 +277,7 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 	// JENKINS-31306
 	@Override
 	public Collection<String> getAffectedPaths() {
-		Collection<String> affectedPaths = new ArrayList<String>();
+		Collection<String> affectedPaths = new ArrayList<>();
 		for (P4AffectedFile item : getAffectedFiles()) {
 			affectedPaths.add(item.getPath());
 		}
@@ -351,11 +351,10 @@ public class P4ChangeEntry extends ChangeLogSet.Entry {
 
 	private int getFileCountLimit() {
 		int max = 0;
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		if (j != null) {
 			Descriptor dsc = j.getDescriptor(PerforceScm.class);
-			if (dsc instanceof PerforceScm.DescriptorImpl) {
-				PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) dsc;
+			if (dsc instanceof PerforceScm.DescriptorImpl p4scm) {
 				max = p4scm.getMaxFiles();
 			}
 		}
