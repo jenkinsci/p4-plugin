@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.review;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.matrix.MatrixRun;
@@ -33,7 +34,7 @@ public class ReviewNotifier extends RunListener<Run> {
 	private static final Logger logger = Logger.getLogger(ReviewNotifier.class.getName());
 
 	@Override
-	public void onCompleted(Run run, TaskListener listener) {
+	public void onCompleted(Run run, @NonNull TaskListener listener) {
 		if (run instanceof MatrixRun) {
 			return;
 		}
@@ -177,9 +178,8 @@ public class ReviewNotifier extends RunListener<Run> {
 	 * Lookup parameters necessary to post back.
 	 *
 	 * @param run
-	 * @throws Exception
 	 */
-	private String getBuildURL(Run run) throws Exception {
+	private String getBuildURL(Run run) {
 		Jenkins j = Jenkins.getInstanceOrNull();
 		if (j == null) {
 			// should never be here.

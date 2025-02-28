@@ -70,14 +70,14 @@
   <dependencies>
 
     <dependency>
-      <groupId>com.perforce</groupId>
-      <artifactId>p4java</artifactId>
-      <version>2024.2.2695691</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>io.jenkins.plugins</groupId>
-      <artifactId>commons-lang3-api</artifactId>
+      <groupId>com.perforce</groupId>
+      <artifactId>p4java</artifactId>
+      <version>2024.2.2695691</version>
     </dependency>
 
     <dependency>
@@ -92,24 +92,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.mashape.unirest</groupId>
-      <artifactId>unirest-java</artifactId>
-      <version>1.4.9</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>apache-httpcomponents-client-4-api</artifactId>
+      <groupId>com.konghq</groupId>
+      <artifactId>unirest-java-core</artifactId>
+      <version>4.4.5</version>
     </dependency>
 
     <!-- Jenkins dependencies -->
@@ -219,11 +204,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.jenkins.plugins</groupId>
-      <artifactId>json-api</artifactId>
     </dependency>
 
   </dependencies>

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -14,12 +15,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 public class P4WebBrowser extends P4Browser {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	// 'ac' stands for action and corresponds to a unique screen in P4Web
@@ -73,13 +75,13 @@ public class P4WebBrowser extends P4Browser {
 	@Symbol("p4Web")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4Web browser";
 		}
 
-		public FormValidation doCheck(@QueryParameter final String value)
-				throws IOException, ServletException {
+		public FormValidation doCheck(@QueryParameter final String value) {
 
 			String url = Util.fixEmpty(value);
 			if (url == null) {
@@ -93,7 +95,7 @@ public class P4WebBrowser extends P4Browser {
 		}
 
 		@Override
-		public P4WebBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
+		public P4WebBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) {
 			return (req == null) ? null : req.bindJSON(P4WebBrowser.class, jsonObject);
 		}
 	}

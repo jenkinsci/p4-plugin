@@ -66,7 +66,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) {
 		return new ArrayList<>();
 	}
 
@@ -79,7 +79,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
 			String actualPattern = getPattern();
-			if (getPattern() == null || getPattern().trim().equals("")) {
+			if (getPattern() == null || getPattern().trim().isEmpty()) {
 				actualPattern = ".*";
 			}
 			Pattern filterPattern = Pattern.compile(actualPattern);
@@ -130,12 +130,9 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 		List<String> localViews = getLocalPathMappings(path);
 
 		// If there is only one view for external/local then external is treated as local
-		boolean external = false;
-		if ((externalViews.size() + localViews.size()) > 1) {
-			external = true;
-		}
+		boolean external = (externalViews.size() + localViews.size()) > 1;
 
-		StringBuffer view = new StringBuffer();
+		StringBuilder view = new StringBuilder();
 		String client = getFormat();
 
 		String jenkinsView = ViewMapHelper.getScriptView(path.getPath(), getScriptPathOrDefault(), client);
@@ -174,7 +171,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		for (String mapping : getViewMappings()) {
 			if (!mapping.startsWith("//")) {
-				StringBuffer sb = new StringBuffer();
+				StringBuilder sb = new StringBuilder();
 				sb.append(path.getPath());
 				sb.append("/");
 				sb.append(mapping);
@@ -192,6 +189,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		public static final String defaultPattern = ".*";
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix Branches";

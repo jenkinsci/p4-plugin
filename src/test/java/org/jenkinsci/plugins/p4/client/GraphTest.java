@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class GraphTest extends DefaultEnvironment {
@@ -66,10 +66,10 @@ public class GraphTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "10279"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -99,7 +99,7 @@ public class GraphTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), new ArrayList<ParameterValue>());
+		Action actions = new SafeParametersAction(new ArrayList<>(), new ArrayList<>());
 
 		// Build at latest
 		FreeStyleBuild build;

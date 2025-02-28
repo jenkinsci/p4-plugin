@@ -30,10 +30,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class P4SCMFileSystemTest extends DefaultEnvironment {
@@ -56,13 +56,13 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		String view = "//depot/... //${P4_CLIENT}/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 	}
 
 	@Test
 	public void testAutoComplete() throws IOException {
 
-		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "autoComplete");
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "autoComplete");
 
 		// Clear login cache then initialise default connection
 		ConnectionHelper p4 = new ConnectionHelper(owner, CREDENTIAL, null);
@@ -114,7 +114,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 		source.setPattern(BranchesScmSource.DescriptorImpl.defaultPattern);
 		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
 
-		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "multi1");
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "multi1");
 		source.setOwner(owner);
 
 		P4Path path = new P4Path("//depot");

@@ -458,11 +458,12 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	@Test
 	public void testJenkinsfileLocation() throws Exception {
 
-		String content = ""
-				+ "node {\n"
-				+ "   echo 'Alt Jenkinsfile'\n"
-				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}";
+		String content = """
+				\
+				node {
+				   echo 'Alt Jenkinsfile'
+				   println "P4_CHANGELIST: ${env.P4_CHANGELIST}"
+				}""";
 
 		submitFile(jenkins, "//depot/Other/Jenkinsfile", content);
 		String change = submitFile(jenkins, "//depot/Data/j001", "Content");
@@ -471,7 +472,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -495,11 +496,12 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	@Test
 	public void testJenkinsfileLocationLightweight() throws Exception {
 
-		String content = ""
-				+ "node {\n"
-				+ "   echo 'Alt Jenkinsfile'\n"
-				+ "   println \"P4_CHANGELIST: ${env.P4_CHANGELIST}\"\n"
-				+ "}";
+		String content = """
+				\
+				node {
+				   echo 'Alt Jenkinsfile'
+				   println "P4_CHANGELIST: ${env.P4_CHANGELIST}"
+				}""";
 
 		submitFile(jenkins, "//depot/Other/Jenkinsfile", content);
 		String change = submitFile(jenkins, "//depot/Data/j002", "Content");
@@ -508,7 +510,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -539,19 +541,20 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	public void testPipelineJenkinsfilePathEnvVar() throws Exception {
 		String base = "//depot/envJfile";
 		String scriptPath = "Jenkinsfile";
-		submitFile(jenkins, base + "/" + scriptPath, ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + scriptPath, """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				             echo "The jenkinsfile path is: ${JENKINSFILE_PATH}"\
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		// Manual workspace spec definition
 		String client = "envJfile.ws";
@@ -613,7 +616,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		WorkflowRun run1 = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run1);
 		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run1);
-		
+
 	/*
 	    // SCM Jenkinsfile job LightWeight Checkout
 		cpsScmFlowDefinition.setLightweight(true);

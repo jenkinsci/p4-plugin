@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -14,12 +15,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 public class SwarmBrowser extends P4Browser {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@DataBoundConstructor
@@ -37,7 +39,7 @@ public class SwarmBrowser extends P4Browser {
 	}
 
 	@Override
-	public URL getDiffLink(P4AffectedFile file, P4Ref change) throws Exception {
+	public URL getDiffLink(P4AffectedFile file, P4Ref change) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -60,12 +62,13 @@ public class SwarmBrowser extends P4Browser {
 	@Symbol("swarm")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Swarm browser";
 		}
 
-		public FormValidation doCheck(@QueryParameter final String value) throws IOException, ServletException {
+		public FormValidation doCheck(@QueryParameter final String value) {
 
 			String url = Util.fixEmpty(value);
 			if (url == null) {
@@ -78,7 +81,7 @@ public class SwarmBrowser extends P4Browser {
 		}
 
 		@Override
-		public SwarmBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
+		public SwarmBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) {
 			return (req == null) ? null : req.bindJSON(SwarmBrowser.class, jsonObject);
 		}
 	}
