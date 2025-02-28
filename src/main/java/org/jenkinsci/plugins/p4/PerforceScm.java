@@ -82,7 +82,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.File;
 import java.io.IOException;
@@ -278,12 +278,12 @@ public class PerforceScm extends SCM {
 
 	public static P4Browser findBrowser(String scmCredential) {
 		// Retrieve item from request
-		StaplerRequest req = Stapler.getCurrentRequest();
+		StaplerRequest2 req = Stapler.getCurrentRequest2();
 		Job job = req == null ? null : req.findAncestorObject(Job.class);
 
 		// If cannot retrieve item, check from root
 		P4BaseCredentials credentials = job == null
-				? ConnectionHelper.findCredential(scmCredential, Jenkins.getInstance())
+				? ConnectionHelper.findCredential(scmCredential, Jenkins.get())
 				: ConnectionHelper.findCredential(scmCredential, job);
 
 		if (credentials == null) {
@@ -1070,7 +1070,7 @@ public class PerforceScm extends SCM {
 		}
 
 		@Override
-		public SCM newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+		public SCM newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
 			PerforceScm scm = (PerforceScm) super.newInstance(req, formData);
 			return scm;
 		}
@@ -1083,7 +1083,7 @@ public class PerforceScm extends SCM {
 		 * defined in the global.jelly page.
 		 */
 		@Override
-		public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+		public boolean configure(StaplerRequest2 req, JSONObject json) throws FormException {
 
 			try {
 				autoSave = json.getBoolean("autoSave");

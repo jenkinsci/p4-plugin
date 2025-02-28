@@ -21,11 +21,11 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	@POST
-	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
+	public void doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws Exception, ServletException {
 
 		getACL().checkPermission(PerforceScm.TAG);
 

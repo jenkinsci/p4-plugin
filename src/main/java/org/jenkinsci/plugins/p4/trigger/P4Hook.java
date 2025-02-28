@@ -13,11 +13,11 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -51,7 +51,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	@POST
-	public void doEvent(StaplerRequest req) throws ServletException, IOException {
+	public void doEvent(StaplerRequest2 req) throws ServletException, IOException {
 
 		checkPermission(Item.BUILD);
 
@@ -74,7 +74,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	@POST
-	public void doChange(StaplerRequest req) throws ServletException, IOException {
+	public void doChange(StaplerRequest2 req) throws ServletException, IOException {
 
 		checkPermission(Item.BUILD);
 
@@ -114,7 +114,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	@POST
-	public void doChangeSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+	public void doChangeSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
 
 		checkPermission(Item.BUILD);
 
