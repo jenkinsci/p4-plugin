@@ -51,14 +51,12 @@ public class ReviewNotifier extends RunListener<Run> {
 			if (StringUtils.isNotEmpty(updateCallback)) {
 				String status = (result.equals(Result.SUCCESS)) ? "pass" : "fail";
 				List<P4SwarmUpdateAction> actions = run.getActions(P4SwarmUpdateAction.class);
-				if (!CollectionUtils.isEmpty(actions) || result.equals(Result.FAILURE)) {
-					List<String> message = getUpdateMessage(actions);
-					notifySwarmUpdate(updateCallback, status, message, buildURL);
-				}
+				List<String> message = getUpdateMessage(actions);
+				notifySwarmUpdate(updateCallback, status, message, buildURL);
 			} else {
-				String failCallback = env.get(ReviewProp.SWARM_FAIL.getProp());
-				String passCallback = env.get(ReviewProp.SWARM_PASS.getProp());
-				String callbackURL = (result.equals(Result.SUCCESS)) ? passCallback : failCallback;
+				String callbackURL = (result.equals(Result.SUCCESS))
+						? env.get(ReviewProp.SWARM_PASS.getProp())
+						: env.get(ReviewProp.SWARM_FAIL.getProp());
 				notifySwarmPassFail(callbackURL, buildURL);
 			}
 
@@ -107,7 +105,7 @@ public class ReviewNotifier extends RunListener<Run> {
 				};
 				timer.scheduleAtFixedRate(task, 2000, 10000);
 			} else {
-				logger.log(Level.INFO, "Skipping job onStarted because use update url id empty.");
+				logger.log(Level.INFO, "Skipping job onStarted because update callback url is empty.");
 			}
 		} catch (Exception e) {
 			logger.log(Level.INFO, "onStarted Unable to Notify Review: " + e.getMessage(), e);
@@ -136,12 +134,11 @@ public class ReviewNotifier extends RunListener<Run> {
 		if (StringUtils.isEmpty(callback)) {
 			return;
 		}
-		logger.info("ReviewNotifier set status=" + status + " to " + callback);
+		logger.info("ReviewNotifier set status= " + status + " to " + callback);
 		JSONObject jo = new JSONObject();
 		jo.put("url", buildUrl);
 		jo.put("status", status);
-		JSONArray ja = new JSONArray(messages);
-		jo.put("messages", ja);
+		jo.put("messages", messages.isEmpty() ? "" : new JSONArray(messages));
 
 		String postContent = jo.toString();
 		HttpURLConnection http = postRequest(callback, postContent);
@@ -173,16 +170,9 @@ public class ReviewNotifier extends RunListener<Run> {
 		return http;
 	}
 
-	/**
-	 * Lookup parameters necessary to post back.
-	 *
-	 * @param run
-	 * @throws Exception
-	 */
-	private String getBuildURL(Run run) throws Exception {
+	private String getBuildURL(Run run) {
 		Jenkins j = Jenkins.getInstanceOrNull();
 		if (j == null) {
-			// should never be here.
 			logger.warning("Internal failure onCompleted:  no jenkins instance.");
 			return "";
 		} else {
@@ -193,6 +183,5 @@ public class ReviewNotifier extends RunListener<Run> {
 			}
 			return rootUrl + run.getUrl();
 		}
-
 	}
 }
