@@ -198,7 +198,7 @@ public class SwarmHelper {
 	}
 
 	public List<SwarmProjectAPI.Branch> getBranchesInProject(String project) throws Exception {
-		String url = getApiUrl() + "/projects/" + project;
+		String url = getApiUrl() + "/projects/" + project.toLowerCase();
 		Map<String, Object> query = new HashMap<>();
 		query.put("fields", "branches");
 		HttpResponse<JsonNode> res = Unirest.get(url)
