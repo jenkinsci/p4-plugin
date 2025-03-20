@@ -23,7 +23,6 @@ import org.jvnet.hudson.test.Issue;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
@@ -263,10 +262,11 @@ public class WorkflowTest extends DefaultEnvironment {
 	public void testGlobalLib() throws Exception {
 
 		// submit test library
-		String content = ""
-				+ "def call(String name = 'human') {\n" +
-				"    echo \"Hello again, ${name}.\"\n" +
-				"}";
+		String content = """
+				\
+				def call(String name = 'human') {
+				    echo "Hello again, ${name}."
+				}""";
 		submitFile(jenkins, "//depot/library/vars/sayHello.groovy", content);
 
 		// change in source (after library)
@@ -282,7 +282,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
 		assertNotNull(globalLib);
-		globalLib.setLibraries(Arrays.asList(config));
+		globalLib.setLibraries(List.of(config));
 
 		// create job using library
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "useLib");
@@ -317,7 +317,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getBuildByNumber(2).getResult());
 
 		// Clear Global Libraries for other Jobs
-		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+		globalLib.setLibraries(new ArrayList<>());
 	}
 
 	@Test
@@ -325,18 +325,20 @@ public class WorkflowTest extends DefaultEnvironment {
 
 		// First Library
 		// submit test library
-		String content1 = ""
-				+ "def call(String name = 'human') {\n" +
-				"    echo \"Hello1, ${name}.\"\n" +
-				"}";
+		String content1 = """
+				\
+				def call(String name = 'human') {
+				    echo "Hello1, ${name}."
+				}""";
 		submitFile(jenkins, "//depot/library1/vars/sayHello1.groovy", content1);
 
 		// Second library
 		// submit test library
-		String content2 = ""
-				+ "def call(String name = 'human') {\n" +
-				"    echo \"Hello2, ${name}.\"\n" +
-				"}";
+		String content2 = """
+				\
+				def call(String name = 'human') {
+				    echo "Hello2, ${name}."
+				}""";
 		submitFile(jenkins, "//depot/library2/vars/sayHello2.groovy", content2);
 
 		// change in source (after library)
@@ -363,7 +365,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
 		assertNotNull(globalLib);
 
-		List<LibraryConfiguration> libs = new ArrayList<LibraryConfiguration>();
+		List<LibraryConfiguration> libs = new ArrayList<>();
 		libs.add(config1);
 		libs.add(config2);
 		globalLib.setLibraries(libs);
@@ -388,7 +390,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Hello2, Jenkins.", run1);
 
 		// Clear Global Libraries for other Jobs
-		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+		globalLib.setLibraries(new ArrayList<>());
 	}
 
 	@Test
@@ -572,7 +574,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		String client = "manualStream.ws";
 		String stream = "//stream/main";
 		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 		File wsRoot = new File("target/manualStream.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
 

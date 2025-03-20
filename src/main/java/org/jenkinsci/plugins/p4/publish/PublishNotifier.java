@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.publish;
 
 import com.perforce.p4java.core.IChangelistSummary;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
@@ -159,7 +160,7 @@ public class PublishNotifier extends Notifier {
 	}
 
 	public static DescriptorImpl descriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		if (j != null) {
 			j.getDescriptorByType(PublishNotifier.DescriptorImpl.class);
 		}
@@ -175,6 +176,7 @@ public class PublishNotifier extends Notifier {
 			return true;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: Publish assets";

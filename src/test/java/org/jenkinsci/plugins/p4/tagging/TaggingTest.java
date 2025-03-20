@@ -45,12 +45,13 @@ public class TaggingTest extends DefaultEnvironment {
 	@Test
 	public void labelShouldGetCreatedByUsingLabelInPostBuild() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("LabelProject");
-		String view = "//depot/Freestyle/... //${P4_CLIENT}/Freestyle/...\n" +
-				"-//depot/Freestyle/main/sub1/... //${P4_CLIENT}/Freestyle/main/sub1/...\n" +
-				"-//depot/Freestyle/main/sub2/... //${P4_CLIENT}/Freestyle/main/sub2/...\n" +
-				"-//depot/Freestyle/main/sub3/... //${P4_CLIENT}/Freestyle/main/sub3/...\n" +
-				"//depot/sub/... //${P4_CLIENT}/sub/...\n" +
-				"\"//depot/sub sub/...\" \"//${P4_CLIENT}/sub sub/...\"";
+		String view = """
+				//depot/Freestyle/... //${P4_CLIENT}/Freestyle/...
+				-//depot/Freestyle/main/sub1/... //${P4_CLIENT}/Freestyle/main/sub1/...
+				-//depot/Freestyle/main/sub2/... //${P4_CLIENT}/Freestyle/main/sub2/...
+				-//depot/Freestyle/main/sub3/... //${P4_CLIENT}/Freestyle/main/sub3/...
+				//depot/sub/... //${P4_CLIENT}/sub/...
+				"//depot/sub sub/..." "//${P4_CLIENT}/sub sub/...\"""";
 
 		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, "jenkins-${NODE_NAME}-${JOB_NAME}.ws", spec, false);

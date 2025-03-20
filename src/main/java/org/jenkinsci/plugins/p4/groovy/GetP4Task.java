@@ -9,10 +9,12 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class GetP4Task extends MasterToSlaveCallable<P4Groovy, InterruptedException> implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final P4BaseCredentials credential;
@@ -33,7 +35,7 @@ public class GetP4Task extends MasterToSlaveCallable<P4Groovy, InterruptedExcept
 	}
 
 	@Override
-	public P4Groovy call() throws InterruptedException {
+	public P4Groovy call() {
 		P4Groovy p4Groovy = new P4Groovy(credential, listener, workspace, buildWorkspace);
 		return p4Groovy;
 	}

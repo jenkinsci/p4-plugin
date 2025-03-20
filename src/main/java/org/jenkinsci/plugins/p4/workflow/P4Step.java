@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Item;
 import hudson.scm.SCM;
@@ -23,8 +24,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-public class P4Step extends SCMStep {
+import java.io.Serial;
+import java.io.Serializable;
 
+public class P4Step extends SCMStep implements Serializable {
+
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String credential;
@@ -142,6 +147,7 @@ public class P4Step extends SCMStep {
 		this.source = source;
 	}
 
+	@NonNull
 	@Override
 	protected SCM createSCM() {
 		P4Browser browser = PerforceScm.findBrowser(credential);
@@ -200,6 +206,7 @@ public class P4Step extends SCMStep {
 			return "p4sync";
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4 Sync";

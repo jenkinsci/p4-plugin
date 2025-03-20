@@ -40,14 +40,14 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) {
 		return new ArrayList<>();
 	}
 
 	@Override
 	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
 		List<String> paths = getIncludePaths();
-		HashSet<P4SCMHead> list = new HashSet<P4SCMHead>();
+		HashSet<P4SCMHead> list = new HashSet<>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), credential, listener)) {
 
@@ -81,6 +81,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	@Symbol("multiStreams")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix Streams";

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.review;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -114,7 +115,7 @@ public class ApproveNotifier extends Notifier {
 	}
 
 	public static DescriptorImpl descriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		if (j != null) {
 			j.getDescriptorByType(ApproveNotifier.DescriptorImpl.class);
 		}
@@ -130,6 +131,7 @@ public class ApproveNotifier extends Notifier {
 			return true;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: ApproveImpl review";

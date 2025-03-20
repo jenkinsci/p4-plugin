@@ -13,11 +13,13 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 public class PublishTask extends AbstractTask implements FileCallable<String>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(PublishTask.class.getName());
