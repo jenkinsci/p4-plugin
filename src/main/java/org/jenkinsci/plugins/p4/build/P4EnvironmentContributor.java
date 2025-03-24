@@ -134,18 +134,17 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 				continue;
 			}
 			Map<String, String> swarmParameters = ((P4SCMHead) head).getSwarmParams();
+
 			if(swarmParameters == null || swarmParameters.isEmpty()) {
 				continue;
 			}
 			String swarmBranch = swarmParameters.get(ReviewProp.SWARM_BRANCH.toString());
 			if (StringUtils.isNotEmpty(swarmBranch)) {
-				logger.info("Set swarm branch : " + swarmBranch);
-				env.put("P4_Swarm_Branch", swarmBranch);
+				env.put("P4_SWARM_BRANCH", swarmBranch);
 			}
 			String change = swarmParameters.get(ReviewProp.P4_CHANGE.toString());
 			if (StringUtils.isNotEmpty(change)) {
-				logger.info("Set change : " + change);
-				env.put(ReviewProp.P4_CHANGE.toString(), change);
+				env.put("P4_EVENT_CHANGE", change);
 			}
 		}
 	}

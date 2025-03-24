@@ -99,7 +99,7 @@ public class PublishNotifier extends Notifier {
 		String publishedChangeId = buildWorkspace.act(task);
 
 		if (StringUtils.isNotEmpty(publishedChangeId)) {
-			storeChangeToChangelog(build, listener, publishedChangeId, task);
+			storeChangeToChangelog(build, listener, publishedChangeId, task, buildWorkspace);
 		}
 
 		cleanupPerforceClient(build, buildWorkspace, listener);
@@ -131,15 +131,19 @@ public class PublishNotifier extends Notifier {
 		buildWorkspace.act(removeClientTask);
 	}
 
-	protected void storeChangeToChangelog(Run<?, ?> run, TaskListener listener, String publishedChangeID, PublishTask task) throws AbortException {
+	protected void storeChangeToChangelog(Run<?, ?> run, TaskListener listener, String publishedChangeID, PublishTask task, FilePath buildWorkspace) throws AbortException {
 		Workspace workspace = getWorkspace().deepClone();
-		try (ClientHelper p4 = new ClientHelper(task.getCredential(), listener, workspace)) {
+		try {
+			workspace = task.setEnvironment(run, workspace, buildWorkspace);
+			ClientHelper p4 = new ClientHelper(task.getCredential(), listener, workspace);
 			List<P4ChangeEntry> changes = new ArrayList<>();
 			long change = Long.parseLong(publishedChangeID.trim());
 			changes.add(createP4ChangeEntry(p4, change, true));
 			TagAction actions = run.getAction(TagAction.class);
-			for (P4Ref ref : actions.getRefChanges()) {
-				changes.add(createP4ChangeEntry(p4, ref.getChange(), false));
+			if (actions != null) {
+				for (P4Ref ref : actions.getRefChanges()) {
+					changes.add(createP4ChangeEntry(p4, ref.getChange(), false));
+				}
 			}
 			P4ChangeSet.store(actions.getChangelog(), changes);
 		} catch (Exception e) {
