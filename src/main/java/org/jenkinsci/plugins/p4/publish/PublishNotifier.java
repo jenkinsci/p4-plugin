@@ -144,8 +144,8 @@ public class PublishNotifier extends Notifier {
 				for (P4Ref ref : actions.getRefChanges()) {
 					changes.add(createP4ChangeEntry(p4, ref.getChange(), false));
 				}
+				P4ChangeSet.store(actions.getChangelog(), changes);
 			}
-			P4ChangeSet.store(actions.getChangelog(), changes);
 		} catch (Exception e) {
 			logger.severe("P4Publish: Failed to store changelog: " + e.getMessage());
 		}
