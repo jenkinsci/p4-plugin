@@ -103,7 +103,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 			throw new IllegalArgumentException("missing path");
 		}
 
-		setFormat("jenkins-lib-${NODE_NAME}-${JOB_NAME}-${BUILD_NUMBER}-${EXECUTOR_NUMBER}");
+		setFormat("jenkins-lib-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}");
 
 		// patch for older configuration version when '/...' was not required.
 		String depotView = path.getPath();
