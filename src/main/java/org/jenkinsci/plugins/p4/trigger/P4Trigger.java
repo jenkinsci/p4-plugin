@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.trigger;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
@@ -45,6 +46,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 			return item instanceof Job;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce triggered build.";
@@ -59,7 +61,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 
 		LOGGER.info("P4: poking: " + job.getName());
 
-		StreamTaskListener listener = new StreamTaskListener(getLogFile(job));
+		StreamTaskListener listener = new StreamTaskListener(getLogFile(job), Charset.defaultCharset());
 		try {
 			PrintStream log = listener.getLogger();
 
@@ -158,7 +160,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		}
 
 		public String getLog() throws IOException {
-			return Util.loadFile(getLogFile(job));
+			return Util.loadFile(getLogFile(job), Charset.defaultCharset());
 		}
 
 		/**
@@ -169,7 +171,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		 */
 		@SuppressFBWarnings(value = "RV_RETURN_VALUE_IGNORED", justification = "This is called from P4TriggerAction Jelly")
 		public void writeLogTo(XMLOutput out) throws IOException {
-			new AnnotatedLargeText<P4TriggerAction>(getLogFile(job), Charset.defaultCharset(), true, this).writeHtmlTo(0,
+			new AnnotatedLargeText<>(getLogFile(job), Charset.defaultCharset(), true, this).writeHtmlTo(0,
 					out.asWriter());
 		}
 	}

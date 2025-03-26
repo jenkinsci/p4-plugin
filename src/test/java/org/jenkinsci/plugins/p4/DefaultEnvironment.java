@@ -151,7 +151,7 @@ abstract public class DefaultEnvironment {
 	}
 
 	private ManualWorkspaceImpl createWorkspace(String path) {
-		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+		String filename = path.substring(path.lastIndexOf("/") + 1);
 
 		// Create workspace
 		String client = "submit.ws";
@@ -160,7 +160,7 @@ abstract public class DefaultEnvironment {
 		String view = "\"" + path + "\"" + " //" + client + "/" + filename;
 		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false, stream, line, view, null, null, null, true);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 
 		File wsRoot = new File("target/submit.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
@@ -169,19 +169,19 @@ abstract public class DefaultEnvironment {
 	}
 
 	private StreamWorkspaceImpl createStreamsWorkspace(String path, int depth) {
-		String p[] = path.substring(2).split("/");
+		String[] p = path.substring(2).split("/");
 
-		StringBuffer sb = new StringBuffer("//");
+		StringBuilder sb = new StringBuilder("//");
 		for (int i = 0; i < depth; i++) {
 			sb.append(p[i]);
 			sb.append("/");
 		}
 
-		String stream = sb.toString().substring(0, sb.lastIndexOf("/"));
+		String stream = sb.substring(0, sb.lastIndexOf("/"));
 
 		String client = "stream.ws";
 		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 
 		File wsRoot = new File("target/stream.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
@@ -190,7 +190,7 @@ abstract public class DefaultEnvironment {
 	}
 
 	private FilePath createFilePath(String path, String content, Workspace workspace) throws IOException, InterruptedException {
-		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+		String filename = path.substring(path.lastIndexOf("/") + 1);
 
 		File wsRoot = new File(workspace.getRootPath()).getAbsoluteFile();
 
@@ -203,7 +203,7 @@ abstract public class DefaultEnvironment {
 	}
 
 	protected void commitFile(JenkinsRule jenkins, String path, String content) throws Exception {
-		String filename = path.substring(path.lastIndexOf("/") + 1, path.length());
+		String filename = path.substring(path.lastIndexOf("/") + 1);
 
 		// Create workspace
 		String client = "graphCommit.ws";
@@ -255,7 +255,7 @@ abstract public class DefaultEnvironment {
 		return false;
 	}
 
-	public class TestHandler extends Handler {
+	public static class TestHandler extends Handler {
 
 		private StringBuffer sb = new StringBuffer();
 

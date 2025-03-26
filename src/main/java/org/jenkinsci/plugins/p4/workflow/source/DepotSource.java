@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -42,6 +43,7 @@ public class DepotSource extends AbstractSource {
 		public DescriptorImpl() {
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Depot Source(s)";

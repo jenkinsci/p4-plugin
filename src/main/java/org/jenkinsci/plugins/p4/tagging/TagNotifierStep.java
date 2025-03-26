@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.tagging;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -24,8 +25,8 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-			throws InterruptedException, IOException {
+	public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
+			throws IOException {
 
 		// return early if label not required
 		if (onlyOnSuccess && run.getResult() != Result.SUCCESS) {
@@ -67,7 +68,7 @@ public class TagNotifierStep extends TagNotifier implements SimpleBuildStep {
 				return tagAction;
 			}
 
-			Jenkins j = Jenkins.getInstance();
+			Jenkins j = Jenkins.get();
 			Job<?, ?> job = j.getItemByFullName(jobName, Job.class);
 			if (job == null) {
 				logger.warning("No job information; is it a valid Perforce job?");

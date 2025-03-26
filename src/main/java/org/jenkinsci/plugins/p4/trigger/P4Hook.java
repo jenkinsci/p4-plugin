@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.UnprotectedRootAction;
+import jakarta.servlet.ServletException;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.scm.api.SCMEvent;
@@ -13,14 +14,13 @@ import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchSCMHeadEvent;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -51,7 +51,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	@POST
-	public void doEvent(StaplerRequest req) throws ServletException, IOException {
+	public void doEvent(StaplerRequest2 req) throws ServletException, IOException {
 
 		checkPermission(Item.BUILD);
 
@@ -61,7 +61,7 @@ public class P4Hook implements UnprotectedRootAction {
 			return;
 		}
 
-		String body = IOUtils.toString(req.getInputStream(), Charset.forName("UTF-8"));
+		String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
 		if (body.startsWith("payload=")) {
 			body = body.substring(8);
 		}
@@ -74,14 +74,14 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	@POST
-	public void doChange(StaplerRequest req) throws ServletException, IOException {
+	public void doChange(StaplerRequest2 req) throws ServletException, IOException {
 
 		checkPermission(Item.BUILD);
 
-		String body = IOUtils.toString(req.getInputStream(), Charset.forName("UTF-8"));
+		String body = IOUtils.toString(req.getInputStream(), StandardCharsets.UTF_8);
 		String contentType = req.getContentType();
 		if (contentType != null && contentType.startsWith("application/json")) {
-			body = URLDecoder.decode(body, "UTF-8");
+			body = URLDecoder.decode(body, StandardCharsets.UTF_8);
 		}
 		if (body.startsWith("payload=")) {
 			body = body.substring(8);
@@ -98,23 +98,19 @@ public class P4Hook implements UnprotectedRootAction {
 			}
 
 			// Use an executor to prevent blocking the trigger during polling
-			executorService.submit(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						probeJobs(port, jobs);
-					} catch (IOException e) {
-						LOGGER.severe("Error on Polling Thread.");
-						e.printStackTrace();
-					}
+			executorService.submit(() -> {
+				try {
+					probeJobs(port, jobs);
+				} catch (IOException e) {
+					LOGGER.severe("Error on Polling Thread.");
+					e.printStackTrace();
 				}
 			});
 		}
 	}
 
 	@POST
-	public void doChangeSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+	public void doChangeSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
 
 		checkPermission(Item.BUILD);
 
@@ -144,8 +140,7 @@ public class P4Hook implements UnprotectedRootAction {
 			LOGGER.fine("P4: trying: " + job.getName());
 
 			P4Trigger trigger = null;
-			if (job instanceof ParameterizedJobMixIn.ParameterizedJob) {
-				ParameterizedJobMixIn.ParameterizedJob pJob = (ParameterizedJobMixIn.ParameterizedJob) job;
+			if (job instanceof ParameterizedJobMixIn.ParameterizedJob pJob) {
 				for (Object t : pJob.getTriggers().values()) {
 					if (t instanceof P4Trigger) {
 						trigger = (P4Trigger) t;
@@ -164,7 +159,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	private List<Job> getJobs() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		return j.getAllItems(Job.class);
 	}
 
