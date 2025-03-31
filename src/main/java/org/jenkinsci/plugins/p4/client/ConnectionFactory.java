@@ -128,8 +128,8 @@ public class ConnectionFactory {
 
 		// Get a server connection
 		String serverUri = config.getServerUri();
-		IOptionsServer iserver;
-		iserver = ServerFactory.getOptionsServer(serverUri, props, opts);
-		return iserver;
+		IOptionsServer iServer = ServerFactory.getOptionsServer(serverUri, props, opts);
+		iServer.setUserName(config.getUserName());
+		return iServer;
 	}
 }

@@ -39,6 +39,7 @@ import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.build.ExecutorHelper;
 import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.build.P4EnvironmentContributor;
+import org.jenkinsci.plugins.p4.build.P4StreamEnvironmentContributionAction;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -586,6 +587,8 @@ public class PerforceScm extends SCM {
 		task.setWorkspace(ws);
 		task.initialise();
 
+		setStreamEnvVariables(run, ws);
+
 		// Override build change if polling per change.
 		if (FilterPerChangeImpl.isActive(getFilter())) {
 			String p4OneChangelist = null;
@@ -697,6 +700,19 @@ public class PerforceScm extends SCM {
 		cleanupPerforceClient(run, buildWorkspace, listener, ws);
 
 		logger.finer("P4: checkout[" + jobName + "] finished.");
+	}
+
+	private void setStreamEnvVariables(Run<?, ?> run, Workspace ws) {
+		String streamAtChange = StringUtils.EMPTY;
+		if (ws instanceof ManualWorkspaceImpl) {
+			streamAtChange = ((ManualWorkspaceImpl) ws).getSpec().getStreamAtChange();
+		}
+		if (ws instanceof StreamWorkspaceImpl) {
+			streamAtChange = ((StreamWorkspaceImpl) ws).getStreamAtChange();
+		}
+		if (StringUtils.isNotBlank(streamAtChange)) {
+			run.addAction(new P4StreamEnvironmentContributionAction(streamAtChange));
+		}
 	}
 
 	private static Optional<TagAction> getActionWithJenkinsFilePath(Run<?, ?> run) {
@@ -926,7 +942,7 @@ public class PerforceScm extends SCM {
 				}
 			}
 		} catch (Exception e) {
-			logger.warning("P4: Not able to get connection");
+			logger.warning("P4: Not able to get connection: " + e.getMessage());
 			return false;
 		}
 

@@ -5,18 +5,18 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.81</version>
+    <version>4.88</version>
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.16.1-SNAPSHOT</version>
+  <version>1.17.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>P4 Plugin</name>
   <description>Perforce Client plugin for the Jenkins SCM provider.</description>
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.version>2.387.3</jenkins.version>
+    <jenkins.version>2.462.3</jenkins.version>
   </properties>
 
   <scm>
@@ -57,8 +57,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.387.x</artifactId>
-        <version>2543.vfb_1a_5fb_9496d</version>
+        <artifactId>bom-2.462.x</artifactId>
+        <version>3814.v9563d972079a_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -70,13 +70,20 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2024.1.2612262</version>
+      <version>2024.2.2695691</version>
     </dependency>
+
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.17.0</version>
+    </dependency>
+
 
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.13.0</version>
+      <version>3.17.0</version>
     </dependency>
 
     <dependency>
@@ -134,13 +141,6 @@
       <artifactId>structs</artifactId>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>2.0</version>
-    </dependency>
-
 
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -162,7 +162,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>script-security</artifactId>
-      <version>1341.va_2819b_414686</version>
     </dependency>
 
     <dependency>
@@ -232,7 +231,7 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20231013</version>
+      <version>20240303</version>
     </dependency>
 
   </dependencies>

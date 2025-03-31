@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.p4.publish;
 
+import com.perforce.p4java.core.IChangelistSummary;
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -18,7 +20,12 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
+import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -27,6 +34,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class PublishNotifier extends Notifier {
@@ -89,9 +98,13 @@ public class PublishNotifier extends Notifier {
 
 		String publishedChangeId = buildWorkspace.act(task);
 
+		if (StringUtils.isNotEmpty(publishedChangeId)) {
+			storeChangeToChangelog(build, listener, publishedChangeId, task, buildWorkspace);
+		}
+
 		cleanupPerforceClient(build, buildWorkspace, listener);
 
-		return StringUtils.isNotEmpty(publishedChangeId);
+		return true;
 	}
 
 	protected void cleanupPerforceClient(Run<?, ?> run, FilePath buildWorkspace, TaskListener listener)
@@ -116,6 +129,37 @@ public class PublishNotifier extends Notifier {
 		removeClientTask.setWorkspace(ws);
 
 		buildWorkspace.act(removeClientTask);
+	}
+
+	protected void storeChangeToChangelog(Run<?, ?> run, TaskListener listener, String publishedChangeID, PublishTask task, FilePath buildWorkspace) throws AbortException {
+		Workspace workspace = getWorkspace().deepClone();
+		try {
+			workspace = task.setEnvironment(run, workspace, buildWorkspace);
+			ClientHelper p4 = new ClientHelper(task.getCredential(), listener, workspace);
+			List<P4ChangeEntry> changes = new ArrayList<>();
+			long change = Long.parseLong(publishedChangeID.trim());
+			changes.add(createP4ChangeEntry(p4, change, true));
+			TagAction actions = run.getAction(TagAction.class);
+			if (actions != null) {
+				for (P4Ref ref : actions.getRefChanges()) {
+					changes.add(createP4ChangeEntry(p4, ref.getChange(), false));
+				}
+				P4ChangeSet.store(actions.getChangelog(), changes);
+			}
+		} catch (Exception e) {
+			logger.severe("P4Publish: Failed to store changelog: " + e.getMessage());
+		}
+	}
+
+	protected P4ChangeEntry createP4ChangeEntry(ClientHelper p4, long change, boolean isPublished) throws Exception {
+		P4ChangeEntry cl = new P4ChangeEntry();
+		IChangelistSummary changelistSummary = p4.getChange(change);
+		if (isPublished) {
+			String desc = "P4Publish Artifacts: " + changelistSummary.getDescription();
+			changelistSummary.setDescription(desc);
+		}
+		cl.setChange(p4, changelistSummary);
+		return cl;
 	}
 
 	public static DescriptorImpl descriptor() {

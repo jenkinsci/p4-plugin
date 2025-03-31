@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.p4.changes.P4RefBuilder;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
+import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmHelper;
 import org.jenkinsci.plugins.p4.swarmAPI.SwarmProjectAPI;
@@ -36,8 +37,10 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -97,6 +100,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	protected List<Action> retrieveActions(SCMHead head, SCMHeadEvent event, TaskListener listener) throws IOException, InterruptedException {
+		logger.fine("Retrieving actions for " + head);
 		List<Action> actions = super.retrieveActions(head, event, listener);
 		if (head instanceof P4ChangeRequestSCMHead) {
 			P4ChangeRequestSCMHead scmHead = ((P4ChangeRequestSCMHead)head);
@@ -116,7 +120,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
-
+		logger.info("Getting tags for " + project);
 		Pattern excludesPattern = Pattern.compile(getExcludes());
 
 		List<P4SCMHead> list = new ArrayList<>();
@@ -138,7 +142,10 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 					p4Path.setRevision(reviewID);
 
 					P4SCMHead target = new P4SCMHead(reviewID, p4Path);
+					Map<String, String> swarmParameters = Collections.singletonMap(ReviewProp.SWARM_BRANCH.toString(), branch);
+					target.setSwarmParams(swarmParameters);
 					P4ChangeRequestSCMHead tag = new P4ChangeRequestSCMHead(reviewID, reviewID, p4Path, target, review.getAuthor());
+					tag.setSwarmParams(swarmParameters);
 					list.add(tag);
 				}
 			}
@@ -149,7 +156,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
-
+		logger.info("Getting heads for " + project);
 		Pattern excludesPattern = Pattern.compile(getExcludes());
 
 		List<P4SCMHead> list = new ArrayList<>();
@@ -166,6 +173,8 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			P4Path p4Path = branch.getPath();
 
 			P4SCMHead head = new P4SCMHead(branch.getName(), p4Path);
+			Map<String, String> swarmParameters = Collections.singletonMap(ReviewProp.SWARM_BRANCH.toString(), branch.getName());
+			head.setSwarmParams(swarmParameters);
 			list.add(head);
 		}
 

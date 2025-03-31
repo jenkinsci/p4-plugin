@@ -56,5 +56,5 @@
         	<f:checkbox title="${%Hide Server Messages for all Perforce commands}" default="false"/>
         </f:entry>
     </f:section>
-	
+
 </j:jelly>
