@@ -73,6 +73,7 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
+import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -698,14 +699,18 @@ public class PerforceScm extends SCM {
 
 	private void setStreamEnvVariables(Run<?, ?> run, Workspace ws) {
 		String streamAtChange = StringUtils.EMPTY;
+		String streamName = StringUtils.EMPTY;
 		if (ws instanceof ManualWorkspaceImpl) {
-			streamAtChange = ((ManualWorkspaceImpl) ws).getSpec().getStreamAtChange();
+			WorkspaceSpec spec = ((ManualWorkspaceImpl) ws).getSpec();
+			streamAtChange = spec.getStreamAtChange();
+			streamName = spec.getStreamName();
 		}
 		if (ws instanceof StreamWorkspaceImpl) {
 			streamAtChange = ((StreamWorkspaceImpl) ws).getStreamAtChange();
+			streamName = ((StreamWorkspaceImpl) ws).getStreamName();
 		}
-		if (StringUtils.isNotBlank(streamAtChange)) {
-			run.addAction(new P4StreamEnvironmentContributionAction(streamAtChange));
+		if (StringUtils.isNotBlank(streamName) || StringUtils.isNotBlank(streamAtChange)) {
+			run.addAction(new P4StreamEnvironmentContributionAction(streamName,streamAtChange));
 		}
 	}
 
