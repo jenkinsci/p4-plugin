@@ -1,9 +1,9 @@
 // Builds a module using https://github.com/jenkins-infra/pipeline-library
 buildPlugin(
-useContainerAgent: true,
-failFast: false,
-configurations: [
-    [platform: 'linux', jdk: 11], 
-    [platform: 'windows', jdk: 11],
-    [platform: 'linux', jdk: 17]
-])
+    useContainerAgent: true,
+    configurations: [
+        [platform: 'linux', jdk: 11, env: [MAVEN_OPTS: '-Xmx3g -Xms512m']],
+        [platform: 'windows', jdk: 11],
+        [platform: 'linux', jdk: 17, env: [MAVEN_OPTS: '-Xmx3g -Xms512m']]
+    ]
+)
