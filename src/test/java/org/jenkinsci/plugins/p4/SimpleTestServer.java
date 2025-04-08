@@ -165,6 +165,7 @@ public class SimpleTestServer {
 		}
 
 		logger.debug("EXEC: " + cmdLine.toString());
+		System.out.println("Running command: " + cmdLine.toString());
 
 		DefaultExecutor executor = new DefaultExecutor();
 		return executor.execute(cmdLine);
