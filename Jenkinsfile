@@ -2,8 +2,8 @@
 buildPlugin(
     useContainerAgent: true,
     configurations: [
-        [platform: 'linux', jdk: 11, env: [MAVEN_OPTS: '-Xmx3g -Xms512m']],
+        [platform: 'linux', jdk: 11, env: [MAVEN_OPTS: '-Xmx4224m -Xms512m -XX:+HeapDumpOnOutOfMemoryError']],
         [platform: 'windows', jdk: 11],
-        [platform: 'linux', jdk: 17, env: [MAVEN_OPTS: '-Xmx3g -Xms512m']]
+        [platform: 'linux', jdk: 17, env: [MAVEN_OPTS: '-Xmx4224m -Xms512m -XX:+HeapDumpOnOutOfMemoryError']]
     ]
 )
