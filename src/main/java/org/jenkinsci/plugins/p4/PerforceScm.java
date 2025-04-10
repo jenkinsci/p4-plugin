@@ -698,14 +698,17 @@ public class PerforceScm extends SCM {
 
 	private void setStreamEnvVariables(Run<?, ?> run, Workspace ws) {
 		String streamAtChange = StringUtils.EMPTY;
+		String streamName = StringUtils.EMPTY;
 		if (ws instanceof ManualWorkspaceImpl) {
 			streamAtChange = ((ManualWorkspaceImpl) ws).getSpec().getStreamAtChange();
+			streamName = ((ManualWorkspaceImpl) ws).getSpec().getStreamName();
 		}
 		if (ws instanceof StreamWorkspaceImpl) {
 			streamAtChange = ((StreamWorkspaceImpl) ws).getStreamAtChange();
+			streamName = ((StreamWorkspaceImpl) ws).getStreamName();
 		}
-		if (StringUtils.isNotBlank(streamAtChange)) {
-			run.addAction(new P4StreamEnvironmentContributionAction(streamAtChange));
+		if (StringUtils.isNotBlank(streamName) || StringUtils.isNotBlank(streamAtChange)) {
+			run.addAction(new P4StreamEnvironmentContributionAction(streamName,streamAtChange));
 		}
 	}
 
