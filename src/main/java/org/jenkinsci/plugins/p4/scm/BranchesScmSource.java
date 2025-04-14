@@ -98,7 +98,7 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			Pattern filterPattern = Pattern.compile(actualPattern);
 
 			int indexOfBranch = -1;
-			if (this.isUseNewDirectoryStructure()) {
+			if (this.isUseNewDirectoryStructure() && !paths.get(0).endsWith("*")) {
 				indexOfBranch = Arrays.stream(paths.get(0).split("/"))
 						.filter(StringUtils::isNotEmpty)
 						.collect(Collectors.toList()).indexOf("*");
