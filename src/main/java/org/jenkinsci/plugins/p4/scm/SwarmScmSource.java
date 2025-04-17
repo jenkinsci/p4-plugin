@@ -60,7 +60,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	transient private SwarmHelper swarm;
 
 	@DataBoundConstructor
-	public SwarmScmSource(String credential, String charset, String format) throws Exception {
+	public SwarmScmSource(String credential, String charset, String format) {
 		super(credential);
 
 		setCharset(charset);
@@ -98,12 +98,12 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		}
 	}
 
+	@NonNull
 	@Override
-	protected List<Action> retrieveActions(SCMHead head, SCMHeadEvent event, TaskListener listener) throws IOException, InterruptedException {
+	protected List<Action> retrieveActions(@NonNull SCMHead head, SCMHeadEvent event, @NonNull TaskListener listener) throws IOException, InterruptedException {
 		logger.fine("Retrieving actions for " + head);
 		List<Action> actions = super.retrieveActions(head, event, listener);
-		if (head instanceof P4ChangeRequestSCMHead) {
-			P4ChangeRequestSCMHead scmHead = ((P4ChangeRequestSCMHead)head);
+		if (head instanceof P4ChangeRequestSCMHead scmHead) {
 			try {
 				String changeUrl = getSwarm().getBaseUrl() + "/reviews/" + scmHead.getId();
 				actions.add(new ObjectMetadataAction(scmHead.getName(), null, changeUrl));
@@ -183,8 +183,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 	@Override
 	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) throws Exception {
-		if (head instanceof P4ChangeRequestSCMHead) {
-			P4ChangeRequestSCMHead changeRequest = (P4ChangeRequestSCMHead) head;
+		if (head instanceof P4ChangeRequestSCMHead changeRequest) {
 			String review = changeRequest.getReview();
 			long change = getLastChangeInReview(review);
 
@@ -339,6 +338,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	@Symbol("multiSwarm")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix Swarm";

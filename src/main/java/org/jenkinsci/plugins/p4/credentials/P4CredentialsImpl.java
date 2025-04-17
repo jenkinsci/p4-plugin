@@ -26,7 +26,7 @@ public class P4CredentialsImpl {
 		ListBoxModel list = new ListBoxModel();
 
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
+		Jenkins scope = Jenkins.get();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
@@ -38,7 +38,7 @@ public class P4CredentialsImpl {
 			list.add("Select credential...", null);
 		}
 		for (P4BaseCredentials c : credentials) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			sb.append(c.getDescription());
 			sb.append(" (");
 			sb.append(c.getUsername());
@@ -53,7 +53,7 @@ public class P4CredentialsImpl {
 	@SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
 	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
-		if(project == null && !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER) ||
+		if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
 				project != null && !project.hasPermission(Item.EXTENDED_READ)) {
 			return new StandardListBoxModel().includeCurrentValue(credentialsId);
 		}
@@ -62,11 +62,11 @@ public class P4CredentialsImpl {
 				.includeEmptyValue()
 				.includeMatchingAs(
 						project instanceof Queue.Task
-								? Tasks.getAuthenticationOf((Queue.Task) project)
-								: ACL.SYSTEM,
+								? Tasks.getAuthenticationOf2((Queue.Task) project)
+								: ACL.SYSTEM2,
 						project,
 						P4BaseCredentials.class,
-						Collections.<DomainRequirement>emptyList(),
+						Collections.emptyList(),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class));
 	}
 

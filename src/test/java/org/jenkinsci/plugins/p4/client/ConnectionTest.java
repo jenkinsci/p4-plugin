@@ -41,7 +41,7 @@ import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertEquals;
@@ -89,10 +89,10 @@ public class ConnectionTest extends DefaultEnvironment {
 		// Dropdown should show 2 credentials: none and "id"
 		PerforceScm.DescriptorImpl impl = (DescriptorImpl) desc;
 		ListBoxModel list = impl.doFillCredentialItems(project, null);
-		assertTrue(list.size() == 2);
+		assertEquals(2, list.size());
 
 		list = impl.doFillCredentialItems(project, CREDENTIAL);
-		assertTrue(list.size() == 2);
+		assertEquals(2, list.size());
 
 		FormValidation form = impl.doCheckCredential(project, null);
 		assertEquals(FormValidation.Kind.OK, form.kind);
@@ -239,12 +239,12 @@ public class ConnectionTest extends DefaultEnvironment {
 		// Log in for next set of tests...
 		ClientHelper p4 = new ClientHelper(auth, null, workspace);
 		boolean mod = p4.getClient().getOptions().isModtime();
-		assertEquals(true, mod);
+		assertTrue(mod);
 
 		// Check file exists with the correct date
 		String ws = build.getWorkspace().getRemote();
 		File file = new File(ws + "/file-0.dat");
-		assertEquals(true, file.exists());
+		assertTrue(file.exists());
 
 		String ver = Metadata.getP4JVersionString();
 		logger.info("P4Java Version: " + ver);
@@ -286,7 +286,7 @@ public class ConnectionTest extends DefaultEnvironment {
 			scanner = new Scanner(new File(p4d.getLogPath()));
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
-				if (line.indexOf(lookFor) >= 0) {
+				if (line.contains(lookFor)) {
 					fail("Found numeric counter '" + cName + "' in log: " + line);
 				}
 			}
