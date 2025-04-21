@@ -9,14 +9,14 @@ Jenkins plugin for a Perforce Helix Core Server (P4D).
 ## Contents
 
 * [Release notes](https://github.com/jenkinsci/p4-plugin/blob/master/RELEASE.md)
-* [FreeStyle setup guide](docs/SETUP.md)
-* [Pipeline setup guide](docs/WORKFLOW.md)
-* [Pipeline libraries](docs/LIBRARY.md)
-* [MultiBranch guide](docs/MULTI.md)
-* [Building Jobs](docs/BUILDINGJOBS.md) 
-* [Post Build Actions](docs/POSTBUILD.md) 
-* [Advanced scripting](docs/P4GROOVY.md)
-* [Notes page](docs/NOTES.md)
+* [FreeStyle setup guide](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/freestyle-project-setup.html)
+* [Pipeline setup guide](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/chapter-pipeline.html)
+* [Pipeline libraries](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/library.html)
+* [MultiBranch guide](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/multibranch-pipeline-setup.html)
+* [Building Jobs](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/building-jobs.html) 
+* [Post Build Actions](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/post-build.html) 
+* [Snippet Generator Sample Steps](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/chapter-snippet-generator-sample-steps.html)
+* [Notes page](https://help.perforce.com/helix-core/integrations-plugins/p4jenkins/current/Content/P4Jenkins/notes.html)
 * [Jenkins page](https://plugins.jenkins.io/p4)
 
 ## Requirements
