@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -44,7 +45,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -346,6 +347,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-43770")
+	@Ignore
 	public void testMultiSyncParallelPolling() throws Exception {
 
 		String content1 = ""

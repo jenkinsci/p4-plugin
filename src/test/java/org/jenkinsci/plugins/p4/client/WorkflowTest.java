@@ -40,7 +40,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	public ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -323,7 +323,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	@Test
 	public void testGlobalLibMultiple() throws Exception {
 
-		// First Library
+		// First LibraryW
 		// submit test library
 		String content1 = ""
 				+ "def call(String name = 'human') {\n" +
