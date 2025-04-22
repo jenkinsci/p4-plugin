@@ -30,8 +30,6 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
-import org.jenkinsci.plugins.p4.filters.Filter;
-import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -46,7 +44,6 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.Assert;
 import org.junit.Before;
@@ -88,7 +85,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(30 * 60);
 
 	@ClassRule
-	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Before
 	public void buildCredentials() throws Exception {
