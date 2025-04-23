@@ -1,5 +1,25 @@
 ## Release notes
 
+
+### Release 1.17.1 (major features/fixes)
+
+[@31269](https://swarm.workshop.perforce.com/changes/31269) - Added support to swarm update callback URL.
+
+[@31320](https://swarm.workshop.perforce.com/changes/31320) - Bug Fix: Publish step fails the job when no files to reconcile. JENKINS-75275
+
+[@31258](https://swarm.workshop.perforce.com/changes/31258) - Bug Fix: If there are no streams on the server, don’t calculate the type of the stream. JENKINS-75076
+
+[@31342](https://swarm.workshop.perforce.com/changes/31342) - Change published by the P4Publish step will be available in changelog file.
+
+[@31373](https://swarm.workshop.perforce.com/changes/31373) - Merge pull request #228 from manish-rajora/patch-1. Bug Fix: Build failing when environment variable is used in the workspace name for p4unshelve step.
+
+[@31347](https://swarm.workshop.perforce.com/changes/31347) - Merge pull request #227 from stuartrowe/JENKINS-75263. 
+
+[@31321](https://swarm.workshop.perforce.com/changes/31321) - Added P4_SWARM_BRANCH environment variables.
+
+[@31374](https://swarm.workshop.perforce.com/changes/31374) - Added P4_EVENT_CHANGE environment variables.
+
+
 ### Release 1.17.0 (major features/fixes)
 
 [@31054](https://swarm.workshop.perforce.com/changes/31054) - The minimum supported Jenkins version has been updated to 2.462.3.

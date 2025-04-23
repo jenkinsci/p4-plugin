@@ -19,7 +19,7 @@ public class P4GroovyTest extends DefaultEnvironment {
 	public JenkinsRule jenkins = new JenkinsRule();
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Test
 	public void testInvalidCredentials() {

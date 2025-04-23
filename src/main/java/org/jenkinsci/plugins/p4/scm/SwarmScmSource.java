@@ -173,7 +173,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			P4Path p4Path = branch.getPath();
 
 			P4SCMHead head = new P4SCMHead(branch.getName(), p4Path);
-			Map<String, String> swarmParameters = Collections.singletonMap(ReviewProp.SWARM_BRANCH.toString(), branch.getId());
+			Map<String, String> swarmParameters = Collections.singletonMap(ReviewProp.SWARM_BRANCH.toString(), branch.getName());
 			head.setSwarmParams(swarmParameters);
 			list.add(head);
 		}

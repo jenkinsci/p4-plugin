@@ -22,6 +22,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -44,7 +45,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -347,14 +348,15 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	@Test
 	@Issue("JENKINS-43770")
 	public void testMultiSyncParallelPolling() throws Exception {
-
+		// Change 1 not available in //depot/data. First change is 17
+		// Change 1 is first change in //depot/main
 		String content1 = ""
 				+ "parallel first: {\n"
 				+ "    node {\n"
 				+ "        p4sync credential: '" + CREDENTIAL + "',\n"
 				+ "           format: 'jenkins-master-${JOB_NAME}-1',\n"
 				+ "           depotPath: '//depot/Data/...',\n"
-				+ "           populate: [$class: 'AutoCleanImpl', pin: '1', quiet: true]\n"
+				+ "           populate: [$class: 'AutoCleanImpl', pin: '17', quiet: true]\n"
 				+ "    }\n"
 				+ "},\n"
 				+ "second: {\n"
@@ -388,7 +390,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		WorkflowRun run1 = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run1);
 		assertEquals(1, job.getLastBuild().getNumber());
-		jenkins.assertLogContains("P4 Task: syncing files at change: 1", run1);
+		jenkins.assertLogContains("P4 Task: syncing files at change: 17", run1);
 		jenkins.assertLogContains("P4 Task: syncing files at change: 8", run1);
 
 		String content2 = ""
@@ -426,7 +428,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		assertEquals(2, job.getLastBuild().getNumber());
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + head, run2);
 		jenkins.assertLogContains("P4 Task: syncing files at change: 9", run2);
-		jenkins.assertLogContains("Found last change 1 on syncID jenkins-master-multiParallelSyncPoll-1", run2);
+		jenkins.assertLogContains("Found last change 17 on syncID jenkins-master-multiParallelSyncPoll-1", run2);
 		jenkins.assertLogContains("Found last change 8 on syncID jenkins-master-multiParallelSyncPoll-2", run2);
 
 		// Add a trigger

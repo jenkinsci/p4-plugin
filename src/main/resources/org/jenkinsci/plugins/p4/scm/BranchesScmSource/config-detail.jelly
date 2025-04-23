@@ -40,6 +40,10 @@
         	<f:repeatableHeteroProperty field="filter" hasHeader="true" addCaption="Add new build filter"/>
         </f:entry>
 
+        <f:entry field="useNewDirectoryStructure">
+            <f:checkbox title="Use new directory structure" default="false"/>
+        </f:entry>
+
     	<t:listScmBrowsers name="p4.browser"/>
 	</f:advanced>
 

@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.17.1-SNAPSHOT</version>
+  <version>1.17.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>P4 Plugin</name>
   <description>Perforce Client plugin for the Jenkins SCM provider.</description>
@@ -18,7 +18,7 @@
   <properties>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
   <scm>

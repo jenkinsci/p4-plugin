@@ -7,8 +7,10 @@ import hudson.model.Run;
 
 public class P4StreamEnvironmentContributionAction implements EnvironmentContributingAction {
 	private final String streamAtChange;
+	private final String streamName;
 
-	public P4StreamEnvironmentContributionAction(String streamAtChange) {
+	public P4StreamEnvironmentContributionAction(String streamName, String streamAtChange) {
+		this.streamName = streamName;
 		this.streamAtChange = streamAtChange;
 	}
 
@@ -29,6 +31,11 @@ public class P4StreamEnvironmentContributionAction implements EnvironmentContrib
 
 	@Override
 	public void buildEnvironment(@NonNull Run<?, ?> run, @NonNull EnvVars env) {
-		env.put("P4_STREAM_AT_CHANGE", streamAtChange);
+		if (streamName != null && !streamName.isEmpty()) {
+			env.put("P4_STREAM", streamName);
+		}
+		if (streamAtChange != null && !streamAtChange.isEmpty()) {
+			env.put("P4_STREAM_AT_CHANGE", streamAtChange);
+		}
 	}
 }
