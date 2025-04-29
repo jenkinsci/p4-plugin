@@ -102,7 +102,7 @@ public class P4Hook implements UnprotectedRootAction {
 				try {
 					probeJobs(port, jobs);
 				} catch (IOException e) {
-					LOGGER.severe("Error on Polling Thread.");
+					LOGGER.severe("Error on Polling Thread: " + e.getMessage());
 					e.printStackTrace();
 				}
 			});
