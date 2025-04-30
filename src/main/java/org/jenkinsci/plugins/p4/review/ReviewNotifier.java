@@ -52,24 +52,16 @@ public class ReviewNotifier extends RunListener<Run> {
 				String status = (result.equals(Result.SUCCESS)) ? "pass" : "fail";
 				List<P4SwarmUpdateAction> actions = run.getActions(P4SwarmUpdateAction.class);
 				List<String> message = getUpdateMessage(actions);
-				try{
-					notifySwarmUpdate(updateCallback, status, message, buildURL);
-				} catch (Exception e) {
-					listener.getLogger().println("Warning: Unable to connect to " + "UPDATE" + " url, [" + updateCallback + "]. Logger can be setup for detailed analysis.");
-				}
+				notifySwarmUpdate(updateCallback, status, message, buildURL);
 			} else {
 				String callbackURL = (result.equals(Result.SUCCESS))
 						? env.get(ReviewProp.SWARM_PASS.getProp())
 						: env.get(ReviewProp.SWARM_FAIL.getProp());
-				try {
-					notifySwarmPassFail(callbackURL, buildURL);
-				} catch (Exception e) {
-					listener.getLogger().println("Warning: Unable to connect to PASS url, [" + callbackURL + "]. Logger can be setup for detailed analysis.");
-				}
+				notifySwarmPassFail(callbackURL, buildURL);
 			}
-
 		} catch (Exception e) {
 			logger.log(Level.INFO, "Unable to Notify Review", e);
+			listener.getLogger().println("Warning: Unable to connect to url, [" + updateCallback + "]. Logger can be setup for detailed analysis.");
 		}
 	}
 
