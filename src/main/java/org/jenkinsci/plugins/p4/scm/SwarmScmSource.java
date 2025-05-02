@@ -214,9 +214,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		// If project is not defined; try probing with non-Swarm event on Swarm Source
 		if (project == null || !project.equalsIgnoreCase(getProject())) {
-
 			P4Ref ref = P4RefBuilder.get(change);
-
 			P4BranchScanner scanner = getScanner(ref);
 			if (scanner == null) {
 				return null;
@@ -225,7 +223,21 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 			String base = scanner.getProjectRoot();
 			String branch = scanner.getBranch();
 			String path = base + "/" + branch;
+
 			return P4SCMRevision.swarmBuilder(path, branch, ref);
+		}
+
+		// Validate project exists in Swarm
+		boolean projectFound = false;
+		try {
+			List<String> projectList = getSwarm().getProjects();
+			projectFound = projectList.contains(project);
+		} catch (Exception e) {
+			throw new RuntimeException("Unable to fetch Swarm Projects: " + e);
+		}
+
+		if (!projectFound) {
+			return null;
 		}
 
 		// Project is defined so look up in Swarm
@@ -235,6 +247,18 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 
 		if (branch == null || path == null || status == null) {
 			return null;
+		}
+
+		// Verify branch exists in the given Swarm project
+		try {
+			List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
+			boolean branchFound = branches.stream().anyMatch(b -> branch.equals(b.getId()));
+
+			if (!branchFound) {
+				return null;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Unable to fetch branches in the Swarm project: " + e);
 		}
 
 		CheckoutStatus checkoutStatus = CheckoutStatus.parse(status);
