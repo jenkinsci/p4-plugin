@@ -24,12 +24,10 @@ public class ConfigurationListener extends SaveableListener {
 	private static final Logger logger = Logger.getLogger(ConfigurationListener.class.getName());
 
 	public void onChange(Saveable o, XmlFile xml) {
-		if (!(o instanceof PerforceScm.DescriptorImpl)) {
+		if (!(o instanceof DescriptorImpl p4scm)) {
 			// must be a PerforceScm
 			return;
 		}
-
-		PerforceScm.DescriptorImpl p4scm = (PerforceScm.DescriptorImpl) o;
 
 		// Exit early if disabled
 		if (!p4scm.isAutoSave()) {
@@ -80,7 +78,7 @@ public class ConfigurationListener extends SaveableListener {
 			depotPath = "\"" + depotPath + "\"";
 		}
 
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		String rootPath = j.getRootDir().getCanonicalPath();
 
 		String view = ViewMapHelper.getClientView(depotPath, clientName, true);
@@ -91,6 +89,6 @@ public class ConfigurationListener extends SaveableListener {
 		workspace.setExpand(new HashMap<>());
 		workspace.setRootPath(rootPath);
 
-		return new ClientHelper(Jenkins.getInstance(), credential, listener, workspace);
+		return new ClientHelper(Jenkins.get(), credential, listener, workspace);
 	}
 }

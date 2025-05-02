@@ -753,23 +753,25 @@ public class PollingTest extends DefaultEnvironment {
 	@Test
 	public void testPipelineFailedPolling() throws Exception {
 
-		String pass = ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo 'test'\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String pass = """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        echo 'test'
+				      }
+				    }
+				  }
+				}""";
 
-		String fail = ""
-				+ "pipeline {\n"
-				+ "  agentxxx\n"
-				+ "  }\n"
-				+ "}";
+		String fail = """
+				\
+				pipeline {
+				  agentxxx
+				  }
+				}""";
 
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
 
@@ -861,10 +863,11 @@ public class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 
 		// Add bad Jenkinsfile
-		submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
-				+ "pipeline {\n"
-				+ "  agentxxx\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + branch + "/" + jfile, """
+				\
+				pipeline {
+				  agentxxx
+				}""");
 
 		// Poll - Build #2 (fail)
 		timer.run();

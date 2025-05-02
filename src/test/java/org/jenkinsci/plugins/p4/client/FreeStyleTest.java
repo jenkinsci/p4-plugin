@@ -75,10 +75,10 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "9"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -131,11 +131,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_LABEL.toString(), "auto15"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -168,7 +168,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		assertNotNull(desc);
 
 		P4WebBrowser.DescriptorImpl impl = (P4WebBrowser.DescriptorImpl) desc;
-		FormValidation form = impl.doCheck(url.toString());
+		FormValidation form = impl.doCheck(url);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
@@ -213,11 +213,11 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -241,7 +241,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		assertNotNull(desc);
 
 		SwarmBrowser.DescriptorImpl impl = (SwarmBrowser.DescriptorImpl) desc;
-		FormValidation form = impl.doCheck(url.toString());
+		FormValidation form = impl.doCheck(url);
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 
@@ -261,9 +261,9 @@ public class FreeStyleTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue("IRRELEVALT_PARAMETER", "9"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -275,7 +275,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 
 		List<ParameterValue> list2 = new ArrayList<>();
 		list2.add(new StringParameterValue("P4_CLEANWORKSPACE", "true"));
-		Action actions2 = new SafeParametersAction(new ArrayList<ParameterValue>(), list2);
+		Action actions2 = new SafeParametersAction(new ArrayList<>(), list2);
 
 		Cause.UserIdCause cause2 = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause2, actions2).get();

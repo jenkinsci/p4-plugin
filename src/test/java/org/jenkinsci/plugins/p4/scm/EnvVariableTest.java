@@ -30,12 +30,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 public class EnvVariableTest extends DefaultEnvironment {
 	private static Logger logger = Logger.getLogger(PerforceSCMSourceTest.class.getName());
@@ -167,19 +167,20 @@ public class EnvVariableTest extends DefaultEnvironment {
 		String base = "//depot/default/default1";
 		String scriptPath = "build/MyJenkinsfile";
 		String branch = "Main";
-		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				             echo "The jenkinsfile path is: ${JENKINSFILE_PATH}"\
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = base + "/...";
@@ -505,36 +506,38 @@ public class EnvVariableTest extends DefaultEnvironment {
 
 	private void submitJenkinsFile(String base, String scriptPath) throws Exception {
 		submitFile(jenkins, base + "/" + scriptPath,
-				"@Library('stream-lib')\n" +
-						"import org.foo.lib.* \n" +
-						"echo \"Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\"\n" +
-						"pipeline {\n" +
-						" agent any\n" +
-						" stages {\n" +
-						"  stage(\"Repro\") {\n" +
-						"   steps {\n" +
-						"    script {\n" +
-						"       echo \"Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\" \n" +
-						"   }\n" +
-						"  }\n" +
-						" }\n" +
-						"}\n" +
-						"}");
+				"""
+						@Library('stream-lib')
+						import org.foo.lib.*\s
+						echo "Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}"
+						pipeline {
+						 agent any
+						 stages {
+						  stage("Repro") {
+						   steps {
+						    script {
+						       echo "Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}"\s
+						   }
+						  }
+						 }
+						}
+						}""");
 	}
 
 	private GlobalLibraries setGlobalLibraryForPipeline() throws Exception {
-		String libContent = "package org.foo;\n" +
-				"\n" +
-				"def dispEnv ()\n" +
-				"{\n" +
-				"  echo \"All Environment Variables\"\n" +
-				"  if (isUnix()) {\n" +
-				"    sh 'env'\n" +
-				"  }\n" +
-				"  else {\n" +
-				"    bat 'set'\n" +
-				"  }\n" +
-				"return this;";
+		String libContent = """
+				package org.foo;
+				
+				def dispEnv ()
+				{
+				  echo "All Environment Variables"
+				  if (isUnix()) {
+				    sh 'env'
+				  }
+				  else {
+				    bat 'set'
+				  }
+				return this;""";
 		submitFile(jenkins, "//depot/library/src/org/foo/lib.groovy", libContent);
 
 		String path = "//depot/library/...";

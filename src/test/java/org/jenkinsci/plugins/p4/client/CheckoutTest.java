@@ -85,7 +85,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
-		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
+		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
 	}
 
 	@Issue("JENKINS-57534")
@@ -121,7 +121,7 @@ public class CheckoutTest extends DefaultEnvironment {
 		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
-		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
+		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
 	}
 
 	@Test
@@ -131,29 +131,31 @@ public class CheckoutTest extends DefaultEnvironment {
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
 
-		String success = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Success\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String success = """
+				
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        echo "Success"
+				      }
+				    }
+				  }
+				}""";
 
-		String fail = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        error('Failed to build')\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String fail = """
+				
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        error('Failed to build')
+				      }
+				    }
+				  }
+				}""";
 
 		submitFile(jenkins, jfile, success);
 
@@ -217,29 +219,31 @@ public class CheckoutTest extends DefaultEnvironment {
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
 
-		String success = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Success\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+	    String success = """
+			    
+			    pipeline {
+			      agent any
+			      stages {
+			        stage('Test') {
+			          steps {
+			            echo "Success"
+			          }
+			        }
+			      }
+			    }""";
 
-		String fail = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        error('Failed to build')\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+	    String fail = """
+			    
+			    pipeline {
+			      agent any
+			      stages {
+			        stage('Test') {
+			          steps {
+			            error('Failed to build')
+			          }
+			        }
+			      }
+			    }""";
 
 		submitFile(jenkins, jfile, success);
 
