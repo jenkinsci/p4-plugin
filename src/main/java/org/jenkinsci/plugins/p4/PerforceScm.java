@@ -498,11 +498,27 @@ public class PerforceScm extends SCM {
 			ws.getExpand().set(ReviewProp.P4_LABEL.toString(), pin);
 		}
 
+		// Early out if lastRun is null
+		if (lastRun == null) {
+			// no previous build, return null.
+			listener.getLogger().println("P4: Polling: No changes as no previous build exists.");
+			return null;
+		}
+
 		// Calculate last change, build if null (JENKINS-40356)
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
+			// Continue to check earlier runs if the lastRun had no TagAction and isn't still in progress(JENKINS-64800)
+			TagAction tagAction = TagAction.getLastAction(lastRun);
+			if (tagAction == null) {
+				Run<?, ?> lastLastRun = !lastRun.isInProgress() ? lastRun.getPreviousBuild() : null;
+				if (lastLastRun != null) {
+					return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
+				}
+			}
+			
 			// no previous build, return null.
-			listener.getLogger().println("P4: Polling: No changes in previous build.");
+			listener.getLogger().println("P4: Polling: No changes in previous build(s).");
 			return null;
 		}
 
