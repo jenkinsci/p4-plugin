@@ -38,30 +38,29 @@ public class ReviewNotifier extends RunListener<Run> {
 			return;
 		}
 		logger.fine("ReviewNotifier: onCompleted");
-		Result result = run.getResult();
-		if (result == null) {
-			logger.warning("Cannot notify onCompleted - job Result is null!");
-			return;
-		}
-
-		String callbackUrl = "";
-		String buildURL = getBuildURL(run);
 		try {
+			Result result = run.getResult();
+			if (result == null) {
+				logger.warning("Cannot notify onCompleted - job Result is null!");
+				return;
+			}
+
+			String buildURL = getBuildURL(run);
 			EnvVars env = run.getEnvironment(listener);
-			callbackUrl = env.get(ReviewProp.SWARM_UPDATE.getProp());
-			if (StringUtils.isNotEmpty(callbackUrl)) {
+			String updateCallback = env.get(ReviewProp.SWARM_UPDATE.getProp());
+			if (StringUtils.isNotEmpty(updateCallback)) {
 				String status = (result.equals(Result.SUCCESS)) ? "pass" : "fail";
 				List<P4SwarmUpdateAction> actions = run.getActions(P4SwarmUpdateAction.class);
 				List<String> message = getUpdateMessage(actions);
-				notifySwarmUpdate(callbackUrl, status, message, buildURL);
+				notifySwarmUpdate(updateCallback, status, message, buildURL);
 			} else {
-				callbackUrl = (result.equals(Result.SUCCESS))
+				String callbackURL = (result.equals(Result.SUCCESS))
 						? env.get(ReviewProp.SWARM_PASS.getProp())
 						: env.get(ReviewProp.SWARM_FAIL.getProp());
-				notifySwarmPassFail(callbackUrl, buildURL);
+				notifySwarmPassFail(callbackURL, buildURL);
 			}
+
 		} catch (Exception e) {
-			listener.getLogger().println("Warning: Unable to connect to url, [" + callbackUrl + "]. Logger can be setup for detailed analysis.");
 			logger.log(Level.INFO, "Unable to Notify Review", e);
 		}
 	}
@@ -136,7 +135,6 @@ public class ReviewNotifier extends RunListener<Run> {
 			return;
 		}
 		logger.info("ReviewNotifier set status= " + status + " to " + callback);
-
 		JSONObject jo = new JSONObject();
 		jo.put("url", buildUrl);
 		jo.put("status", status);
@@ -152,7 +150,6 @@ public class ReviewNotifier extends RunListener<Run> {
 			return;
 		}
 		logger.info("ReviewNotifier to " + callback + " with url=" + buildUrl);
-
 		String postContent = "url=" + buildUrl;
 		HttpURLConnection http = postRequest(callback, postContent);
 		int response = http.getResponseCode();
