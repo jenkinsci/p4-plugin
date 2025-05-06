@@ -70,7 +70,7 @@ public class PollingTest extends DefaultEnvironment {
 	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(15 * 60);
 
 	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R15_1);
+	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
 
 	@Before
 	public void buildCredentials() throws Exception {
@@ -690,8 +690,8 @@ public class PollingTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/main/file.001", "content");
 
 		// Poll for changes multiple times
-		for (int i = 0; i < 300; i++) {
-			Thread.sleep(40);
+		for (int i = 0; i < 30; i++) {
+			Thread.sleep(300);
 			cron.run();
 		}
 		jenkins.waitUntilNoActivity();
