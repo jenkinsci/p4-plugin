@@ -56,10 +56,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -845,7 +843,6 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		map.put(ReviewProp.SWARM_PATH.getProp(), base + "/" + branch);
 		map.put(ReviewProp.P4_CHANGE.getProp(), commit);
 		map.put(ReviewProp.SWARM_STATUS.getProp(), CheckoutStatus.COMMITTED.name());
-
 
 		List<String> projectList = new ArrayList<>();
 		projectList.add("SwarmCommit");

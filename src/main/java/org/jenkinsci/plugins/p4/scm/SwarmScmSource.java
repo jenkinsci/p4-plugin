@@ -202,7 +202,6 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 	 */
 	@Override
 	public P4SCMRevision getRevision(JSONObject payload) {
-
 		// Verify Change is set in JSON
 		String change = getProperty(payload, P4_CHANGE);
 		if (change == null) {
