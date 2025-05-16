@@ -881,7 +881,76 @@ public class PollingTest extends DefaultEnvironment {
 		cron.run();
 		Thread.sleep(500);
 		jenkins.waitUntilNoActivity();
-		assertEquals("Pol and trigger Build #3", 3, job.getLastBuild().number);
+		assertEquals("Poll, but no build", 2, job.getLastBuild().number);
+	}
+
+	@Test
+	public void testPipelineFailedPollingNoTagActionWithRecurison() throws Exception {
+
+		String pass = ""
+				+ "pipeline {\n"
+				+ "  agent any\n"
+				+ "  stages {\n"
+				+ "    stage('Test') {\n"
+				+ "      steps {\n"
+				+ "        echo 'test'\n"
+				+ "      }\n"
+				+ "    }\n"
+				+ "  }\n"
+				+ "}";
+
+		String fail = ""
+				+ "pipeline {\n"
+				+ "  agentxxx\n"
+				+ "  }\n"
+				+ "}";
+
+		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
+
+		// Manual workspace spec definition
+		String client = "basicJenkinsfile.ws";
+		String view = "//depot/Data/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// SCM and Populate and Filter options
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, null);
+		scm.getDescriptor().setRecursionInPolling(true);
+
+		// SCM Jenkinsfile job
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPollingNoTagAction");
+		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+
+		// Set lightweight checkout
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		cpsScmFlowDefinition.setLightweight(true);
+		job.setDefinition(cpsScmFlowDefinition);
+
+		// enable SCM polling (even though we poll programmatically)
+		SCMTrigger cron = new SCMTrigger("0 0 * * *");
+		job.addTrigger(cron);
+
+		// Build #1
+		WorkflowRun build = jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+		jenkins.assertLogContains("P4 Task: syncing files at change", build);
+
+		// Poll for changes incrementally (change 1)
+		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
+		cron.run();
+		waitForBuild(job, 2);
+		jenkins.waitUntilNoActivity();
+		assertEquals("Poll and trigger Build #2", 2, job.getLastBuild().number);
+		assertEquals(Result.FAILURE, job.getLastBuild().getResult());
+
+		// Remove TagActions to simulate case where a build failed its initial sync
+		job.getLastBuild().removeActions(TagAction.class);
+
+		// Poll for changes incrementally (change 1)
+		cron.run();
+		Thread.sleep(500);
+		jenkins.waitUntilNoActivity();
+		assertEquals("Poll and trigger Build #3", 3, job.getLastBuild().number);
 	}
 
 	@Test

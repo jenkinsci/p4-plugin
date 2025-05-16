@@ -508,12 +508,15 @@ public class PerforceScm extends SCM {
 		// Calculate last change, build if null (JENKINS-40356)
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
-			// Continue to check earlier runs if the lastRun had no TagAction and isn't still in progress(JENKINS-64800)
-			TagAction tagAction = TagAction.getLastAction(lastRun);
-			if (tagAction == null) {
-				Run<?, ?> lastLastRun = !lastRun.isInProgress() ? lastRun.getPreviousBuild() : null;
-				if (lastLastRun != null) {
-					return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
+			PerforceScm.DescriptorImpl scm = getDescriptor();
+			if (scm != null && scm.isRecursionInPolling()) {
+				// Continue to check earlier runs if the lastRun had no TagAction and isn't still in progress(JENKINS-64800)
+				TagAction tagAction = TagAction.getLastAction(lastRun);
+				if (tagAction == null) {
+					Run<?, ?> lastLastRun = !lastRun.isInProgress() ? lastRun.getPreviousBuild() : null;
+					if (lastLastRun != null) {
+						return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
+					}
 				}
 			}
 			
@@ -1010,6 +1013,8 @@ public class PerforceScm extends SCM {
 
 		private boolean lastSuccess;
 
+		private boolean recursionInPolling;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -1064,6 +1069,14 @@ public class PerforceScm extends SCM {
 
 		public void setLastSuccess(boolean lastSuccess) {
 			this.lastSuccess = lastSuccess;
+		}
+
+		public boolean isRecursionInPolling() {
+			return recursionInPolling;
+		}
+
+		public void setRecursionInPolling(boolean recursionInPolling) {
+			this.recursionInPolling = recursionInPolling;
 		}
 
 		/**
@@ -1154,6 +1167,13 @@ public class PerforceScm extends SCM {
 				logger.info("Unable to read Reporting options in configuration");
 				lastSuccess = false;
 				hideMessages = false;
+			}
+
+			try {
+				recursionInPolling = json.getBoolean("recursionInPolling");
+			} catch (JSONException e) {
+				logger.info("Unable to read Polling options in configuration");
+				recursionInPolling = false;
 			}
 
 			save();
