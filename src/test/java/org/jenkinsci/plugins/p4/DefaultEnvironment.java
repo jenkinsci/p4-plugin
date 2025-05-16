@@ -49,6 +49,8 @@ abstract public class DefaultEnvironment {
 	protected final static String R18_1 = "r18.1";
 
 	protected final static String R19_1 = "r19.1";
+	protected final static String R24_1_r15 = "r24.1_r15"; //Binaries R24_1 checkpoint r15
+	protected final static String R24_1_r17 = "r24.1_r17"; //Binaries R24_1 checkpoint r17
 
 	protected final static String CREDENTIAL = "id";
 	protected final static int HTTP_PORT = 1888;

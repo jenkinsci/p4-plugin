@@ -4,6 +4,7 @@ import com.perforce.p4java.core.file.IFileSpec;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.TaskListener;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
@@ -15,14 +16,17 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class BranchesScmSource extends AbstractP4ScmSource {
 
 	private P4Browser browser;
 	private String pattern = DescriptorImpl.defaultPattern;
 	private String mappings = DescriptorImpl.defaultPath;
+	private boolean useNewDirectoryStructure = false;
 
 	@DataBoundConstructor
 	public BranchesScmSource(String credential, String includes, String charset, String format) {
@@ -40,6 +44,15 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 	@DataBoundSetter
 	public void setPattern(String pattern) {
 		this.pattern = pattern;
+	}
+
+	public boolean isUseNewDirectoryStructure() {
+		return this.useNewDirectoryStructure;
+	}
+
+	@DataBoundSetter
+	public void setUseNewDirectoryStructure(boolean useNewDirectoryStructure) {
+		this.useNewDirectoryStructure = useNewDirectoryStructure;
 	}
 
 	public String getPattern() {
@@ -84,9 +97,19 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 			}
 			Pattern filterPattern = Pattern.compile(actualPattern);
 
+			int indexOfBranch = -1;
+			if (this.isUseNewDirectoryStructure() && !paths.get(0).endsWith("*")) {
+				indexOfBranch = Arrays.stream(paths.get(0).split("/"))
+						.filter(StringUtils::isNotEmpty)
+						.collect(Collectors.toList()).indexOf("*");
+			}
+
 			List<IFileSpec> specs = p4.getDirs(paths);
 			for (IFileSpec s : specs) {
 				String branch = s.getOriginalPathString();
+				if (this.isUseNewDirectoryStructure()) {
+					branch = branch.substring(0, branch.lastIndexOf("/"));
+				}
 
 				// check the branch is not empty
 				if (branch == null || branch.isEmpty()) {
@@ -105,6 +128,13 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 				// get filename and check for null
 				String file = branch.substring(branch.lastIndexOf("/") + 1);
+				if (this.isUseNewDirectoryStructure() && indexOfBranch != -1) {
+					file = Arrays.stream(branch.split("/"))
+							.filter(StringUtils::isNotEmpty)
+							.collect(Collectors.toList())
+							.get(indexOfBranch);
+
+				}
 				if (file == null || file.isEmpty()) {
 					continue;
 				}
