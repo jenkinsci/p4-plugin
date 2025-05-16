@@ -919,7 +919,7 @@ public class PollingTest extends DefaultEnvironment {
 		scm.getDescriptor().setRecursionInPolling(true);
 
 		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPollingNoTagAction");
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPollingNoTagActionWithRecursion");
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Set lightweight checkout
