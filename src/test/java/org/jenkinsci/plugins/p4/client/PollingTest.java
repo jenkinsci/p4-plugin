@@ -775,7 +775,7 @@ public class PollingTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "basicJenkinsfile.ws";
+		String client = "PipelineFailedPolling.ws";
 		String view = "//depot/Data/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
@@ -840,7 +840,7 @@ public class PollingTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "basicJenkinsfile.ws";
+		String client = "PipelineFailedPollingNoTagAction.ws";
 		String view = "//depot/Data/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
@@ -908,7 +908,7 @@ public class PollingTest extends DefaultEnvironment {
 		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "basicJenkinsfile.ws";
+		String client = "PipelineFailedPollingNoTagActionWithRecurison.ws";
 		String view = "//depot/Data/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
