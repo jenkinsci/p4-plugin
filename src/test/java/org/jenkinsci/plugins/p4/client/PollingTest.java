@@ -772,11 +772,16 @@ public class PollingTest extends DefaultEnvironment {
 				+ "  }\n"
 				+ "}";
 
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
+		String testName = "PipelineFailedPolling";
+		String jenkinsfile = "Jenkinsfile";
+		String depotPath = String.format("//depot/Data/%s", testName);
+		String jenkinsfileDepotPath = String.format("%s/%s", depotPath, jenkinsfile);
+		submitFile(jenkins, jenkinsfileDepotPath, pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "PipelineFailedPolling.ws";
-		String view = "//depot/Data/... //" + client + "/...";
+		String client = testName + ".ws";
+		String clientPath = String.format("//%s", client);
+		String view = String.format("%s/... %s/...", depotPath, clientPath);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
@@ -784,12 +789,9 @@ public class PollingTest extends DefaultEnvironment {
 		Populate populate = new AutoCleanImpl();
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, null);
 
-		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPolling");
-		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
-
-		// Set lightweight checkout
-		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		// SCM Jenkinsfile job LightWeight Checkout
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, testName);
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, jenkinsfile);
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
 
@@ -802,7 +804,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", build);
 
 		// Poll for changes incrementally (change 1)
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
+		submitFile(jenkins, jenkinsfileDepotPath, fail, "Fail Jenkinsfile");
 		cron.run();
 		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
@@ -837,11 +839,16 @@ public class PollingTest extends DefaultEnvironment {
 				+ "  }\n"
 				+ "}";
 
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
+		String testName = "PipelineFailedPollingNoTagAction";
+		String jenkinsfile = "Jenkinsfile";
+		String depotPath = String.format("//depot/Data/%s", testName);
+		String jenkinsfileDepotPath = String.format("%s/%s", depotPath, jenkinsfile);
+		submitFile(jenkins, jenkinsfileDepotPath, pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "PipelineFailedPollingNoTagAction.ws";
-		String view = "//depot/Data/... //" + client + "/...";
+		String client = testName + ".ws";
+		String clientPath = String.format("//%s", client);
+		String view = String.format("%s/... %s/...", depotPath, clientPath);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
@@ -850,11 +857,10 @@ public class PollingTest extends DefaultEnvironment {
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, null, populate, null);
 
 		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPollingNoTagAction");
-		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, testName);
 
 		// Set lightweight checkout
-		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, jenkinsfile);
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
 
@@ -867,7 +873,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", build);
 
 		// Poll for changes incrementally (change 1)
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
+		submitFile(jenkins, jenkinsfileDepotPath, fail, "Fail Jenkinsfile");
 		cron.run();
 		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
@@ -905,11 +911,16 @@ public class PollingTest extends DefaultEnvironment {
 				+ "  }\n"
 				+ "}";
 
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", pass, "Pass Jenkinsfile");
+		String testName = "PipelineFailedPollingNoTagActionWithRecurison";
+		String jenkinsfile = "Jenkinsfile";
+		String depotPath = String.format("//depot/Data/%s", testName);
+		String jenkinsfileDepotPath = String.format("%s/%s", depotPath, jenkinsfile);
+		submitFile(jenkins, jenkinsfileDepotPath, pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
-		String client = "PipelineFailedPollingNoTagActionWithRecurison.ws";
-		String view = "//depot/Data/... //" + client + "/...";
+		String client = testName + ".ws";
+		String clientPath = String.format("//%s", client);
+		String view = String.format("%s/... %s/...", depotPath, clientPath);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
@@ -919,11 +930,10 @@ public class PollingTest extends DefaultEnvironment {
 		scm.getDescriptor().setRecursionInPolling(true);
 
 		// SCM Jenkinsfile job
-		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "PipelineFailedPollingNoTagActionWithRecursion");
-		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, testName);
 
 		// Set lightweight checkout
-		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, "Jenkinsfile");
+		CpsScmFlowDefinition cpsScmFlowDefinition = new CpsScmFlowDefinition(scm, jenkinsfile);
 		cpsScmFlowDefinition.setLightweight(true);
 		job.setDefinition(cpsScmFlowDefinition);
 
@@ -936,7 +946,7 @@ public class PollingTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change", build);
 
 		// Poll for changes incrementally (change 1)
-		submitFile(jenkins, "//depot/Data/Jenkinsfile", fail, "Fail Jenkinsfile");
+		submitFile(jenkins, jenkinsfileDepotPath, fail, "Fail Jenkinsfile");
 		cron.run();
 		waitForBuild(job, 2);
 		jenkins.waitUntilNoActivity();
