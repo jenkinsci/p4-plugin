@@ -57,4 +57,10 @@
         </f:entry>
     </f:section>
 
+    <f:section title="Perforce: Polling">
+		<f:entry field="recursionInPolling">
+			<f:checkbox title="${%Use recursion to find a previous build during polling}" default="false"/>
+		</f:entry>
+    </f:section>
+
 </j:jelly>
