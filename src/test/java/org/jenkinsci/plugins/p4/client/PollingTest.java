@@ -961,6 +961,9 @@ public class PollingTest extends DefaultEnvironment {
 		Thread.sleep(500);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll and trigger Build #3", 3, job.getLastBuild().number);
+
+		// Reset so RecursionInPolling setting doesn't leak to other tests
+		scm.getDescriptor().setRecursionInPolling(false);
 	}
 
 	@Test
