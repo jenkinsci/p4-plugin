@@ -839,14 +839,15 @@ public class PollingTest extends DefaultEnvironment {
 
 		String testName = "PipelineFailedPollingNoTagAction";
 		String jenkinsfile = "Jenkinsfile";
-		String depotPath = String.format("//depot/Data/%s", testName);
+		String depotPath = String.format("//depot/Other/%s", testName);
 		String jenkinsfileDepotPath = String.format("%s/%s", depotPath, jenkinsfile);
 		submitFile(jenkins, jenkinsfileDepotPath, pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
 		String client = testName + ".ws";
 		String clientPath = String.format("//%s", client);
-		String view = String.format("%s/... %s/...", depotPath, clientPath);
+		String jenkinsfileClientPath = String.format("%s/%s", clientPath, jenkinsfile);
+		String view = String.format("%s %s", jenkinsfileDepotPath, jenkinsfileClientPath);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
@@ -911,14 +912,15 @@ public class PollingTest extends DefaultEnvironment {
 
 		String testName = "PipelineFailedPollingNoTagActionWithRecurison";
 		String jenkinsfile = "Jenkinsfile";
-		String depotPath = String.format("//depot/Data/%s", testName);
+		String depotPath = String.format("//depot/Other/%s", testName);
 		String jenkinsfileDepotPath = String.format("%s/%s", depotPath, jenkinsfile);
 		submitFile(jenkins, jenkinsfileDepotPath, pass, "Pass Jenkinsfile");
 
 		// Manual workspace spec definition
 		String client = testName + ".ws";
 		String clientPath = String.format("//%s", client);
-		String view = String.format("%s/... %s/...", depotPath, clientPath);
+		String jenkinsfileClientPath = String.format("%s/%s", clientPath, jenkinsfile);
+		String view = String.format("%s %s", jenkinsfileDepotPath, jenkinsfileClientPath);
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
 
@@ -956,7 +958,8 @@ public class PollingTest extends DefaultEnvironment {
 
 		// Poll for changes incrementally (change 1)
 		cron.run();
-		Thread.sleep(500);
+
+		waitForBuild(job, 3);
 		jenkins.waitUntilNoActivity();
 		assertEquals("Poll and trigger Build #3", 3, job.getLastBuild().number);
 
