@@ -146,7 +146,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		}
 
 		public String getIconFileName() {
-			return "clipboard.png";
+			return "symbol-clipboard plugin-ionicons-api";
 		}
 
 		public String getDisplayName() {
