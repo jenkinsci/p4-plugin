@@ -40,7 +40,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	}
 
 	public String getIconFileName() {
-		return "symbol-swarm-review-outline plugin-p4";
+		return "symbol-swarm-review plugin-p4";
 	}
 
 	public String getDisplayName() {
