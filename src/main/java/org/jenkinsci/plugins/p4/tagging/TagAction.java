@@ -70,7 +70,7 @@ public class TagAction extends AbstractScmTagAction {
 	public String getIconFileName() {
 		if (!getACL().hasPermission(PerforceScm.TAG))
 			return null;
-		return "symbol-pricetag plugin-ionicons-api";
+		return "symbol-pricetag-outline plugin-ionicons-api";
 	}
 
 	public String getDisplayName() {
