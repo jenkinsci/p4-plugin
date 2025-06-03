@@ -844,6 +844,10 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		map.put(ReviewProp.P4_CHANGE.getProp(), commit);
 		map.put(ReviewProp.SWARM_STATUS.getProp(), CheckoutStatus.COMMITTED.name());
 
+		List<String> projectList = new ArrayList<>();
+		projectList.add("SwarmCommit");
+		when(mockSwarm.getProjects()).thenReturn(projectList);
+
 		JSONObject payload = JSONObject.fromObject(map);
 
 		// Another change that should not get sync'ed
@@ -926,6 +930,10 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		map.put(ReviewProp.P4_CHANGE.getProp(), review);
 		map.put(ReviewProp.SWARM_REVIEW.getProp(), review);
 		map.put(ReviewProp.SWARM_STATUS.getProp(), CheckoutStatus.SHELVED.name());
+
+		List<String> projectList = new ArrayList<>();
+		projectList.add("SwarmReview");
+		when(mockSwarm.getProjects()).thenReturn(projectList);
 
 		JSONObject payload = JSONObject.fromObject(map);
 
