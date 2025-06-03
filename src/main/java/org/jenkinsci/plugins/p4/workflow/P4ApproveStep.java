@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow;
 
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -24,6 +25,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
+import java.io.Serial;
 import java.util.Set;
 
 public class P4ApproveStep extends Step {
@@ -63,7 +65,7 @@ public class P4ApproveStep extends Step {
 	}
 
 	@Override
-	public StepExecution start(StepContext context) throws Exception {
+	public StepExecution start(StepContext context) {
 		return new P4ApproveStepExecution(this, context);
 	}
 
@@ -76,6 +78,7 @@ public class P4ApproveStep extends Step {
 			return "p4approve";
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4 ApproveImpl Review";
@@ -101,6 +104,7 @@ public class P4ApproveStep extends Step {
 
 	public static class P4ApproveStepExecution extends SynchronousNonBlockingStepExecution<Void> {
 
+		@Serial
 		private static final long serialVersionUID = 1L;
 
 		private transient P4ApproveStep step = null;
