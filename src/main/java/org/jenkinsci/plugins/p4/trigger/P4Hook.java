@@ -37,7 +37,7 @@ public class P4Hook implements UnprotectedRootAction {
 
 	@Override
 	public String getIconFileName() {
-		return "symbol-perforce plugin-p4";
+		return "symbol-logo-p4-icon plugin-p4";
 	}
 
 	@Override
