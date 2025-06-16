@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
+import java.io.Serial;
+
 public class P4GraphRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final SCMHead target;
@@ -18,6 +22,7 @@ public class P4GraphRequestSCMHead extends P4SCMHead implements ChangeRequestSCM
 		this.branch = branch;
 	}
 
+	@NonNull
 	@Override
 	public String getId() {
 		return getName();
@@ -36,6 +41,7 @@ public class P4GraphRequestSCMHead extends P4SCMHead implements ChangeRequestSCM
 	 *
 	 * @return a “target” or “base” branch
 	 */
+	@NonNull
 	@Override
 	public SCMHead getTarget() {
 		return target;
