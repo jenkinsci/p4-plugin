@@ -251,8 +251,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		// Verify branch exists in the given Swarm project
 		try {
 			List<SwarmProjectAPI.Branch> branches = getSwarm().getBranchesInProject(project);
-			boolean branchFound = branches.stream().anyMatch(b -> branch.equals(b.getId()));
-
+			boolean branchFound = branches.stream().anyMatch(b -> branch.equals(b.getName()));
 			if (!branchFound) {
 				return null;
 			}
