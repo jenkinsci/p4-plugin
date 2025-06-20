@@ -76,6 +76,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.mig82</groupId>
+      <artifactId>folder-properties</artifactId>
+      <version>57.vde5161ec7a_b_a_</version>
+    </dependency>
+
+    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.17.0</version>

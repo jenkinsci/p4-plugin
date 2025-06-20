@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.mig82.folders.properties.PropertiesLoader;
 import com.perforce.p4java.exception.P4JavaException;
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -430,6 +431,8 @@ public class PerforceScm extends SCM {
 
 		// JENKINS-48434 by setting rootPath to null will leave client's root unchanged
 		ws.setRootPath(null);
+
+		envVars.putAll(lastRun.getEnvironment(listener));
 		ws.setExpand(envVars);
 
 		// Set EXPANDED client
@@ -589,6 +592,10 @@ public class PerforceScm extends SCM {
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+		EnvVars env = run.getEnvironment(new LogTaskListener(logger, Level.INFO));
+		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(run.getParent());
+		env.putAll(folderPropertiesVars);
+		ws.setExpand(env);
 
 		// Add review to environment, if defined
 		if (review != null) {

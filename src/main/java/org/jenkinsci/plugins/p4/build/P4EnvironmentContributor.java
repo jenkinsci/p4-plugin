@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.build;
 
+import com.mig82.folders.properties.PropertiesLoader;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -34,6 +35,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		TagAction tagAction = TagAction.getLastAction(run);
 		buildEnvironment(tagAction, env);
 		injectSwarmEnvVars(run, env);
+		env.putAll(PropertiesLoader.loadFolderProperties(run.getParent()));
 	}
 
 	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {

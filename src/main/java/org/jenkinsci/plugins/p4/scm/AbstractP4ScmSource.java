@@ -36,6 +36,7 @@ import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.scm.events.P4BranchScanner;
+import org.jenkinsci.plugins.p4.utils.FolderPropertiesUtil;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -180,6 +181,18 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
+	}
+
+	public boolean pathContainsFolderPropertyVar(List<String> paths) {
+		if (paths == null || paths.isEmpty()) {
+			return false;
+		}
+		for (String path : paths) {
+			if (path.contains(FolderPropertiesUtil.PROP_EXPANSION_PATTERN)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private List<P4SCMHead> getP4SCMHeads(SCMHeadObserver observer, TaskListener listener) throws Exception {
