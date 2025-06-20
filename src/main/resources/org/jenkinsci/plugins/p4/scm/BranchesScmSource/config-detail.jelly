@@ -41,7 +41,7 @@
         </f:entry>
 
         <f:entry field="useNewDirectoryStructure">
-            <f:checkbox title="Use new directory structure" default="false"/>
+            <f:checkbox title="Enable variable branch position in “Include branches”." default="false"/>
         </f:entry>
 
     	<t:listScmBrowsers name="p4.browser"/>
