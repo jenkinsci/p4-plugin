@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.mig82.folders.properties.PropertiesLoader;
 import com.perforce.p4java.exception.P4JavaException;
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -432,6 +433,10 @@ public class PerforceScm extends SCM {
 		ws.setRootPath(null);
 		ws.setExpand(envVars);
 
+		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(lastRun.getParent());
+		if (!folderPropertiesVars.isEmpty()) {
+			folderPropertiesVars.forEach(ws::addEnv);
+		}
 		// Set EXPANDED client
 		String client = ws.getFullName();
 		listener.getLogger().println("P4: Polling on: " + nodeName + " with:" + client);
@@ -519,7 +524,7 @@ public class PerforceScm extends SCM {
 					}
 				}
 			}
-			
+
 			// no previous build, return null.
 			listener.getLogger().println("P4: Polling: No changes in previous build(s).");
 			return null;
@@ -589,6 +594,10 @@ public class PerforceScm extends SCM {
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(run.getParent());
+		if (!folderPropertiesVars.isEmpty()) {
+			folderPropertiesVars.forEach(ws::addEnv);
+		}
 
 		// Add review to environment, if defined
 		if (review != null) {
@@ -727,7 +736,7 @@ public class PerforceScm extends SCM {
 			streamName = ((StreamWorkspaceImpl) ws).getStreamName();
 		}
 		if (StringUtils.isNotBlank(streamName) || StringUtils.isNotBlank(streamAtChange)) {
-			run.addAction(new P4StreamEnvironmentContributionAction(streamName,streamAtChange));
+			run.addAction(new P4StreamEnvironmentContributionAction(streamName, streamAtChange));
 		}
 	}
 

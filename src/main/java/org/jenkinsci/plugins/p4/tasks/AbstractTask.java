@@ -99,7 +99,6 @@ public abstract class AbstractTask implements Serializable {
 		envVars.put("NODE_NAME", envVars.get("NODE_NAME", nodeName));
 		String executor = ExecutorHelper.getExecutorID(buildWorkspace, listener);
 		envVars.put("EXECUTOR_NUMBER", envVars.get("EXECUTOR_NUMBER", executor));
-
 		ws.setExpand(envVars);
 
 		// Set workspace root (check for parallel execution)

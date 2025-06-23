@@ -65,7 +65,7 @@ public class SwarmBrowser extends P4Browser {
 			return "Swarm browser";
 		}
 
-		public FormValidation doCheck(@QueryParameter final String value) throws IOException, ServletException {
+		public FormValidation doCheckUrl(@QueryParameter final String value) throws IOException, ServletException {
 
 			String url = Util.fixEmpty(value);
 			if (url == null) {

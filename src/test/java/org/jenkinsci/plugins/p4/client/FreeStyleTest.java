@@ -241,7 +241,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		assertNotNull(desc);
 
 		SwarmBrowser.DescriptorImpl impl = (SwarmBrowser.DescriptorImpl) desc;
-		FormValidation form = impl.doCheck(url.toString());
+		FormValidation form = impl.doCheckUrl(url.toString());
 		assertEquals(FormValidation.Kind.OK, form.kind);
 	}
 

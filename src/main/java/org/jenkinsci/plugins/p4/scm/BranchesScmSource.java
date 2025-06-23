@@ -9,6 +9,7 @@ import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.browsers.P4Browser;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.ViewMapHelper;
+import org.jenkinsci.plugins.p4.utils.FolderPropertiesUtil;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
@@ -88,6 +89,10 @@ public class BranchesScmSource extends AbstractP4ScmSource {
 
 		Pattern excludesPattern = Pattern.compile(getExcludes());
 		List<String> paths = getIncludePaths();
+		if (pathContainsFolderPropertyVar(paths)) {
+			paths = FolderPropertiesUtil.processFolderPropertiesIn(paths, getOwner());
+		}
+
 		List<P4SCMHead> list = new ArrayList<>();
 
 		try (ConnectionHelper p4 = new ConnectionHelper(getOwner(), getCredential(), listener)) {
