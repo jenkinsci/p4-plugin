@@ -431,10 +431,12 @@ public class PerforceScm extends SCM {
 
 		// JENKINS-48434 by setting rootPath to null will leave client's root unchanged
 		ws.setRootPath(null);
-
-		envVars.putAll(lastRun.getEnvironment(listener));
 		ws.setExpand(envVars);
 
+		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(lastRun.getParent());
+		if (!folderPropertiesVars.isEmpty()) {
+			folderPropertiesVars.forEach(ws::addEnv);
+		}
 		// Set EXPANDED client
 		String client = ws.getFullName();
 		listener.getLogger().println("P4: Polling on: " + nodeName + " with:" + client);
@@ -522,7 +524,7 @@ public class PerforceScm extends SCM {
 					}
 				}
 			}
-			
+
 			// no previous build, return null.
 			listener.getLogger().println("P4: Polling: No changes in previous build(s).");
 			return null;
@@ -592,10 +594,10 @@ public class PerforceScm extends SCM {
 
 		// Get workspace used for the Task
 		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
-		EnvVars env = run.getEnvironment(new LogTaskListener(logger, Level.INFO));
 		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(run.getParent());
-		env.putAll(folderPropertiesVars);
-		ws.setExpand(env);
+		if (!folderPropertiesVars.isEmpty()) {
+			folderPropertiesVars.forEach(ws::addEnv);
+		}
 
 		// Add review to environment, if defined
 		if (review != null) {
@@ -734,7 +736,7 @@ public class PerforceScm extends SCM {
 			streamName = ((StreamWorkspaceImpl) ws).getStreamName();
 		}
 		if (StringUtils.isNotBlank(streamName) || StringUtils.isNotBlank(streamAtChange)) {
-			run.addAction(new P4StreamEnvironmentContributionAction(streamName,streamAtChange));
+			run.addAction(new P4StreamEnvironmentContributionAction(streamName, streamAtChange));
 		}
 	}
 

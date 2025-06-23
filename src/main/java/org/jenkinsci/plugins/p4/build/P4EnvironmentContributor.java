@@ -35,7 +35,10 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		TagAction tagAction = TagAction.getLastAction(run);
 		buildEnvironment(tagAction, env);
 		injectSwarmEnvVars(run, env);
-		env.putAll(PropertiesLoader.loadFolderProperties(run.getParent()));
+		EnvVars folderPropertiesVars = PropertiesLoader.loadFolderProperties(run.getParent());
+		if (!folderPropertiesVars.isEmpty()) {
+			env.putAll(folderPropertiesVars);
+		}
 	}
 
 	public static void buildEnvironment(TagAction tagAction, Map<String, String> map) {
@@ -137,7 +140,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 			}
 			Map<String, String> swarmParameters = ((P4SCMHead) head).getSwarmParams();
 
-			if(swarmParameters == null || swarmParameters.isEmpty()) {
+			if (swarmParameters == null || swarmParameters.isEmpty()) {
 				continue;
 			}
 			String swarmBranch = swarmParameters.get(ReviewProp.SWARM_BRANCH.toString());
