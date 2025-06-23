@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public final class FolderPropertiesUtil {
-	public static String PROP_EXPANSION_PATTERN = "${";
+	public static final String PROP_EXPANSION_PATTERN = "${";
 
 	private FolderPropertiesUtil() {
 	}
