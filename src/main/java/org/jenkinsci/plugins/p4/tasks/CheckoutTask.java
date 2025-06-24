@@ -157,7 +157,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	}
 
 	/**
-	 * Invoke sync on build node (master or remote node).
+	 * Invoke sync on build node (controller or remote node).
 	 *
 	 * @return true if updated, false if no change.
 	 */

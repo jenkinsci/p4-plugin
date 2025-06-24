@@ -177,7 +177,7 @@ public abstract class AbstractTask implements Serializable {
 				throw new AbortException(msg);
 			}
 
-			// Check connection (might be on remote slave)
+			// Check connection (might be on remote agent)
 			if (!checkConnection(p4)) {
 				String msg = "P4: Unable to connect.";
 				logger.warning(msg);

@@ -16,7 +16,7 @@ public enum ReviewProp {
 
 	// Core Perforce properties
 	P4_CHANGE("change", true),
-	P4_LABEL("label", false),               // reserved by Jenkins for Slave Axes
+	P4_LABEL("label", false),               // reserved by Jenkins for Agent Axes
 	P4_PORT("p4port", true),                // must match P4PORT string in credential
 
 	// SCM MultiBranch properties
