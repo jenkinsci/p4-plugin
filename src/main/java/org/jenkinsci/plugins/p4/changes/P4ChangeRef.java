@@ -2,13 +2,16 @@ package org.jenkinsci.plugins.p4.changes;
 
 import com.perforce.p4java.core.IChangelistSummary;
 import com.perforce.p4java.core.file.IFileSpec;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
+import java.io.Serial;
 import java.util.List;
 
 public class P4ChangeRef implements P4Ref {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final long change;
@@ -52,11 +55,8 @@ public class P4ChangeRef implements P4Ref {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof P4ChangeRef) {
-			P4ChangeRef ref = (P4ChangeRef) obj;
-			if (ref.toString().equals(toString())) {
-				return true;
-			}
+		if (obj instanceof P4ChangeRef ref) {
+			return ref.toString().equals(toString());
 		}
 		return false;
 	}
@@ -69,12 +69,11 @@ public class P4ChangeRef implements P4Ref {
 	}
 
 	@Override
-	public int compareTo(Object obj) {
+	public int compareTo(@NonNull Object obj) {
 		if (equals(obj)) {
 			return 0;
 		}
-		if (obj instanceof P4ChangeRef) {
-			P4ChangeRef ref = (P4ChangeRef) obj;
+		if (obj instanceof P4ChangeRef ref) {
 			return (int)(change - ref.getChange());
 		}
 		throw new ClassCastException();

@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -88,7 +87,7 @@ public class StreamAtChangeTest extends DefaultEnvironment {
 		List<Integer> collect = streamLog.values().stream()
 				.flatMap(Collection::stream)
 				.map(IStreamlog::getChange)
-				.sorted().collect(Collectors.toList());
+				.sorted().toList();
 		int firstVersion = collect.get(0);
 		int secondVersion = collect.get(1);
 
@@ -116,7 +115,7 @@ public class StreamAtChangeTest extends DefaultEnvironment {
 		List<Integer> collect = streamLog.values().stream()
 				.flatMap(Collection::stream)
 				.map(IStreamlog::getChange)
-				.sorted().collect(Collectors.toList());
+				.sorted().toList();
 		int secondVersion = collect.get(1);
 
 		String stream = "//stream/atChange";
@@ -168,7 +167,7 @@ public class StreamAtChangeTest extends DefaultEnvironment {
 		List<Integer> collect = streamLog.values().stream()
 				.flatMap(Collection::stream)
 				.map(IStreamlog::getChange)
-				.sorted().collect(Collectors.toList());
+				.sorted().toList();
 		int secondVersion = collect.get(1);
 
 		String pipeline = ""

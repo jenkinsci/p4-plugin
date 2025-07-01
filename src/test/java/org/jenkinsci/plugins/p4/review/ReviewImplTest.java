@@ -1,11 +1,11 @@
 package org.jenkinsci.plugins.p4.review;
 
-import org.htmlunit.html.HtmlElement;
-import org.htmlunit.html.HtmlPage;
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.StringParameterValue;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerRule;
@@ -54,7 +54,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 
 		HtmlPage page = jenkins.createWebClient().getPage(project, "review");
 		HtmlElement review = page.getElementByName("review");
-		assertEquals(review.getAttribute("type"), "text");
+		assertEquals("text", review.getAttribute("type"));
 	}
 
 	@Test
@@ -78,10 +78,10 @@ public class ReviewImplTest extends DefaultEnvironment {
 				"}", false));
 		job.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		WorkflowRun run = job.scheduleBuild2(0, actions).get();
 		jenkins.assertLogContains("P4_CHANGELIST=39", run);

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
@@ -35,6 +36,7 @@ public class TemplateSource extends AbstractSource {
 		public DescriptorImpl() {
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Template Workspace";
