@@ -256,7 +256,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("ForceSyncOnDemand");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
-		Populate populate = new SyncOnlyImpl(false, true, false, false, true, "", null);
+		Populate populate = new SyncOnlyImpl(false, true, false, true, "", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();

@@ -11,7 +11,6 @@ if (stream != null) {
         def parts = line.split("=", 2)
         if (parts.length == 2 && parts[0].endsWith(".blurb")) {
             orderedProps.put(parts[0], parts[1])
-            //orderedProps[parts[0]] = parts[1]
         }
     }
 
