@@ -28,7 +28,7 @@ public class WhereTask extends AbstractTask implements FilePath.FileCallable<Str
 	}
 
 	/**
-	 * Invoke sync on build node (master or remote node).
+	 * Invoke sync on build node (controller or remote node).
 	 *
 	 * @return true if updated, false if no change.
 	 */

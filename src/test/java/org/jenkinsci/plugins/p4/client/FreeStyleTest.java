@@ -100,7 +100,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		// Check workspace descriptors
 		WorkspaceDescriptor desc = workspace.getDescriptor();
 		assertNotNull(desc);
-		assertEquals("Static (static view, master only)", desc.getDisplayName());
+		assertEquals("Static (static view, controller only)", desc.getDisplayName());
 		ListBoxModel charsets = WorkspaceDescriptor.doFillCharsetItems();
 		assertTrue(charsets.size() > 1);
 

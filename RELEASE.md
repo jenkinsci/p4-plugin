@@ -1,5 +1,20 @@
 ## Release notes
 
+### Release 1.17.2 (major features/fixes)
+
+[@31409](https://swarm.workshop.perforce.com/changes/31409) - Support selection of branch name from path in multibranch project for Branch Sources.
+
+[@31711](https://swarm.workshop.perforce.com/changes/31711) - Added support for properties set by Folder Properties Plugin.
+
+[@31724](https://swarm.workshop.perforce.com/changes/31724) - Update P4Java version to P4Java-2025.1.2785811.
+
+[@31408](https://swarm.workshop.perforce.com/changes/31408) - Added P4_STREAM environment variables.
+
+[@31657](https://swarm.workshop.perforce.com/changes/31657) - Recursively check previous builds for changes during polling. JENKINS-64800
+
+[@31410](https://swarm.workshop.perforce.com/changes/31410) - Bug Fix: Workspaces created via Templates don't use template's client type. JENKINS-48471
+
+[@31451](https://swarm.workshop.perforce.com/changes/31451) - Bug Fix: Report Swarm URL PASS FAIL errors in the console log as informational but do not fail job. JENKINS-75334
 
 ### Release 1.17.1 (major features/fixes)
 

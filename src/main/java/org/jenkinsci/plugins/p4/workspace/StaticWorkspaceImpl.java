@@ -63,7 +63,7 @@ public class StaticWorkspaceImpl extends Workspace implements Serializable {
 		@NonNull
 		@Override
 		public String getDisplayName() {
-			return "Static (static view, master only)";
+			return "Static (static view, controller only)";
 		}
 
 		/**

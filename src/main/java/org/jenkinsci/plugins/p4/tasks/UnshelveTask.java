@@ -39,7 +39,7 @@ public class UnshelveTask extends AbstractTask implements FileCallable<Boolean>,
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
 		try {
-			// Check connection (might be on remote slave)
+			// Check connection (might be on remote agent)
 			if (!checkConnection(p4)) {
 				return false;
 			}
