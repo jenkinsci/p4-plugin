@@ -13,15 +13,13 @@ public abstract class Populate implements ExtensionPoint, Describable<Populate>,
 
 	private final boolean have; // ! sync '-p'
 	private final boolean force; // sync '-f'
-	private final boolean modtime;
 	private final boolean quiet; // task '-q'
 	private final String pin;
 	private final ParallelSync parallel;
 
-	public Populate(boolean have, boolean force, boolean modtime, boolean quiet, String pin, ParallelSync parallel) {
+	public Populate(boolean have, boolean force, boolean quiet, String pin, ParallelSync parallel) {
 		this.have = have;
 		this.force = force;
-		this.modtime = modtime;
 		this.pin = pin;
 		this.quiet = quiet;
 		this.parallel = parallel;
@@ -33,10 +31,6 @@ public abstract class Populate implements ExtensionPoint, Describable<Populate>,
 
 	public boolean isForce() {
 		return force;
-	}
-
-	public boolean isModtime() {
-		return modtime;
 	}
 
 	public boolean isQuiet() {

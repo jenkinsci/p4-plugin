@@ -89,7 +89,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
 				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
 				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
-				+ "      revert:true, have:true, modtime:true]\n"
+				+ "      revert:true, have:true]\n"
 				+ "   p4sync workspace:workspace, credential: '" + CREDENTIAL + "', populate: syncOptions\n"
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -167,7 +167,7 @@ public class WorkflowTest extends DefaultEnvironment {
 				+ "      syncID: 'foo-${NODE_NAME}-${JOB_NAME}',\n"
 				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
 				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
-				+ "      revert:true, have:true, modtime:true]\n"
+				+ "      revert:true, have:true]\n"
 				+ "   p4sync workspace:workspace, credential: '" + CREDENTIAL + "', populate: syncOptions\n"
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));

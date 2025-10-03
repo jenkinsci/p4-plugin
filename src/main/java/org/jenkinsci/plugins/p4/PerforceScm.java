@@ -570,7 +570,6 @@ public class PerforceScm extends SCM {
 						((SyncOnlyImpl) populate).isRevert(),
 						true,
 						true,
-						populate.isModtime(),
 						populate.isQuiet(),
 						populate.getPin(),
 						populate.getParallel());

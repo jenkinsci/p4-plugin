@@ -5,8 +5,7 @@ This option is used if you have a hand-crafted build environment that you don't 
 ## Options:
 You can select a number of options: 
 - **Force sync:** Replaces the workspace files. 
-- **Populate have list:**  Overwrites the Perforce "have list". 
-- **Sync with MODTIME for consistency check:** Preserves the modification time of files during the sync operation.
+- **Populate have list:**  Overwrites the Perforce "have list".
 - **QUIET Perforce messages:** Enables the -q flag for all applicable Perforce Helix Core Server operations. Summary details will still be displayed.
 - **Revert any open or unshelved files:** Used to undo any changes made by previous builds based on Helix Swarm reviews or changes made manually within Perforce. 
 - **Pin build at Perforce Label:** When a build is triggered by **Polling**, **Build Now** or an external action, the workspace will only sync to the Perforce label in this field. Any other specified change or label will be ignored.

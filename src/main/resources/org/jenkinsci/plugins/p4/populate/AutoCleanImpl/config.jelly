@@ -10,7 +10,7 @@
 	</f:entry>
 	
 	<f:entry field="modtime">
-		<f:checkbox title="${%Sync with MODTIME for consistency check}" default="false"/>
+		<f:checkbox title="${%Sync with MODTIME}" default="false"/>
 	</f:entry>
 
 	<f:entry field="quiet">
