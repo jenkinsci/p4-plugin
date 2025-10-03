@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.unshelve;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
@@ -20,7 +21,7 @@ public class UnshelveBuilderStep extends UnshelveBuilder implements SimpleBuildS
 		this.credential = credential;
 		this.workspace = workspace;
 	}
-	
+
 	@Deprecated
 	public UnshelveBuilderStep(String credential, Workspace workspace, String shelf, String resolve, boolean tidy) {
 		this(null, null, shelf, resolve, tidy, false);
@@ -32,7 +33,7 @@ public class UnshelveBuilderStep extends UnshelveBuilder implements SimpleBuildS
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher, TaskListener listener)
+	public void perform(@NonNull Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
 		TagAction tagAction = TagAction.getLastAction(run);

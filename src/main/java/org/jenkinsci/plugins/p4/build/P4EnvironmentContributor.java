@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.build;
 
 import com.mig82.folders.properties.PropertiesLoader;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -21,7 +22,6 @@ import org.jenkinsci.plugins.p4.scm.P4SCMRevision;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -31,7 +31,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 	private static Logger logger = Logger.getLogger(P4EnvironmentContributor.class.getName());
 
 	@Override
-	public void buildEnvironmentFor(Run run, EnvVars env, TaskListener listener) throws IOException, InterruptedException {
+	public void buildEnvironmentFor(@NonNull Run run, @NonNull EnvVars env, @NonNull TaskListener listener) {
 		TagAction tagAction = TagAction.getLastAction(run);
 		buildEnvironment(tagAction, env);
 		injectSwarmEnvVars(run, env);
@@ -93,7 +93,7 @@ public class P4EnvironmentContributor extends EnvironmentContributor {
 		}
 
 		// Set P4_TICKET connection
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		if (j != null) {
 			@SuppressWarnings("unchecked")
 			Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);

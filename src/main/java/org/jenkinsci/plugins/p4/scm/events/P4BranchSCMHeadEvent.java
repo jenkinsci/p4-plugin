@@ -36,11 +36,10 @@ public class P4BranchSCMHeadEvent extends SCMHeadEvent<JSONObject> {
 	public Map<SCMHead, SCMRevision> heads(@NonNull SCMSource scmSource) {
 
 		// Verify SCMSource
-		if (!(scmSource instanceof AbstractP4ScmSource)) {
+		if (!(scmSource instanceof AbstractP4ScmSource source)) {
 			// Not a Perforce Source
 			return Collections.emptyMap();
 		}
-		AbstractP4ScmSource source = (AbstractP4ScmSource) scmSource;
 
 		// Check Perforce server P4PORT
 		String p4port = getField(getPayload(), ReviewProp.P4_PORT);
