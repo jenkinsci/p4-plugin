@@ -9,41 +9,46 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.io.IOException;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import static com.perforce.p4java.core.IMapEntry.EntryType.EXCLUDE;
 import static com.perforce.p4java.core.IMapEntry.EntryType.INCLUDE;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TaggingTest extends DefaultEnvironment {
+@WithJenkins
+class TaggingTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-FreeStyleTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws IOException {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+        jenkins.timeout = 30 * 60;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void labelShouldGetCreatedByUsingLabelInPostBuild() throws Exception {
+	void labelShouldGetCreatedByUsingLabelInPostBuild() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("LabelProject");
 		String view = "//depot/Freestyle/... //${P4_CLIENT}/Freestyle/...\n" +
 				"-//depot/Freestyle/main/sub1/... //${P4_CLIENT}/Freestyle/main/sub1/...\n" +

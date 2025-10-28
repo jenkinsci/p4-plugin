@@ -23,9 +23,8 @@ import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -45,11 +44,13 @@ import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -65,36 +66,41 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class PerforceSCMSourceTest extends DefaultEnvironment {
+@WithJenkins
+class PerforceSCMSourceTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(PerforceSCMSourceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PerforceSCMSourceTest.class.getName());
 
 	private static final String P4ROOT = "tmp-ScmSourceTest-p4root";
 
-	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(30 * 60);
+	private static JenkinsRule jenkins;
 
-	@ClassRule
-	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+    private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+        jenkins.timeout = 30 * 60;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testMultiBranchWithStreams() throws Exception {
-
+	void testMultiBranchWithStreams() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
 		StreamsScmSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -133,8 +139,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchWithClassic() throws Exception {
-
+	void testMultiBranchWithClassic() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
 		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
@@ -157,7 +162,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testExcludesWithClassic() throws Exception {
+	void testExcludesWithClassic() throws Exception {
 
 		String project = "excludeClassic";
 		String base = "//depot/" + project;
@@ -181,8 +186,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAJobShouldNotCreateClientForOtherJobsInAMultibranchProject() throws Exception {
-
+	void testAJobShouldNotCreateClientForOtherJobsInAMultibranchProject() throws Exception {
 		String project = "multi";
 		String base = "//depot/" + project;
 		String[] branches = new String[]{"br1", "br2"};
@@ -206,13 +210,12 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		while((line = br.readLine()) !=null){
 			builder.append(line);
 		}
-		assertTrue("A Job should include its branch in console logs",builder.toString().contains("//depot/multi/br1"));
-		assertFalse("A job should not include other job branch in console logs",builder.toString().contains("//depot/multi/br2"));
+		assertTrue(builder.toString().contains("//depot/multi/br1"),"A Job should include its branch in console logs");
+		assertFalse(builder.toString().contains("//depot/multi/br2"),"A job should not include other job branch in console logs");
 	}
 
 	@Test
-	public void testExcludesWithSwarm() throws Exception {
-
+	void testExcludesWithSwarm() throws Exception {
 		String project = "excludeSwarm";
 		String base = "//depot/" + project;
 		String[] branches = new String[]{"br1", "br2"};
@@ -240,8 +243,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testNoMultiStreams() throws Exception {
-
+	void testNoMultiStreams() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//depot/...";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -255,8 +257,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSingleStream() throws Exception {
-
+	void testSingleStream() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/Ace-main";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -270,8 +271,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSimplePathStreams() throws Exception {
-
+	void testSimplePathStreams() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/...";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -285,8 +285,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testWildPathStreams() throws Exception {
-
+	void testWildPathStreams() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/Ace-*";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -300,8 +299,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testExcludesStreams() throws Exception {
-
+	void testExcludesStreams() throws Exception {
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "excludes-streams");
 
 		CredentialsStore folderStore = getFolderStore(multi);
@@ -356,8 +354,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSimplePathClassic() throws Exception {
-
+	void testSimplePathClassic() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream";
 		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
@@ -372,8 +369,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testStarPathClassic() throws Exception {
-
+	void testStarPathClassic() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//stream/*";
 		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
@@ -388,8 +384,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testRootPathClassic() throws Exception {
-
+	void testRootPathClassic() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//...";
 		SCMSource source = new BranchesScmSource(CREDENTIAL, includes, null, format);
@@ -403,8 +398,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSpacePathClassic() throws Exception {
-
+	void testSpacePathClassic() throws Exception {
 		submitFile(jenkins, "//depot/space path/A/Jenkinsfile", "node() {}");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -420,8 +414,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMappingPathClassic() throws Exception {
-
+	void testMappingPathClassic() throws Exception {
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content");
 		submitFile(jenkins, "//depot/classic/A/tests/fileB", "content");
 		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", ""
@@ -462,8 +455,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMappingDefaultsClassic() throws Exception {
-
+	void testMappingDefaultsClassic() throws Exception {
 		String base = "//depot/default";
 		sampleProject(base, new String[]{"Main"}, "Jenkinsfile");
 
@@ -487,8 +479,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testRootPathStreams() throws Exception {
-
+	void testRootPathStreams() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//...";
 		SCMSource source = new StreamsScmSource(CREDENTIAL, includes, null, format);
@@ -502,8 +493,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchClassicWithCredentialsInFolder() throws Exception {
-
+	void testMultiBranchClassicWithCredentialsInFolder() throws Exception {
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-classic-creds-in-folder");
 
 		CredentialsStore folderStore = getFolderStore(multi);
@@ -519,13 +509,12 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertEquals(Result.SUCCESS, multi.getComputation().getResult(), "Branch Indexing succeeded");
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
-	public void testMultiBranchStreamWithCredentialsInFolder() throws Exception {
-
+	void testMultiBranchStreamWithCredentialsInFolder() throws Exception {
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams-creds-in-folder");
 
 		CredentialsStore folderStore = getFolderStore(multi);
@@ -541,13 +530,12 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertEquals(Result.SUCCESS, multi.getComputation().getResult(), "Branch Indexing succeeded");
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 	}
 
 	@Test
-	public void testMultiBranchStreamWithImports() throws Exception {
-
+	void testMultiBranchStreamWithImports() throws Exception {
 		WorkflowMultiBranchProject multi = jenkins.jenkins.createProject(WorkflowMultiBranchProject.class, "multi-streams-imports");
 
 		CredentialsStore folderStore = getFolderStore(multi);
@@ -603,7 +591,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
 
-		assertEquals("Branch Indexing succeeded", Result.SUCCESS, multi.getComputation().getResult());
+		assertEquals(Result.SUCCESS, multi.getComputation().getResult(), "Branch Indexing succeeded");
 		assertThat("We now have branches", multi.getItems(), not(containsInAnyOrder()));
 
 		// create a new change on the imported path
@@ -620,8 +608,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchClassicUpdateEvent() throws Exception {
-
+	void testMultiBranchClassicUpdateEvent() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/update";
 		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, "Jenkinsfile");
@@ -661,13 +648,12 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun build = multi.getItem("Main").getLastBuild();
-		assertEquals("Main has built", 2, build.number);
-		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals(2, build.number, "Main has built");
+		assertEquals(1, multi.getItem("Dev").getLastBuild().number, "Dev has not built");
 	}
 
 	@Test
-	public void testMultiBranchClassicMultiUpdateEvents() throws Exception {
-
+	void testMultiBranchClassicMultiUpdateEvents() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/multi";
 		String baseChange = sampleProject(base, new String[]{"Main", "Dev"}, "Jenkinsfile");
@@ -710,16 +696,15 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
-		assertEquals("Main has built", 2, runMain.number);
+		assertEquals(2, runMain.number, "Main has built");
 		assertEquals(Result.SUCCESS, runMain.getResult());
 
-		assertTrue("Dev has not built", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals(1, multi.getItem("Dev").getLastBuild().number, "Dev has not built");
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + change, runMain);
 	}
 
 	@Test
-	public void testMultiBranchSwarmCommittedTriggerEvent() throws Exception {
-
+	void testMultiBranchSwarmCommittedTriggerEvent() throws Exception {
 		// Setup sample Multi Branch Project
 		String project = "SwarmTriggerCommit";
 		String base = "//depot/SwarmTriggerCommit";
@@ -753,7 +738,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		// Make a shelve / fake review
 		String commit = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
 		assertNotNull(commit);
-		assertTrue("Not a number", commit.chars().allMatch(Character::isDigit));
+		assertTrue(commit.chars().allMatch(Character::isDigit), "Not a number");
 
 		// Mock Changes/Reviews
 		List<Long> changes = new ArrayList<>();
@@ -780,18 +765,17 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals(1, multi.getItem("Dev").getLastBuild().number, "Dev should not build");
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
-		assertEquals("Main should have built", 2, runMain.number);
+		assertEquals(2, runMain.number, "Main should have built");
 		assertEquals(Result.SUCCESS, runMain.getResult());
 
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + commit, runMain);
 	}
 
 	@Test
-	public void testMultiBranchSwarmCommittedAPIEvent() throws Exception {
-
+	void testMultiBranchSwarmCommittedAPIEvent() throws Exception {
 		// Setup sample Multi Branch Project
 		String project = "SwarmCommit";
 		String base = "//depot/SwarmCommit";
@@ -825,7 +809,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		// Make a shelve / fake review
 		String commit = submitFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
 		assertNotNull(commit);
-		assertTrue("Not a number", commit.chars().allMatch(Character::isDigit));
+		assertTrue(commit.chars().allMatch(Character::isDigit), "Not a number");
 
 		// Mock Changes/Reviews
 		List<Long> changes = new ArrayList<>();
@@ -860,18 +844,17 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		waitForBuild(multi.getItem("Main"), 2);
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not build", multi.getItem("Dev").getLastBuild().number == 1);
+		assertEquals(1, multi.getItem("Dev").getLastBuild().number, "Dev should not build");
 
 		WorkflowRun runMain = multi.getItem("Main").getLastBuild();
-		assertEquals("Main should have built", 2, runMain.number);
+		assertEquals(2, runMain.number, "Main should have built");
 
 		jenkins.assertLogContains("P4 Task: syncing files at change: " + commit, runMain);
 		assertEquals(Result.SUCCESS, runMain.getResult());
 	}
 
 	@Test
-	public void testMultiBranchSwarmMultiUpdateEvents() throws Exception {
-
+	void testMultiBranchSwarmMultiUpdateEvents() throws Exception {
 		// Setup sample Multi Branch Project
 		String project = "SwarmReview";
 		String base = "//depot/SwarmReview";
@@ -904,9 +887,9 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		// Make a shelve / fake review
 		String review = shelveFile(jenkins, base + "/" + branch + "/src/fileA", "edit1");
-		logger.info("Test: shelving " + review);
+		LOGGER.info("Test: shelving " + review);
 		assertNotNull(review);
-		assertTrue("Not a number", review.chars().allMatch(Character::isDigit));
+		assertTrue(review.chars().allMatch(Character::isDigit), "Not a number");
 
 		// Mock Changes/Reviews
 		List<Long> changes = new ArrayList<>();
@@ -939,11 +922,11 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		// Another change that should not get sync'ed
 		String change = submitFile(jenkins, base + "/" + branch + "/src/fileB", "edit2");
-		logger.info("Test: submitting change " + change);
+		LOGGER.info("Test: submitting change " + change);
 
 		String origin = "testMultiBranchSwarmMultiUpdateEvents";
 		P4BranchSCMHeadEvent event = new P4BranchSCMHeadEvent(SCMEvent.Type.CREATED, payload, origin);
-		logger.fine("\n\nTest: Firing Event!");
+		LOGGER.fine("\n\nTest: Firing Event!");
 		SCMHeadEvent.fireNow(event);
 
 		WorkflowJob revJob = multi.getItem(review);
@@ -959,8 +942,8 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 		jenkins.waitUntilNoActivity();
 
-		assertTrue("Dev should not built", multi.getItem("Dev").getLastBuild().number == 1);
-		assertTrue("Main should not built", multi.getItem("Main").getLastBuild().number == 1);
+		assertEquals(1, multi.getItem("Dev").getLastBuild().number, "Dev should not built");
+		assertEquals(1, multi.getItem("Main").getLastBuild().number, "Main should not built");
 
 		WorkflowRun revRun = revJob.getLastBuild();
 		assertNotNull(revJob);
@@ -972,7 +955,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-38781")
-	public void testUnshelvedChangesShouldGetDisplayedInJenkinsBuildChange() throws Exception {
+	void testUnshelvedChangesShouldGetDisplayedInJenkinsBuildChange() throws Exception {
 		String base = "//depot/UnshelveChange";
 		String jfile = base + "/Jenkinsfile";
 
@@ -1018,7 +1001,7 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		job.setDefinition(cpsScmFlowDefinition);
 		QueueTaskFuture<WorkflowRun> build = job.scheduleBuild2(0);
 		WorkflowRun run1 = build.get();
-		Assert.assertNotNull(run1);
+		assertNotNull(run1);
 		waitForBuild(job, run1.getNumber());
 
 		jenkins.getInstance().reload();
@@ -1029,8 +1012,6 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 		assertTrue(text.contains("//depot/UnshelveChange/Jenkinsfile"));
 		assertTrue(text.contains("//depot/UnshelveChange/sync/file1"));
 	}
-
-
 
 	/* ------------------------------------------------------------------------------------------------------------- */
 	/*	Helper methods                                                                                               */
@@ -1073,7 +1054,6 @@ public class PerforceSCMSourceTest extends DefaultEnvironment {
 	}
 
 	private SwarmHelper sampleSwarmProject(String project, String base, String[] branches) throws Exception {
-
 		SwarmHelper mockSwarm = mock(SwarmHelper.class);
 		when(mockSwarm.getBaseUrl()).thenReturn("mock");
 		when(mockSwarm.getActiveReviews(project)).thenReturn(new ArrayList<>());

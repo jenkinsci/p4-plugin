@@ -1,49 +1,54 @@
 package org.jenkinsci.plugins.p4.client;
 
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test class for testing org.jenkinsci.plugins.p4.workflow.source.AbstractSource implementation
  */
-public class GraphWorkFlowTest extends DefaultEnvironment {
+@WithJenkins
+class GraphWorkFlowTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(GraphWorkFlowTest.class.getName());
 	private static final String P4ROOT = "tmp-GraphWorkflowTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r17);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r17);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	// Test for syncing a graph source using script with source specified
-	@Ignore
+	@Disabled
 	@Test
-	public void testSyncGraphSources() throws Exception {
-
+	void testSyncGraphSources() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '''//graph/docker-plugin/...\n" +
@@ -58,10 +63,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("P4 Task: syncing files at change: //graph/scm-api-plugin.git@81dcf18bca038604c4fc784de42e6069feef8bd1", run);
 	}
 
-	@Ignore
+	@Disabled
 	@Test
-	public void testSyncGraphSource() throws Exception {
-
+	void testSyncGraphSource() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'GraphSource', graph: '//graph/scm-api-plugin/...']," +
@@ -76,10 +80,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	}
 
 	// Test for syncing a graph source with no source specified. i.e legacy script with new changes.
-	@Ignore
+	@Disabled
 	@Test
-	public void testSyncGraphSourceWithLegacyScript() throws Exception {
-
+	void testSyncGraphSourceWithLegacyScript() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin/...'," +
@@ -95,8 +98,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 	// Test for syncing a depot source using script with source specified
 	@Test
-	public void testSyncDepotSource() throws Exception {
-
+	void testSyncDepotSource() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', source: [$class: 'DepotSource', depot: '//depot/...']," +
@@ -112,8 +114,7 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 
 	// Test for syncing a depot source with no source specified. i.e legacy script with new changes.
 	@Test
-	public void testSyncDepotSourceWithLegacyScript() throws Exception {
-
+	void testSyncDepotSourceWithLegacyScript() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//depot/...'," +
@@ -128,10 +129,9 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	}
 
 	// Test for syncing a depot source with no source specified. i.e legacy script with new changes.
-	@Ignore
+	@Disabled
 	@Test
-	public void testSyncDepotSourceJava() throws Exception {
-
+	void testSyncDepotSourceJava() throws Exception {
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
 				"steps{" +
 				"p4sync charset: 'none', credential: '" + CREDENTIAL + "', depotPath: '//graph/scm-api-plugin/....java'," +
@@ -146,64 +146,63 @@ public class GraphWorkFlowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testGetClientView() {
+	void testGetClientView() {
 		String clientView = AbstractSource.getClientView("//depot/...", "job1");
-		Assert.assertEquals("//depot/... //job1/...", clientView);
+		assertEquals("//depot/... //job1/...", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/*", "job1");
-		Assert.assertEquals("//depot/* //job1/*", clientView);
+		assertEquals("//depot/* //job1/*", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/file", "job1");
-		Assert.assertEquals("//depot/file //job1/file", clientView);
+		assertEquals("//depot/file //job1/file", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/file space", "job1");
-		Assert.assertEquals("\"//depot/file space\" \"//job1/file space\"", clientView);
+		assertEquals("\"//depot/file space\" \"//job1/file space\"", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...", "job1");
-		Assert.assertEquals("//depot/src/... //job1/...", clientView);
+		assertEquals("//depot/src/... //job1/...", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/....java", "job1");
-		Assert.assertEquals("//depot/src/....java //job1/....java", clientView);
+		assertEquals("//depot/src/....java //job1/....java", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/*.java", "job1");
-		Assert.assertEquals("//depot/src/*.java //job1/*.java", clientView);
+		assertEquals("//depot/src/*.java //job1/*.java", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/file\n//depot2/file", "job1");
-		Assert.assertEquals("//depot/file //job1/depot/file\n//depot2/file //job1/depot2/file", clientView);
+		assertEquals("//depot/file //job1/depot/file\n//depot2/file //job1/depot2/file", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...\n//depot/tgt/...", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...\n  //depot/tgt/...", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/...\n\t//depot/tgt/...", "job1");
-		Assert.assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
+		assertEquals("//depot/src/... //job1/depot/src/...\n//depot/tgt/... //job1/depot/tgt/...", clientView);
 
 		clientView = AbstractSource.getClientView("//depot/src/....java\n//depot/tgt/....java", "job1");
-		Assert.assertEquals("//depot/src/....java //job1/depot/src/....java\n//depot/tgt/....java //job1/depot/tgt/....java", clientView);
+		assertEquals("//depot/src/....java //job1/depot/src/....java\n//depot/tgt/....java //job1/depot/tgt/....java", clientView);
 
 		// BAD INPUT (treated as file)
 		clientView = AbstractSource.getClientView("//depot/src/", "job1"); //BAD
-		Assert.assertEquals("//depot/src //job1/src", clientView);
+		assertEquals("//depot/src //job1/src", clientView);
 
 		// BAD INPUT (four '....' will slip through)
 		clientView = AbstractSource.getClientView("//depot/src/....", "job1"); //BAD
-		Assert.assertEquals("//depot/src/.... //job1/....", clientView);
+		assertEquals("//depot/src/.... //job1/....", clientView);
 
 		// BAD INPUT (treated as file)
 		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt", "job1");
-		Assert.assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
+		assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
 
 		// BAD INPUT (treated as file)
 		clientView = AbstractSource.getClientView("//depot/src/\n//depot/tgt/", "job1");
-		Assert.assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
+		assertEquals("//depot/src //job1/depot/src\n//depot/tgt //job1/depot/tgt", clientView);
 	}
 
-	@Ignore
+	@Disabled
 	@Test
-	public void testParallelSync() throws Exception {
-
+	void testParallelSync() throws Exception {
 		String client = "jenkins-master-parallelSync-0";
 
 		String pipelineScript = "pipeline{\nagent any \nstages{\nstage('l'){\n" +
