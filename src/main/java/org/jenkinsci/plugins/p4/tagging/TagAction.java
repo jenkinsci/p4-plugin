@@ -10,6 +10,7 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -41,6 +42,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<String> tags = new ArrayList<String>();
 
 	private List<P4Ref> refChanges;
+	private List<P4PollRef> pollRefChanges;
 
 	private P4Revision buildChange;
 	private P4Review review;
@@ -298,6 +300,36 @@ public class TagAction extends AbstractScmTagAction {
 		return changes;
 	}
 
+	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4PollRef> changes = new ArrayList<>();
+
+		List<TagAction> actions = lastActions(run);
+
+		if (actions == null || syncID == null || syncID.isEmpty()) {
+			listener.getLogger().println("No previous build found...");
+			return changes;
+		}
+
+		logger.fine("   using syncID: " + syncID);
+
+		boolean found = false;
+		for (TagAction action : actions) {
+			if (syncID.equals(action.getSyncID())) {
+				List<P4PollRef> pollChanges = action.getPollPathChanges();
+
+				if (pollChanges != null && !pollChanges.isEmpty()) {
+					for (P4PollRef poll : pollChanges) {
+						if (poll.getPollPath() != null && !changes.contains(poll)) {
+							changes.add(poll);
+						}
+					}
+				}
+			}
+		}
+
+		return changes;
+	}
+
 	/**
 	 * Find the last action; use this for environment variable as the last action has the latest values.
 	 *
@@ -353,4 +385,19 @@ public class TagAction extends AbstractScmTagAction {
 	public String getJenkinsPath() {
 		return jenkinsPath;
 	}
+
+	public void setPollPathChanges(List<P4Ref> finalPollPathList) {
+		List<P4PollRef> changes = new ArrayList<P4PollRef>();
+
+		for(P4Ref ref : finalPollPathList) {
+			P4PollRef poll = new P4PollRef(ref.getChange(), ((P4PollRef)ref).getPollPath());
+			changes.add(poll);
+		}
+		this.pollRefChanges = changes;
+	}
+
+	public List<P4PollRef> getPollPathChanges() {
+		return this.pollRefChanges;
+	}
+
 }

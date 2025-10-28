@@ -14,6 +14,7 @@ import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.console.P4Logging;
@@ -315,6 +316,9 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					}
 				} else {
 					// add classic changes
+					if(build instanceof P4PollRef) {
+						continue;
+					}
 					List<P4Ref> changes = p4.listChanges(lastRefs, build);
 					for (P4Ref change : changes) {
 						P4ChangeEntry cl = change.getChangeEntry(p4);

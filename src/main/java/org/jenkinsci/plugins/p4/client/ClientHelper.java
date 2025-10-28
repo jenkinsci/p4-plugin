@@ -41,6 +41,7 @@ import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -1386,6 +1387,33 @@ public class ClientHelper extends ConnectionHelper {
 
 		String path = "//" + iclient.getName() + "/...";
 		return listHaveChanges(path);
+	}
+
+	/**
+	 * Fetches a list of changes for a directory poll path (other than client view mapping)
+	 *
+	 * @param from List of from revisions
+	 * @return changelist To Revision
+	 * @throws Exception push up stack
+	 */
+	public List<P4Ref> listHaveChangesForPollPath(P4PollRef from) throws Exception {
+		List<P4Ref> finalChanges = new ArrayList<P4Ref>();
+
+		if (from.getChange() >= 0) {
+			String path = from.getPollPath() + "/...@" + from.getChange() + ",now";
+			log("P4: Polling with range: " + from + ",now for poll path: " + from.getPollPath());
+
+			List<P4Ref> changes = listChanges(path);
+			if (changes.size() > 0) {
+				P4PollRef firstChange = new P4PollRef(changes.get(0).getChange(), from.getPollPath());
+				if (!from.equals(firstChange)) {
+					finalChanges.add(firstChange);
+					return finalChanges;
+				}
+			}
+		}
+
+		return finalChanges;
 	}
 
 	/**

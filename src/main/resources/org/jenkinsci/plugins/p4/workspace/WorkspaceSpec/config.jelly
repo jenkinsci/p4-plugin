@@ -44,4 +44,36 @@
 		<f:checkbox id="id.backup" default="true" />
 	</f:entry>
 
+    <f:entry title="Polling Path" field="pollPath">
+        <f:textarea id="id.pollPath" />
+        <div id="pollPathWarning" style="color: red; font-size: 12px; margin-top: 4px;"></div>
+    </f:entry>
+
+    <script type="text/javascript">
+        function validatePollingPath() {
+            var textarea = document.getElementById("id.pollPath");
+            var warningDiv = document.getElementById("pollPathWarning");
+            if (!textarea || !warningDiv) return;
+
+            var entries = textarea.value.split(',')
+                .map(e => e.trim())
+                .filter(e => e.length > 0);
+
+            if (entries.length > 10) {
+                textarea.style.border = "2px solid red";
+                warningDiv.textContent = "Maximum 10 comma-separated entries are allowed in this field. Example: //depot/1, //depot/2, ..., //depot/10";
+            } else {
+                textarea.style.border = "";
+                warningDiv.textContent = "";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var textarea = document.getElementById("id.pollPath");
+            if (textarea) {
+                textarea.addEventListener("input", validatePollingPath);
+            }
+        });
+    </script>
+
 </j:jelly>

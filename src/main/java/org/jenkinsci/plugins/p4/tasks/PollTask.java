@@ -12,6 +12,7 @@ import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
@@ -37,6 +38,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 	private final List<Filter> filter;
 	private final List<P4Ref> lastRefs;
+	private List<P4PollRef> lastPollRefs;
 
 	private String pin;
 
@@ -44,6 +46,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 		super(credential, run, listener);
 		this.filter = filter;
 		this.lastRefs = lastRefs;
+		this.lastPollRefs = getPollRefChanges();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -94,11 +97,28 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			}
 		}
 
+		// Poll polling path changes
+		if (changes.isEmpty() && !lastPollRefs.isEmpty()) {
+			List<P4Ref> pollChanges = new ArrayList<P4Ref>();
+
+			for (P4PollRef ref : lastPollRefs) {
+				pollChanges = p4.listHaveChangesForPollPath(ref);
+				changes.addAll(pollChanges);
+			}
+		}
 		return changes;
 	}
 
 	public void setLimit(String expandedPin) {
 		pin = expandedPin;
+	}
+
+	public void setPollRefChanges(List<P4PollRef> pollRefs) {
+		lastPollRefs = pollRefs;
+	}
+
+	public List<P4PollRef> getPollRefChanges() {
+		return lastPollRefs;
 	}
 
 	/**
