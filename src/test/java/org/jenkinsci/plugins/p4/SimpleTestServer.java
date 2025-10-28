@@ -17,13 +17,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SimpleTestServer {
 
-	private static Logger logger = LoggerFactory.getLogger(SimpleTestServer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleTestServer.class);
 
 	private static final String RESOURCES = "src/test/resources/";
 
@@ -32,7 +32,7 @@ public class SimpleTestServer {
 	private final String p4ver;
 
 	public SimpleTestServer(String root, String version) {
-		String p4d = new File(RESOURCES + version).getAbsolutePath().toString();
+		String p4d = new File(RESOURCES + version).getAbsolutePath();
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.contains("win")) {
 			p4d += "/bin.ntx64/p4d.exe";
@@ -84,7 +84,7 @@ public class SimpleTestServer {
 		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
 		while (tarEntry != null) {
 			File node = new File(p4root, tarEntry.getName());
-			logger.debug("extracting: " + node.getCanonicalPath());
+            LOGGER.debug("extracting: {}", node.getCanonicalPath());
 			if (tarEntry.isDirectory()) {
 				node.mkdirs();
 			} else {
@@ -140,7 +140,7 @@ public class SimpleTestServer {
 		executor.execute(cmdLine);
 
 		int version = 0;
-		for (String line : outputStream.toString(Charset.forName("UTF-8")).split("\\n")) {
+		for (String line : outputStream.toString(StandardCharsets.UTF_8).split("\\n")) {
 			if (line.startsWith("Rev. P4D")) {
 				Pattern p = Pattern.compile("\\d{4}\\.\\d{1}");
 				Matcher m = p.matcher(line);
@@ -151,7 +151,7 @@ public class SimpleTestServer {
 				}
 			}
 		}
-		logger.info("P4D Version: " + version);
+        LOGGER.info("P4D Version: {}", version);
 		return version;
 	}
 
@@ -164,7 +164,7 @@ public class SimpleTestServer {
 			cmdLine.addArgument(arg);
 		}
 
-		logger.debug("EXEC: " + cmdLine.toString());
+        LOGGER.debug("EXEC: {}", cmdLine);
 
 		DefaultExecutor executor = new DefaultExecutor();
 		return executor.execute(cmdLine);

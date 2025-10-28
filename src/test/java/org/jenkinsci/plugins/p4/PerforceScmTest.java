@@ -9,23 +9,29 @@ import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PerforceScmTest extends DefaultEnvironment {
+@WithJenkins
+class PerforceScmTest extends DefaultEnvironment {
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	private JenkinsRule jenkins;
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        jenkins = rule;
+    }
 
 	@Test
-	public void testConfigBasic() throws Exception {
+	void testConfigBasic() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject();
 
 		String credential = "123";
@@ -44,7 +50,7 @@ public class PerforceScmTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testIsBuildParent() throws IOException {
+	void testIsBuildParent() throws IOException {
 		MatrixProject project = new MatrixProject("MatrixTest");
 
 		String credential = "123";
@@ -54,16 +60,16 @@ public class PerforceScmTest extends DefaultEnvironment {
 		project.setScm(scm);
 
 		project.setExecutionStrategy(new DefaultMatrixExecutionStrategyImpl());
-		assertFalse("isBuildParent should be false for default execution strategy",
-				scm.isBuildParent(project));
+		assertFalse(scm.isBuildParent(project),
+				"isBuildParent should be false for default execution strategy");
 
 		project.setExecutionStrategy(new MatrixOptions(true, false, false));
-		assertTrue("isBuildParent should be true when MatrixOptions#buildParent is true",
-				scm.isBuildParent(project));
+		assertTrue(scm.isBuildParent(project),
+				"isBuildParent should be true when MatrixOptions#buildParent is true");
 
 		project.setExecutionStrategy(new MatrixOptions(false, true, true));
-		assertFalse("isBuildParent should be false when MatrixOptions#buildParent is false",
-				scm.isBuildParent(project));
+		assertFalse(scm.isBuildParent(project),
+				"isBuildParent should be false when MatrixOptions#buildParent is false");
 	}
 
 }

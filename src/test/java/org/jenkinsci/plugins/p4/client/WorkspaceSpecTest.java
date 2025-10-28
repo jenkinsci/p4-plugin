@@ -8,37 +8,43 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class WorkspaceSpecTest extends DefaultEnvironment {
+@WithJenkins
+class WorkspaceSpecTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-WorkspaceSpecTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r17);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r17);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testChangeViewFreeStyle() throws Exception {
+	void testChangeViewFreeStyle() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Jam/... //" + format + "/...";
 		String cview = "//depot/Jam/...@10099";
@@ -62,7 +68,7 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testBackupFalseFreeStyle() throws Exception {
+	void testBackupFalseFreeStyle() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Jam/... //" + format + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
@@ -99,10 +105,9 @@ public class WorkspaceSpecTest extends DefaultEnvironment {
 
 	/**
 	 * test for https://issues.jenkins.io/browse/JENKINS-69491
- 	 */
+	 */
 	@Test
-	public void adjustViewLineTest() throws Exception {
-
+	void adjustViewLineTest() {
 		String clientName = "CLIENT";
 		String view = "\n//depot/Jam/... //placeholder/...\n" +
 				"//depot/java/yo/...\n\n" +

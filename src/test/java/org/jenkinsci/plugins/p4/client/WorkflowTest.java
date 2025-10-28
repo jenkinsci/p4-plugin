@@ -5,8 +5,7 @@ import com.perforce.p4java.core.IMapEntry;
 import com.perforce.p4java.impl.generic.client.ClientView;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.scm.GlobalLibraryScmSource;
 import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
@@ -16,10 +15,12 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.libs.GlobalLibraries;
 import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,28 +29,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class WorkflowTest extends DefaultEnvironment {
+@WithJenkins
+class WorkflowTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(WorkflowTest.class.getName());
 	private static final String P4ROOT = "tmp-WorkflowTest-p4root";
 
-	@Rule
-	public ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	private JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) throws Exception {
+        jenkins = rule;
+        jenkins.timeout = 7 * 60;
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testWorkflow() throws Exception {
-
+	void testWorkflow() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "demo");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -66,8 +68,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testWorkflowEnv() throws Exception {
-
+	void testWorkflowEnv() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowEnv");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -80,8 +81,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testManualP4Sync() throws Exception {
-
+	void testManualP4Sync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "manualP4Sync");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -97,8 +97,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4GroovyConnectAndSync() throws Exception {
-
+	void testP4GroovyConnectAndSync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n"
@@ -114,8 +113,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4GroovySpecEdit() throws Exception {
-
+	void testP4GroovySpecEdit() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n"
@@ -134,8 +132,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4GroovyForceSpecEdit() throws Exception {
-
+	void testP4GroovyForceSpecEdit() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "p4groovy.spec.force");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n"
@@ -157,8 +154,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSyncIDManualP4Sync() throws Exception {
-
+	void testSyncIDManualP4Sync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "syncIDmanualP4Sync");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -180,8 +176,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4GroovyMultiArg() throws Exception {
-
+	void testP4GroovyMultiArg() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "multiArg");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n"
@@ -200,8 +195,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testCheckoutEnvironment() throws Exception {
-
+	void testCheckoutEnvironment() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "checkoutEnv");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n" +
@@ -231,8 +225,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testCleanupClient() throws Exception {
-
+	void testCleanupClient() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "cleanup");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node () {\n" +
@@ -260,8 +253,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testGlobalLib() throws Exception {
-
+	void testGlobalLib() throws Exception {
 		// submit test library
 		String content = ""
 				+ "def call(String name = 'human') {\n" +
@@ -317,12 +309,11 @@ public class WorkflowTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getBuildByNumber(2).getResult());
 
 		// Clear Global Libraries for other Jobs
-		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+		globalLib.setLibraries(new ArrayList<>());
 	}
 
 	@Test
-	public void testGlobalLibMultiple() throws Exception {
-
+	void testGlobalLibMultiple() throws Exception {
 		// First LibraryW
 		// submit test library
 		String content1 = ""
@@ -363,7 +354,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		GlobalLibraries globalLib = (GlobalLibraries) jenkins.getInstance().getDescriptor(GlobalLibraries.class);
 		assertNotNull(globalLib);
 
-		List<LibraryConfiguration> libs = new ArrayList<LibraryConfiguration>();
+		List<LibraryConfiguration> libs = new ArrayList<>();
 		libs.add(config1);
 		libs.add(config2);
 		globalLib.setLibraries(libs);
@@ -388,12 +379,11 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogContains("Hello2, Jenkins.", run1);
 
 		// Clear Global Libraries for other Jobs
-		globalLib.setLibraries(new ArrayList<LibraryConfiguration>());
+		globalLib.setLibraries(new ArrayList<>());
 	}
 
 	@Test
-	public void testPreviewCheckout() throws Exception {
-
+	void testPreviewCheckout() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "previewCheckout");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -408,8 +398,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFlushCheckout() throws Exception {
-
+	void testFlushCheckout() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "flushCheckout");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -424,8 +413,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4SyncEllipsisAndDot() throws Exception {
-
+	void testP4SyncEllipsisAndDot() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowEllipsis");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -452,8 +440,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4SyncSpaceInPath() throws Exception {
-
+	void testP4SyncSpaceInPath() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowSpace");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -480,8 +467,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4SyncFileOnly() throws Exception {
-
+	void testP4SyncFileOnly() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflowFile");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -508,8 +494,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testExcludeDepotSourcePath() throws Exception {
-
+	void testExcludeDepotSourcePath() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "excludeDepotSource");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -537,8 +522,7 @@ public class WorkflowTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testManualStream() throws Exception {
-
+	void testManualStream() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "manualStream");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node('built-in') {\n"
@@ -572,7 +556,7 @@ public class WorkflowTest extends DefaultEnvironment {
 		String client = "manualStream.ws";
 		String stream = "//stream/main";
 		StreamWorkspaceImpl workspace = new StreamWorkspaceImpl("none", false, stream, client);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 		File wsRoot = new File("target/manualStream.ws").getAbsoluteFile();
 		workspace.setRootPath(wsRoot.toString());
 
@@ -584,10 +568,8 @@ public class WorkflowTest extends DefaultEnvironment {
 		jenkins.assertLogNotContains("NullPointerException", run2);
 	}
 
-
 	@Test
-	public void testStaticLabelSync() throws Exception {
-
+	void testStaticLabelSync() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "staticLabelSync");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node {\n"
@@ -607,8 +589,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-52806")
-	public void testTagActionEvnVarsWithParallelSteps() throws Exception {
-
+	void testTagActionEvnVarsWithParallelSteps() throws Exception {
 		// need 3 executors (job + one for each parallel step)
 		jenkins.jenkins.setNumExecutors(3);
 
@@ -642,8 +623,7 @@ public class WorkflowTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-60074")
-	public void testTagActionEvnVars() throws Exception {
-
+	void testTagActionEvnVars() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "nodeTagAction");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n"

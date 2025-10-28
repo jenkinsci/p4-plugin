@@ -8,9 +8,8 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
@@ -20,12 +19,13 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 import java.util.HashMap;
@@ -33,28 +33,33 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JenkinsfileTest extends DefaultEnvironment {
+@WithJenkins
+class JenkinsfileTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(JenkinsfileTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(JenkinsfileTest.class.getName());
 	private static final String P4ROOT = "tmp-JenkinsfileTest-p4root";
 
-	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+        jenkins.timeout = 7 * 60;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testBasicJenkinsfile() throws Exception {
-
+	void testBasicJenkinsfile() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"
@@ -113,8 +118,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testDiffClients() throws Exception {
-
+	void testDiffClients() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   checkout([$class: 'PerforceScm', credential: '" + CREDENTIAL + "',"
@@ -183,8 +187,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMulitSync() throws Exception {
-
+	void testMultiSync() throws Exception {
 		String content1 = ""
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
@@ -247,8 +250,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMulitSyncPolling() throws Exception {
-
+	void testMultiSyncPolling() throws Exception {
 		String content1 = ""
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
@@ -347,7 +349,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-43770")
-	public void testMultiSyncParallelPolling() throws Exception {
+	void testMultiSyncParallelPolling() throws Exception {
 		// Change 1 not available in //depot/data. First change is 17
 		// Change 1 is first change in //depot/main
 		String content1 = ""
@@ -458,8 +460,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsfileLocation() throws Exception {
-
+	void testJenkinsfileLocation() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   echo 'Alt Jenkinsfile'\n"
@@ -473,7 +474,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -495,8 +496,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsfileLocationLightweight() throws Exception {
-
+	void testJenkinsfileLocationLightweight() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   echo 'Alt Jenkinsfile'\n"
@@ -510,7 +510,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -538,7 +538,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPipelineJenkinsfilePathEnvVar() throws Exception {
+	void testPipelineJenkinsfilePathEnvVar() throws Exception {
 		String base = "//depot/envJfile";
 		String scriptPath = "Jenkinsfile";
 		submitFile(jenkins, base + "/" + scriptPath, ""
@@ -587,7 +587,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testNodeJenkinsfilePathEnvVar() throws Exception {
+	void testNodeJenkinsfilePathEnvVar() throws Exception {
 		String base = "//depot/envJfile";
 		String scriptPath = "Jenkinsfile";
 		submitFile(jenkins, base + "/" + scriptPath, ""
@@ -628,10 +628,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	*/
 	}
 
-
 	@Test
-	public void testParametersStreamJenkinsfile() throws Exception {
-
+	void testParametersStreamJenkinsfile() throws Exception {
 		// Create workspace
 		submitStreamFile(jenkins, "//stream/main/Jenkinsfile", "node() {}", "desc");
 
