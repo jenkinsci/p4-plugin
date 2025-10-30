@@ -670,6 +670,7 @@ public class PerforceScm extends SCM {
 			}
 
 			if(!pollPathList.isEmpty()) {
+				pollPathList = new ArrayList<>(pollPathList.subList(0, Math.min(10, pollPathList.size())));
 				try (TempClientHelper p4 = new TempClientHelper(null, credential, listener, null)) {
 					for (String pollPath : pollPathList) {
 						// Fetching the latest change for each polling path
