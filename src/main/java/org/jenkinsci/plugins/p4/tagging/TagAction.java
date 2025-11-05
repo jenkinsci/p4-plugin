@@ -390,8 +390,10 @@ public class TagAction extends AbstractScmTagAction {
 		List<P4PollRef> changes = new ArrayList<P4PollRef>();
 
 		for(P4Ref ref : finalPollPathList) {
-			P4PollRef poll = new P4PollRef(ref.getChange(), ((P4PollRef)ref).getPollPath());
-			changes.add(poll);
+			if(ref != null) {
+				P4PollRef poll = new P4PollRef(ref.getChange(), ((P4PollRef)ref).getPollPath());
+				changes.add(poll);
+			}
 		}
 		this.pollRefChanges = changes;
 	}

@@ -1390,30 +1390,37 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
-	 * Fetches a list of changes for a directory poll path (other than client view mapping)
+	 * Retrieves the latest Perforce changelist for a given polling path since a specified changelist number.
+	 * If no changes exist or the input is invalid, the method returns {@code null}.
 	 *
-	 * @param from List of from revisions
-	 * @return changelist To Revision
-	 * @throws Exception push up stack
+	 * @param from the reference containing the polling path and starting changelist number;
+	 * @return a {@link P4PollRef} representing the latest change found for the given path,
+	 *         or {@code null} if no changes are found or if the input reference is invalid.
+	 * @throws Exception if an error occurs while retrieving the list of changes from Perforce.
 	 */
-	public List<P4Ref> listHaveChangesForPollPath(P4PollRef from) throws Exception {
-		List<P4Ref> finalChanges = new ArrayList<P4Ref>();
 
-		if (from.getChange() >= 0) {
-			String path = from.getPollPath() + "/...@" + from.getChange() + ",now";
-			log("P4: Polling with range: " + from + ",now for poll path: " + from.getPollPath());
-
-			List<P4Ref> changes = listChanges(path);
-			if (changes.size() > 0) {
-				P4PollRef firstChange = new P4PollRef(changes.get(0).getChange(), from.getPollPath());
-				if (!from.equals(firstChange)) {
-					finalChanges.add(firstChange);
-					return finalChanges;
-				}
-			}
+	public P4Ref getLatestChangeForPollPath(P4PollRef from) throws Exception {
+		if(from == null && from.getChange()<0) {
+			return null;
 		}
 
-		return finalChanges;
+		String path;
+		if(from.getPollPath().endsWith("/..."))
+			path = from.getPollPath() + "@" + from.getChange() + ",now";
+		else
+			path = from.getPollPath() + "/...@" + from.getChange() + ",now";
+
+		List<P4Ref> changes = listChanges(path);
+		if (changes.isEmpty()) {
+			return null;
+		}
+
+		P4Ref finalChange = new P4PollRef(changes.get(0).getChange(), from.getPollPath());
+		if(from.equals(finalChange)) {
+			return null;
+		}
+
+		return finalChange;
 	}
 
 	/**

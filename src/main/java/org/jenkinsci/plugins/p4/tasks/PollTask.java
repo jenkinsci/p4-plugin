@@ -102,8 +102,10 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			List<P4Ref> pollChanges = new ArrayList<P4Ref>();
 
 			for (P4PollRef ref : lastPollRefs) {
-				pollChanges = p4.listHaveChangesForPollPath(ref);
-				changes.addAll(pollChanges);
+				P4Ref changeref = p4.getLatestChangeForPollPath(ref);
+				if (changeref != null) {
+					changes.add(changeref);
+				}
 			}
 		}
 		return changes;
