@@ -50,7 +50,6 @@ import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
-import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
@@ -99,7 +98,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class PerforceScm extends SCM {
 
@@ -656,39 +654,11 @@ public class PerforceScm extends SCM {
 			task.setIncrementalChanges(changes);
 		}
 
-		// Adding all the pollPath and their latest changes in a list
-		List<P4Ref> finalPollPathList = new ArrayList<P4Ref>();
-		if (ws instanceof ManualWorkspaceImpl) {
-			String workspacePollpath = ((ManualWorkspaceImpl) ws).getSpec().getPollPath();
-			List<String> pollPathList = new ArrayList<>();
-			// Extract and clean comma-separated polling paths
-			if (workspacePollpath != null && !workspacePollpath.isEmpty()) {
-				pollPathList = Arrays.stream(workspacePollpath.split(","))
-						.map(String::trim)
-						.filter(s -> !s.isEmpty())
-						.collect(Collectors.toList());
-			}
-
-			if(!pollPathList.isEmpty()) {
-				pollPathList = new ArrayList<>(pollPathList.subList(0, Math.min(10, pollPathList.size())));
-				try (TempClientHelper p4 = new TempClientHelper(null, credential, listener, null)) {
-					for (String pollPath : pollPathList) {
-						P4Ref changes = p4.getLatestChangeForPollPath(new P4PollRef(0, pollPath));
-						if(changes != null) {
-							finalPollPathList.add(changes);
-						}
-					}
-				} catch (Exception ex) {
-					throw new RuntimeException("Error while processing polling paths: ", ex);
-				}
-			}
-		}
-
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
-		tag.setPollPathChanges(finalPollPathList);
+		tag.setPollPathChanges(task.resolvePollPathsToLatestChanges());
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
 		// JENKINS-39107: Make Depot location of Jenkins file available

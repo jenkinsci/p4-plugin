@@ -38,7 +38,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 	private final List<Filter> filter;
 	private final List<P4Ref> lastRefs;
-	private List<P4PollRef> lastPollRefs;
+	private List<P4PollRef> lastPollRefs = new ArrayList<>();
 
 	private String pin;
 
@@ -46,7 +46,6 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 		super(credential, run, listener);
 		this.filter = filter;
 		this.lastRefs = lastRefs;
-		this.lastPollRefs = getPollRefChanges();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -68,21 +67,6 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			changes = p4.listHaveChanges(lastRefs);
 		}
 
-		// filter changes...
-		List<P4Ref> remainder = new ArrayList<P4Ref>();
-		for (P4Ref c : changes) {
-			long change = c.getChange();
-			if (change > 0) {
-				Changelist changelist = p4.getChange(change);
-				// add unfiltered changes to remainder list
-				if (!filterChange(changelist, filter)) {
-					remainder.add(new P4ChangeRef(changelist.getId()));
-					p4.log("... found change: " + changelist.getId());
-				}
-			}
-		}
-		changes = remainder;
-
 		// Poll Graph commit changes
 		if (p4.checkVersion(20171)) {
 			List<IRepo> repos = p4.listRepos();
@@ -99,15 +83,29 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 		// Poll polling path changes
 		if (changes.isEmpty() && !lastPollRefs.isEmpty()) {
-			List<P4Ref> pollChanges = new ArrayList<P4Ref>();
-
 			for (P4PollRef ref : lastPollRefs) {
-				P4Ref changeref = p4.getLatestChangeForPollPath(ref);
-				if (changeref != null) {
-					changes.add(changeref);
+				P4PollRef changeRef = p4.getLatestChangeForPollPath(ref);
+				if (changeRef != null) {
+					changes.add(changeRef);
 				}
 			}
 		}
+
+		// filter changes...
+		List<P4Ref> remainder = new ArrayList<>();
+		for (P4Ref c : changes) {
+			long change = c.getChange();
+			if (change > 0) {
+				Changelist changelist = p4.getChange(change);
+				// add unfiltered changes to remainder list
+				if (!filterChange(changelist, filter)) {
+					remainder.add(new P4ChangeRef(changelist.getId()));
+					p4.log("... found change: " + changelist.getId());
+				}
+			}
+		}
+		changes = remainder;
+
 		return changes;
 	}
 
@@ -116,7 +114,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 	}
 
 	public void setPollRefChanges(List<P4PollRef> pollRefs) {
-		lastPollRefs = pollRefs;
+		this.lastPollRefs = pollRefs;
 	}
 
 	public List<P4PollRef> getPollRefChanges() {

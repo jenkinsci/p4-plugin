@@ -41,7 +41,6 @@ import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
-import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -1292,12 +1291,12 @@ public class ClientHelper extends ConnectionHelper {
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		// JENKINS-68516: skip changelist calculation if maxChanges=0.
 		if (getMaxChangeLimit() <= 0) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
@@ -1347,7 +1346,7 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private List<P4Ref> listChanges(String ws) throws Exception {
-		List<P4Ref> list = new ArrayList<P4Ref>();
+		List<P4Ref> list = new ArrayList<>();
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(getMaxChangeLimit());
 
@@ -1390,40 +1389,6 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
-	 * Retrieves the latest Perforce changelist for a given polling path since a specified changelist number.
-	 * If no changes exist or the input is invalid, the method returns {@code null}.
-	 *
-	 * @param from the reference containing the polling path and starting changelist number;
-	 * @return a {@link P4PollRef} representing the latest change found for the given path,
-	 *         or {@code null} if no changes are found or if the input reference is invalid.
-	 * @throws Exception if an error occurs while retrieving the list of changes from Perforce.
-	 */
-
-	public P4Ref getLatestChangeForPollPath(P4PollRef from) throws Exception {
-		if(from == null && from.getChange()<0) {
-			return null;
-		}
-
-		String path;
-		if(from.getPollPath().endsWith("/..."))
-			path = from.getPollPath() + "@" + from.getChange() + ",now";
-		else
-			path = from.getPollPath() + "/...@" + from.getChange() + ",now";
-
-		List<P4Ref> changes = listChanges(path);
-		if (changes.isEmpty()) {
-			return null;
-		}
-
-		P4Ref finalChange = new P4PollRef(changes.get(0).getChange(), from.getPollPath());
-		if(from.equals(finalChange)) {
-			return null;
-		}
-
-		return finalChange;
-	}
-
-	/**
 	 * Fetches a list of changes needed to update the workspace to the specified
 	 * limit. The limit could be a Perforce change number, label or counter.
 	 *
@@ -1441,7 +1406,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		// return empty array, if from and changeLimit are equal, or Perforce will report a change
 		if (from.equals(changeLimit)) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		if (from.getChange() > 0) {
@@ -1457,7 +1422,7 @@ public class ClientHelper extends ConnectionHelper {
 	private List<P4Ref> listHaveChanges(String fileSpec) throws Exception {
 		log("P4: Polling with cstat: " + fileSpec);
 
-		List<P4Ref> haveChanges = new ArrayList<P4Ref>();
+		List<P4Ref> haveChanges = new ArrayList<>();
 		Map<String, Object>[] map;
 		map = getConnection().execMapCmd("cstat", new String[]{fileSpec}, null);
 

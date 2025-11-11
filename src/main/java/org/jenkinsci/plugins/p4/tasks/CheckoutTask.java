@@ -17,11 +17,13 @@ import org.jenkinsci.plugins.p4.changes.P4LabelRef;
 import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.console.P4Logging;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.workspace.Expand;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
@@ -30,8 +32,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
@@ -316,9 +320,6 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 					}
 				} else {
 					// add classic changes
-					if(build instanceof P4PollRef) {
-						continue;
-					}
 					List<P4Ref> changes = p4.listChanges(lastRefs, build);
 					for (P4Ref change : changes) {
 						P4ChangeEntry cl = change.getChangeEntry(p4);
@@ -390,5 +391,60 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		checker.check((RoleSensitive) this, Roles.SLAVE);
+	}
+
+
+	/**
+	 * Resolve workspace-defined poll paths to their latest Perforce changes.
+	 *
+	 * <p>This method:
+	 * - Only runs when the configured workspace is a {@link ManualWorkspaceImpl}.
+	 * - Reads the comma-separated poll paths from the workspace spec, trims entries
+	 *   and ignores empty values.
+	 * - For up to {@code MAX_PATHS_TO_CHECK} poll paths, queries Perforce for the latest
+	 *   changelist for each poll path using {@link ConnectionHelper#getLatestChangeForPollPath(P4PollRef)}.
+	 * - Returns a list of non-null {@link P4Ref} objects (one per path with a found change)
+	 *   in the same order the paths were specified.
+	 *
+	 * @return list of latest per-path {@code P4PollRef} results (empty if none)
+	 * @throws RuntimeException if an error occurs while querying Perforce (current behavior)
+	 */
+	public List<P4PollRef> resolvePollPathsToLatestChanges() {
+		final int MAX_PATHS_TO_CHECK = 10;
+
+		List<P4PollRef> results = new ArrayList<>();
+		Workspace ws = getWorkspace();
+
+		if (!(ws instanceof ManualWorkspaceImpl)) {
+			return results;
+		}
+
+		String pollSpec = ((ManualWorkspaceImpl) ws).getSpec().getPollPath();
+		if (pollSpec == null || pollSpec.trim().isEmpty()) {
+			return results;
+		}
+
+		List<String> paths = Arrays.stream(pollSpec.split(","))
+				.map(String::trim)
+				.filter(s -> !s.isEmpty())
+				.collect(Collectors.toList());
+
+		if (paths.isEmpty()) {
+			return results;
+		}
+
+		try (ConnectionHelper p4 = new ConnectionHelper(getCredential(), getListener())) {
+			int limit = Math.min(MAX_PATHS_TO_CHECK, paths.size());
+			for (int i = 0; i < limit; i++) {
+				P4PollRef ref = p4.getLatestChangeForPollPath(new P4PollRef(0, paths.get(i)));
+				if (ref != null) {
+					results.add(ref);
+				}
+			}
+		} catch (Exception ex) {
+			throw new RuntimeException("Error while processing polling paths", ex);
+		}
+
+		return results;
 	}
 }

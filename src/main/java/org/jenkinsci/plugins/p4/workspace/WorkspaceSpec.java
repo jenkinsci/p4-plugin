@@ -106,7 +106,6 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		this.type = type;
 		this.serverID = serverID;
 		this.backup = backup;
-		this.pollPath = getPollPath();
 	}
 
 	// Default setup for Classic Workspace
@@ -125,7 +124,6 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 		this.type = null;
 		this.serverID = null;
 		this.backup = true;
-		this.pollPath = getPollPath();
 	}
 
 	@Deprecated

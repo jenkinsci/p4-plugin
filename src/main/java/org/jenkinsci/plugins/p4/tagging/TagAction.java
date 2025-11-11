@@ -30,7 +30,9 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +44,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<String> tags = new ArrayList<String>();
 
 	private List<P4Ref> refChanges;
-	private List<P4PollRef> pollRefChanges;
+	private List<P4PollRef> pollRefChanges = new ArrayList<>();
 
 	private P4Revision buildChange;
 	private P4Review review;
@@ -301,33 +303,44 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<P4PollRef> changes = new ArrayList<>();
+		// Use LinkedHashSet to preserve insertion order while deduplicating by
+		// P4PollRef.equals()/hashCode().
+		Set<P4PollRef> result = new LinkedHashSet<>();
 
 		List<TagAction> actions = lastActions(run);
-
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");
-			return changes;
+			return new ArrayList<>();
 		}
 
 		logger.fine("   using syncID: " + syncID);
 
-		boolean found = false;
 		for (TagAction action : actions) {
-			if (syncID.equals(action.getSyncID())) {
-				List<P4PollRef> pollChanges = action.getPollPathChanges();
+			if (!syncID.equals(action.getSyncID())) {
+				continue;
+			}
 
-				if (pollChanges != null && !pollChanges.isEmpty()) {
-					for (P4PollRef poll : pollChanges) {
-						if (poll.getPollPath() != null && !changes.contains(poll)) {
-							changes.add(poll);
-						}
-					}
+			List<P4PollRef> pollChanges = action.getPollPathChanges();
+			if (pollChanges == null || pollChanges.isEmpty()) {
+				continue;
+			}
+
+			for (P4PollRef poll : pollChanges) {
+				if (poll == null) {
+					continue;
+				}
+				String path = poll.getPollPath();
+				if (path == null) {
+					continue;
+				}
+				// LinkedHashSet.add will ignore duplicates based on equals/hashCode
+				if (result.add(poll)) {
+					listener.getLogger().println("Found last poll change " + poll.toString() + " on syncID " + syncID + " path " + path);
 				}
 			}
 		}
 
-		return changes;
+		return new ArrayList<>(result);
 	}
 
 	/**
@@ -386,8 +399,8 @@ public class TagAction extends AbstractScmTagAction {
 		return jenkinsPath;
 	}
 
-	public void setPollPathChanges(List<P4Ref> finalPollPathList) {
-		List<P4PollRef> changes = new ArrayList<P4PollRef>();
+	public void setPollPathChanges(List<P4PollRef> finalPollPathList) {
+		List<P4PollRef> changes = new ArrayList<>();
 
 		for(P4Ref ref : finalPollPathList) {
 			if(ref != null) {
