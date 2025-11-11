@@ -41,6 +41,7 @@ import org.jenkinsci.plugins.p4.build.ExecutorHelper;
 import org.jenkinsci.plugins.p4.build.NodeHelper;
 import org.jenkinsci.plugins.p4.build.P4EnvironmentContributor;
 import org.jenkinsci.plugins.p4.build.P4StreamEnvironmentContributionAction;
+import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeParser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
@@ -54,6 +55,7 @@ import org.jenkinsci.plugins.p4.credentials.P4CredentialsImpl;
 import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterLatestChangeImpl;
+import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -825,7 +827,7 @@ public class PerforceScm extends SCM {
 	}
 
 	private List<P4ChangeEntry> calculateChanges(Run<?, ?> run, CheckoutTask task) {
-		List<P4ChangeEntry> list = new ArrayList<P4ChangeEntry>();
+		List<P4ChangeEntry> list = new ArrayList<>();
 
 		Run<?, ?> lastBuild;
 		PerforceScm.DescriptorImpl scm = getDescriptor();
@@ -860,7 +862,43 @@ public class PerforceScm extends SCM {
 			list.add(task.getCurrentChange());
 		}
 
+		// Apply path-based filters to the change list
+		list = applyPathFilters(list);
 		return list;
+	}
+
+	/**
+	 * Apply path-based filters (FilterPathImpl) to a list of change entries.
+	 * If no path filters are present the original list is returned.
+	 *
+	 * @param entries list of change entries to filter
+	 * @return filtered list of change entries (or original list if no filters)
+	 */
+	private List<P4ChangeEntry> applyPathFilters(List<P4ChangeEntry> entries) {
+		if (entries == null || entries.isEmpty() || filter == null || filter.isEmpty()) {
+			return entries;
+		}
+
+		List<P4ChangeEntry> remainder = new ArrayList<>();
+
+		for (Filter f : filter) {
+			if (!(f instanceof FilterPathImpl)) {
+				continue;
+			}
+			String filterPath = ((FilterPathImpl) f).getPath();
+
+			for (P4ChangeEntry c : entries) {
+				Collection<P4AffectedFile> affectedFiles = c.getAffectedFiles();
+				for (P4AffectedFile affectedFile : affectedFiles) {
+					String p = affectedFile.getPath();
+					if (!p.startsWith(filterPath)) {
+						remainder.add(c);
+					}
+				}
+			}
+		}
+
+		return remainder.isEmpty() ? entries : remainder;
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885 JENKINS-52806 JENKINS-60074
