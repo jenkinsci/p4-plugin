@@ -10,6 +10,7 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -29,7 +30,9 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +44,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<String> tags = new ArrayList<String>();
 
 	private List<P4Ref> refChanges;
+	private List<P4PollRef> pollRefChanges = new ArrayList<>();
 
 	private P4Revision buildChange;
 	private P4Review review;
@@ -298,6 +302,47 @@ public class TagAction extends AbstractScmTagAction {
 		return changes;
 	}
 
+	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		// Use LinkedHashSet to preserve insertion order while deduplicating by
+		// P4PollRef.equals()/hashCode().
+		Set<P4PollRef> result = new LinkedHashSet<>();
+
+		List<TagAction> actions = lastActions(run);
+		if (actions == null || syncID == null || syncID.isEmpty()) {
+			listener.getLogger().println("No previous build found...");
+			return new ArrayList<>();
+		}
+
+		logger.fine("   using syncID: " + syncID);
+
+		for (TagAction action : actions) {
+			if (!syncID.equals(action.getSyncID())) {
+				continue;
+			}
+
+			List<P4PollRef> pollChanges = action.getPollPathChanges();
+			if (pollChanges == null || pollChanges.isEmpty()) {
+				continue;
+			}
+
+			for (P4PollRef poll : pollChanges) {
+				if (poll == null) {
+					continue;
+				}
+				String path = poll.getPollPath();
+				if (path == null) {
+					continue;
+				}
+				// LinkedHashSet.add will ignore duplicates based on equals/hashCode
+				if (result.add(poll)) {
+					listener.getLogger().println("Found last poll change " + poll.toString() + " on syncID " + syncID + " path " + path);
+				}
+			}
+		}
+
+		return new ArrayList<>(result);
+	}
+
 	/**
 	 * Find the last action; use this for environment variable as the last action has the latest values.
 	 *
@@ -353,4 +398,21 @@ public class TagAction extends AbstractScmTagAction {
 	public String getJenkinsPath() {
 		return jenkinsPath;
 	}
+
+	public void setPollPathChanges(List<P4PollRef> finalPollPathList) {
+		List<P4PollRef> changes = new ArrayList<>();
+
+		for(P4Ref ref : finalPollPathList) {
+			if(ref != null) {
+				P4PollRef poll = new P4PollRef(ref.getChange(), ((P4PollRef)ref).getPollPath());
+				changes.add(poll);
+			}
+		}
+		this.pollRefChanges = changes;
+	}
+
+	public List<P4PollRef> getPollPathChanges() {
+		return this.pollRefChanges;
+	}
+
 }

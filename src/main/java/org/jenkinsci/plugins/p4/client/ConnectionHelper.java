@@ -35,7 +35,9 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.io.IOException;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -606,5 +609,37 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	@Override
 	public void close() throws Exception {
 		disconnect();
+	}
+
+	/**
+	 * Retrieves the latest Perforce changelist for a given polling path since a specified changelist number.
+	 * If no changes exist or the input is invalid, the method returns {@code null}.
+	 *
+	 * @param from the reference containing the polling path and starting changelist number;
+	 * @return a {@link P4PollRef} representing the latest change found for the given path,
+	 *         or {@code null} if no changes are found or if the input reference is invalid.
+	 * @throws Exception if an error occurs while retrieving the list of changes from Perforce.
+	 */
+
+	public P4PollRef getLatestChangeForPollPath(P4PollRef from) throws Exception {
+		if (from == null || from.getChange() < 0) {
+			return null;
+		}
+
+		String pollPath = from.getPollPath();
+		String path = pollPath.endsWith("/...")
+				? pollPath + "@" + from.getChange() + ",now"
+				: pollPath + "/...@" + from.getChange() + ",now";
+
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(1);
+		List<IChangelistSummary> changes = getConnection().getChangelists(spec, opts);
+		if (changes.isEmpty()) {
+			return null;
+		}
+
+		P4PollRef finalChange = new P4PollRef(changes.get(0).getId(), pollPath);
+		return from.equals(finalChange) ? null : finalChange;
 	}
 }

@@ -1291,12 +1291,12 @@ public class ClientHelper extends ConnectionHelper {
 		// return empty array, if from and to are equal, or Perforce will report
 		// a change
 		if (from.equals(to)) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		// JENKINS-68516: skip changelist calculation if maxChanges=0.
 		if (getMaxChangeLimit() <= 0) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		String ws = "//" + iclient.getName() + "/...@" + from + "," + to;
@@ -1346,7 +1346,7 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	private List<P4Ref> listChanges(String ws) throws Exception {
-		List<P4Ref> list = new ArrayList<P4Ref>();
+		List<P4Ref> list = new ArrayList<>();
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(getMaxChangeLimit());
 
@@ -1406,7 +1406,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 		// return empty array, if from and changeLimit are equal, or Perforce will report a change
 		if (from.equals(changeLimit)) {
-			return new ArrayList<P4Ref>();
+			return new ArrayList<>();
 		}
 
 		if (from.getChange() > 0) {
@@ -1422,7 +1422,7 @@ public class ClientHelper extends ConnectionHelper {
 	private List<P4Ref> listHaveChanges(String fileSpec) throws Exception {
 		log("P4: Polling with cstat: " + fileSpec);
 
-		List<P4Ref> haveChanges = new ArrayList<P4Ref>();
+		List<P4Ref> haveChanges = new ArrayList<>();
 		Map<String, Object>[] map;
 		map = getConnection().execMapCmd("cstat", new String[]{fileSpec}, null);
 

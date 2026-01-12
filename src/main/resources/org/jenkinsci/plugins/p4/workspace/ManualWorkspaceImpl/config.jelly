@@ -40,6 +40,7 @@
 				document.getElementById("id.stream").value = json.stream;
 				document.getElementById("id.line").value = json.line;
 				document.getElementById("id.view").value = json.view;
+				document.getElementById("id.pollPath").value = json.pollPath;
 			});
 		}
 	</script>
