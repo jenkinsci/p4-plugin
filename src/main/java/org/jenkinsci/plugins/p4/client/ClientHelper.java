@@ -404,7 +404,7 @@ public class ClientHelper extends ConnectionHelper {
 	private void syncFiles(String revisions, Populate populate) throws Exception {
 
 		// set MODTIME if populate options is used only required before 15.1
-		if (populate.isModtime() && !checkVersion(20151)) {
+		if( (populate instanceof AutoCleanImpl)  && ((AutoCleanImpl) populate).isModtime() && !checkVersion(20151) ) {
 			IClientOptions options = iclient.getOptions();
 			if (!options.isModtime()) {
 				options.setModtime(true);
@@ -606,7 +606,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// set MODTIME if populate options is used and server supports flag
-		if (populate.isModtime()) {
+		if ( (populate instanceof AutoCleanImpl)  && ((AutoCleanImpl) populate).isModtime() ) {
 			if (checkVersion(20141)) {
 				cleanOpts.setCheckModTime(true);
 			} else {

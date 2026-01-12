@@ -8,7 +8,7 @@ import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
@@ -16,34 +16,40 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReviewImplTest extends DefaultEnvironment {
+@WithJenkins
+class ReviewImplTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-ReviewImplTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testStaticReviewImpl() throws Exception {
+	void testStaticReviewImpl() throws Exception {
 		String client = defaultClient();
 		FreeStyleProject project = jenkins.createFreeStyleProject("StaticReview");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, client);
@@ -58,7 +64,7 @@ public class ReviewImplTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testReviewEnvironmentVar() throws Exception {
+	void testReviewEnvironmentVar() throws Exception {
 		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "reviewEnvVar");
 		job.setDefinition(new CpsFlowDefinition(""
 				+ "node() {\n" +

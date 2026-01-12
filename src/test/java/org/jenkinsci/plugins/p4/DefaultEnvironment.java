@@ -38,23 +38,23 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-abstract public class DefaultEnvironment {
+public abstract class DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(DefaultEnvironment.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DefaultEnvironment.class.getName());
 
-	protected final static String R15_1 = "r15.1";
-	protected final static String R17_1 = "r17.1";
-	protected final static String R18_1 = "r18.1";
+	protected static final String R15_1 = "r15.1";
+	protected static final String R17_1 = "r17.1";
+	protected static final String R18_1 = "r18.1";
 
-	protected final static String R19_1 = "r19.1";
-	protected final static String R24_1_r15 = "r24.1_r15"; //Binaries R24_1 checkpoint r15
-	protected final static String R24_1_r17 = "r24.1_r17"; //Binaries R24_1 checkpoint r17
+	protected static final String R19_1 = "r19.1";
+	protected static final String R24_1_r15 = "r24.1_r15"; //Binaries R24_1 checkpoint r15
+	protected static final String R24_1_r17 = "r24.1_r17"; //Binaries R24_1 checkpoint r17
 
-	protected final static String CREDENTIAL = "id";
-	protected final static int HTTP_PORT = 1888;
-	protected final static String HTTP_URL = "http://localhost:" + HTTP_PORT;
+	protected static final String CREDENTIAL = "id";
+	protected static final int HTTP_PORT = 1888;
+	protected static final String HTTP_URL = "http://localhost:" + HTTP_PORT;
 	protected final int LOG_LIMIT = 1000;
 
 	protected P4PasswordImpl createCredentials(String user, String password, String p4port, String id) throws IOException {
@@ -248,12 +248,12 @@ abstract public class DefaultEnvironment {
 		while (r > 0) {
 			r--;
 			if (job.getLastBuild().number == buildNumber) {
-				logger.info("waitForBuild(): Attempts: " + (retry - r));
+				LOGGER.info("waitForBuild(): Attempts: " + (retry - r));
 				return true;
 			}
 			Thread.sleep(delay);
 		}
-		logger.severe("Gave up waiting for build");
+        LOGGER.severe("Gave up waiting for build");
 		return false;
 	}
 

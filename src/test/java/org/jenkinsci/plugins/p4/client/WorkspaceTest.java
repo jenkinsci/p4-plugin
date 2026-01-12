@@ -14,7 +14,7 @@ import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -25,40 +25,45 @@ import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WorkspaceTest extends DefaultEnvironment {
+@WithJenkins
+class WorkspaceTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-WorkspaceTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testFreeStyleProject_ManualWs() throws Exception {
-
+	void testFreeStyleProject_ManualWs() throws Exception {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
@@ -113,8 +118,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_TemplateWs() throws Exception {
-
+	void testFreeStyleProject_TemplateWs() throws Exception {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -150,8 +154,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_StreamWs() throws Exception {
-
+	void testFreeStyleProject_StreamWs() throws Exception {
 		String stream = "//stream/main";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -189,8 +192,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testTPI95() throws Exception {
-
+	void testTPI95() throws Exception {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -220,8 +222,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWs() throws Exception {
-
+	void testFreeStyleProject_SpecWs() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test1";
 
@@ -261,8 +262,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWsChangeView() throws Exception {
-
+	void testFreeStyleProject_SpecWsChangeView() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test2";
 
@@ -303,8 +303,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWsBadSpec() throws Exception {
-
+	void testFreeStyleProject_SpecWsBadSpec() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test3";
 
@@ -339,7 +338,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSyncID() {
+	void testSyncID() {
 		Map<String, String> map = new HashMap<>();
 		map.put("NODE_NAME", "foo");
 		map.put("OTHER", "bar");
@@ -354,8 +353,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFolderProject_StreamWs() throws Exception {
-
+	void testFolderProject_StreamWs() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Data/... //" + format + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);

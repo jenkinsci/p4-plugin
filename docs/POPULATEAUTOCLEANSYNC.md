@@ -6,7 +6,7 @@ This is an efficient option that cleans and syncs file revisions in the workspac
 You can select a number of options: 
 - **REPLACE missing/modified files:** Perforce checks out and overwrites any depot files that are either missing from the workspace, or have been modified locally.
 - **DELETE generated files:** Perforce deletes any local files that are not in the depot.
-- **Sync with MODTIME for consistency check:** Preserves the modification time of files during the sync operation. 
+- **Sync with MODTIME:** Preserves the modification time of files during the sync operation. 
 - **QUIET Perforce messages:** Enables the -q flag for all applicable Helix Server operations. Summary details will still be displayed.
 - **Clean up Review actions:** Reverts open files in the pending changelist, but leaves the content in the workspace unchanged. Equivalent to `p4 revert -k`.
 - **Pin build at Perforce Label:** When a build is triggered by **Polling**, **Build Now** or an external action, the workspace will only sync to the Perforce label in this field. Any other specified change or label will be ignored.

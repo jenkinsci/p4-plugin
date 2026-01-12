@@ -21,7 +21,7 @@ public class GraphHybridImpl extends Populate {
 	 */
 	@DataBoundConstructor
 	public GraphHybridImpl(boolean quiet, String pin, ParallelSync parallel) {
-		super(true, true, false, quiet, pin, parallel);
+		super(true, true, quiet, pin, parallel);
 	}
 
 	@Extension

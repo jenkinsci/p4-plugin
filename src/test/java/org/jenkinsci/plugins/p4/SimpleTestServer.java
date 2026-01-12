@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 
 public class SimpleTestServer {
 
-	private static Logger logger = LoggerFactory.getLogger(SimpleTestServer.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleTestServer.class);
 
 	private static final String RESOURCES = "src/test/resources/";
 
@@ -84,7 +84,7 @@ public class SimpleTestServer {
 		TarArchiveEntry tarEntry = tarIn.getNextEntry();
 		while (tarEntry != null) {
 			File node = new File(p4root, tarEntry.getName());
-			logger.debug("extracting: {}", node.getCanonicalPath());
+      LOGGER.debug("extracting: {}", node.getCanonicalPath());
 			if (tarEntry.isDirectory()) {
 				node.mkdirs();
 			} else {
@@ -151,7 +151,7 @@ public class SimpleTestServer {
 				}
 			}
 		}
-		logger.info("P4D Version: {}", version);
+    LOGGER.info("P4D Version: {}", version);
 		return version;
 	}
 
@@ -164,7 +164,7 @@ public class SimpleTestServer {
 			cmdLine.addArgument(arg);
 		}
 
-		logger.debug("EXEC: {}", cmdLine);
+    LOGGER.debug("EXEC: {}", cmdLine);
 
 		DefaultExecutor executor = new DefaultExecutor();
 		return executor.execute(cmdLine);

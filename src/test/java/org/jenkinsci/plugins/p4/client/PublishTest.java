@@ -12,7 +12,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -23,11 +23,12 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,23 +36,28 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static com.perforce.p4java.PropertyDefs.IGNORE_FILE_NAME_KEY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class PublishTest extends DefaultEnvironment {
+@WithJenkins
+class PublishTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PublishTest.class.getName());
 	private static final String P4ROOT = "tmp-PublishTest-p4root";
 	private static final String SUPER = "super";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 		createCredentials("admin", "Password", p4d.getRshPort(), SUPER);
 
@@ -59,7 +65,7 @@ public class PublishTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPublishWithPurge() throws Exception {
+	void testPublishWithPurge() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-purge");
 
 		// Create workspace
@@ -99,7 +105,7 @@ public class PublishTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPublishWithFilter() throws Exception {
+	void testPublishWithFilter() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-filter");
 
 		// Create workspace
@@ -141,7 +147,7 @@ public class PublishTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPublishWithFail() throws Exception {
+	void testPublishWithFail() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-fail");
 
 		// Create workspace
@@ -185,8 +191,7 @@ public class PublishTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testHighAsciiDescriptions() throws Exception {
-
+	void testHighAsciiDescriptions() throws Exception {
 		byte[] byteArray = new byte[]{'t', 'e', 's', 't', 5, '.'};
 		String desc = new String(byteArray, StandardCharsets.UTF_8);
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content", desc);
@@ -199,7 +204,7 @@ public class PublishTest extends DefaultEnvironment {
 				+ "      name: 'jenkins-${NODE_NAME}-${JOB_NAME}',\n"
 				+ "      spec: [view: '//depot/... //jenkins-${NODE_NAME}-${JOB_NAME}/...']]\n"
 				+ "   def syncOptions = [$class: 'org.jenkinsci.plugins.p4.populate.SyncOnlyImpl',\n"
-				+ "      revert:true, have:true, modtime:true]\n"
+				+ "      revert:true, have:true]\n"
 				+ "   p4sync workspace:workspace, credential: '" + CREDENTIAL + "', populate: syncOptions\n"
 				+ "}", false));
 		WorkflowRun run = jenkins.assertBuildStatusSuccess(job.scheduleBuild2(0));
@@ -209,8 +214,9 @@ public class PublishTest extends DefaultEnvironment {
 		String msg = changeSet.getHistory().get(0).getMsg();
 		assertEquals("test?.", msg);
 	}
+
 	@Test
-	public void publishShouldCleanTheP4ClientWhenManualSpecCleanupIsTrue() throws Exception {
+	void publishShouldCleanTheP4ClientWhenManualSpecCleanupIsTrue() throws Exception {
 		WorkflowJob project = jenkins.jenkins.createProject(WorkflowJob.class, "Publish-Cleanup");
 
 		project.setDefinition(new CpsFlowDefinition(" " +

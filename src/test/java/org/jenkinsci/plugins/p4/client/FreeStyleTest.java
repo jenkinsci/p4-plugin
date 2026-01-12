@@ -19,7 +19,7 @@ import org.htmlunit.html.HtmlInput;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.browsers.P4WebBrowser;
 import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -32,42 +32,47 @@ import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FreeStyleTest extends DefaultEnvironment {
+@WithJenkins
+class FreeStyleTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(FreeStyleTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(FreeStyleTest.class.getName());
 	private static final String P4ROOT = "tmp-FreeStyleTest-p4root";
 	private static final String SUPER = "super";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 		createCredentials("admin", "Password", p4d.getRshPort(), SUPER);
 	}
 
 	@Test
-	public void testFreeStyleProject_buildChange() throws Exception {
-
+	void testFreeStyleProject_buildChange() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildChange");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
@@ -117,10 +122,8 @@ public class FreeStyleTest extends DefaultEnvironment {
 	}
 
 
-
 	@Test
-	public void testFreeStyleProject_buildLabel() throws Exception {
-
+	void testFreeStyleProject_buildLabel() throws Exception {
 		String url = "http://localhost";
 		P4WebBrowser browser = new P4WebBrowser(url);
 
@@ -173,8 +176,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_buildCounter() throws Exception {
-
+	void testFreeStyleProject_buildCounter() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildCounter");
 		StaticWorkspaceImpl workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		String pin = "testCounter";
@@ -198,8 +200,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_buildShelf() throws Exception {
-
+	void testFreeStyleProject_buildShelf() throws Exception {
 		String url = "http://localhost";
 		SwarmBrowser browser = new SwarmBrowser(url);
 
@@ -246,9 +247,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_forceSyncOnDemand() throws Exception {
-
-
+	void testFreeStyleProject_forceSyncOnDemand() throws Exception {
 		String client = "PollingInc.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -256,7 +255,7 @@ public class FreeStyleTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject("ForceSyncOnDemand");
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
-		Populate populate = new SyncOnlyImpl(false, true, false, false, true, "", null);
+		Populate populate = new SyncOnlyImpl(false, true, false, true, "", null);
 		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 		project.setScm(scm);
 		project.save();
