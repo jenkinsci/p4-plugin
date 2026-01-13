@@ -8,7 +8,6 @@ import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,14 +20,14 @@ public class TempClientHelper extends ClientHelper implements Closeable {
 
 	public TempClientHelper(Item context, String credential, TaskListener listener, Workspace workspace) throws Exception {
 		super(context, credential, listener);
-		this.clientUUID = "jenkinsTemp-" + UUID.randomUUID().toString();
+		this.clientUUID = "jenkinsTemp-" + UUID.randomUUID();
 		if (workspace != null) {
 			update(workspace);
 		}
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		try {
 			deleteClient(clientUUID);
 		} catch (Exception e) {
@@ -46,8 +45,7 @@ public class TempClientHelper extends ClientHelper implements Closeable {
 		workspace.setName(clientUUID);
 
 		// Update view with new name
-		if (workspace instanceof ManualWorkspaceImpl) {
-			ManualWorkspaceImpl manual = (ManualWorkspaceImpl) workspace;
+		if (workspace instanceof ManualWorkspaceImpl manual) {
 			WorkspaceSpec spec = manual.getSpec();
 			String view = spec.getView();
 			view = view.replace(oldName, clientUUID);

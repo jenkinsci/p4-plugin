@@ -12,16 +12,15 @@ import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.scm.SwarmScmSource;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static jakarta.servlet.http.HttpServletResponse.SC_CREATED;
 
 @Symbol("swarm_projects")
 @Extension
@@ -44,7 +43,7 @@ public class SwarmQueryAction implements RootAction {
 
 	// RootAction has no Item (Job, Run or MultiBranchProject) that can be use for context to look up a Credential
 	@SuppressWarnings("deprecation")
-	public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+	public void doDynamic(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
 
 		String path = req.getRestOfPath();
 
@@ -83,7 +82,7 @@ public class SwarmQueryAction implements RootAction {
 				source.setSwarm(swarm);
 				source.setPopulate(new AutoCleanImpl());
 
-				WorkflowMultiBranchProject multi = Jenkins.getInstance().createProject(WorkflowMultiBranchProject.class, name);
+				WorkflowMultiBranchProject multi = Jenkins.get().createProject(WorkflowMultiBranchProject.class, name);
 				multi.getSourcesList().add(new BranchSource(source));
 
 				multi.scheduleBuild2(0);

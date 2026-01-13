@@ -94,7 +94,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		if (getValidate().check(dirs, "")) {
 			return dirs;
 		}
-		return new ArrayList<IFileSpec>();
+		return new ArrayList<>();
 	}
 
 	private List<String> cleanDirPaths(List<String> paths) throws Exception {
@@ -369,10 +369,10 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		List<Map<String, Object>> resultMaps;
 		resultMaps = getConnection().execMapCmdList(cmd, args, null);
 
-		List<IFileSpec> list = new ArrayList<IFileSpec>();
+		List<IFileSpec> list = new ArrayList<>();
 
 		if (resultMaps != null) {
-			if ((resultMaps.size() > 0) && (resultMaps.get(0) != null)) {
+			if ((!resultMaps.isEmpty()) && (resultMaps.get(0) != null)) {
 				Map<String, Object> map = resultMaps.get(0);
 				if (map.containsKey("shelved")) {
 					for (int i = 0; map.get("rev" + i) != null; i++) {
@@ -438,11 +438,11 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	protected String buildRevisionLimit(String path, P4Ref from, P4Ref to) {
 		String revisionPath = path;
 		if (from != null && to != null) {
-			revisionPath = revisionPath + "@" + from.toString() + "," + to.toString();
+			revisionPath = revisionPath + "@" + from + "," + to;
 		} else if (from == null && to != null) {
-			revisionPath = revisionPath + "@" + to.toString();
+			revisionPath = revisionPath + "@" + to;
 		} else if (from != null && to == null) {
-			revisionPath = revisionPath + "@" + from.toString() + ",now";
+			revisionPath = revisionPath + "@" + from + ",now";
 		}
 		return revisionPath;
 	}
@@ -520,18 +520,16 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<P4Ref> listCommits(List<P4Ref> fromRefs, P4Ref to) throws Exception {
-		List<P4Ref> list = new ArrayList<P4Ref>();
+		List<P4Ref> list = new ArrayList<>();
 
-		if (!(to instanceof P4GraphRef)) {
+		if (!(to instanceof P4GraphRef toGraph)) {
 			return list;
 		}
-		P4GraphRef toGraph = (P4GraphRef) to;
 
 		for (P4Ref from : fromRefs) {
-			if (!(from instanceof P4GraphRef)) {
+			if (!(from instanceof P4GraphRef fromGraph)) {
 				continue;
 			}
-			P4GraphRef fromGraph = (P4GraphRef) from;
 
 			// skip mismatched repos
 			if (!fromGraph.getRepo().equals(toGraph.getRepo())) {
@@ -604,7 +602,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		disconnect();
 	}
 }

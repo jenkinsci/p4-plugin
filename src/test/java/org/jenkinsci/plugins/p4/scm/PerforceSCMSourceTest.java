@@ -6,7 +6,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
-import org.htmlunit.html.HtmlPage;
 import com.perforce.p4java.core.IStream;
 import com.perforce.p4java.core.IStreamSummary;
 import com.perforce.p4java.core.IStreamViewMapping;
@@ -22,6 +21,7 @@ import jenkins.scm.api.SCMEvent;
 import jenkins.scm.api.SCMHeadEvent;
 import jenkins.scm.api.SCMSource;
 import net.sf.json.JSONObject;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerExtension;
@@ -56,12 +56,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -86,16 +86,16 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 	private static JenkinsRule jenkins;
 
 	@RegisterExtension
-    private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
+  private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
     @BeforeAll
-    static void beforeAll(JenkinsRule rule) {
+  static void beforeAll(JenkinsRule rule) {
         jenkins = rule;
         jenkins.timeout = 30 * 60;
     }
 
     @BeforeEach
-    void beforeEach() throws Exception {
+  void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
@@ -326,17 +326,18 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		server.createStream(stream);
 
 		// Create a Jenkinsfile
-		String pipeline = ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Hello\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String pipeline = """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        echo "Hello"
+				      }
+				    }
+				  }
+				}""";
 		submitStreamFile(jenkins, "//stream/Acme-main/Jenkinsfile", pipeline, "description");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
@@ -417,21 +418,22 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 	void testMappingPathClassic() throws Exception {
 		submitFile(jenkins, "//depot/classic/A/src/fileA", "content");
 		submitFile(jenkins, "//depot/classic/A/tests/fileB", "content");
-		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'\n"
-				+ "          if(!fileExists('fileA'))       error 'missing fileA'\n"
-				+ "          if(!fileExists('fileB'))       error 'missing fileB'\n"
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, "//depot/classic/A/Jenkinsfile", """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				          if(!fileExists('Jenkinsfile')) error 'missing Jenkinsfile'
+				          if(!fileExists('fileA'))       error 'missing fileA'
+				          if(!fileExists('fileB'))       error 'missing fileB'
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = "//depot/classic/...";
@@ -563,19 +565,20 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		server.createStream(stream);
 
 		// Create a Jenkinsfile
-		String pipeline = ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "          if(!fileExists('imports/file1.txt'))   error 'missing import'\n"
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String pipeline = """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				          if(!fileExists('imports/file1.txt'))   error 'missing import'
+				        }
+				      }
+				    }
+				  }
+				}""";
 		submitStreamFile(jenkins, "//stream/import/Jenkinsfile", pipeline, "description");
 
 		// create a file to import
@@ -744,9 +747,9 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(commit));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -815,9 +818,9 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(commit));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		// Build JSON Payload
 		HashMap<String, String> map = new HashMap<>();
@@ -895,9 +898,9 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		List<Long> changes = new ArrayList<>();
 		changes.add(Long.parseLong(review));
 		HashMap<String, List<String>> projects = new HashMap<>();
-		projects.put(project, Arrays.asList("Main"));
+		projects.put(project, List.of("Main"));
 		SwarmReviewAPI.Review mockReview = new SwarmReviewAPI.Review(changes, changes, projects, "author");
-		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(Arrays.asList(mockReview)));
+		when(mockSwarm.getSwarmReview(anyString())).thenReturn(new SwarmReviewAPI(List.of(mockReview)));
 
 		List<SwarmReviewsAPI.Reviews> mockReviewsList = new ArrayList<>();
 		SwarmReviewsAPI.Reviews mockReviews = new SwarmReviewsAPI.Reviews(Long.parseLong(review), changes, "author");

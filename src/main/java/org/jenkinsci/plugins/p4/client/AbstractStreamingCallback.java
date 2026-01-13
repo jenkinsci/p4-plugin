@@ -27,12 +27,12 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 	}
 
 	@Override
-	public boolean startResults(int key) throws P4JavaException {
+	public boolean startResults(int key) {
 		return true;
 	}
 
 	@Override
-	public boolean endResults(int key) throws P4JavaException {
+	public boolean endResults(int key) {
 		done = true;
 		return true;
 	}
@@ -82,7 +82,7 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 			return;
 		}
 
-		StringBuffer msg = new StringBuffer();
+		StringBuilder msg = new StringBuilder();
 		String action = (map.get("action") == null) ? "" : (String) map.get("action");
 		String clientFile = (map.get("clientFile") == null) ? "" : (String) map.get("clientFile");
 		String depotFile = (map.get("depotFile") == null) ? "" : (String) map.get("depotFile");
@@ -92,7 +92,7 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 		msg.append(" - ");
 		msg.append(clientFile + " ");
 		msg.append(action);
-		listener.getLogger().println(msg.toString());
+		listener.getLogger().println(msg);
 	}
 
 	private boolean isQuiet() {
@@ -100,8 +100,7 @@ public abstract class AbstractStreamingCallback implements IStreamingCallback {
 		ICommandCallback callback = server.registerCallback(null);
 		server.registerCallback(callback);
 
-		if(callback instanceof P4Logging) {
-			P4Logging logging = (P4Logging) callback;
+		if (callback instanceof P4Logging logging) {
 			return logging.isQuiet();
 		}
 		return false;

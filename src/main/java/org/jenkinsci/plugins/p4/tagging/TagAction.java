@@ -21,13 +21,11 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,7 +36,7 @@ public class TagAction extends AbstractScmTagAction {
 	private static Logger logger = Logger.getLogger(TagAction.class.getName());
 
 	private String tag;
-	private List<String> tags = new ArrayList<String>();
+	private List<String> tags = new ArrayList<>();
 
 	private List<P4Ref> refChanges;
 
@@ -58,7 +56,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	private transient String p4ticket;
 
-	public TagAction(Run<?, ?> run, String credential) throws IOException, InterruptedException {
+	public TagAction(Run<?, ?> run, String credential) {
 		super(run);
 
 		P4BaseCredentials auth = ConnectionHelper.findCredential(credential, run);
@@ -86,7 +84,7 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	@POST
-	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
+	public void doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws Exception {
 
 		getACL().checkPermission(PerforceScm.TAG);
 

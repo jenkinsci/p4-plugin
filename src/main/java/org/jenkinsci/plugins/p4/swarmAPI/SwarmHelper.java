@@ -1,16 +1,17 @@
 package org.jenkinsci.plugins.p4.swarmAPI;
 
 import com.google.gson.Gson;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
+import kong.unirest.core.HttpResponse;
+import kong.unirest.core.JsonNode;
+import kong.unirest.core.Unirest;
+import kong.unirest.core.json.JSONArray;
+import kong.unirest.core.json.JSONObject;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.review.ApproveState;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
+import java.io.Serial;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,13 +79,10 @@ public class SwarmHelper {
 			return false;
 		}
 
-		switch (state) {
-			case VOTE_UP:
-			case VOTE_DOWN:
-				return postVote(id, state, description);
-			default:
-				return patchReview(id, state, description);
-		}
+		return switch (state) {
+			case VOTE_UP, VOTE_DOWN -> postVote(id, state, description);
+			default -> patchReview(id, state, description);
+		};
 	}
 
 	private boolean patchReview(String id, ApproveState state, String description) throws Exception {
@@ -247,7 +245,8 @@ public class SwarmHelper {
 	}
 
 	private static class SwarmException extends Exception {
-		static final long serialVersionUID = 1;
+		@Serial
+		private static final long serialVersionUID = 1;
 
 		public SwarmException(HttpResponse<?> res) {
 			super("Swarm error - code: " + res.getStatus() + "\n error: " + res.getStatusText());

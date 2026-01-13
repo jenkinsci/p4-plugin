@@ -8,6 +8,7 @@ import hudson.util.DescribableList;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,19 +17,19 @@ import java.util.logging.Logger;
 
 public class Expand implements Cloneable, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(Expand.class.getName());
 
-	private Map<String, String> formatTags = new HashMap<String, String>();
+	private Map<String, String> formatTags = new HashMap<>();
 
 	public Expand(Map<String, String> map) {
-		Jenkins jenkins = Jenkins.getInstance();
+		Jenkins jenkins = Jenkins.get();
 		DescribableList<NodeProperty<?>, NodePropertyDescriptor> props = jenkins.getGlobalNodeProperties();
 		if (props != null) {
 			for (NodeProperty<?> node : props) {
-				if (node instanceof EnvironmentVariablesNodeProperty) {
-					EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty) node;
+				if (node instanceof EnvironmentVariablesNodeProperty env) {
 					formatTags.putAll((env).getEnvVars());
 				}
 			}

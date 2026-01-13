@@ -1,14 +1,17 @@
 package org.jenkinsci.plugins.p4.filters;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 public class FilterLatestChangeImpl extends Filter implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final boolean latestChange;
@@ -26,6 +29,7 @@ public class FilterLatestChangeImpl extends Filter implements Serializable {
 	@Symbol("latest")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Polling latest change";

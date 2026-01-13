@@ -6,13 +6,13 @@ pipeline {
 		stage('Linux Build & Test') {
 
 		    environment {
-                JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
+                JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
             }
-			
+
 			agent {
 				label 'p4java'
 			}
-			
+
 			stages {
 				stage('Compile') {
 					steps {
@@ -49,10 +49,10 @@ pipeline {
 				}
 			}
 		}
-		
+
 		stage('Windows Build & Test') {
 		    environment {
-                JAVA_HOME = "C:\\Program Files\\Java\\jdk-11.0.16.1"
+                JAVA_HOME = "C:\\Program Files\\Java\\jdk-17.0.14"
             }
 			agent {
 				label 'p4java-win'
@@ -86,7 +86,7 @@ pipeline {
 				}
 			}
 		}
-		
+
 		stage('Launch system tests') {
 			steps {
 				build job: 'jenkins-system-tests/main', wait: false

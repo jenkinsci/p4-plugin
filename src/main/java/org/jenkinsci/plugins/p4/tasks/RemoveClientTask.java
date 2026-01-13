@@ -15,15 +15,16 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 public class RemoveClientTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
@@ -50,7 +51,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	}
 
 	private void useGlobalSettings() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		@SuppressWarnings("unchecked")
 		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
@@ -62,7 +63,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	}
 
 	@Override
-	public Object task(ClientHelper p4) throws Exception {
+	public Object task(ClientHelper p4) {
 		logger.info("Task: remove client.");
 
 		String client = getClientName();
@@ -102,12 +103,12 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	}
 
 	@Override
-	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException, InterruptedException {
+	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
 		return (Boolean) tryTask();
 	}
 
 	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }

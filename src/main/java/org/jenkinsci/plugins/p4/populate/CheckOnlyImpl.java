@@ -1,11 +1,15 @@
 package org.jenkinsci.plugins.p4.populate;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
+
 public class CheckOnlyImpl extends Populate {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -23,6 +27,7 @@ public class CheckOnlyImpl extends Populate {
 	@Symbol("previewOnly")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Preview check Only";
