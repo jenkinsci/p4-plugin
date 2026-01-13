@@ -689,7 +689,7 @@ public class PerforceScm extends SCM {
 				success = true;
 			}
 		} else {
-			if (job instanceof MatrixProject) {
+			if (job instanceof MatrixProject || job instanceof MatrixConfiguration) {
 				if (parentChange != null) {
 					log.println("Using parent change: " + parentChange);
 					task.setBuildChange(parentChange);
