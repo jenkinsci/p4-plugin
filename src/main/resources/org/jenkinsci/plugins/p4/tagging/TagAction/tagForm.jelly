@@ -46,8 +46,7 @@
 						<td nowrap="nowrap"><b>Label Name:</b> </td>
 						<td><input type="text" name="name"
 						value="jenkins-${it.run.project.name}-Build-${it.build.number}" 
-						style="width:70%" id="name" 
-						checkUrl="'checkTag?value='+escape(this.value)"/>
+						style="width:70%" id="name"/>
 						</td>
 					</tr>
 					<tr>
