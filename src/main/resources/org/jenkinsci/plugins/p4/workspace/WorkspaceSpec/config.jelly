@@ -44,36 +44,93 @@
 		<f:checkbox id="id.backup" default="true" />
 	</f:entry>
 
-    <f:entry title="Polling Path" field="pollPath">
-        <f:textarea id="id.pollPath" />
-        <div id="pollPathWarning" style="color: red; font-size: 12px; margin-top: 4px;"></div>
+    <f:entry title="${%Custom Polling Path}" field="customPolling">
+        <f:checkbox id="id.customPolling" default="false" />
+    </f:entry>
+
+    <f:entry>
+        <div id="pollPathEntry" style="display:none">
+            <f:textarea id="id.pollPath" field="pollPath" />
+            <div id="pollPathWarning" style="color: red; font-size: 12px; margin-top: 4px;"></div>
+        </div>
     </f:entry>
 
     <script type="text/javascript">
-        function validatePollingPath() {
-            var textarea = document.getElementById("id.pollPath");
-            var warningDiv = document.getElementById("pollPathWarning");
-            if (!textarea || !warningDiv) return;
+//<![CDATA[
+        (function() {
+            function validatePollingPath() {
+                var textarea = document.getElementById("id.pollPath");
+                var warningDiv = document.getElementById("pollPathWarning");
+                if (!textarea || !warningDiv) return;
 
-            var entries = textarea.value.split(',')
-                .map(e => e.trim())
-                .filter(e => e.length > 0);
+                var entries = textarea.value.split(',')
+                    .map(function(e) { return e.trim(); })
+                    .filter(function(e) { return e.length > 0; });
 
-            if (entries.length > 10) {
-                textarea.style.border = "2px solid red";
-                warningDiv.textContent = "Maximum 10 comma-separated entries are allowed in this field. Example: //depot/1, //depot/2, ..., //depot/10";
-            } else {
-                textarea.style.border = "";
-                warningDiv.textContent = "";
+                if (entries.length > 10) {
+                    textarea.style.border = "2px solid red";
+                    warningDiv.textContent = "Maximum 10 comma-separated entries are allowed in this field. Example: //depot/1, //depot/2, ..., //depot/10";
+                } else {
+                    textarea.style.border = "";
+                    warningDiv.textContent = "";
+                }
             }
-        }
 
-        document.addEventListener("DOMContentLoaded", function() {
+            function togglePollPath() {
+                var checkbox = document.getElementById("id.customPolling");
+                var entry = document.getElementById("pollPathEntry");
+                if (!checkbox || !entry) return;
+                entry.style.display = checkbox.checked ? "" : "none";
+            }
+
+            function validateOnSubmit() {
+                var checkbox = document.getElementById("id.customPolling");
+                var textarea = document.getElementById("id.pollPath");
+                var warningDiv = document.getElementById("pollPathWarning");
+                if (checkbox && checkbox.checked && textarea && textarea.value.trim() === '') {
+                    if (warningDiv) {
+                        warningDiv.textContent = "At least one polling path is required when Custom Polling is enabled.";
+                    }
+                    textarea.style.border = "2px solid red";
+                    textarea.focus();
+                    return false;
+                }
+                return true;
+            }
+
+            // Elements are already in the DOM — run immediately to set initial state
+            togglePollPath();
+
+            var checkbox = document.getElementById("id.customPolling");
             var textarea = document.getElementById("id.pollPath");
+            if (checkbox) {
+                checkbox.addEventListener("change", togglePollPath);
+            }
             if (textarea) {
                 textarea.addEventListener("input", validatePollingPath);
             }
-        });
+
+            // Hook into Save and Apply buttons
+            var form = checkbox ? checkbox.closest("form") : null;
+            if (form) {
+                form.addEventListener("submit", function(e) {
+                    if (!validateOnSubmit()) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                    }
+                });
+            }
+            // Jenkins "Apply" button does not trigger form submit — intercept click
+            document.querySelectorAll("button[name='Apply'], input[name='Apply']").forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    if (!validateOnSubmit()) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                    }
+                });
+            });
+        })();
+//]]>
     </script>
 
 </j:jelly>

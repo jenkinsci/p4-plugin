@@ -654,11 +654,17 @@ public class PerforceScm extends SCM {
 			task.setIncrementalChanges(changes);
 		}
 
+		boolean isCustomPollingPathPresent = (ws instanceof ManualWorkspaceImpl)
+				&& ((ManualWorkspaceImpl) ws).getSpec().isCustomPolling();
+
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
-		tag.setPollPathChanges(task.resolvePollPathsToLatestChanges());
+		if (isCustomPollingPathPresent) {
+			// adding the tag in the new build.xml file only when Custom Polling is enabled
+			tag.setCustomPollPathChanges(task.resolvePollPathsToLatestChanges());
+		}
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
 		// JENKINS-39107: Make Depot location of Jenkins file available

@@ -319,8 +319,7 @@ public class TagAction extends AbstractScmTagAction {
 			if (!syncID.equals(action.getSyncID())) {
 				continue;
 			}
-
-			List<P4PollRef> pollChanges = action.getPollPathChanges();
+			List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
 			if (pollChanges == null || pollChanges.isEmpty()) {
 				continue;
 			}
@@ -399,7 +398,7 @@ public class TagAction extends AbstractScmTagAction {
 		return jenkinsPath;
 	}
 
-	public void setPollPathChanges(List<P4PollRef> finalPollPathList) {
+	public void setCustomPollPathChanges(List<P4PollRef> finalPollPathList) {
 		List<P4PollRef> changes = new ArrayList<>();
 
 		for(P4Ref ref : finalPollPathList) {
@@ -411,7 +410,7 @@ public class TagAction extends AbstractScmTagAction {
 		this.pollRefChanges = changes;
 	}
 
-	public List<P4PollRef> getPollPathChanges() {
+	public List<P4PollRef> getCustomPollPathChanges() {
 		return this.pollRefChanges;
 	}
 

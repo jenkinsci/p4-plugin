@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.remoting.RoleChecker;
 import org.jenkinsci.remoting.RoleSensitive;
 
@@ -56,6 +57,8 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
 		List<P4Ref> changes = new ArrayList<P4Ref>();
+		boolean isCustomPollingPathPresent = (this.getWorkspace() instanceof ManualWorkspaceImpl)
+				&& ((ManualWorkspaceImpl) this.getWorkspace()).getSpec().isCustomPolling();
 
 		//Fix for https://issues.jenkins.io/browse/JENKINS-63879
 		boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
@@ -79,6 +82,11 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 				}
 
 			}
+		}
+
+		if(!changes.isEmpty() && isCustomPollingPathPresent) {
+			// if custom polling path is present, then we need to poll only custom paths and not client workspace
+			changes = new ArrayList<P4Ref>();
 		}
 
 		// Poll polling path changes

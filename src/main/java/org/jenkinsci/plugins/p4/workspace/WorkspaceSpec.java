@@ -37,15 +37,25 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	private final String serverID;
 	private final boolean backup;
 	private String pollPath;
+	private boolean customPolling;
 
 	public String getPollPath() {
 		return pollPath;
 	}
 
+	public boolean isCustomPolling() {
+		return customPolling;
+	}
+
 	@DataBoundSetter
-	 public void setPollPath(String pollPath) {
+	public void setPollPath(String pollPath) {
 		this.pollPath = pollPath;
-	 }
+	}
+
+	@DataBoundSetter
+	public void setCustomPolling(boolean customPolling) {
+		this.customPolling = customPolling;
+	}
 
 	public String getStreamName() {
 		return streamName;
