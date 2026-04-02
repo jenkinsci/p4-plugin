@@ -30,6 +30,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -257,24 +258,20 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	/**
-	 * Change reporting...
+	 * Validates inputs and returns all TagActions from the previous build,
+	 * or an empty list if no valid previous build or syncID exists.
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
 	 * @param syncID   Changelist Sync ID
 	 * @return Perforce change
 	 */
-	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<P4Ref> changes = new ArrayList<>();
-
-		List<TagAction> actions;
-		actions = lastActions(run);
-
+	private static List<TagAction> resolveActions(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<TagAction> actions = lastActions(run);
 		if (actions == null || syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No previous build found...");
-			return changes;
+			return Collections.emptyList();
 		}
-
 		logger.fine("   using syncID: " + syncID);
 
 		// Fetch all syncIDs and check for duplicates JENKINS-55075
@@ -286,6 +283,22 @@ public class TagAction extends AbstractScmTagAction {
 			}
 			syncList.add(action.getSyncID());
 			logger.fine("   stored syncID: " + action.getSyncID());
+		}
+
+		return actions;
+	}
+
+	/**
+	 * Validates inputs and returns all TagActions from the previous build,
+	 * or an empty list if no valid previous build or syncID exists.
+	 * This is in reference to client workspace changes.
+	 * */
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4Ref> changes = new ArrayList<>();
+
+		List<TagAction> actions = resolveActions(run, listener, syncID);
+		if (actions.isEmpty()) {
+			return changes;
 		}
 
 		// look for action matching view
@@ -302,39 +315,31 @@ public class TagAction extends AbstractScmTagAction {
 		return changes;
 	}
 
+	/**
+	 * Validates inputs and returns all TagActions from the previous build,
+	 * or an empty list if no valid previous build or syncID exists.
+	 * This is in reference to custom poll path changes.
+	 * */
 	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		// Use LinkedHashSet to preserve insertion order while deduplicating by
-		// P4PollRef.equals()/hashCode().
-		Set<P4PollRef> result = new LinkedHashSet<>();
-
-		List<TagAction> actions = lastActions(run);
-		if (actions == null || syncID == null || syncID.isEmpty()) {
-			listener.getLogger().println("No previous build found...");
+		List<TagAction> actions = resolveActions(run, listener, syncID);
+		if (actions.isEmpty()) {
 			return new ArrayList<>();
 		}
 
-		logger.fine("   using syncID: " + syncID);
-
+		Set<P4PollRef> result = new LinkedHashSet<>();
 		for (TagAction action : actions) {
-			if (!syncID.equals(action.getSyncID())) {
-				continue;
-			}
-			List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
-			if (pollChanges == null || pollChanges.isEmpty()) {
-				continue;
-			}
-
-			for (P4PollRef poll : pollChanges) {
-				if (poll == null) {
+			if (syncID.equals(action.getSyncID())) {
+				List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
+				if (pollChanges == null || pollChanges.isEmpty()) {
 					continue;
 				}
-				String path = poll.getPollPath();
-				if (path == null) {
-					continue;
-				}
-				// LinkedHashSet.add will ignore duplicates based on equals/hashCode
-				if (result.add(poll)) {
-					listener.getLogger().println("Found last poll change " + poll.toString() + " on syncID " + syncID + " path " + path);
+				for (P4PollRef change : pollChanges) {
+					if (change == null) {
+						continue;
+					}
+					if (result.add(change)) {
+						listener.getLogger().println("Found last poll change " + change.toString() + " on syncID " + syncID);
+					}
 				}
 			}
 		}

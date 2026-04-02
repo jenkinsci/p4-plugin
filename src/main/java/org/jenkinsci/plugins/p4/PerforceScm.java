@@ -655,7 +655,7 @@ public class PerforceScm extends SCM {
 		}
 
 		boolean isCustomPollingPathPresent = (ws instanceof ManualWorkspaceImpl)
-				&& ((ManualWorkspaceImpl) ws).getSpec().isCustomPolling();
+				&& ((ManualWorkspaceImpl) ws).getSpec().hasCustomPollingPaths();
 
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);

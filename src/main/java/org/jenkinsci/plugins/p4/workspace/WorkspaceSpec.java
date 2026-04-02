@@ -14,10 +14,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.Serializable;
+import java.util.logging.Logger;
 
 public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(WorkspaceSpec.class.getName());
 
 	public final boolean allwrite;
 	public final boolean clobber;
@@ -44,6 +46,19 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	}
 
 	public boolean isCustomPolling() {
+		return customPolling;
+	}
+
+	/**
+	 * Checks if the user has ticked the Custom Polling Path checkbox and
+	 * consequently, the poll paths textarea is not empty.
+	 * Logs a warning if the checkbox is enabled but no paths are defined.
+	 * */
+	public boolean hasCustomPollingPaths() {
+		if (customPolling && (pollPath == null || pollPath.trim().isEmpty())) {
+			logger.warning("Custom Polling is enabled but no poll paths are defined — falling back to standard workspace polling.");
+			return false;
+		}
 		return customPolling;
 	}
 

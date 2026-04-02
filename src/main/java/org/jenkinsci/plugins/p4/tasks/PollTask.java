@@ -56,45 +56,42 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
-		List<P4Ref> changes = new ArrayList<P4Ref>();
+		List<P4Ref> changes = new ArrayList<>();
 		boolean isCustomPollingPathPresent = (this.getWorkspace() instanceof ManualWorkspaceImpl)
-				&& ((ManualWorkspaceImpl) this.getWorkspace()).getSpec().isCustomPolling();
+				&& ((ManualWorkspaceImpl) this.getWorkspace()).getSpec().hasCustomPollingPaths();
 
-		//Fix for https://issues.jenkins.io/browse/JENKINS-63879
-		boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
-
-		// find changes...
-		if (pin != null && !pin.isEmpty() && !pollLatestWithPin) {
-			changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
-		} else {
-			changes = p4.listHaveChanges(lastRefs);
-		}
-
-		// Poll Graph commit changes
-		if (p4.checkVersion(20171)) {
-			List<IRepo> repos = p4.listRepos();
-			for (IRepo repo : repos) {
-				P4Ref graphHead = p4.getGraphHead(repo.getName());
-				List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
-				changes.addAll(commits);
-				for(P4Ref commit : commits) {
-					p4.log("... found commit: " + commit.toString());
-				}
-
-			}
-		}
-
-		if(!changes.isEmpty() && isCustomPollingPathPresent) {
+		if (isCustomPollingPathPresent) {
 			// if custom polling path is present, then we need to poll only custom paths and not client workspace
-			changes = new ArrayList<P4Ref>();
-		}
+			// Poll polling path changes
+			if (!lastPollRefs.isEmpty()) {
+				for (P4PollRef ref : lastPollRefs) {
+					P4PollRef changeRef = p4.getLatestChangeForPollPath(ref);
+					if (changeRef != null) {
+						changes.add(changeRef);
+					}
+				}
+			}
+		} else {
+			//Fix for https://issues.jenkins.io/browse/JENKINS-63879
+			boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
 
-		// Poll polling path changes
-		if (changes.isEmpty() && !lastPollRefs.isEmpty()) {
-			for (P4PollRef ref : lastPollRefs) {
-				P4PollRef changeRef = p4.getLatestChangeForPollPath(ref);
-				if (changeRef != null) {
-					changes.add(changeRef);
+			// find changes...
+			if (pin != null && !pin.isEmpty() && !pollLatestWithPin) {
+				changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
+			} else {
+				changes = p4.listHaveChanges(lastRefs);
+			}
+
+			// Poll Graph commit changes
+			if (p4.checkVersion(20171)) {
+				List<IRepo> repos = p4.listRepos();
+				for (IRepo repo : repos) {
+					P4Ref graphHead = p4.getGraphHead(repo.getName());
+					List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
+					changes.addAll(commits);
+					for (P4Ref commit : commits) {
+						p4.log("... found commit: " + commit.toString());
+					}
 				}
 			}
 		}
