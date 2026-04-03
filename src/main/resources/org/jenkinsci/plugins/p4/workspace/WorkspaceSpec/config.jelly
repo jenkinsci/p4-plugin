@@ -56,6 +56,7 @@
     </f:entry>
 
     <script>
+//<![CDATA[
 (function() {
     function validatePollingPath() {
         var textarea = document.getElementById("id.pollPath");
@@ -86,7 +87,7 @@
         var checkbox = document.getElementById("id.customPolling");
         var textarea = document.getElementById("id.pollPath");
         var warningDiv = document.getElementById("pollPathWarning");
-        if (checkbox &amp;&amp; checkbox.checked &amp;&amp; textarea &amp;&amp; textarea.value.trim() === '') {
+        if (checkbox && checkbox.checked && textarea && textarea.value.trim() === '') {
             if (warningDiv) {
                 warningDiv.textContent = "At least one polling path is required when Custom Polling is enabled.";
             }
@@ -129,6 +130,7 @@
         });
     });
 })();
+//]]>
     </script>
 
 </j:jelly>
