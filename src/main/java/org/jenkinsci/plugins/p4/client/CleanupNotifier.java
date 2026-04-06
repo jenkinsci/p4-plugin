@@ -10,6 +10,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+import hudson.util.ListBoxModel;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.tagging.TagAction;
@@ -24,11 +25,23 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 	protected static final Logger logger = Logger.getLogger(CleanupNotifier.class.getName());
 
-	public final boolean deleteClient;
+	public final String deleteMode;
 
 	@DataBoundConstructor
-	public CleanupNotifier(boolean deleteClient) {
-		this.deleteClient = deleteClient;
+	public CleanupNotifier(String deleteMode) {
+		this.deleteMode = (deleteMode != null && !deleteMode.isEmpty()) ? deleteMode : "deleteClient";
+	}
+
+	public String getDeleteMode() {
+		return deleteMode;
+	}
+
+	public boolean isDeleteClient() {
+		return "deleteClient".equals(deleteMode);
+	}
+
+	public boolean isForceDeleteClient() {
+		return "forceDeleteClient".equals(deleteMode);
 	}
 
 	@Override
@@ -63,11 +76,12 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(credential, run, listener);
-		task.setDeleteClient(deleteClient);
+		task.setDeleteClient(isDeleteClient());
+		task.setForceDeleteClient(isForceDeleteClient());
 
 		// Set workspace used for the Task
-		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
-		task.setWorkspace(ws);
+		//Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
+		task.setWorkspace(workspace);
 
 		buildWorkspace.act(task);
 	}

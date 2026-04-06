@@ -292,6 +292,18 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		getConnection().deleteClient(name, opts);
 	}
 
+	/**
+	 * Delete a client workspace using -f option (force delete)
+	 *
+	 * @param name Client name
+	 * @throws Exception push up stack
+	 */
+	public void forceDeleteClient(String name) throws Exception {
+		DeleteClientOptions opts = new DeleteClientOptions();
+		opts.setForce(true);
+		getConnection().deleteClient(name, opts);
+	}
+
 	public String getEmail(String userName) throws Exception {
 		IUser user = getConnection().getUser(userName);
 		if (user != null) {
