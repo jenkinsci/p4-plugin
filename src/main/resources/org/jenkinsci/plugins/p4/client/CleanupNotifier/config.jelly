@@ -1,31 +1,13 @@
 <?jelly escape-by-default='true'?>
 <j:jelly 	xmlns:j="jelly:core" 	xmlns:st="jelly:stapler" 	xmlns:d="jelly:define" 
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form">
-			
-	<f:entry title="Delete Mode">
-		<label>
-			<j:choose>
-				<j:when test="${instance != null and instance.deleteMode == 'forceDeleteClient'}">
-					<input type="radio" name="deleteMode" value="deleteClient"/>
-				</j:when>
-				<j:otherwise>
-					<input type="radio" name="deleteMode" value="deleteClient" checked="checked"/>
-				</j:otherwise>
-			</j:choose>
-			Delete Client
-		</label>
-		<br/>
-		<label>
-			<j:choose>
-				<j:when test="${instance != null and instance.deleteMode == 'forceDeleteClient'}">
-					<input type="radio" name="deleteMode" value="forceDeleteClient" checked="checked"/>
-				</j:when>
-				<j:otherwise>
-					<input type="radio" name="deleteMode" value="forceDeleteClient"/>
-				</j:otherwise>
-			</j:choose>
-			Force Delete Client
-		</label>
+
+	<f:entry title="Delete Client" field="deleteClient">
+		<f:checkbox/>
 	</f:entry>
+
+	<f:entry title="Force Delete Client" field="forceDeleteClient">
+    		<f:checkbox/>
+    	</f:entry>
 
 </j:jelly>
