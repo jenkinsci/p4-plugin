@@ -980,13 +980,14 @@ public class PerforceScm extends SCM {
 			return false;
 		}
 
-		Node buildNode = (run instanceof AbstractBuild) ? ((AbstractBuild<?, ?>) run).getBuiltOn() : null;
-		String buildNodeName = buildNode.getNodeName();
 		String currentNodeName = node.getNodeName();
-		// Now compare
-		if (buildNodeName != null && !currentNodeName.equals(buildNodeName)) {
-			logger.warning("P4: Workspace node differs from build node, skipping cleanup");
-			return false;
+		if (run instanceof AbstractBuild) {
+			Node buildNode = ((AbstractBuild<?, ?>) run).getBuiltOn();
+			String buildNodeName = (buildNode != null) ? buildNode.getNodeName() : ((AbstractBuild<?, ?>) run).getBuiltOnStr();
+			if (!currentNodeName.equals(buildNodeName)) {
+				logger.warning("P4: Workspace node differs from build node, skipping cleanup");
+				return false;
+			}
 		}
 
 		// exit early if client workspace is undefined
