@@ -13,6 +13,7 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Item;
@@ -979,6 +980,16 @@ public class PerforceScm extends SCM {
 			return false;
 		}
 
+		String currentNodeName = node.getNodeName();
+		if (run instanceof AbstractBuild) {
+			Node buildNode = ((AbstractBuild<?, ?>) run).getBuiltOn();
+			String buildNodeName = (buildNode != null) ? buildNode.getNodeName() : ((AbstractBuild<?, ?>) run).getBuiltOnStr();
+			if (!currentNodeName.equals(buildNodeName)) {
+				logger.warning("P4: Workspace node differs from build node, skipping cleanup");
+				return false;
+			}
+		}
+
 		// exit early if client workspace is undefined
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		EnvVars envVars = run.getEnvironment(listener);
@@ -1012,8 +1023,8 @@ public class PerforceScm extends SCM {
 		RemoveClientTask task = new RemoveClientTask(credential, job, listener);
 
 		// Set workspace used for the Task
-		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
-		task.setWorkspace(ws);
+		task.setEnvironment(run, workspace, buildWorkspace);
+		task.setWorkspace(workspace);
 
 		boolean clean = buildWorkspace.act(task);
 
