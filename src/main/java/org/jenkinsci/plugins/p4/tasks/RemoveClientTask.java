@@ -29,6 +29,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
 
 	private boolean deleteClient;
+	private boolean forceDeleteClient;
 	private boolean deleteFiles;
 
 	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener) {
@@ -43,6 +44,10 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 
 	public void setDeleteClient(boolean deleteClient) {
 		this.deleteClient = deleteClient;
+	}
+
+	public void setForceDeleteClient(boolean forceDeleteClient) {
+		this.forceDeleteClient = forceDeleteClient;
 	}
 
 	public void setDeleteFiles(boolean deleteFiles) {
@@ -82,13 +87,17 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 			}
 
 			// remove client if required
-			if (deleteClient) {
+			if (deleteClient || forceDeleteClient) {
 				if (p4.isClient(client)) {
 					// revert any pending files, before deleting client
 					p4.revertAllFiles(false);
 					p4.log("P4 Task: remove client: " + client);
 					logger.info("P4: remove client: " + client);
-					p4.deleteClient(client);
+					if (forceDeleteClient) {
+						p4.forceDeleteClient(client);
+					} else {
+						p4.deleteClient(client);
+					}
 				} else {
 					logger.warning("P4: Cannot find: " + client);
 					return deleteFiles;
