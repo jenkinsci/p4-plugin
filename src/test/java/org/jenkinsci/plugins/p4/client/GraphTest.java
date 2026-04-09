@@ -10,19 +10,20 @@ import hudson.model.StringParameterValue;
 import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.GraphHybridImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,30 +31,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class GraphTest extends DefaultEnvironment {
+@WithJenkins
+class GraphTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(GraphTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(GraphTest.class.getName());
 	private static final String P4ROOT = "tmp-GraphTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r17);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r17);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testFreeStyleForceSync() throws Exception {
-
+	void testFreeStyleForceSync() throws Exception {
 		String client = "graph.ws";
 		String view = "//depot/jam/... //" + client + "/jam/...\n";
 		view += "//graph/scm-api-plugin/... //" + client + "/scm-api/...\n";
@@ -67,10 +72,10 @@ public class GraphTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "10279"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -84,10 +89,9 @@ public class GraphTest extends DefaultEnvironment {
 		assertTrue(log.contains("... totalFileCount 75"));
 	}
 
-	@Ignore
+	@Disabled
 	@Test
-	public void testPollingPin() throws Exception {
-
+	void testPollingPin() throws Exception {
 		String client = "graph.ws";
 		String view = "//depot/jam/... //" + client + "/jam/...\n";
 		view += "//graph/scm-api-plugin/... //" + client + "/scm-api/...\n";
@@ -101,7 +105,7 @@ public class GraphTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), new ArrayList<ParameterValue>());
+		Action actions = new SafeParametersAction(new ArrayList<>(), new ArrayList<>());
 
 		// Build at latest
 		FreeStyleBuild build;

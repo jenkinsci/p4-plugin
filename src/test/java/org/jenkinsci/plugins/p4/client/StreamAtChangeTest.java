@@ -18,7 +18,7 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -30,12 +30,13 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,38 +46,43 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class StreamAtChangeTest extends DefaultEnvironment {
+@WithJenkins
+class StreamAtChangeTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-WorkspaceSpecTest-p4root";
 	private P4PasswordImpl credentials;
 	private ConnectionHelper p4;
 	private IOptionsServer server;
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r17);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r17);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		credentials = createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
 		p4 = new ConnectionHelper(credentials);
 		server = p4.getConnection();
 	}
 
-	@After
-	public void tearDown() {
+	@AfterEach
+	void afterEach() {
 		if (p4 != null) {
 			p4.disconnect();
 		}
 	}
 
 	@Test
-	public void testStreamAtChange() throws Exception {
+	void testStreamAtChange() throws Exception {
 		submitFile(jenkins, "//depot/streamAtChange/depotFile", "This is first file.");
 		//Create two version of a stream
 		String streamPath = createStream("//stream/atChange", "atChange");
@@ -104,7 +110,7 @@ public class StreamAtChangeTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWs() throws Exception {
+	void testFreeStyleProject_SpecWs() throws Exception {
 		submitFile(jenkins, "//depot/streamAtChange/depotFile", "This is first file.");
 		//Create two version of a stream
 		String streamPath = createStream("//stream/atChange", "atChange");
@@ -158,7 +164,7 @@ public class StreamAtChangeTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testP4_STREAM_Variable() throws Exception {
+	void testP4_STREAM_Variable() throws Exception {
 		String streamName = createStream("//stream/main", "main");
 
 		//Get change number for the stream updates

@@ -18,39 +18,46 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.acegisecurity.Authentication;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.client.AuthorisationConfig;
 import org.jenkinsci.plugins.p4.client.AuthorisationType;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PerforceCredentialsTest extends DefaultEnvironment {
+@WithJenkins
+class PerforceCredentialsTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-CredentialsTest-p4root";
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	private JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
+
+    @BeforeEach
+    void beforeEach(JenkinsRule rule) {
+        jenkins = rule;
+    }
 
 	@Test
-	public void testAddStandardCredentials() throws IOException {
+	void testAddStandardCredentials() throws IOException {
 		P4BaseCredentials credential = new P4PasswordImpl(
 				CredentialsScope.SYSTEM, "id", "desc:passwd", "localhost:1666",
 				null, "user", "0", "0", null, "pass");
@@ -77,7 +84,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAddPasswordCredentials() throws IOException {
+	void testAddPasswordCredentials() throws IOException {
 		P4PasswordImpl credential = new P4PasswordImpl(CredentialsScope.SYSTEM,
 				"id", "description", "localhost:1666", null, "user", "0", "0", null, "pass");
 
@@ -106,7 +113,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAddSslCredentials() throws IOException {
+	void testAddSslCredentials() throws IOException {
 		TrustImpl ssl = new TrustImpl("12345ABCD");
 		P4PasswordImpl credential = new P4PasswordImpl(CredentialsScope.SYSTEM,
 				"id", "description", "localhost:1666", ssl, "user", "0", "0", null, "pass");
@@ -125,7 +132,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAddTicketCredentials() throws IOException {
+	void testAddTicketCredentials() throws IOException {
 		TicketModeImpl ticket = new TicketModeImpl("ticketValueSet", "12345",
 				null);
 
@@ -152,7 +159,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAddTicketPathCredentials() throws IOException {
+	void testAddTicketPathCredentials() throws IOException {
 		TicketModeImpl ticket = new TicketModeImpl("ticketPathSet", null,
 				"~/.p4ticket");
 
@@ -177,7 +184,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 
 	private List<P4BaseCredentials> lookupCredentials() {
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
+		Jenkins scope = Jenkins.get();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
@@ -185,7 +192,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAvailableCredentialsAtRoot() throws IOException {
+	void testAvailableCredentialsAtRoot() throws IOException {
 		P4BaseCredentials systemCredentials = new P4PasswordImpl(
 				CredentialsScope.SYSTEM, "idSystem", "desc:passwd", "localhost:1666",
 				null, "user", "0", "0", null, "pass");
@@ -205,7 +212,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testAvailableCredentialsInJob() throws IOException {
+	void testAvailableCredentialsInJob() throws IOException {
 		Job job = jenkins.createFreeStyleProject("testAvailableCredentialsInJob");
 
 		P4BaseCredentials systemCredentials = new P4PasswordImpl(
@@ -223,13 +230,13 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertFalse(new SystemCredentialsProvider().getCredentials().isEmpty());
 
 		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentials(P4BaseCredentials.class,
-				job, ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+				job, ACL.SYSTEM, Collections.emptyList());
 		assertEquals(1, list.size());
 		assertEquals(globalCredentials.getId(), list.get(0).getId());
 	}
 
 	@Test
-	public void testAvailableCredentialsInFolder() throws IOException {
+	void testAvailableCredentialsInFolder() throws IOException {
 
 		Folder folder = createFolder();
 		CredentialsStore folderStore = getFolderStore(folder);
@@ -256,14 +263,14 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 		assertFalse(folderStore.getCredentials(Domain.global()).isEmpty());
 
 		List<P4BaseCredentials> list = CredentialsProvider.lookupCredentials(P4BaseCredentials.class,
-				folder.getItemGroup(), ACL.SYSTEM, Collections.<DomainRequirement>emptyList());
+				folder.getItemGroup(), ACL.SYSTEM, Collections.emptyList());
 		assertEquals(2, list.size());
 		assertEquals(inFolderCredentials.getId(), list.get(0).getId());
 		assertEquals(globalCredentials.getId(), list.get(1).getId());
 	}
 
 	@Test
-	public void testInJobCredentialsList() throws Exception {
+	void testInJobCredentialsList() throws Exception {
 
 		String port = p4d.getRshPort();
 
@@ -292,7 +299,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testInFolderCredentialsList() throws Exception {
+	void testInFolderCredentialsList() throws Exception {
 
 		String port = p4d.getRshPort();
 
@@ -345,7 +352,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testInvalidCredentials() throws Exception {
+	void testInvalidCredentials() throws Exception {
 
 		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidCredentials");
 		job.setDefinition(new CpsFlowDefinition(""
@@ -359,7 +366,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testInvalidPort() throws Exception {
+	void testInvalidPort() throws Exception {
 		createCredentials("user", "password", "localhos:1666", "idBad");
 
 		WorkflowJob job = jenkins.createProject(WorkflowJob.class, "invalidPort");
@@ -374,7 +381,7 @@ public class PerforceCredentialsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testConnectionError() {
+	void testConnectionError() {
 		try {
 			P4PasswordImpl cred = createCredentials("user", "password", p4d.getRshPort(), "InvalidUserPass");
 			//helper is not used but is required to call the constructor to trigger the flow.

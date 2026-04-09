@@ -1,12 +1,13 @@
 package org.jenkinsci.plugins.p4.publish;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class PurgeLimitTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class PurgeLimitTest {
 
 	@Test
-	public void testPurge() {
+	void testPurge() {
 		String desc = "Configuration change";
 		boolean success = false;
 		boolean delete = true;
@@ -14,18 +15,18 @@ public class PurgeLimitTest {
 		boolean reopen = false;
 
 		SubmitImpl publish = new SubmitImpl(desc, success, delete, modtime, reopen, "11");
-		Assert.assertEquals(16, publish.getPurgeValue());
+		assertEquals(16, publish.getPurgeValue());
 
 		publish = new SubmitImpl(desc, success, delete, modtime, reopen, "300");
-		Assert.assertEquals(512, publish.getPurgeValue());
+		assertEquals(512, publish.getPurgeValue());
 
 		publish = new SubmitImpl(desc, success, delete, modtime, reopen, "10");
-		Assert.assertEquals(10, publish.getPurgeValue());
+		assertEquals(10, publish.getPurgeValue());
 
 		publish = new SubmitImpl(desc, success, delete, modtime, reopen, "600");
-		Assert.assertEquals(512, publish.getPurgeValue());
+		assertEquals(512, publish.getPurgeValue());
 
 		publish = new SubmitImpl(desc, success, delete, modtime, reopen, "foo");
-		Assert.assertEquals(0, publish.getPurgeValue());
+		assertEquals(0, publish.getPurgeValue());
 	}
 }

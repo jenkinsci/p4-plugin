@@ -185,6 +185,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 					boolean isFileInViewMask = false;
 					String p = s.getDepotPathString();
 					for (String maskPath : maskPaths) {
+						maskPath = maskPath.trim(); // remove leading/trailing spaces
 						if (p.startsWith(maskPath)) {
 							isFileInViewMask = true;
 						}

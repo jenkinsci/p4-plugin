@@ -12,7 +12,7 @@ import hudson.model.Result;
 import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -23,11 +23,12 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,26 +36,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CheckoutTest extends DefaultEnvironment {
+@WithJenkins
+class CheckoutTest extends DefaultEnvironment {
 
-	private static final Logger logger = Logger.getLogger(CheckoutTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CheckoutTest.class.getName());
 	private static final String P4ROOT = "tmp-CheckoutTest-p4root";
 
-	@Rule
-	public JenkinsRule jenkins = new JenkinsRule();
+	private JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+	@BeforeEach
+	void beforeEach(JenkinsRule rule) throws Exception {
+        jenkins = rule;
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testCheckoutUnrestrictedView() throws Exception {
+	void testCheckoutUnrestrictedView() throws Exception {
 		String client = "CheckoutUnrestrictedView.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -85,12 +87,12 @@ public class CheckoutTest extends DefaultEnvironment {
 		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
-		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
+		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
 	}
 
 	@Issue("JENKINS-57534")
 	@Test
-	public void testCheckoutRestrictedView() throws Exception {
+	void testCheckoutRestrictedView() throws Exception {
 		String client = "CheckoutRestrictedView.ws";
 		String view = "//depot/Main/... //" + client + "/Main/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -121,12 +123,11 @@ public class CheckoutTest extends DefaultEnvironment {
 		scm.buildEnvironment(build, env);
 
 		// Assert that the workspace sync'd the expected change
-		assertEquals(env.get("P4_CHANGELIST"), expectedChangelist);
+		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
 	}
 
 	@Test
-	public void testChangesFromLastBuildPipeline() throws Exception {
-
+	void testChangesFromLastBuildPipeline() throws Exception {
 		String base = "//depot/changes";
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
@@ -210,9 +211,8 @@ public class CheckoutTest extends DefaultEnvironment {
 		assertEquals(1, cs5.getHistory().size());
 	}
 
-    @Test
-    public void testChangesFromLastSuccesssPipeline() throws Exception {
-
+	@Test
+	void testChangesFromLastSuccesssPipeline() throws Exception {
 		String base = "//depot/changes";
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
@@ -298,8 +298,7 @@ public class CheckoutTest extends DefaultEnvironment {
     }
 
 	@Test
-	public void testMatrixConfigurationManualWorkspace() throws Exception {
-
+	void testMatrixConfigurationManualWorkspace() throws Exception {
 		// Multi-configuration project
 		MatrixProject project = jenkins.createProject(MatrixProject.class, "matrix");
 		AxisList axes = new AxisList();
