@@ -9,21 +9,21 @@ public interface P4Credentials extends StandardUsernameCredentials {
 	 *
 	 * Only used for Jelly binding; use getFullP4port()
 	 */
-	public String getP4port();
+	String getP4port();
 
 	/**
 	 * @return SSL object if enabled
 	 */
-	public TrustImpl getSsl();
+	TrustImpl getSsl();
 
 	/**
 	 * @return true if SSL is selected
 	 * Do not use isSsl() JENKINS-58249
 	 */
-	public boolean isSslEnabled();
+	boolean isSslEnabled();
 
 	/**
 	 * @return The P4 trust fingerprint
 	 */
-	public String getTrust();
+	String getTrust();
 }

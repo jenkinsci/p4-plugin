@@ -5,11 +5,13 @@ import org.jenkinsci.plugins.p4.changes.P4AffectedFile;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 
+import java.io.Serial;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public abstract class P4Browser extends RepositoryBrowser<P4ChangeEntry> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String url;

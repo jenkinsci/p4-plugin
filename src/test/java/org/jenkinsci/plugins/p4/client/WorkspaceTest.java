@@ -226,15 +226,17 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test1";
 
-		String specFile = ""
-				+ "Client: jenkins-${JOB_NAME}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //jenkins-${JOB_NAME}/...\n";
+		String specFile = """
+				\
+				Client: jenkins-${JOB_NAME}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //jenkins-${JOB_NAME}/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -264,17 +266,19 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test2";
 
-		String specFile = ""
-				+ "Client: ${P4_CLIENT}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //${P4_CLIENT}/...\n"
-				+ "ChangeView:\n"
-				+"\t//depot/Data/...@17\n";
+		String specFile = """
+				\
+				Client: ${P4_CLIENT}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //${P4_CLIENT}/...
+				ChangeView:
+				\t//depot/Data/...@17
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -303,15 +307,17 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test3";
 
-		String specFile = ""
-				+ "Client: bad_client\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //bad_client/...\n";
+		String specFile = """
+				\
+				Client: bad_client
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //bad_client/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 

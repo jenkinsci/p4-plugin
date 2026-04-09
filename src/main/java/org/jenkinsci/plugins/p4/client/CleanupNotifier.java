@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.client;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -41,11 +42,11 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 	public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		@Override
-		@SuppressWarnings("rawtypes")
 		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
 			return true;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: Cleanup";
@@ -53,7 +54,7 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath buildWorkspace, Launcher launcher, TaskListener listener)
+	public void perform(@NonNull Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
 		TagAction tagAction = TagAction.getLastAction(run);

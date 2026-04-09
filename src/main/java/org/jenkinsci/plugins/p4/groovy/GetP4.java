@@ -46,7 +46,7 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
+	public void perform(@NonNull Run<?, ?> run, @NonNull FilePath buildWorkspace, @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
 		// Setup workspace used for the GroovyTask
@@ -56,7 +56,7 @@ public class GetP4 extends Builder implements SimpleBuildStep {
 			GetP4Task task = new GetP4Task(run, credential, workspace, buildWorkspace, listener);
 			p4Groovy = buildWorkspace.act(task);
 		} catch (P4InvalidCredentialException ex) {
-			// credential not found. 
+			// credential not found.
 			throw new IOException(ex.getMessage(), ex);
 		}
 	}
