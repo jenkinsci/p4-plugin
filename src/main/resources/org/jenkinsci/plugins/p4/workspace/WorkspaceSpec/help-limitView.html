@@ -1,0 +1,20 @@
+<div>
+	<b>Limit View</b>
+	<p>Restricts the paths mapped by the View. This is helpful for streams clients where the View
+		cannot be modified in the client spec.</p>
+	<p>The mappings may be specified in either client or depot syntax, but not a combination of both.
+		Exclusion mappings (prefixed with <code>-</code>) can be used to omit specific paths or file types.</p>
+	<p>Example:
+		<pre>
+  View:
+    //depot1/... //ws/depot1/...
+    //depot2/... //ws/depot2/...
+  LimitView:
+    //ws/depot1/path/...
+    -//ws/....exe
+		</pre>
+		Will limit the client's view to just files under <code>//depot1/path</code> excluding
+		files with the <code>.exe</code> extension.
+	</p>
+	<p>Note: LimitView requires Perforce Server 2021.1 or later.</p>
+</div>

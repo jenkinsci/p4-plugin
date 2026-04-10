@@ -36,6 +36,10 @@
     	<f:textarea id="id.changeView" />
     </f:entry>
 
+	<f:entry title="${%Limit View}" field="limitView">
+		<f:textarea id="id.limitView" />
+	</f:entry>
+
     <f:entry title="${%Server ID}" field="serverID">
     	<f:textbox id="id.serverID" />
     </f:entry>

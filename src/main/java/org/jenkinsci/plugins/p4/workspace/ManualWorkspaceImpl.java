@@ -28,6 +28,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -172,6 +173,33 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		return line;
 	}
 
+	private ArrayList<String> getLimitViewList(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception {
+		ArrayList<String> limitView = new ArrayList<>();
+
+		String view = workspaceSpec.getLimitView();
+		if (view != null) {
+			String specString = getExpand().format(view, true);
+			if (specString.startsWith("@")) {
+				logger.fine("P4: limit view from file=" + specString);
+				String specPathFull = specString.substring(1).trim();
+				List<IFileSpec> file = FileSpecBuilder.makeFileSpecList(specPathFull);
+				GetFileContentsOptions printOpts = new GetFileContentsOptions();
+				printOpts.setNoHeaderLine(true);
+				try (InputStream ins = connection.getFileContents(file, printOpts)) {
+					specString = new String(ins.readAllBytes(), StandardCharsets.UTF_8);
+				}
+				specString = getExpand().format(specString, true);
+			}
+
+			for (String line : specString.split("\\n")) {
+				String trimmed = line.trim();
+				if (!trimmed.isEmpty()) {
+					limitView.add(trimmed);
+				}
+			}
+		}
+		return limitView;
+	}
 
 	private ArrayList<String> getChangeView(IOptionsServer connection, WorkspaceSpec workspaceSpec) throws Exception
     {
@@ -266,6 +294,11 @@ public class ManualWorkspaceImpl extends Workspace implements Serializable {
 		// Set Change view
 		if (connection.getServerVersionNumber() >= 20172) {
 			iclient.setChangeView(getChangeView(connection, getSpec()));
+		}
+
+		// Set Limit view (requires Perforce Server 2021.1+)
+		if (connection.getServerVersionNumber() >= 20211) {
+			iclient.setLimitView(getLimitViewList(connection, getSpec()));
 		}
 
 		// Allow change between GRAPH and WRITEABLE
