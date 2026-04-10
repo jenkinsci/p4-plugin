@@ -258,21 +258,19 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	/**
-	 * Validates inputs and returns all TagActions from the previous build,
-	 * or an empty list if no valid previous build or syncID exists.
+	 * Returns all TagActions from the last build, warning on duplicate syncIDs.
+	 * Returns an empty list if no valid previous build or actions exist.
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
-	 * @param syncID   Changelist Sync ID
-	 * @return Perforce change
+	 * @return List of TagActions from the last build
 	 */
-	private static List<TagAction> resolveActions(Run<?, ?> run, TaskListener listener, String syncID) {
+	private static List<TagAction> getLastTagActions(Run<?, ?> run, TaskListener listener) {
 		List<TagAction> actions = lastActions(run);
-		if (actions == null || syncID == null || syncID.isEmpty()) {
+		if (actions == null) {
 			listener.getLogger().println("No previous build found...");
 			return Collections.emptyList();
 		}
-		logger.fine("   using syncID: " + syncID);
 
 		// Fetch all syncIDs and check for duplicates JENKINS-55075
 		List<String> syncList = new ArrayList<>();
@@ -289,61 +287,64 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	/**
-	 * Validates inputs and returns all TagActions from the previous build,
-	 * or an empty list if no valid previous build or syncID exists.
-	 * This is in reference to client workspace changes.
-	 * */
-	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<P4Ref> changes = new ArrayList<>();
-
-		List<TagAction> actions = resolveActions(run, listener, syncID);
-		if (actions.isEmpty()) {
-			return changes;
+	 * Returns TagActions from the last build that match the given syncID,
+	 * or an empty list if syncID is invalid or no matching actions exist.
+	 *
+	 * @param run      The current build
+	 * @param listener Listener for logging
+	 * @param syncID   The syncID to match against
+	 * @return List of matching TagActions
+	 */
+	private static List<TagAction> findTagActionsForSyncID(Run<?, ?> run, TaskListener listener, String syncID) {
+		if (syncID == null || syncID.isEmpty()) {
+			listener.getLogger().println("No build found for syncID: ..." + syncID);
+			return Collections.emptyList();
 		}
+		logger.fine("   using syncID: " + syncID);
 
-		// look for action matching view
-		// (clone ID now filtered from the syncID to addresses JENKINS-43877)
-		for (TagAction action : actions) {
+		List<TagAction> matched = new ArrayList<>();
+		for (TagAction action : getLastTagActions(run, listener)) {
 			if (syncID.equals(action.getSyncID())) {
-				changes = action.getRefChanges();
-				for (P4Ref change : changes) {
-					listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
-				}
+				matched.add(action);
 			}
 		}
+		return matched;
+	}
 
+	/**
+	 * Returns workspace/client ref changes from the last build for the given syncID.
+	 * (clone ID now filtered from the syncID to address JENKINS-43877)
+	 */
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4Ref> changes = new ArrayList<>();
+		for (TagAction action : findTagActionsForSyncID(run, listener, syncID)) {
+			changes = action.getRefChanges();
+			for (P4Ref change : changes) {
+				listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
+			}
+		}
 		return changes;
 	}
 
 	/**
-	 * Validates inputs and returns all TagActions from the previous build,
-	 * or an empty list if no valid previous build or syncID exists.
-	 * This is in reference to custom poll path changes.
-	 * */
+	 * Returns custom poll path changes from the last build for the given syncID.
+	 */
 	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<TagAction> actions = resolveActions(run, listener, syncID);
-		if (actions.isEmpty()) {
-			return new ArrayList<>();
-		}
-
 		Set<P4PollRef> result = new LinkedHashSet<>();
-		for (TagAction action : actions) {
-			if (syncID.equals(action.getSyncID())) {
-				List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
-				if (pollChanges == null || pollChanges.isEmpty()) {
+		for (TagAction action : findTagActionsForSyncID(run, listener, syncID)) {
+			List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
+			if (pollChanges == null || pollChanges.isEmpty()) {
+				continue;
+			}
+			for (P4PollRef change : pollChanges) {
+				if (change == null) {
 					continue;
 				}
-				for (P4PollRef change : pollChanges) {
-					if (change == null) {
-						continue;
-					}
-					if (result.add(change)) {
-						listener.getLogger().println("Found last poll change " + change.toString() + " on syncID " + syncID);
-					}
+				if (result.add(change)) {
+					listener.getLogger().println("Found last poll change " + change + " on syncID " + syncID);
 				}
 			}
 		}
-
 		return new ArrayList<>(result);
 	}
 
@@ -406,10 +407,9 @@ public class TagAction extends AbstractScmTagAction {
 	public void setCustomPollPathChanges(List<P4PollRef> finalPollPathList) {
 		List<P4PollRef> changes = new ArrayList<>();
 
-		for(P4Ref ref : finalPollPathList) {
+		for(P4PollRef ref : finalPollPathList) {
 			if(ref != null) {
-				P4PollRef poll = new P4PollRef(ref.getChange(), ((P4PollRef)ref).getPollPath());
-				changes.add(poll);
+				changes.add(ref);
 			}
 		}
 		this.pollRefChanges = changes;

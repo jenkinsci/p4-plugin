@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
 import java.util.List;
+import java.util.Objects;
 
 public class P4PollRef implements P4Ref {
 
@@ -56,13 +57,18 @@ public class P4PollRef implements P4Ref {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof P4PollRef) {
-			P4PollRef ref = (P4PollRef) obj;
-			if (ref.getPollPath().equals(this.pollPath) && ref.getChange()==this.change) {
-				return true;
-			}
-		}
-		return false;
+		if (obj == null) return false;
+		if(!(obj instanceof P4PollRef)) return false;
+
+		if (this == obj) return true;
+
+		P4PollRef ref = (P4PollRef) obj;
+		return this.change == ref.change && Objects.equals(this.pollPath, ref.pollPath);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(change, pollPath);
 	}
 
 	@Override
@@ -72,7 +78,7 @@ public class P4PollRef implements P4Ref {
 		}
 		if (obj instanceof P4PollRef) {
 			P4PollRef ref = (P4PollRef) obj;
-			return (int) (change - ref.getChange());
+			return Long.compare(this.change, ref.getChange());
 		}
 		throw new ClassCastException();
 	}

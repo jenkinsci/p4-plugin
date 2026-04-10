@@ -622,7 +622,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	 */
 
 	public P4PollRef getLatestChangeForPollPath(P4PollRef from) throws Exception {
-		if (from == null || from.getChange() < 0) {
+		if (from == null || from.getChange() < 0 || from.getPollPath() == null) {
 			return null;
 		}
 
@@ -635,7 +635,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		GetChangelistsOptions opts = new GetChangelistsOptions();
 		opts.setMaxMostRecent(1);
 		List<IChangelistSummary> changes = getConnection().getChangelists(spec, opts);
-		if (changes.isEmpty()) {
+		if (changes.isEmpty() || changes.get(0) == null || changes.get(0).getId() <= 0) {
 			return null;
 		}
 
