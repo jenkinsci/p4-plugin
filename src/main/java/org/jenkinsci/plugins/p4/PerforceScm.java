@@ -49,6 +49,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -533,10 +534,13 @@ public class PerforceScm extends SCM {
 			return null;
 		}
 
+		List<P4PollRef> lastPollPathRefs = TagAction.getLastPollChange(lastRun, listener, syncID);
+
 		// Create task
 		PollTask task = new PollTask(credential, lastRun, listener, filter, lastRefs);
 		task.setWorkspace(ws);
 		task.setLimit(pin);
+		task.setPollRefChanges(lastPollPathRefs);
 
 		// Execute remote task
 		List<P4Ref> changes = buildWorkspace.act(task);
@@ -653,10 +657,17 @@ public class PerforceScm extends SCM {
 			task.setIncrementalChanges(changes);
 		}
 
+		boolean isCustomPollingPathPresent = (ws instanceof ManualWorkspaceImpl)
+				&& ((ManualWorkspaceImpl) ws).getSpec().hasCustomPollingPaths();
+
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
+		if (isCustomPollingPathPresent) {
+			// adding the tag in the new build.xml file only when Custom Polling is enabled
+			tag.setCustomPollPathChanges(task.resolvePollPathsToLatestChanges());
+		}
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
 		// JENKINS-39107: Make Depot location of Jenkins file available
