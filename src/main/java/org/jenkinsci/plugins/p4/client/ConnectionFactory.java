@@ -119,6 +119,13 @@ public class ConnectionFactory {
 		props.put(PropertyDefs.ENABLE_GRAPH_SHORT_FORM, "true");
 		props.put(PropertyDefs.ENABLE_ANDMAPS_SHORT_FORM, "true");
 
+		// Enable TLS auto-negotiation for SSL connections (TLSv1.3 preferred, TLSv1.2 fallback).
+		// Newer JVMs block TLSv1.2 by default; setting both protocols avoids manual per-node
+		// configuration of secureSocketEnabledProtocols=TLSv1.3 across large environments.
+		if (config.isSsl()) {
+			props.put(RpcPropertyDefs.RPC_SECURE_SOCKET_ENABLED_PROTOCOLS_NICK, "TLSv1.3,TLSv1.2");
+		}
+
 		// Set P4HOST if defined
 		UsageOptions opts = new UsageOptions(props);
 		String p4host = config.getP4Host();
