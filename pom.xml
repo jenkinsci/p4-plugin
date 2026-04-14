@@ -17,8 +17,14 @@
 
   <properties>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.462</jenkins.baseline>
+    <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <!-- Override parent:4.88 defaults which pin Jetty 10 (javax.servlet).
+         Jenkins 2.479+ requires Jakarta EE 10 (jakarta.servlet 6.0 / Jetty 12 EE10).
+         jenkins-test-harness 2557 uses jetty-ee10-webapp; fixes NoClassDefFoundError in @WithJenkins tests.
+         maven-hpi-plugin 3.1814 uses Winstone (no embedded Jetty); fixes 'mvn hpi:run' startup. -->
+    <jenkins-test-harness.version>2557.v6317fc67b_811</jenkins-test-harness.version>
+    <hpi-plugin.version>3.1814.v77d15159f9b_d</hpi-plugin.version>
   </properties>
 
   <scm>
@@ -60,7 +66,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3814.v9563d972079a_</version>
+        <version>4924.v6b_eb_a_79a_d9d0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -68,6 +74,13 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <dependency>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>5.0.0</version>
+        <scope>provided</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.perforce</groupId>
@@ -239,7 +252,7 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20240303</version>
+      <version>20250517</version>
     </dependency>
 
   </dependencies>

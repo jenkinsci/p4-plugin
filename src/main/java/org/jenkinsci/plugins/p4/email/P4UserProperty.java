@@ -8,7 +8,7 @@ import hudson.model.UserPropertyDescriptor;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.export.Exported;
 
 public class P4UserProperty extends UserProperty {
@@ -36,7 +36,7 @@ public class P4UserProperty extends UserProperty {
 
 		@Override
 		public UserProperty
-				newInstance(StaplerRequest req, JSONObject formData)
+				newInstance(StaplerRequest2 req, JSONObject formData)
 						throws FormException {
 			return new P4UserProperty(formData.optString("email"));
 		}

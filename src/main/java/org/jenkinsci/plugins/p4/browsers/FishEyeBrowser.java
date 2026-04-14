@@ -13,9 +13,9 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.regex.Pattern;
@@ -128,7 +128,7 @@ public class FishEyeBrowser extends P4Browser {
 		}
 
 		@Override
-		public FishEyeBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+		public FishEyeBrowser newInstance(StaplerRequest2 req, JSONObject jsonObject) throws FormException {
 			return (req == null) ? null : req.bindJSON(FishEyeBrowser.class, jsonObject);
 		}
 	}
