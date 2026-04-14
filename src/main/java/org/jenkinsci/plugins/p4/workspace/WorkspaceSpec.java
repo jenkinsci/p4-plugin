@@ -40,6 +40,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	private final boolean backup;
 	private String pollPath;
 	private boolean customPolling;
+	private String limitView;
 
 	public String getPollPath() {
 		return pollPath;
@@ -160,6 +161,15 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 
 	public Object clone() throws CloneNotSupportedException {
 		return super.clone();
+	}
+
+	public String getLimitView() {
+		return limitView;
+	}
+
+	@DataBoundSetter
+	public void setLimitView(String limitView) {
+		this.limitView = limitView;
 	}
 
 	@Extension
