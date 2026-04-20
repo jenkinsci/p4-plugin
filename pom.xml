@@ -19,12 +19,10 @@
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <!-- Override parent:4.88 defaults which pin Jetty 10 (javax.servlet).
+    <!-- Override parent:4.88 default which pins Jetty 10 (javax.servlet).
          Jenkins 2.479+ requires Jakarta EE 10 (jakarta.servlet 6.0 / Jetty 12 EE10).
-         jenkins-test-harness 2557 uses jetty-ee10-webapp; fixes NoClassDefFoundError in @WithJenkins tests.
-         maven-hpi-plugin 3.1814 uses Winstone (no embedded Jetty); fixes 'mvn hpi:run' startup. -->
+         jenkins-test-harness 2557 uses jetty-ee10-webapp; fixes NoClassDefFoundError in @WithJenkins tests. -->
     <jenkins-test-harness.version>2557.v6317fc67b_811</jenkins-test-harness.version>
-    <hpi-plugin.version>3.1814.v77d15159f9b_d</hpi-plugin.version>
   </properties>
 
   <scm>
