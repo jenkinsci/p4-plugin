@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.88</version>
+    <version>5.1</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -16,13 +16,8 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
-    <!-- Override parent:4.88 default which pins Jetty 10 (javax.servlet).
-         Jenkins 2.479+ requires Jakarta EE 10 (jakarta.servlet 6.0 / Jetty 12 EE10).
-         jenkins-test-harness 2557 uses jetty-ee10-webapp; fixes NoClassDefFoundError in @WithJenkins tests. -->
-    <jenkins-test-harness.version>2557.v6317fc67b_811</jenkins-test-harness.version>
   </properties>
 
   <scm>
@@ -72,13 +67,6 @@
   </dependencyManagement>
 
   <dependencies>
-
-    <dependency>
-        <groupId>jakarta.servlet</groupId>
-        <artifactId>jakarta.servlet-api</artifactId>
-        <version>5.0.0</version>
-        <scope>provided</scope>
-    </dependency>
 
     <dependency>
       <groupId>com.perforce</groupId>

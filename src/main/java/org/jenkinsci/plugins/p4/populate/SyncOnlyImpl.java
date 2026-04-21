@@ -16,7 +16,7 @@ public class SyncOnlyImpl extends Populate {
 	 * @param revert   revert before sync option
 	 * @param have     populate have list
 	 * @param force    force sync
-	 * @param quiet    Perforce quiet option
+	 * @param quiet    P4 quiet option
 	 * @param pin      Change or label to pin the sync
 	 * @param parallel Parallel sync option
 	 */
