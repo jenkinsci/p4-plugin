@@ -517,19 +517,24 @@ public class PerforceScm extends SCM {
 		// Calculate last change, build if null (JENKINS-40356)
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
-			PerforceScm.DescriptorImpl scm = getDescriptor();
-			if (scm != null && scm.isRecursionInPolling()) {
-				// Continue to check earlier runs if the lastRun had no TagAction and isn't still in progress(JENKINS-64800)
-				TagAction tagAction = TagAction.getLastAction(lastRun);
-				if (tagAction == null) {
-					Run<?, ?> lastLastRun = !lastRun.isInProgress() ? lastRun.getPreviousBuild() : null;
-					if (lastLastRun != null) {
-						return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
-					}
+			// Only stop the walkback if the last build actually ran p4sync for THIS workspace.
+			// If the TagAction belongs to a different workspace (syncID mismatch) or is absent
+			// (pipeline failed before reaching p4sync), walk back to find a valid baseline.
+			// (Fixes P4JENKINS-158: trigger stalls after a build that fails before p4sync)
+			TagAction tagAction = TagAction.getLastAction(lastRun);
+			if (tagAction != null && syncID.equals(tagAction.getSyncID())) {
+				// Last build did sync this workspace and found no new changes — nothing to build.
+				listener.getLogger().println("P4: Polling: No changes in previous build(s).");
+				return null;
+			}
+			// Last build had no sync for this workspace; walk back to find a usable baseline.
+			if (!lastRun.isInProgress()) {
+				Run<?, ?> previousRun = lastRun.getPreviousBuild();
+				if (previousRun != null) {
+					listener.getLogger().println("P4: Polling: last build had no sync for this workspace, walking back to previous build.");
+					return lookForChanges(buildWorkspace, ws, previousRun, listener);
 				}
 			}
-
-			// no previous build, return null.
 			listener.getLogger().println("P4: Polling: No changes in previous build(s).");
 			return null;
 		}
