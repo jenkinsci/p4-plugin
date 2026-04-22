@@ -80,7 +80,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	public String getDisplayName() {
 		if (isTagged())
-			return "Perforce Label";
+			return "P4 Label";
 		else
 			return "Label This Build";
 	}
@@ -244,7 +244,7 @@ public class TagAction extends AbstractScmTagAction {
 	 * Method used by Jelly code to show Label information (do not remove)
 	 *
 	 * @param tag Label name
-	 * @return Perforce Label object
+	 * @return P4 Label object
 	 */
 	public Label getLabel(String tag) {
 		P4BaseCredentials baseCredential = ClientHelper.findCredential(credential, getRun());

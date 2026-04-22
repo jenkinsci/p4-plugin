@@ -395,19 +395,19 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 
 
 	/**
-	 * Resolve workspace-defined poll paths to their latest Perforce changes.
+	 * Resolve workspace-defined poll paths to their latest P4 changes.
 	 *
 	 * <p>This method:
 	 * - Only runs when the configured workspace is a {@link ManualWorkspaceImpl}.
 	 * - Reads the comma-separated poll paths from the workspace spec, trims entries
 	 *   and ignores empty values.
-	 * - For up to {@code MAX_PATHS_TO_CHECK} poll paths, queries Perforce for the latest
+	 * - For up to {@code MAX_PATHS_TO_CHECK} poll paths, queries P4 for the latest
 	 *   changelist for each poll path using {@link ConnectionHelper#getLatestChangeForPollPath(P4PollRef)}.
 	 * - Returns a list of non-null {@link P4Ref} objects (one per path with a found change)
 	 *   in the same order the paths were specified.
 	 *
 	 * @return list of latest per-path {@code P4PollRef} results (empty if none)
-	 * @throws RuntimeException if an error occurs while querying Perforce (current behavior)
+	 * @throws RuntimeException if an error occurs while querying P4 (current behavior)
 	 */
 	public List<P4PollRef> resolvePollPathsToLatestChanges() {
 		final int MAX_PATHS_TO_CHECK = 10;

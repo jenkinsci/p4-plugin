@@ -57,16 +57,16 @@ public abstract class AbstractTask implements Serializable {
 	 * Set the workspace used for the task.
 	 * Often AbstractTask#setEnvironment() is used to expand the variables in the workspace before set
 	 *
-	 * @param workspace Perforce Workspace type
+	 * @param workspace P4 Workspace type
 	 */
 	public void setWorkspace(Workspace workspace) {
 		this.workspace = workspace;
 	}
 
 	/**
-	 * Implements the Perforce task to retry if necessary
+	 * Implements the P4 task to retry if necessary
 	 *
-	 * @param p4 Perforce connection helper
+	 * @param p4 P4 connection helper
 	 * @return Task object
 	 * @throws Exception push up stack
 	 */
