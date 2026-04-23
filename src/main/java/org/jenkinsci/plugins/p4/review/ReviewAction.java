@@ -16,11 +16,11 @@ import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn.ParameterizedJob;
 import jenkins.util.TimeDuration;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -69,7 +69,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	}
 
 	@POST
-	public void doBuildSubmit(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+	public void doBuildSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
 
 		project.checkPermission(Item.BUILD);
 
@@ -80,7 +80,7 @@ public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Act
 	}
 
 	@POST
-	public void doBuild(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+	public void doBuild(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
 
 		project.checkPermission(Item.BUILD);
 

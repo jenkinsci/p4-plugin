@@ -45,13 +45,17 @@ public class TempClientHelper extends ClientHelper implements Closeable {
 		String oldName = workspace.getName();
 		workspace.setName(clientUUID);
 
-		// Update view with new name
+		// Update view and limitView with new name
 		if (workspace instanceof ManualWorkspaceImpl) {
 			ManualWorkspaceImpl manual = (ManualWorkspaceImpl) workspace;
 			WorkspaceSpec spec = manual.getSpec();
 			String view = spec.getView();
 			view = view.replace(oldName, clientUUID);
 			spec.setView(view);
+			String limitView = spec.getLimitView();
+			if (limitView != null && !limitView.isEmpty()) {
+				spec.setLimitView(limitView.replace(oldName, clientUUID));
+			}
 			manual.setSpec(spec);
 		}
 

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.88</version>
+    <version>5.1</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -16,8 +16,7 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.462</jenkins.baseline>
+    <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
@@ -60,7 +59,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>3814.v9563d972079a_</version>
+        <version>4924.v6b_eb_a_79a_d9d0</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -72,7 +71,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2025.1.2785811</version>
+      <version>2025.2.2917314</version>
     </dependency>
 
     <dependency>
@@ -245,7 +244,7 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20240303</version>
+      <version>20250517</version>
     </dependency>
 
   </dependencies>

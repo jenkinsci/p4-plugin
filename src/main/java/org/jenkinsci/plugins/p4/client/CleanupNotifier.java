@@ -16,6 +16,7 @@ import org.jenkinsci.plugins.p4.tagging.TagAction;
 import org.jenkinsci.plugins.p4.tasks.RemoveClientTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -24,11 +25,29 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 	protected static final Logger logger = Logger.getLogger(CleanupNotifier.class.getName());
 
-	public final boolean deleteClient;
+	private boolean deleteClient;
+	private boolean forceDeleteClient;
 
 	@DataBoundConstructor
-	public CleanupNotifier(boolean deleteClient) {
+	public CleanupNotifier() {
+	}
+
+	@DataBoundSetter
+	public void setDeleteClient(boolean deleteClient) {
 		this.deleteClient = deleteClient;
+	}
+
+	@DataBoundSetter
+	public void setForceDeleteClient(boolean forceDeleteClient) {
+		this.forceDeleteClient = forceDeleteClient;
+	}
+
+	public boolean isDeleteClient() {
+		return deleteClient;
+	}
+
+	public boolean isForceDeleteClient() {
+		return forceDeleteClient;
 	}
 
 	@Override
@@ -63,11 +82,11 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 		// Setup Cleanup Task
 		RemoveClientTask task = new RemoveClientTask(credential, run, listener);
-		task.setDeleteClient(deleteClient);
+		task.setDeleteClient(isDeleteClient());
+		task.setForceDeleteClient(isForceDeleteClient());
 
 		// Set workspace used for the Task
-		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
-		task.setWorkspace(ws);
+		task.setWorkspace(workspace);
 
 		buildWorkspace.act(task);
 	}

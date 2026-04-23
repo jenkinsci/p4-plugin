@@ -10,6 +10,7 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.changes.P4Revision;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
@@ -21,15 +22,18 @@ import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 import org.jenkinsci.plugins.p4.tasks.TaggingTask;
 import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,6 +45,7 @@ public class TagAction extends AbstractScmTagAction {
 	private List<String> tags = new ArrayList<String>();
 
 	private List<P4Ref> refChanges;
+	private List<P4PollRef> pollRefChanges = new ArrayList<>();
 
 	private P4Revision buildChange;
 	private P4Review review;
@@ -75,7 +80,7 @@ public class TagAction extends AbstractScmTagAction {
 
 	public String getDisplayName() {
 		if (isTagged())
-			return "Perforce Label";
+			return "P4 Label";
 		else
 			return "Label This Build";
 	}
@@ -86,7 +91,7 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	@POST
-	public void doSubmit(StaplerRequest req, StaplerResponse rsp) throws Exception, ServletException {
+	public void doSubmit(StaplerRequest2 req, StaplerResponse2 rsp) throws Exception, ServletException {
 
 		getACL().checkPermission(PerforceScm.TAG);
 
@@ -239,7 +244,7 @@ public class TagAction extends AbstractScmTagAction {
 	 * Method used by Jelly code to show Label information (do not remove)
 	 *
 	 * @param tag Label name
-	 * @return Perforce Label object
+	 * @return P4 Label object
 	 */
 	public Label getLabel(String tag) {
 		P4BaseCredentials baseCredential = ClientHelper.findCredential(credential, getRun());
@@ -253,25 +258,19 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	/**
-	 * Change reporting...
+	 * Returns all TagActions from the last build, warning on duplicate syncIDs.
+	 * Returns an empty list if no valid previous build or actions exist.
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
-	 * @param syncID   Changelist Sync ID
-	 * @return Perforce change
+	 * @return List of TagActions from the last build
 	 */
-	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
-		List<P4Ref> changes = new ArrayList<>();
-
-		List<TagAction> actions;
-		actions = lastActions(run);
-
-		if (actions == null || syncID == null || syncID.isEmpty()) {
+	private static List<TagAction> getLastTagActions(Run<?, ?> run, TaskListener listener) {
+		List<TagAction> actions = lastActions(run);
+		if (actions == null) {
 			listener.getLogger().println("No previous build found...");
-			return changes;
+			return Collections.emptyList();
 		}
-
-		logger.fine("   using syncID: " + syncID);
 
 		// Fetch all syncIDs and check for duplicates JENKINS-55075
 		List<String> syncList = new ArrayList<>();
@@ -284,18 +283,69 @@ public class TagAction extends AbstractScmTagAction {
 			logger.fine("   stored syncID: " + action.getSyncID());
 		}
 
-		// look for action matching view
-		// (clone ID now filtered from the syncID to addresses JENKINS-43877)
-		for (TagAction action : actions) {
+		return actions;
+	}
+
+	/**
+	 * Returns TagActions from the last build that match the given syncID,
+	 * or an empty list if syncID is invalid or no matching actions exist.
+	 *
+	 * @param run      The current build
+	 * @param listener Listener for logging
+	 * @param syncID   The syncID to match against
+	 * @return List of matching TagActions
+	 */
+	private static List<TagAction> findTagActionsForSyncID(Run<?, ?> run, TaskListener listener, String syncID) {
+		if (syncID == null || syncID.isEmpty()) {
+			listener.getLogger().println("No build found for syncID: ..." + syncID);
+			return Collections.emptyList();
+		}
+		logger.fine("   using syncID: " + syncID);
+
+		List<TagAction> matched = new ArrayList<>();
+		for (TagAction action : getLastTagActions(run, listener)) {
 			if (syncID.equals(action.getSyncID())) {
-				changes = action.getRefChanges();
-				for (P4Ref change : changes) {
-					listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
+				matched.add(action);
+			}
+		}
+		return matched;
+	}
+
+	/**
+	 * Returns workspace/client ref changes from the last build for the given syncID.
+	 * (clone ID now filtered from the syncID to address JENKINS-43877)
+	 */
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		List<P4Ref> changes = new ArrayList<>();
+		for (TagAction action : findTagActionsForSyncID(run, listener, syncID)) {
+			changes = action.getRefChanges();
+			for (P4Ref change : changes) {
+				listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
+			}
+		}
+		return changes;
+	}
+
+	/**
+	 * Returns custom poll path changes from the last build for the given syncID.
+	 */
+	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		Set<P4PollRef> result = new LinkedHashSet<>();
+		for (TagAction action : findTagActionsForSyncID(run, listener, syncID)) {
+			List<P4PollRef> pollChanges = action.getCustomPollPathChanges();
+			if (pollChanges == null || pollChanges.isEmpty()) {
+				continue;
+			}
+			for (P4PollRef change : pollChanges) {
+				if (change == null) {
+					continue;
+				}
+				if (result.add(change)) {
+					listener.getLogger().println("Found last poll change " + change + " on syncID " + syncID);
 				}
 			}
 		}
-
-		return changes;
+		return new ArrayList<>(result);
 	}
 
 	/**
@@ -353,4 +403,20 @@ public class TagAction extends AbstractScmTagAction {
 	public String getJenkinsPath() {
 		return jenkinsPath;
 	}
+
+	public void setCustomPollPathChanges(List<P4PollRef> finalPollPathList) {
+		List<P4PollRef> changes = new ArrayList<>();
+
+		for(P4PollRef ref : finalPollPathList) {
+			if(ref != null) {
+				changes.add(ref);
+			}
+		}
+		this.pollRefChanges = changes;
+	}
+
+	public List<P4PollRef> getCustomPollPathChanges() {
+		return this.pollRefChanges;
+	}
+
 }

@@ -13,6 +13,7 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixConfiguration;
 import hudson.matrix.MatrixExecutionStrategy;
 import hudson.matrix.MatrixProject;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Item;
@@ -48,6 +49,7 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
@@ -515,27 +517,35 @@ public class PerforceScm extends SCM {
 		// Calculate last change, build if null (JENKINS-40356)
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastRun, listener, syncID);
 		if (lastRefs == null || lastRefs.isEmpty()) {
-			PerforceScm.DescriptorImpl scm = getDescriptor();
-			if (scm != null && scm.isRecursionInPolling()) {
-				// Continue to check earlier runs if the lastRun had no TagAction and isn't still in progress(JENKINS-64800)
-				TagAction tagAction = TagAction.getLastAction(lastRun);
-				if (tagAction == null) {
-					Run<?, ?> lastLastRun = !lastRun.isInProgress() ? lastRun.getPreviousBuild() : null;
-					if (lastLastRun != null) {
-						return lookForChanges(buildWorkspace, ws, lastLastRun, listener);
-					}
+			// Only stop the walkback if the last build actually ran p4sync for THIS workspace.
+			// If the TagAction belongs to a different workspace (syncID mismatch) or is absent
+			// (pipeline failed before reaching p4sync), walk back to find a valid baseline.
+			// (Fixes P4JENKINS-158: trigger stalls after a build that fails before p4sync)
+			TagAction tagAction = TagAction.getLastAction(lastRun);
+			if (tagAction != null && syncID.equals(tagAction.getSyncID())) {
+				// Last build did sync this workspace and found no new changes — nothing to build.
+				listener.getLogger().println("P4: Polling: No changes in previous build(s).");
+				return null;
+			}
+			// Last build had no sync for this workspace; walk back to find a usable baseline.
+			if (!lastRun.isInProgress()) {
+				Run<?, ?> previousRun = lastRun.getPreviousBuild();
+				if (previousRun != null) {
+					listener.getLogger().println("P4: Polling: last build had no sync for this workspace, walking back to previous build.");
+					return lookForChanges(buildWorkspace, ws, previousRun, listener);
 				}
 			}
-
-			// no previous build, return null.
 			listener.getLogger().println("P4: Polling: No changes in previous build(s).");
 			return null;
 		}
+
+		List<P4PollRef> lastPollPathRefs = TagAction.getLastPollChange(lastRun, listener, syncID);
 
 		// Create task
 		PollTask task = new PollTask(credential, lastRun, listener, filter, lastRefs);
 		task.setWorkspace(ws);
 		task.setLimit(pin);
+		task.setPollRefChanges(lastPollPathRefs);
 
 		// Execute remote task
 		List<P4Ref> changes = buildWorkspace.act(task);
@@ -652,10 +662,17 @@ public class PerforceScm extends SCM {
 			task.setIncrementalChanges(changes);
 		}
 
+		boolean isCustomPollingPathPresent = (ws instanceof ManualWorkspaceImpl)
+				&& ((ManualWorkspaceImpl) ws).getSpec().hasCustomPollingPaths();
+
 		// Add tagging action to build, enabling label support.
 		TagAction tag = new TagAction(run, credential);
 		tag.setWorkspace(ws);
 		tag.setRefChanges(task.getSyncChange());
+		if (isCustomPollingPathPresent) {
+			// adding the tag in the new build.xml file only when Custom Polling is enabled
+			tag.setCustomPollPathChanges(task.resolvePollPathsToLatestChanges());
+		}
 		// JENKINS-37442: Make the log file name available
 		tag.setChangelog(changelogFile);
 		// JENKINS-39107: Make Depot location of Jenkins file available
@@ -979,6 +996,16 @@ public class PerforceScm extends SCM {
 			return false;
 		}
 
+		String currentNodeName = node.getNodeName();
+		if (run instanceof AbstractBuild) {
+			Node buildNode = ((AbstractBuild<?, ?>) run).getBuiltOn();
+			String buildNodeName = (buildNode != null) ? buildNode.getNodeName() : ((AbstractBuild<?, ?>) run).getBuiltOnStr();
+			if (!currentNodeName.equals(buildNodeName)) {
+				logger.warning("P4: Workspace node differs from build node, skipping cleanup");
+				return false;
+			}
+		}
+
 		// exit early if client workspace is undefined
 		LogTaskListener listener = new LogTaskListener(logger, Level.INFO);
 		EnvVars envVars = run.getEnvironment(listener);
@@ -1012,8 +1039,8 @@ public class PerforceScm extends SCM {
 		RemoveClientTask task = new RemoveClientTask(credential, job, listener);
 
 		// Set workspace used for the Task
-		Workspace ws = task.setEnvironment(run, workspace, buildWorkspace);
-		task.setWorkspace(ws);
+		task.setEnvironment(run, workspace, buildWorkspace);
+		task.setWorkspace(workspace);
 
 		boolean clean = buildWorkspace.act(task);
 
