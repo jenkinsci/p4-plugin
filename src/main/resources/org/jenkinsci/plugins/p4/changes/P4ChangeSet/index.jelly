@@ -11,7 +11,7 @@
 
                 <j:choose>
                     <j:when test="${entry.id == null}">
-                        No connection to Perforce.
+                        No connection to P4.
                     </j:when>
 			
             

@@ -1,9 +1,9 @@
 <?jelly escape-by-default='true'?>
 <div>
-	Perforce Client plugin for the Jenkins SCM provider.  The plugin includes extension points for:
+	P4 Client plugin for the Jenkins SCM provider.  The plugin includes extension points for:
 	
 	<ul>
-		<li>Perforce Password and Ticket Credentials store</li>
+		<li>P4 Password and Ticket Credentials store</li>
 		<li>Workspace management for static, manual, template and stream</li>
 		<li>Action point for Review Builds</li>
 	</ul>

@@ -6,13 +6,13 @@
 	</f:entry>
 	
 	<f:entry field="quiet">
-		<f:checkbox title="${%QUIET Perforce messages}" default="true"/>
+		<f:checkbox title="${%QUIET P4 messages}" default="true"/>
 	</f:entry>
 	
 	<f:entry field="pin">
 		<table border="0" width="100%">
 			<tr>
-				<td nowrap="true">Pin build at Perforce Label</td>
+				<td nowrap="true">Pin build at P4 Label</td>
 				<td width="100%"><f:textbox/></td>
 			</tr>
 		</table>

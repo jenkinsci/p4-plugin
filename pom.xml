@@ -12,7 +12,7 @@
   <version>1.17.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>P4 Plugin</name>
-  <description>Perforce Client plugin for the Jenkins SCM provider.</description>
+  <description>P4 Client plugin for the Jenkins SCM provider.</description>
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>

@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout" xmlns:f="/lib/form">
 
-    <l:layout title="${%Trigger Perforce Jobs}" norefresh="true" permission="${it.requiredPermission}">
+    <l:layout title="${%Trigger P4 Jobs}" norefresh="true" permission="${it.requiredPermission}">
         <l:side-panel>
             <l:tasks>
                 <l:task icon="icon-up icon-md" href="../" title="${%Back to Project}"/>
@@ -26,10 +26,10 @@
             
             <div>
             	<br/>
-				<b>Automating the Perforce Jenkins Trigger</b>
-				<p>Typically the '/p4/change' end-point is called by a Perforce 'change-commit' trigger.  A POST to '/p4/change' with a JSON payload of 'p4port' and 'change' e.g.</p>
+				<b>Automating the P4 Jenkins Trigger</b>
+				<p>Typically the '/p4/change' end-point is called by a P4 'change-commit' trigger.  A POST to '/p4/change' with a JSON payload of 'p4port' and 'change' e.g.</p>
 				<p><code>curl --header 'Content-Type: application/json' --request POST --data "payload={change:200,p4port:\"perforce.com:1666\"}" http://jenkins:8080/p4/change</code></p>
-				<p>Only jobs registered to trigger, with matching Perforce Credentials specifying the same P4Port, are triggered to look for updates.</p>
+				<p>Only jobs registered to trigger, with matching P4 Credentials specifying the same P4Port, are triggered to look for updates.</p>
 			</div>
 
         </l:main-panel>
