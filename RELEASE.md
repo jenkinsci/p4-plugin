@@ -1,5 +1,35 @@
 ## Release notes
 
+### Release 1.17.3 (major features/fixes)
+
+[@32615](https://swarm.workshop.perforce.com/changes/32615) - Fix - Builds stop triggering after early pipeline failure until manual run
+
+[@32614](https://swarm.workshop.perforce.com/changes/32614) - Upgrading Jenkins version to 2.479.3
+
+[@32611](https://swarm.workshop.perforce.com/changes/32611) - Added support for both TLS1.3 and TLS1.2
+
+[@32610](https://swarm.workshop.perforce.com/changes/32610) - Added support of LimitView in client spec
+
+[@32608](https://swarm.workshop.perforce.com/changes/32608) - Implementation of Explicit Poll Workspace Option. P4Java version upgrade to 2025.2.2917314
+
+[@32607](https://swarm.workshop.perforce.com/changes/32607) - Workspace cleanup thread checks are added for unwanted builds
+
+[@32606](https://swarm.workshop.perforce.com/changes/32606) - Added support for -f force option in p4 client with a new force delete client checkbox
+
+[@32605](https://swarm.workshop.perforce.com/changes/32605) - Fix : Polling build filters should ignore leading whitespace
+
+[@32385](https://swarm.workshop.perforce.com/changes/32385) - Merged the PR from dependency bot. Bump org.apache.commons:commons-lang3 from 3.17.0 to 3.18.0
+
+[@32384](https://swarm.workshop.perforce.com/changes/32384) - Merge pull request #218 from yaroslavafenkin:JENKINS-74091. Remove unused inline JavaScript from ManualWorkspace jelly file.
+
+[@32383](https://swarm.workshop.perforce.com/changes/32383) - Merge pull request #219 from yaroslavafenkin:JENKINS-74090. Remove legacy and unused checkUrl from TagAction jelly
+
+[@32382](https://swarm.workshop.perforce.com/changes/32382) - Merge pull request #248 from strangelookingnerd:migrate_to_jupiter. Migrate testing framwork from JUnit4 to Junit5
+
+[@31975](https://swarm.workshop.perforce.com/changes/31975) - Keeping Modtime option available only with AutoCleanImpl
+
+[@31905](https://swarm.workshop.perforce.com/changes/31905) - Fixing the Variable Description visibility
+
 ### Release 1.17.2 (major features/fixes)
 
 [@31409](https://swarm.workshop.perforce.com/changes/31409) - Support selection of branch name from path in multibranch project for Branch Sources.
