@@ -1,0 +1,77 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(wc:*)",
+      "Bash(file:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(mvn package:*)",
+      "Bash(mvn package -DskipTests)",
+      "Bash(mvn test:*)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn hpi:run)",
+      "Bash(mvn dependency:tree)",
+      "Bash(mvn -version)",
+      "Bash(java -version)",
+      "Bash(java --version)",
+      "Bash(p4 -V)",
+      "Bash(p4 info)",
+      "Bash(p4 have:*)",
+      "Bash(p4 sync:*)",
+      "Bash(p4 changes:*)",
+      "Bash(p4 client:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Write(./pom.xml)",
+      "Edit(./pom.xml)",
+      "Write(./LICENSE)",
+      "Edit(./LICENSE)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a'"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"$CLAUDE_TOOL_INPUT\" | python3 -c \"import sys, json; inp = json.load(sys.stdin); path = inp.get('file_path',''); protected = ['pom.xml','LICENSE','src/test/resources']; blocked = any(p in path for p in protected); print('BLOCK: ' + path + ' is a protected file — ask the user before editing') if blocked else None; exit(1) if blocked else exit(0)\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '=== p4-plugin session ===' && java -version 2>&1 | head -1 && mvn -version 2>&1 | head -1 && echo 'p4d binaries:' && ls src/test/resources/*/bin.* 2>/dev/null | head -6 || echo '  (none found — integration tests will not run)'"
+          }
+        ]
+      }
+    ]
+  }
+}
