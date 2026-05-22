@@ -225,7 +225,7 @@ public abstract class AbstractTask implements Serializable {
 
 				// back off n^2 seconds, before retry
 				try {
-					TimeUnit.SECONDS.sleep(t ^ 2);
+					TimeUnit.SECONDS.sleep((long) t * t);
 				} catch (InterruptedException e2) {
 					Thread.currentThread().interrupt();
 				}
