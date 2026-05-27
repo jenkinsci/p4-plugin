@@ -15,16 +15,16 @@ public class P4SwarmUpdateAction implements Action {
 
 	@Override
 	public String getIconFileName() {
-		return "";
+		return null;
 	}
 
 	@Override
 	public String getDisplayName() {
-		return "";
+		return null;
 	}
 
 	@Override
 	public String getUrlName() {
-		return "";
+		return null;
 	}
 }

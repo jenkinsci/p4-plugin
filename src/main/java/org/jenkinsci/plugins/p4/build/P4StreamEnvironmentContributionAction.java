@@ -16,17 +16,17 @@ public class P4StreamEnvironmentContributionAction implements EnvironmentContrib
 
 	@Override
 	public String getIconFileName() {
-		return "";
+		return null;
 	}
 
 	@Override
 	public String getDisplayName() {
-		return "";
+		return null;
 	}
 
 	@Override
 	public String getUrlName() {
-		return "";
+		return null;
 	}
 
 	@Override
