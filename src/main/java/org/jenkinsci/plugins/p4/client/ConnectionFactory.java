@@ -8,7 +8,7 @@ import com.perforce.p4java.option.UsageOptions;
 import com.perforce.p4java.server.IOptionsServer;
 import com.perforce.p4java.server.ServerFactory;
 import hudson.util.FormValidation;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Properties;
 import java.util.logging.Logger;

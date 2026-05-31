@@ -4,7 +4,7 @@ import com.perforce.p4java.core.IFix;
 import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
 import java.io.BufferedOutputStream;

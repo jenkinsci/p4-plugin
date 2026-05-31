@@ -9,7 +9,7 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import jenkins.model.Jenkins;
 import jenkins.model.JenkinsLocationConfiguration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.p4.workflow.source.P4SwarmUpdateAction;
 import org.json.JSONArray;
 import org.json.JSONObject;

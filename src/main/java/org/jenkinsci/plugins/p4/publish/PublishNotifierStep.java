@@ -7,7 +7,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepMonitor;
 import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.p4.tasks.PublishTask;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.kohsuke.stapler.DataBoundConstructor;

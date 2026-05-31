@@ -5,7 +5,7 @@ import com.perforce.p4java.client.IClientSummary.IClientOptions;
 import com.perforce.p4java.impl.mapbased.client.Client;
 import com.perforce.p4java.server.IOptionsServer;
 import hudson.Extension;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
