@@ -36,6 +36,10 @@
     	<f:textarea id="id.changeView" />
     </f:entry>
 
+	<f:entry title="${%Limit View}" field="limitView">
+		<f:textarea id="id.limitView" />
+	</f:entry>
+
     <f:entry title="${%Server ID}" field="serverID">
     	<f:textbox id="id.serverID" />
     </f:entry>
@@ -43,5 +47,18 @@
 	<f:entry title="${%Backup Client}" field="backup">
 		<f:checkbox id="id.backup" default="true" />
 	</f:entry>
+
+    <f:entry title="${%Custom Polling Path}" field="customPolling">
+        <f:checkbox id="id.customPolling" default="false" />
+    </f:entry>
+
+    <f:entry>
+        <div id="pollPathEntry" style="display:none">
+            <f:textarea id="id.pollPath" field="pollPath" />
+            <div id="pollPathWarning" style="color: red; font-size: 12px; margin-top: 4px;"></div>
+        </div>
+    </f:entry>
+
+    <script src="${resURL}/plugin/p4/js/workspaceSpec.js"></script>
 
 </j:jelly>

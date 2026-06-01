@@ -3,7 +3,7 @@
     <l:layout>
         <st:include it="${it.owner}" page="sidepanel.jelly" />
         <l:main-panel>
-            <h1>${%Last Perforce Change}</h1>
+            <h1>${%Last P4 Change}</h1>
             <j:set var="log" value="${it.log}" />
             <j:choose>
                 <j:when test="${empty(log)}">

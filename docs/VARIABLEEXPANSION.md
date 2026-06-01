@@ -4,10 +4,10 @@ Many of the workspace fields can include environment variables to help define th
 ```
 jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
-- `NODE_NAME` - Name of the "slave" or "master" the job is built on, such as linux.
+- `NODE_NAME` - Name of the "agent" or "controller" the job is built on, such as linux.
 - `JOB_NAME` - Name of the project of this build, such as "foo"
 - `EXECUTOR_NUMBER` - The unique number that identifies the current executor.
-If the job is called 'foo' and it is built on a slave called 'linux' the variables expand the name to:
+If the job is called 'foo' and it is built on a agents called 'linux' the variables expand the name to:
 ```
 jenkins-linux-foo
 ```
@@ -19,10 +19,10 @@ Jenkins provides a set of environment variables. You can also define your own. H
 `JOB_NAME`  - Name of the project of this build. For example "foo"  
 `BUILD_TAG`  - String of "jenkins-${JOB_NAME}-${BUILD_NUMBER}".  
 `EXECUTOR_NUMBER`  - The unique number that identifies the current executor.  
-`NODE_NAME`  - Name of the "slave" or "master". For example "linux".  
+`NODE_NAME`  - Name of the "agent" or "controller". For example "linux".  
 `NODE_LABELS`  - Whitespace-separated list of labels that the node is assigned.  
 `WORKSPACE`  - Absolute path of the build as a workspace.  
-`JENKINS_HOME`  - Absolute path on the master node for Jenkins to store data.  
+`JENKINS_HOME`  - Absolute path on the controller node for Jenkins to store data.  
 `JENKINS_URL`  - URL of Jenkins. For example [http://server:port/jenkins/](http://server:port/jenkins/)  
 `BUILD_URL`  - Full URL of this build. For example  [http://server:port/jenkins/job/foo/15/](http://server:port/jenkins/job/foo/15/)  
 `JOB_URL`  - Full URL of this job. For example [http://server:port/jenkins/job/foo/](http://server:port/jenkins/job/foo/)

@@ -3,7 +3,7 @@
 			xmlns:l="/lib/layout" 	xmlns:t="/lib/hudson" 		xmlns:f="/lib/form"
 			xmlns:c="/lib/credentials">
 
-	<f:entry title="Perforce Credentials" field="credential">
+	<f:entry title="P4 Credentials" field="credential">
 		<c:select/>
 	</f:entry>
 	

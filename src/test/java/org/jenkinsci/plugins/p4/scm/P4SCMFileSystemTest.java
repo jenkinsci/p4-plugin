@@ -150,7 +150,6 @@ class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	@Test
 	void testLightWeightWorkflow() throws Exception {
-
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"
@@ -184,7 +183,6 @@ class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	@Test
 	void testLightWeightP4_CLIENT() throws Exception {
-
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"

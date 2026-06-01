@@ -49,7 +49,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 		@NonNull
 		@Override
 		public String getDisplayName() {
-			return "Perforce triggered build.";
+			return "P4 triggered build.";
 		}
 	}
 
@@ -140,7 +140,7 @@ public class P4Trigger extends Trigger<Job<?, ?>> {
 	final static Logger LOGGER = Logger.getLogger(P4Trigger.class.getName());
 
 	/**
-	 * Perforce Trigger Log Action
+	 * P4 Trigger Log Action
 	 */
 	public final class P4TriggerAction implements Action {
 		public Job<?, ?> getOwner() {

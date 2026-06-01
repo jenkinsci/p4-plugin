@@ -15,7 +15,7 @@
 	</f:entry>
 
 	<!--f:entry field="cleanup">
-		<f:checkbox title="${%Delete the Perforce Client after checkout}" default="false"/>
+		<f:checkbox title="${%Delete the P4 Client after checkout}" default="false"/>
 	</f:entry-->
 	
 	<f:entry>

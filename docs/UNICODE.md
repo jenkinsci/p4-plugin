@@ -23,12 +23,12 @@ behaviour:
                                     Set to 1 to write utf8 files with a BOM
                                     Set to 2 to write utf8 BOM only on Windows
                                     
-For Jenkins to make use of the configurable you need to set the JVM property on the Jenkins Master or Build Slave.
+For Jenkins to make use of the configurable you need to set the JVM property on the Jenkins Controller or Build Agent.
 For example:
 
       -Dcom.perforce.p4java.filesys.utf8bom=0
       
-For most use-cases you will need set the JVM option for the slave build node: 
+For most use-cases you will need set the JVM option for the agent build node: 
 
  - Jenkins > Manage Jenkins > Manage Nodes > New Node or select Node and Configure
  

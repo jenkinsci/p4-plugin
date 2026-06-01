@@ -160,7 +160,7 @@ and fill out the fields as required. For example:
    of `-script` will help to identify the workspace's use and make it unique from code sync steps.
 
  * Only map the Jenkinsfile (and perhaps Pipeline libraries) in the workspace view.  Jenkins may create an '@script'
-   directory on the master and you don't want to unnecessarily sync code to an area not used for the actual build.
+   directory on the controller and you don't want to unnecessarily sync code to an area not used for the actual build.
 
 ## Lightweight checkout
 
@@ -245,7 +245,7 @@ the client workspace name, but must be unique enough to distinguish between mult
 to identify previous builds.  For this reason if the client Workspace name contains any of the following variables
 their values will be ignored when determining the `syncID`:
 
-* NODE_NAME (which might change between slaves)
+* NODE_NAME (which might change between agents)
 * BUILD_NUMBER (which changes for each build)
 * EXECUTOR_NUMBER (changes based on the execution thread) 
 

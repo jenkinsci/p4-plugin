@@ -4,7 +4,7 @@ Manually define the workspace view and sync options. Creates the workspace if it
 
 1. **Workspace behaviour:** select **Manual (Custom View)** from the dropdown list. 
 2. **Character Set:** sets the character set used by Jenkins when syncing files from the Perforce Helix Core Server. This should be set to **none** unless the workspace is connected to a Unicode enabled Helix Server. 
-3.  **Workspace name:** Jenkins slave nodes must each use a unique Perforce workspace. The format string configures the workspace name by substituting the specified variables. At least one variable must be used, but it is recommended that, as a minimum, the following variables are used:
+3.  **Workspace name:** Jenkins agent nodes must each use a unique Perforce workspace. The format string configures the workspace name by substituting the specified variables. At least one variable must be used, but it is recommended that, as a minimum, the following variables are used:
 ```
 jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}
 ```
@@ -31,6 +31,6 @@ For more information about variables, see [Variable Expansion](VARIABLEEXPANSION
 8. **Stream:** if using streams, specify the full Perforce depot path for the stream that will be used to create or update the Jenkins build workspace. If you are connected to a Helix Server, streams will be auto suggested as you type. 
 9. **Stream at change:** when specified, the client view is generated from the stream specification version at or before the change number.
 10. **View Mappings:** displays the mapping of the depot files to your client workspace. This defines the files that you want in your client workspace and specifies where you want them to reside. The default view maps all depot files onto the client. For information about the view syntax, see [Client Views](https://www.perforce.com/perforce/doc.current/manuals/cmdref/index.html#CmdRef/views.html) in the [P4 Command Reference Guide](https://www.perforce.com/perforce/doc.current/manuals/cmdref/index.html#CmdRef/about.html). A new view takes effect on the next `p4 sync`. 
-11. **Server ID:** if set, restricts usage to the named server. If unset, usage is allowed on the master Helix Server and on any replicas of the master other than Edge Servers. 
+11. **Server ID:** if set, restricts usage to the named server. If unset, usage is allowed on the master P4 Server and on any replicas of the master other than Edge Servers. 
 
 Click the browser **Back** button to go back to the previous page. 
