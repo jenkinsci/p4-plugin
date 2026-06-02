@@ -115,7 +115,7 @@ public class SimpleTestServer {
 		if (p4root.exists()) {
 			int count = 5;
 			while(!tryDestroy() && count > 0) {
-				Thread.sleep(200);
+				Thread.sleep(500);
 				count --;
 			}
 		}
