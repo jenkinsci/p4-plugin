@@ -6,6 +6,7 @@ import com.perforce.p4java.core.file.FileAction;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.exception.RequestException;
 import com.perforce.p4java.impl.generic.core.Fix;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
 import hudson.scm.ChangeLogParser;
 import hudson.scm.ChangeLogSet;
@@ -41,6 +42,7 @@ public class P4ChangeParser extends ChangeLogParser {
 	}
 
 	@Override
+	@SuppressFBWarnings("REC_CATCH_EXCEPTION")
 	public ChangeLogSet<? extends Entry> parse(Run run, RepositoryBrowser<?> browser, File file) {
 		try (ConnectionHelper p4 = new ConnectionHelper(run, credential, null)) {
 			SAXParserFactory factory = SAXParserFactory.newInstance();

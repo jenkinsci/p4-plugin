@@ -22,6 +22,7 @@ import java.util.List;
 public class P4CredentialsImpl {
 
 	@Deprecated
+	@SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
 	static public ListBoxModel doFillCredentialItems() {
 		ListBoxModel list = new ListBoxModel();
 
@@ -50,7 +51,6 @@ public class P4CredentialsImpl {
 		return list;
 	}
 
-	@SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
 	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
 		if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||

@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.scm;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.model.Action;
 import hudson.model.TaskListener;
@@ -271,6 +272,7 @@ public abstract class AbstractP4ScmSource extends SCMSource {
 
 	@NonNull
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
 	public PerforceScm build(@NonNull SCMHead head, @CheckForNull SCMRevision revision) {
 		return new P4SCMBuilder(this, head, revision).withTraits(getTraits()).build();
 	}
