@@ -28,7 +28,8 @@ public class SimpleTestServer {
 	private static final String RESOURCES = "src/test/resources/";
 
 	private final String p4d;
-	private final File p4root;
+	private final String rootName;
+	private File p4root;
 	private final String p4ver;
 
 	public SimpleTestServer(String root, String version) {
@@ -44,8 +45,14 @@ public class SimpleTestServer {
 			p4d += "/bin.linux26x86_64/p4d";
 		}
 		this.p4d = p4d;
+		this.rootName = root;
 		this.p4root = new File("target/" + root).getAbsoluteFile();
 		this.p4ver = version;
+	}
+
+	protected void setSubdir(String subdir) {
+		String safe = subdir.replaceAll("[^a-zA-Z0-9_-]", "_");
+		this.p4root = new File("target/" + rootName + "/" + safe).getAbsoluteFile();
 	}
 
 	public String getResources() {
@@ -107,7 +114,7 @@ public class SimpleTestServer {
 		if (p4root.exists()) {
 			FileUtils.cleanDirectory(p4root);
 		} else {
-			p4root.mkdir();
+			p4root.mkdirs();
 		}
 	}
 

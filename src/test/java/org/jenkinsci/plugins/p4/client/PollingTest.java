@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -72,7 +73,13 @@ class PollingTest extends DefaultEnvironment {
 	private static JenkinsRule jenkins;
 
 	@RegisterExtension
-	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15) {
+		@Override
+		public void beforeEach(ExtensionContext context) throws Exception {
+			setSubdir(context.getRequiredTestMethod().getName());
+			super.beforeEach(context);
+		}
+	};
 
     @BeforeAll
     static void beforeAll(JenkinsRule rule) {
