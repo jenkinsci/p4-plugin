@@ -84,7 +84,7 @@ public class SimpleTestServer {
 		TarArchiveEntry tarEntry = tarIn.getNextEntry();
 		while (tarEntry != null) {
 			File node = new File(p4root, tarEntry.getName());
-      LOGGER.debug("extracting: {}", node.getCanonicalPath());
+      		LOGGER.debug("extracting: {}", node.getCanonicalPath());
 			if (tarEntry.isDirectory()) {
 				node.mkdirs();
 			} else {
@@ -113,10 +113,10 @@ public class SimpleTestServer {
 
 	public void destroy() throws Exception {
 		if (p4root.exists()) {
-			int count = 5;
-			while(!tryDestroy() && count > 0) {
+			int count = 10;
+			while (!tryDestroy() && count > 0) {
 				Thread.sleep(500);
-				count --;
+				count--;
 			}
 		}
 	}
@@ -151,7 +151,7 @@ public class SimpleTestServer {
 				}
 			}
 		}
-    LOGGER.info("P4D Version: {}", version);
+    	LOGGER.info("P4D Version: {}", version);
 		return version;
 	}
 
@@ -164,7 +164,7 @@ public class SimpleTestServer {
 			cmdLine.addArgument(arg);
 		}
 
-    LOGGER.debug("EXEC: {}", cmdLine);
+    	LOGGER.debug("EXEC: {}", cmdLine);
 
 		DefaultExecutor executor = new DefaultExecutor();
 		return executor.execute(cmdLine);
