@@ -87,7 +87,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Helix Streams";
+			return "P4 Streams";
 		}
 	}
 }

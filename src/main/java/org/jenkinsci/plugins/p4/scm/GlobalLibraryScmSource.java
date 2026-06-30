@@ -143,7 +143,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 		@Override
 		public String getDisplayName() {
-			return "Helix Library";
+			return "P4 Library";
 		}
 
 		public FormValidation doCheckPath(@QueryParameter String value) {
