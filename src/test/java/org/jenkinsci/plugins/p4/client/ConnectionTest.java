@@ -177,9 +177,11 @@ class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in with client for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, workspace);
-		IClient iclient = p4.getClient();
-		String clienthost = iclient.getHostName();
+		String clienthost;
+		try (ClientHelper p4 = new ClientHelper(auth, null, workspace)) {
+			IClient iclient = p4.getClient();
+			clienthost = iclient.getHostName();
+		}
 		String hostname = InetAddress.getLocalHost().getHostName();
 
 		assertNotNull(clienthost);
@@ -237,9 +239,10 @@ class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, workspace);
-		boolean mod = p4.getClient().getOptions().isModtime();
-		assertTrue(mod);
+		try (ClientHelper p4 = new ClientHelper(auth, null, workspace)) {
+			boolean mod = p4.getClient().getOptions().isModtime();
+			assertTrue(mod);
+		}
 
 		// Check file exists with the correct date
 		String ws = build.getWorkspace().getRemote();
@@ -256,44 +259,44 @@ class ConnectionTest extends DefaultEnvironment {
 
 	@Test
 	void testIsCounter() throws Exception {
-		ConnectionHelper cHelper = new ConnectionHelper(auth, null);
-
-		String cName = "change";  // always exists.
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertTrue(isCounter, "counter '" + cName + "'not found");
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		}
-
-		cName = "thisDoesNotExist";
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertFalse(isCounter, "counter '" + cName + "' found");
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		}
-
-		cName = "666111"; // JENKINS-70219
-		Scanner scanner = null;
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertFalse(isCounter, "counter '" + cName + "' found");
-
-			// check log for "user-counter NNN" command.
-			String lookFor = "user-counter " + cName;
-			scanner = new Scanner(new File(p4d.getLogPath()));
-			while (scanner.hasNextLine()) {
-				String line = scanner.nextLine();
-				if (line.contains(lookFor)) {
-					fail("Found numeric counter '" + cName + "' in log: " + line);
-				}
+		try (ConnectionHelper cHelper = new ConnectionHelper(auth, null)) {
+			String cName = "change";  // always exists.
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertTrue(isCounter, "counter '" + cName + "'not found");
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
 			}
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		} finally {
-			if (scanner != null) {
-				scanner.close();
+
+			cName = "thisDoesNotExist";
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertFalse(isCounter, "counter '" + cName + "' found");
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
+			}
+
+			cName = "666111"; // JENKINS-70219
+			Scanner scanner = null;
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertFalse(isCounter, "counter '" + cName + "' found");
+
+				// check log for "user-counter NNN" command.
+				String lookFor = "user-counter " + cName;
+				scanner = new Scanner(new File(p4d.getLogPath()));
+				while (scanner.hasNextLine()) {
+					String line = scanner.nextLine();
+					if (line.contains(lookFor)) {
+						fail("Found numeric counter '" + cName + "' in log: " + line);
+					}
+				}
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
+			} finally {
+				if (scanner != null) {
+					scanner.close();
+				}
 			}
 		}
 	}

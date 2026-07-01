@@ -109,8 +109,9 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		multi.getSourcesList().add(new BranchSource(source));
 
 		// Get a connection and create the virtual stream.
-		ConnectionHelper p4 = new ConnectionHelper(source.getOwner(), CREDENTIAL, null);
-		createVirtualStream(p4.getConnection());
+		try (ConnectionHelper p4 = new ConnectionHelper(source.getOwner(), CREDENTIAL, null)) {
+			createVirtualStream(p4.getConnection());
+		}
 
 		multi.scheduleBuild2(0);
 		jenkins.waitUntilNoActivity();
@@ -309,21 +310,22 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		folderStore.addCredentials(Domain.global(), inFolderCredentials);
 
 		// Get a connection
-		ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials);
-		IOptionsServer server = p4.getConnection();
+		try (ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials)) {
+			IOptionsServer server = p4.getConnection();
 
-		// create a Mainline stream
-		IStream stream = new Stream();
-		stream.setOwnerName(server.getUserName());
-		stream.setStream("//stream/Acme-main");
-		stream.setName("Acme-main");
-		stream.setType(IStreamSummary.Type.MAINLINE);
+			// create a Mainline stream
+			IStream stream = new Stream();
+			stream.setOwnerName(server.getUserName());
+			stream.setStream("//stream/Acme-main");
+			stream.setName("Acme-main");
+			stream.setType(IStreamSummary.Type.MAINLINE);
 
-		// add a view mapping
-		ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
-		streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
-		stream.setStreamView(streamView);
-		server.createStream(stream);
+			// add a view mapping
+			ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
+			streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
+			stream.setStreamView(streamView);
+			server.createStream(stream);
+		}
 
 		// Create a Jenkinsfile
 		String pipeline = ""
@@ -545,22 +547,23 @@ class PerforceSCMSourceTest extends DefaultEnvironment {
 		folderStore.addCredentials(Domain.global(), inFolderCredentials);
 
 		// Get a connection
-		ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials);
-		IOptionsServer server = p4.getConnection();
+		try (ConnectionHelper p4 = new ConnectionHelper(inFolderCredentials)) {
+			IOptionsServer server = p4.getConnection();
 
-		// create a Mainline stream
-		IStream stream = new Stream();
-		stream.setOwnerName(server.getUserName());
-		stream.setStream("//stream/import");
-		stream.setName("import");
-		stream.setType(IStreamSummary.Type.MAINLINE);
+			// create a Mainline stream
+			IStream stream = new Stream();
+			stream.setOwnerName(server.getUserName());
+			stream.setStream("//stream/import");
+			stream.setName("import");
+			stream.setType(IStreamSummary.Type.MAINLINE);
 
-		// add a view with import+ mapping
-		ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
-		streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
-		streamView.addEntry(new Stream.StreamViewMapping(1, IStreamViewMapping.PathType.IMPORTPLUS, "imports/...", "//depot/import_test/..."));
-		stream.setStreamView(streamView);
-		server.createStream(stream);
+			// add a view with import+ mapping
+			ViewMap<IStreamViewMapping> streamView = new ViewMap<>();
+			streamView.addEntry(new Stream.StreamViewMapping(0, IStreamViewMapping.PathType.SHARE, "...", null));
+			streamView.addEntry(new Stream.StreamViewMapping(1, IStreamViewMapping.PathType.IMPORTPLUS, "imports/...", "//depot/import_test/..."));
+			stream.setStreamView(streamView);
+			server.createStream(stream);
+		}
 
 		// Create a Jenkinsfile
 		String pipeline = ""
