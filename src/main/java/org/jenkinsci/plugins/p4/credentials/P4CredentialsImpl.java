@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
@@ -35,7 +34,7 @@ public class P4CredentialsImpl {
 				acl, domain);
 
 		if (credentials.isEmpty()) {
-			list.add("Select credential...", null);
+			list.add("Select credential...", "");
 		}
 		for (P4BaseCredentials c : credentials) {
 			StringBuffer sb = new StringBuffer();
@@ -50,7 +49,6 @@ public class P4CredentialsImpl {
 		return list;
 	}
 
-	@SuppressFBWarnings(value="NP_NULL_PARAM_DEREF", justification="pending https://github.com/jenkinsci/credentials-plugin/pull/68")
 	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
 		if(project == null && !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER) ||

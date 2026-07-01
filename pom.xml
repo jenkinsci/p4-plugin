@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.1</version>
+    <version>5.17</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.516</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
@@ -59,27 +59,11 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4924.v6b_eb_a_79a_d9d0</version>
+        <version>5601.v59f37270a_349</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>2.18.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-       <version>2.18.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>2.18.6</version>
-      </dependency>
-      <dependency>
-
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
         <version>1.84</version>
@@ -99,20 +83,18 @@
         <artifactId>bcutil-jdk18on</artifactId>
         <version>1.84</version>
       </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials-binding</artifactId>
-        <version>687.689.v1a_f775332fc9</version>
-      </dependency>
+      <!-- Pin workflow-cps (Pipeline: Groovy) above the version resolved transitively
+           via workflow-multibranch to remediate CVE-2026-57283 / CVE-2026-57284.
+           No published BOM yet pins this fixed version; it requires Jenkins 2.516.3+. -->
       <dependency>
         <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-step-api</artifactId>
-        <version>704.ve4f0967e98fa_</version>
+        <artifactId>workflow-cps</artifactId>
+        <version>4331.4333.v50a_b_076c5199</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.18.0</version>
+        <version>3.19.0</version>
       </dependency>
       <dependency>
         <groupId>org.mozilla</groupId>
@@ -154,7 +136,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.18.0</version>
+      <version>3.19.0</version>
     </dependency>
 
     <dependency>
@@ -296,6 +278,16 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Used by SimpleTestServer to unpack the p4d test server archive. Formerly
+         supplied transitively by Jenkins core; detached into a plugin as of the
+         2.516 baseline, so it is declared explicitly for the test classpath. -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.27.1</version>
       <scope>test</scope>
     </dependency>
 
