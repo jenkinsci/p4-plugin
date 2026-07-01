@@ -87,8 +87,10 @@ class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -155,35 +157,36 @@ class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			int head = Integer.parseInt(p4.getCounter("change"));
 
-		// Build 1
-		WorkflowRun run = job.scheduleBuild2(0).get();
-		jenkins.assertBuildStatusSuccess(run);
-		assertEquals(head, Integer.parseInt(p4.getCounter("change")));
+			// Build 1
+			WorkflowRun run = job.scheduleBuild2(0).get();
+			jenkins.assertBuildStatusSuccess(run);
+			assertEquals(head, Integer.parseInt(p4.getCounter("change")));
 
-		// Make changes for trigger
-		submitFile(jenkins, "//depot/Data/j002", "Content");
+			// Make changes for trigger
+			submitFile(jenkins, "//depot/Data/j002", "Content");
 
-		// Add a trigger
-		P4Trigger trigger = new P4Trigger();
-		trigger.start(job, false);
-		job.addTrigger(trigger);
-		job.save();
+			// Add a trigger
+			P4Trigger trigger = new P4Trigger();
+			trigger.start(job, false);
+			job.addTrigger(trigger);
+			job.save();
 
-		assertEquals(1, job.getLastBuild().getNumber());
+			assertEquals(1, job.getLastBuild().getNumber());
 
-		// Test trigger
-		trigger.poke(job, p4d.getRshPort());
+			// Test trigger
+			trigger.poke(job, p4d.getRshPort());
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
-		jenkins.waitUntilNoActivity();
+			TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+			jenkins.waitUntilNoActivity();
 
-		assertEquals(2, job.getLastBuild().getNumber());
-		assertEquals(head + 1, Integer.parseInt(p4.getCounter("change")));
+			assertEquals(2, job.getLastBuild().getNumber());
+			assertEquals(head + 1, Integer.parseInt(p4.getCounter("change")));
 
-		assertEquals(1, job.getLastBuild().getChangeSets().size());
+			assertEquals(1, job.getLastBuild().getChangeSets().size());
+		}
 	}
 
 	@Test
@@ -309,8 +312,10 @@ class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get latest change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 2
 		WorkflowRun run2 = job.scheduleBuild2(0).get();
@@ -421,8 +426,10 @@ class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get latest change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 2
 		WorkflowRun run2 = job.scheduleBuild2(0).get();
@@ -527,8 +534,10 @@ class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(cpsScmFlowDefinition);
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		String head = p4.getCounter("change");
+		String head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = p4.getCounter("change");
+		}
 
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();

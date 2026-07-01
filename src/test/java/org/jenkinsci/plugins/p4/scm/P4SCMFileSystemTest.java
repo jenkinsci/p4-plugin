@@ -66,30 +66,31 @@ class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
-	void testAutoComplete() throws IOException {
+	void testAutoComplete() throws Exception {
 		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "autoComplete");
 
 		// Clear login cache then initialise default connection
-		ConnectionHelper p4 = new ConnectionHelper(owner, CREDENTIAL, null);
-		p4.invalidateSession();
+		try (ConnectionHelper p4 = new ConnectionHelper(owner, CREDENTIAL, null)) {
+			p4.invalidateSession();
 
-		NavigateHelper nav = new NavigateHelper(5);
+			NavigateHelper nav = new NavigateHelper(5);
 
-		AutoCompletionCandidates results = nav.getCandidates("//");
-		assertNotNull(results);
-		assertEquals(2, results.getValues().size());
+			AutoCompletionCandidates results = nav.getCandidates("//");
+			assertNotNull(results);
+			assertEquals(2, results.getValues().size());
 
-		results = nav.getCandidates("//de");
-		assertNotNull(results);
-		assertEquals("//depot/", results.getValues().get(0));
+			results = nav.getCandidates("//de");
+			assertNotNull(results);
+			assertEquals("//depot/", results.getValues().get(0));
 
-		results = nav.getCandidates("//depot/");
-		assertNotNull(results);
-		assertEquals("//depot/Data/", results.getValues().get(0));
+			results = nav.getCandidates("//depot/");
+			assertNotNull(results);
+			assertEquals("//depot/Data/", results.getValues().get(0));
 
-		results = nav.getCandidates("//depot/Data/");
-		assertNotNull(results);
-		assertEquals("//depot/Data/file-0.dat", results.getValues().get(0));
+			results = nav.getCandidates("//depot/Data/");
+			assertNotNull(results);
+			assertEquals("//depot/Data/file-0.dat", results.getValues().get(0));
+		}
 	}
 
 	@Test
