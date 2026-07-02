@@ -35,8 +35,8 @@ pipeline {
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'target/site/',
-						reportFiles: 'surefire-report.html',
+						reportDir: 'target/reports/',
+						reportFiles: 'surefire.html',
 						reportName: 'LinuxTestReport'
 					]
 
@@ -81,8 +81,8 @@ pipeline {
 						allowMissing: false,
 						alwaysLinkToLastBuild: true,
 						keepAll: true,
-						reportDir: 'target/site/',
-						reportFiles: 'surefire-report.html',
+						reportDir: 'target/reports/',
+						reportFiles: 'surefire.html',
 						reportName: 'WindowsTestReport'
 					]
 				}
