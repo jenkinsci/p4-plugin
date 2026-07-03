@@ -235,7 +235,7 @@ class WorkflowTest extends DefaultEnvironment {
 				"      populate: forceClean(quiet: true), \n" +
 				"      source: streamSource('//stream/main')\n" +
 				"\n" +
-				"    p4cleanup(deleteClient: true)\n" +
+				"    p4cleanup(true)\n" +
 				"\n" +
 				"    p4sync charset: 'none', \n" +
 				"      credential: '" + CREDENTIAL + "', \n" +
@@ -243,7 +243,7 @@ class WorkflowTest extends DefaultEnvironment {
 				"      populate: forceClean(quiet: true), \n" +
 				"      source: streamSource('//stream/main')\n" +
 				"\n" +
-				"    p4cleanup(deleteClient: true)\n" +
+				"    p4cleanup(true)\n" +
 				"}", false));
 		job.save();
 
