@@ -6,6 +6,7 @@ import org.jenkinsci.plugins.p4.workflow.source.AbstractSource;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+
+import hudson.FilePath;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,6 +46,20 @@ class GraphWorkFlowTest extends DefaultEnvironment {
     @BeforeEach
     void beforeEach() throws Exception {
 		createCredentials("jenkins", "Password", p4d.getRshPort(), CREDENTIAL);
+	}
+
+	@AfterEach
+	void afterEach() throws Exception {
+		// Perforce syncs files read-only. On Windows a leftover read-only tree
+		// breaks the next build's `mvn clean` (it cannot delete read-only files).
+		// Remove each job's workspace so the synced files do not survive the test;
+		// FilePath.deleteRecursive() clears the read-only attribute before deleting.
+		for (WorkflowJob job : jenkins.jenkins.getAllItems(WorkflowJob.class)) {
+			FilePath workspace = jenkins.jenkins.getWorkspaceFor(job);
+			if (workspace != null) {
+				workspace.deleteRecursive();
+			}
+		}
 	}
 
 	// Test for syncing a graph source using script with source specified

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.1</version>
+    <version>5.17</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
   </properties>
 
@@ -59,27 +59,11 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4924.v6b_eb_a_79a_d9d0</version>
+        <version>6607.v3ed3d8ddfed8</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
       <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-core</artifactId>
-        <version>2.18.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-       <version>2.18.6</version>
-      </dependency>
-      <dependency>
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-annotations</artifactId>
-        <version>2.18.6</version>
-      </dependency>
-      <dependency>
-
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
         <version>1.84</version>
@@ -100,19 +84,29 @@
         <version>1.84</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials-binding</artifactId>
-        <version>687.689.v1a_f775332fc9</version>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <version>4331.4333.v50a_b_076c5199</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-step-api</artifactId>
-        <version>704.ve4f0967e98fa_</version>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1402.1405.vc96e74964250</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials-binding</artifactId>
+        <version>725.ve52b_2328a_fde</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>jackson2-api</artifactId>
+        <version>2.22.0-439.vb_b_43658d6176</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.18.0</version>
+        <version>3.20.0</version>
       </dependency>
       <dependency>
         <groupId>org.mozilla</groupId>
@@ -154,7 +148,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.18.0</version>
+      <version>3.20.0</version>
     </dependency>
 
     <dependency>
@@ -191,7 +185,6 @@
     </dependency>
 
     <!-- Jenkins dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
@@ -219,7 +212,6 @@
     </dependency>
 
     <!-- Workflow dependencies (aggregator) -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
@@ -246,7 +238,6 @@
     </dependency>
 
     <!-- Optional dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
@@ -261,7 +252,6 @@
     </dependency>
 
     <!-- Test scope dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-auth</artifactId>
@@ -300,9 +290,16 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.27.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20250517</version>
+      <version>20251224</version>
     </dependency>
 
   </dependencies>
