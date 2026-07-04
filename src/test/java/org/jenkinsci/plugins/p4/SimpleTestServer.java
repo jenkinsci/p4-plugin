@@ -105,7 +105,26 @@ public class SimpleTestServer {
 
 	public void clean() throws IOException {
 		if (p4root.exists()) {
-			FileUtils.cleanDirectory(p4root);
+			// On Windows the rsh p4d process spawned by the previous test may still be
+			// exiting and holding its db.* files when the next test starts; retry until
+			// the OS releases the handles (Linux can delete open files, so it passes first try).
+			int count = 30;
+			while (true) {
+				try {
+					FileUtils.cleanDirectory(p4root);
+					return;
+				} catch (IOException e) {
+					if (--count <= 0) {
+						throw e;
+					}
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException ie) {
+						Thread.currentThread().interrupt();
+						throw new IOException(ie);
+					}
+				}
+			}
 		} else {
 			p4root.mkdir();
 		}
@@ -113,9 +132,9 @@ public class SimpleTestServer {
 
 	public void destroy() throws Exception {
 		if (p4root.exists()) {
-			int count = 5;
+			int count = 30;
 			while(!tryDestroy() && count > 0) {
-				Thread.sleep(200);
+				Thread.sleep(500);
 				count --;
 			}
 		}

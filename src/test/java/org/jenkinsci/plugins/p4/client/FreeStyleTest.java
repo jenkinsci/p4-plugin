@@ -110,15 +110,16 @@ class FreeStyleTest extends DefaultEnvironment {
 		assertTrue(charsets.size() > 1);
 
 		// Log in for next set of tests...
-		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
-		p4.login();
+		try (ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			p4.login();
 
-		StaticWorkspaceImpl.DescriptorImpl impl = (StaticWorkspaceImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doCheckName("test.ws");
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			StaticWorkspaceImpl.DescriptorImpl impl = (StaticWorkspaceImpl.DescriptorImpl) desc;
+			FormValidation form = impl.doCheckName("test.ws");
+			assertEquals(FormValidation.Kind.OK, form.kind);
 
-		AutoCompletionCandidates clients = impl.doAutoCompleteName("j");
-		assertTrue(clients.getValues().contains("jenkins.data.ws"));
+			AutoCompletionCandidates clients = impl.doAutoCompleteName("j");
+			assertTrue(clients.getValues().contains("jenkins.data.ws"));
+		}
 	}
 
 
@@ -186,10 +187,11 @@ class FreeStyleTest extends DefaultEnvironment {
 		project.save();
 
 		// Log in and create counter for test
-		ClientHelper p4 = new ClientHelper(project, SUPER, null, workspace);
-		IOptionsServer iserver = p4.getConnection();
-		CounterOptions opts = new CounterOptions();
-		iserver.setCounter("testCounter", "9", opts);
+		try (ClientHelper p4 = new ClientHelper(project, SUPER, null, workspace)) {
+			IOptionsServer iserver = p4.getConnection();
+			CounterOptions opts = new CounterOptions();
+			iserver.setCounter("testCounter", "9", opts);
+		}
 
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		FreeStyleBuild build = project.scheduleBuild2(0, cause).get();

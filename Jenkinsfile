@@ -1,6 +1,11 @@
-// Builds a module using https://github.com/jenkins-infra/pipeline-library
-buildPlugin(useContainerAgent: true, configurations: [
-    [platform: 'linux', jdk: 11], 
-    [platform: 'windows', jdk: 11],
-    [platform: 'linux', jdk: 17]
+/*
+ See the documentation for more options:
+ https://github.com/jenkins-infra/pipeline-library/
+*/
+buildPlugin(
+  forkCount: '1', // P4 tests are NOT parallel-safe (shared ~/.p4tickets + static ConnectionFactory state); must stay at 1 fork. Do not use 'NC'.
+  useContainerAgent: true, // Set to `false` if you need to use Docker for containerized tests
+  configurations: [
+    [platform: 'linux', jdk: 17],
+    [platform: 'windows', jdk: 17],
 ])

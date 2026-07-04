@@ -25,15 +25,11 @@ public class CleanupNotifier extends Notifier implements SimpleBuildStep {
 
 	protected static final Logger logger = Logger.getLogger(CleanupNotifier.class.getName());
 
-	private boolean deleteClient;
+	public final boolean deleteClient;
 	private boolean forceDeleteClient;
 
 	@DataBoundConstructor
-	public CleanupNotifier() {
-	}
-
-	@DataBoundSetter
-	public void setDeleteClient(boolean deleteClient) {
+	public CleanupNotifier(boolean deleteClient) {
 		this.deleteClient = deleteClient;
 	}
 

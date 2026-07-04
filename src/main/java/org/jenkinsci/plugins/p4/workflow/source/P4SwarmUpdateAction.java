@@ -1,8 +1,8 @@
 package org.jenkinsci.plugins.p4.workflow.source;
 
-import hudson.model.Action;
+import hudson.model.InvisibleAction;
 
-public class P4SwarmUpdateAction implements Action {
+public class P4SwarmUpdateAction extends InvisibleAction {
 	private String message;
 
 	public P4SwarmUpdateAction(String message) {
@@ -11,20 +11,5 @@ public class P4SwarmUpdateAction implements Action {
 
 	public String getMessage() {
 		return message;
-	}
-
-	@Override
-	public String getIconFileName() {
-		return "";
-	}
-
-	@Override
-	public String getDisplayName() {
-		return "";
-	}
-
-	@Override
-	public String getUrlName() {
-		return "";
 	}
 }

@@ -385,7 +385,8 @@ class PerforceCredentialsTest extends DefaultEnvironment {
 		try {
 			P4PasswordImpl cred = createCredentials("user", "password", p4d.getRshPort(), "InvalidUserPass");
 			//helper is not used but is required to call the constructor to trigger the flow.
-			ConnectionHelper helper = new ConnectionHelper(cred);
+			try (ConnectionHelper helper = new ConnectionHelper(cred)) {
+			}
 		} catch (Exception e) {
 			assertEquals("P4: Invalid credentials. Giving up...", e.getMessage());
 		}

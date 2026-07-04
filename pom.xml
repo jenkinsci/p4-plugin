@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/p4-plugin</url>
 
   <properties>
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <hpi.bundledArtifacts>jzlib,p4java,unirest-java</hpi.bundledArtifacts>
@@ -63,7 +63,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>6607.v3ed3d8ddfed8</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -75,7 +75,7 @@
     <dependency>
       <groupId>com.perforce</groupId>
       <artifactId>p4java</artifactId>
-      <version>2025.2.2917314</version>
+      <version>2026.1.2989454</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.commons</groupId>
@@ -142,7 +142,6 @@
     </dependency>
 
     <!-- Jenkins dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
@@ -185,7 +184,6 @@
     </dependency>
 
     <!-- Optional dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
@@ -200,7 +198,6 @@
     </dependency>
 
     <!-- Test scope dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-auth</artifactId>
@@ -243,6 +240,14 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.27.1</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
