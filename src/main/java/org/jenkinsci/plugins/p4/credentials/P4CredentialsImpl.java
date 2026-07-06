@@ -4,7 +4,6 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
@@ -22,8 +21,7 @@ import java.util.List;
 public class P4CredentialsImpl {
 
 	@Deprecated
-	@SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
-	static public ListBoxModel doFillCredentialItems() {
+	public static ListBoxModel doFillCredentialItems() {
 		ListBoxModel list = new ListBoxModel();
 
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
@@ -36,7 +34,7 @@ public class P4CredentialsImpl {
 				acl, domain);
 
 		if (credentials.isEmpty()) {
-			list.add("Select credential...", null);
+			list.add("Select credential...", "");
 		}
 		for (P4BaseCredentials c : credentials) {
 			StringBuilder sb = new StringBuilder();
@@ -51,7 +49,7 @@ public class P4CredentialsImpl {
 		return list;
 	}
 
-	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
+	public static ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
 		if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
 				project != null && !project.hasPermission(Item.EXTENDED_READ)) {
@@ -71,7 +69,7 @@ public class P4CredentialsImpl {
 	}
 
 	@Deprecated
-	static public FormValidation doCheckCredential(@QueryParameter String value) {
+	public static FormValidation doCheckCredential(@QueryParameter String value) {
 		if (value == null) {
 			return FormValidation.ok();
 		}
@@ -91,7 +89,7 @@ public class P4CredentialsImpl {
 		}
 	}
 
-	static public FormValidation doCheckCredential(Item project, String value) {
+	public static FormValidation doCheckCredential(Item project, String value) {
 		if (value == null) {
 			return FormValidation.ok();
 		}

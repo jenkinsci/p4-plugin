@@ -720,8 +720,9 @@ class PollingTest extends DefaultEnvironment {
 				+ "  }\n"
 				+ "}", false));
 
-		// enable SCM polling (even though we poll programmatically)
-		SCMTrigger cron = new SCMTrigger("* * * * *");
+		// enable SCM polling (even though we poll programmatically); use a
+		// daily spec so the live scheduler never races an extra poll during the test
+		SCMTrigger cron = new SCMTrigger("0 0 * * *");
 		job.addTrigger(cron);
 
 		// disable concurrent builds
