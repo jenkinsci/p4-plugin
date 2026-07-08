@@ -96,7 +96,7 @@ class BomTest extends DefaultEnvironment {
 
 		byte[] synced = syncAndReadBack("text-delta", depotPath, new AutoCleanImpl());
 		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced, "text+D BOM file must transfer verbatim");
+		assertBodyEquals(content, synced, "text+D BOM file must transfer verbatim");
 	}
 
 	// ==================================================================
@@ -139,11 +139,11 @@ class BomTest extends DefaultEnvironment {
 			byte[] synced = readWorkspaceBytes(build, f);
 			assertStartsWith(BOM, synced);
 		}
-		assertArrayEquals(text, readWorkspaceBytes(build, "text.txt"));
-		assertArrayEquals(compressed, readWorkspaceBytes(build, "compressed.txt"));
-		assertArrayEquals(fullfile, readWorkspaceBytes(build, "fullfile.txt"));
-		assertArrayEquals(exec, readWorkspaceBytes(build, "exec.txt"));
-		assertArrayEquals(writable, readWorkspaceBytes(build, "writable.txt"));
+		assertBodyEquals(text, readWorkspaceBytes(build, "text.txt"), "text must be verbatim");
+		assertBodyEquals(compressed, readWorkspaceBytes(build, "compressed.txt"), "text+C must be verbatim");
+		assertBodyEquals(fullfile, readWorkspaceBytes(build, "fullfile.txt"), "text+F must be verbatim");
+		assertBodyEquals(exec, readWorkspaceBytes(build, "exec.txt"), "text+x must be verbatim");
+		assertBodyEquals(writable, readWorkspaceBytes(build, "writable.txt"), "text+w must be verbatim");
 
 		// text+k: BOM preserved AND the keyword expanded.
 		byte[] syncedKeyword = readWorkspaceBytes(build, "keyword.txt");
@@ -157,7 +157,7 @@ class BomTest extends DefaultEnvironment {
 
 		// controls: no cross-contamination from BOM'd neighbours.
 		byte[] syncedPlain = readWorkspaceBytes(build, "plain.txt");
-		assertArrayEquals(plain, syncedPlain);
+		assertBodyEquals(plain, syncedPlain, "plain file must be verbatim");
 		assertFalse(startsWith(BOM, syncedPlain), "plain file must not gain a BOM");
 
 		// BOM-only file must survive as exactly 3 bytes.
@@ -192,12 +192,12 @@ class BomTest extends DefaultEnvironment {
 
 		byte[] syncedLarge = readWorkspaceBytes(build, "large.txt");
 		assertStartsWith(BOM, syncedLarge);
-		assertArrayEquals(large, syncedLarge, "large multibyte BOM file must transfer verbatim");
+		assertBodyEquals(large, syncedLarge, "large multibyte BOM file must transfer verbatim");
 
 		for (int i = 0; i < small.length; i++) {
 			byte[] synced = readWorkspaceBytes(build, "file_" + i + ".txt");
 			assertStartsWith(BOM, synced);
-			assertArrayEquals(small[i], synced, "parallel-synced file " + i + " must be verbatim");
+			assertBodyEquals(small[i], synced, "parallel-synced file " + i + " must be verbatim");
 		}
 	}
 
@@ -215,7 +215,9 @@ class BomTest extends DefaultEnvironment {
 		// Polling: after a clean sync, nothing changed -> must not request a build.
 		FreeStyleProject project = fileSyncProject("bom-idem", depotPath, "none", null, new AutoCleanImpl());
 		FreeStyleBuild built = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(built, "unchanged.txt"), "sync must be verbatim");
+		byte[] synced = readWorkspaceBytes(built, "unchanged.txt");
+		assertStartsWith(BOM, synced);
+		assertBodyEquals(content, synced, "sync must be verbatim");
 
 		PollingResult poll = project.poll(new LogTaskListener(LOGGER, Level.INFO));
 		assertEquals(PollingResult.NO_CHANGES, poll, "an untouched BOM file must not poll dirty");
@@ -284,7 +286,7 @@ class BomTest extends DefaultEnvironment {
 		byte[] unshelved = unshelveAndReadBack("bom-unshelve", depotPath, shelf);
 
 		assertStartsWith(BOM, unshelved);
-		assertArrayEquals(content, unshelved, "unshelved BOM file must be verbatim");
+		assertBodyEquals(content, unshelved, "unshelved BOM file must be verbatim");
 	}
 
 	// ==================================================================
@@ -548,6 +550,32 @@ class BomTest extends DefaultEnvironment {
 
 	private static void assertStartsWith(byte[] prefix, byte[] actual) {
 		assertTrue(startsWith(prefix, actual), "expected content to start with the given byte prefix");
+	}
+
+	/**
+	 * Verbatim comparison for <em>text</em> content, ignoring CR bytes. A text file's line
+	 * endings are translated by the client platform on sync (LF on Linux, CRLF on
+	 * Windows), so a byte-for-byte compare against LF-based expected content would fail on
+	 * a Windows agent even though the file is intact. Stripping CR makes the assertion
+	 * platform-independent while still catching any real body corruption. The BOM itself
+	 * is checked separately via {@link #assertStartsWith}. Do NOT use this for binary
+	 * content (which may legitimately contain 0x0D and is never EOL-translated).
+	 */
+	private static void assertBodyEquals(byte[] expected, byte[] actual, String message) {
+		assertArrayEquals(stripCr(expected), stripCr(actual), message);
+	}
+
+	private static byte[] stripCr(byte[] in) {
+		byte[] out = new byte[in.length];
+		int n = 0;
+		for (byte b : in) {
+			if (b != '\r') {
+				out[n++] = b;
+			}
+		}
+		byte[] trimmed = new byte[n];
+		System.arraycopy(out, 0, trimmed, 0, n);
+		return trimmed;
 	}
 
 	private static int countOccurrences(byte[] haystack, byte[] needle) {
