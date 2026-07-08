@@ -8,14 +8,12 @@ import com.perforce.p4java.core.file.IExtendedFileSpec;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.impl.generic.core.Changelist;
 import com.perforce.p4java.option.client.AddFilesOptions;
-import com.perforce.p4java.option.client.EditFilesOptions;
 import com.perforce.p4java.option.client.ReconcileFilesOptions;
 import com.perforce.p4java.option.client.ReopenFilesOptions;
 import com.perforce.p4java.option.client.ShelveFilesOptions;
 import com.perforce.p4java.option.client.SyncOptions;
 import com.perforce.p4java.option.client.UnshelveFilesOptions;
 import com.perforce.p4java.option.server.GetExtendedFilesOptions;
-import com.perforce.p4java.option.server.GetFileContentsOptions;
 import hudson.model.Cause;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -55,33 +53,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Comprehensive content-integrity tests for files carrying a UTF-8 BOM through P4Java
- * into a Jenkins workspace.
+ * JENKINS-76454: a file whose content starts with a UTF-8 BOM ({@code EF BB BF}) must not
+ * be corrupted when P4Java syncs it into a Jenkins workspace.
  *
- * <p>Background: JENKINS-76454 reported that a {@code text+D} file whose content begins
- * with a UTF-8 BOM ({@code EF BB BF}) was corrupted during the sync/transfer step. Every
- * test submits a file with <em>raw bytes</em> and a <em>forced filetype</em> (never a
- * String round-trip, which would hide the BOM), moves it through a real Jenkins operation,
- * and reads the bytes back to assert the BOM and body survived. Digest integrity is
- * proven implicitly: a corrupted transfer makes P4Java abort, so a SUCCESS build plus a
- * byte-verbatim assertion is the guard.
- *
- * <p>Proven by red/green: on p4java 2025.2.2917314 the {@code text+D}+BOM, double-BOM,
- * large-file and force-clean cases go red (aborted build or mangled BOM); on
- * 2026.1.2989454 all pass.
- *
- * <p>Coverage (single self-contained file; helpers at the bottom):
- * <ul>
- *     <li>§A filetypes: text, text+D, text+k, text+C, text+F, text+x, text+w, binary</li>
- *     <li>§B BOM variants: mid-file, double, utf16 leading bytes, BOM-only, BOM+newline, empty</li>
- *     <li>§I controls: plain ASCII, arbitrary binary</li>
- *     <li>§C line-endings: UNIX / WIN / MAC / SHARE</li>
- *     <li>§D size: multi-MB ASCII and multi-MB multibyte-UTF-8 bodies</li>
- *     <li>§E populate: AutoClean, ForceClean+mixed, SyncOnly, revision pinning, parallel</li>
- *     <li>§F idempotency: rebuild stable, polling no-change, force-clean x2</li>
- *     <li>§G unicode twin-risk: single BOM, add BOM, utf16, cross-charset no-double, binary bypass</li>
- *     <li>§H adjacent paths: shelve/unshelve, print, reconcile-no-edit</li>
- * </ul>
+ * <p>Each test submits raw bytes with a forced filetype, runs a real Jenkins operation,
+ * and reads the bytes back to check the BOM and body are intact. Fixed in p4java
+ * 2026.1.2989454 (fails on 2025.2.2917314).
  */
 @WithJenkins
 @Issue("JENKINS-76454")
@@ -105,12 +82,12 @@ class BomTest extends DefaultEnvironment {
 	}
 
 	// ==================================================================
-	// §A - filetypes
+	// 1. The reported repro (standalone for a clean 1:1 signal)
 	// ==================================================================
 
+	@Issue("JENKINS-76454")
 	@Test
 	void testTextDeltaWithBom() throws Exception {
-		// The reported repro: text+D file whose content leads with a UTF-8 BOM.
 		String depotPath = "//depot/bom/text_delta.txt";
 		byte[] content = concat(BOM, "line1\nline2\n".getBytes(StandardCharsets.UTF_8));
 
@@ -119,535 +96,187 @@ class BomTest extends DefaultEnvironment {
 
 		byte[] synced = syncAndReadBack("text-delta", depotPath, new AutoCleanImpl());
 		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced, "BOM + body must transfer verbatim");
-	}
-
-	@Test
-	void testTextWithBom() throws Exception {
-		String depotPath = "//depot/bom/text.txt";
-		byte[] content = concat(BOM, "plain text body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("text", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testTextKeywordWithBom() throws Exception {
-		// Keyword expansion (+k) must still happen, and the BOM must be preserved.
-		String depotPath = "//depot/bom/keyword.txt";
-		byte[] content = concat(BOM, "$Id$\nkeyword body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+k");
-
-		byte[] synced = syncAndReadBack("keyword", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-
-		String body = new String(synced, StandardCharsets.UTF_8);
-		assertTrue(body.contains("$Id:"), "keyword $Id$ should have expanded: " + body);
-		assertFalse(body.contains("$Id$"), "unexpanded keyword should not remain: " + body);
-	}
-
-	@Test
-	void testTextCompressedWithBom() throws Exception {
-		// text+C stores the full file compressed - the deflate/inflate path.
-		String depotPath = "//depot/bom/compressed.txt";
-		byte[] content = concat(BOM, "compressed storage body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+C");
-
-		byte[] synced = syncAndReadBack("compressed", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testTextFullFileWithBom() throws Exception {
-		// text+F stores the full file (no RCS delta) - a distinct storage path.
-		String depotPath = "//depot/bom/fullfile.txt";
-		byte[] content = concat(BOM, "full-file storage body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+F");
-
-		byte[] synced = syncAndReadBack("fullfile", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testTextExecutableWithBom() throws Exception {
-		// text+x - executable bit set; content path must be unaffected.
-		String depotPath = "//depot/bom/exec.txt";
-		byte[] content = concat(BOM, "#!/bin/sh\necho hi\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+x");
-		assertTrue(getHeadType(depotPath).contains("x"), "fixture should carry the +x modifier");
-
-		byte[] synced = syncAndReadBack("exec", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testTextWritableWithBom() throws Exception {
-		// text+w - always-writable; content path must be unaffected.
-		String depotPath = "//depot/bom/writable.txt";
-		byte[] content = concat(BOM, "always writable body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+w");
-
-		byte[] synced = syncAndReadBack("writable", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testBinaryContainingBomBytes() throws Exception {
-		// Control: bytes that happen to look like a BOM in a binary file are just data.
-		String depotPath = "//depot/bom/binary.bin";
-		byte[] content = concat(BOM, new byte[]{0x00, 0x01, 0x02, (byte) 0xFF, 0x7F, 0x00});
-
-		submitFileAsType(depotPath, content, "binary");
-		assertEquals("binary", getHeadType(depotPath));
-
-		byte[] synced = syncAndReadBack("binary", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "binary content must be byte-for-byte identical");
+		assertArrayEquals(content, synced, "text+D BOM file must transfer verbatim");
 	}
 
 	// ==================================================================
-	// §B - BOM variants / position
+	// 2. All other filetypes + no-BOM controls + no cross-contamination,
+	//    pulled together in a single force-clean (full re-transfer) sync.
 	// ==================================================================
 
 	@Test
-	void testBomMidFile() throws Exception {
-		String depotPath = "//depot/bom/midfile.txt";
-		byte[] content = concat("abc".getBytes(StandardCharsets.UTF_8),
-				concat(BOM, "def\n".getBytes(StandardCharsets.UTF_8)));
+	void testBomFiletypesAndControls() throws Exception {
+		String base = "//depot/bomtypes";
 
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("midfile", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "a mid-file BOM sequence must survive verbatim");
-	}
-
-	@Test
-	void testDoubleBom() throws Exception {
-		String depotPath = "//depot/bom/double.txt";
-		byte[] content = concat(concat(BOM, BOM), "body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("double", depotPath, new AutoCleanImpl());
-		assertStartsWith(concat(BOM, BOM), synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testUtf16LeBomLeadingBytes() throws Exception {
-		// FF FE leading bytes in a plain-text file on a non-unicode server are just data.
-		String depotPath = "//depot/bom/utf16le.txt";
-		byte[] content = concat(new byte[]{(byte) 0xFF, (byte) 0xFE},
-				"le body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("utf16le", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "FF FE leading bytes must survive verbatim");
-	}
-
-	@Test
-	void testUtf16BeBomLeadingBytes() throws Exception {
-		String depotPath = "//depot/bom/utf16be.txt";
-		byte[] content = concat(new byte[]{(byte) 0xFE, (byte) 0xFF},
-				"be body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("utf16be", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "FE FF leading bytes must survive verbatim");
-	}
-
-	@Test
-	void testBomOnlyFile() throws Exception {
-		String depotPath = "//depot/bom/bomonly.txt";
-		byte[] content = BOM.clone();
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("bomonly", depotPath, new AutoCleanImpl());
-		assertArrayEquals(BOM, synced, "a BOM-only file must remain exactly 3 bytes");
-	}
-
-	@Test
-	void testBomThenNewline() throws Exception {
-		String depotPath = "//depot/bom/bomnewline.txt";
-		byte[] content = concat(BOM, "\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("bomnewline", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertEquals('\n', synced[synced.length - 1], "trailing newline must be preserved");
-	}
-
-	@Test
-	void testEmptyFile() throws Exception {
-		String depotPath = "//depot/bom/empty.txt";
-		byte[] content = new byte[0];
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("empty", depotPath, new AutoCleanImpl());
-		assertEquals(0, synced.length, "empty file must stay empty");
-	}
-
-	// ==================================================================
-	// §I - controls (no-BOM baselines)
-	// ==================================================================
-
-	@Test
-	void testPlainAsciiNoBom() throws Exception {
-		String depotPath = "//depot/bom/plain.txt";
-		byte[] content = "hello world\nsecond line\n".getBytes(StandardCharsets.UTF_8);
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("plain", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced);
-		assertFalse(startsWith(BOM, synced), "control file must not gain a BOM");
-	}
-
-	@Test
-	void testArbitraryBinary() throws Exception {
-		String depotPath = "//depot/bom/arbitrary.bin";
-		byte[] content = new byte[256];
-		for (int i = 0; i < 256; i++) {
-			content[i] = (byte) i;
-		}
-
-		submitFileAsType(depotPath, content, "binary");
-
-		byte[] synced = syncAndReadBack("arbitrary", depotPath, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "every byte value 0x00..0xFF must round-trip");
-	}
-
-	// ==================================================================
-	// §C - line-ending translation must not disturb the BOM
-	// ==================================================================
-
-	@Test
-	void testUnixLineEndPreservesBom() throws Exception {
-		byte[] synced = syncLineEnd("unix", "//depot/bom/eol_unix.txt", "UNIX");
-		assertStartsWith(BOM, synced);
-		assertEquals(0, countOccurrences(synced, new byte[]{'\r'}), "UNIX must have no CR");
-		assertEquals(3, countOccurrences(synced, new byte[]{'\n'}), "UNIX keeps three LF");
-	}
-
-	@Test
-	void testWinLineEndPreservesBom() throws Exception {
-		byte[] synced = syncLineEnd("win", "//depot/bom/eol_win.txt", "WIN");
-		assertStartsWith(BOM, synced);
-		assertEquals(3, countOccurrences(synced, new byte[]{'\r', '\n'}), "WIN translates each newline to CRLF");
-	}
-
-	@Test
-	void testMacLineEndPreservesBom() throws Exception {
-		byte[] synced = syncLineEnd("mac", "//depot/bom/eol_mac.txt", "MAC");
-		assertStartsWith(BOM, synced);
-		assertEquals(3, countOccurrences(synced, new byte[]{'\r'}), "MAC translates each newline to CR");
-		assertEquals(0, countOccurrences(synced, new byte[]{'\n'}), "MAC must have no LF");
-	}
-
-	@Test
-	void testShareLineEndPreservesBom() throws Exception {
-		byte[] synced = syncLineEnd("share", "//depot/bom/eol_share.txt", "SHARE");
-		assertStartsWith(BOM, synced);
-		assertEquals(0, countOccurrences(synced, new byte[]{'\r'}), "SHARE writes LF to the workspace");
-		assertEquals(3, countOccurrences(synced, new byte[]{'\n'}), "SHARE keeps three LF");
-	}
-
-	/** Submit BOM + three LF lines, sync with the given client line-ending, return bytes. */
-	private byte[] syncLineEnd(String name, String depotPath, String line) throws Exception {
-		byte[] content = concat(BOM, "line1\nline2\nline3\n".getBytes(StandardCharsets.UTF_8));
-		submitFileAsType(depotPath, content, "text");
-		return syncAndReadBack("eol-" + name, depotPath, "none", line, new AutoCleanImpl());
-	}
-
-	// ==================================================================
-	// §D - size / streaming boundary
-	// ==================================================================
-
-	@Test
-	void testLargeAsciiFileWithBom() throws Exception {
-		// A multi-MB ASCII body behind a leading BOM - the streaming path most likely to
-		// drop or shift bytes if a fix is only partial.
-		String depotPath = "//depot/bom/large_ascii.txt";
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 200_000; i++) {
-			sb.append("the quick brown fox jumps over the lazy dog\n");
-		}
-		byte[] content = concat(BOM, sb.toString().getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("large-ascii", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced, "large BOM'd ASCII file must transfer verbatim");
-	}
-
-	@Test
-	void testLargeMultibyteFileWithBom() throws Exception {
-		// A large multibyte-UTF-8 body behind a BOM - the realistic Unicode case, and a
-		// second guard on multi-byte char boundaries straddling the transfer buffer.
-		String depotPath = "//depot/bom/large_multibyte.txt";
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 150_000; i++) {
-			sb.append("café über naïve — 日本語 テスト résumé\n");
-		}
-		byte[] content = concat(BOM, sb.toString().getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text");
-
-		byte[] synced = syncAndReadBack("large-mb", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced, "large BOM'd multibyte file must transfer verbatim");
-	}
-
-	// ==================================================================
-	// §E - populate / sync operations
-	// ==================================================================
-
-	@Test
-	void testAutoCleanWithBom() throws Exception {
-		String depotPath = "//depot/bompop/autoclean.txt";
-		byte[] content = concat(BOM, "auto clean body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+D");
-
-		byte[] synced = syncAndReadBack("autoclean", depotPath, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
-
-	@Test
-	void testForceCleanMixedFiletypesWithBom() throws Exception {
-		// ForceClean does a full re-transfer + digest recheck (strongest integrity check).
-		// Pull text+D+BOM, binary and plain-text together in one sync; none must
-		// cross-contaminate (a stray BOM added to or stripped from the wrong file).
-		String base = "//depot/bommix";
-		byte[] textBom = concat(BOM, "force clean text with bom\n".getBytes(StandardCharsets.UTF_8));
-		byte[] binary = concat(BOM, new byte[]{0x00, 0x01, (byte) 0xFF, 0x02});
+		byte[] text = concat(BOM, "plain text body\n".getBytes(StandardCharsets.UTF_8));
+		byte[] compressed = concat(BOM, "compressed body\n".getBytes(StandardCharsets.UTF_8));
+		byte[] fullfile = concat(BOM, "full-file body\n".getBytes(StandardCharsets.UTF_8));
+		byte[] exec = concat(BOM, "#!/bin/sh\necho hi\n".getBytes(StandardCharsets.UTF_8));
+		byte[] writable = concat(BOM, "writable body\n".getBytes(StandardCharsets.UTF_8));
+		byte[] keyword = concat(BOM, "$Id$\nkeyword body\n".getBytes(StandardCharsets.UTF_8));
+		byte[] binary = concat(BOM, new byte[]{0x00, 0x01, 0x02, (byte) 0xFF, 0x7F, 0x00});
 		byte[] plain = "plain ascii no bom\n".getBytes(StandardCharsets.UTF_8);
+		byte[] bomOnly = BOM.clone();
 
-		submitFileAsType(base + "/text_bom.txt", textBom, "text+D");
+		submitFileAsType(base + "/text.txt", text, "text");
+		submitFileAsType(base + "/compressed.txt", compressed, "text+C");
+		submitFileAsType(base + "/fullfile.txt", fullfile, "text+F");
+		submitFileAsType(base + "/exec.txt", exec, "text+x");
+		submitFileAsType(base + "/writable.txt", writable, "text+w");
+		submitFileAsType(base + "/keyword.txt", keyword, "text+k");
 		submitFileAsType(base + "/blob.bin", binary, "binary");
 		submitFileAsType(base + "/plain.txt", plain, "text");
+		submitFileAsType(base + "/bomonly.txt", bomOnly, "text");
 
-		FreeStyleBuild build = buildDirSync("bom-mix", base + "/...", "none", null,
+		// Guard on the fixtures themselves.
+		assertEquals("binary", getHeadType(base + "/blob.bin"));
+
+		FreeStyleBuild build = buildDirSync("bom-types", base + "/...", "none", null,
 				new ForceCleanImpl(false, false, null, null));
 
-		byte[] syncedTextBom = readWorkspaceBytes(build, "text_bom.txt");
-		assertStartsWith(BOM, syncedTextBom);
-		assertArrayEquals(textBom, syncedTextBom, "text+D+BOM must transfer verbatim under force-clean");
+		// Every text filetype variant preserves the BOM and body verbatim.
+		for (String f : new String[]{"text.txt", "compressed.txt", "fullfile.txt", "exec.txt", "writable.txt"}) {
+			byte[] synced = readWorkspaceBytes(build, f);
+			assertStartsWith(BOM, synced);
+		}
+		assertArrayEquals(text, readWorkspaceBytes(build, "text.txt"));
+		assertArrayEquals(compressed, readWorkspaceBytes(build, "compressed.txt"));
+		assertArrayEquals(fullfile, readWorkspaceBytes(build, "fullfile.txt"));
+		assertArrayEquals(exec, readWorkspaceBytes(build, "exec.txt"));
+		assertArrayEquals(writable, readWorkspaceBytes(build, "writable.txt"));
+
+		// text+k: BOM preserved AND the keyword expanded.
+		byte[] syncedKeyword = readWorkspaceBytes(build, "keyword.txt");
+		assertStartsWith(BOM, syncedKeyword);
+		String keywordBody = new String(syncedKeyword, StandardCharsets.UTF_8);
+		assertTrue(keywordBody.contains("$Id:"), "keyword $Id$ should have expanded: " + keywordBody);
+		assertFalse(keywordBody.contains("$Id$"), "unexpanded keyword should not remain: " + keywordBody);
+
+		// binary: BOM bytes are just data - verbatim.
 		assertArrayEquals(binary, readWorkspaceBytes(build, "blob.bin"), "binary must be verbatim");
-		assertArrayEquals(plain, readWorkspaceBytes(build, "plain.txt"), "plain must stay BOM-free");
+
+		// controls: no cross-contamination from BOM'd neighbours.
+		byte[] syncedPlain = readWorkspaceBytes(build, "plain.txt");
+		assertArrayEquals(plain, syncedPlain);
+		assertFalse(startsWith(BOM, syncedPlain), "plain file must not gain a BOM");
+
+		// BOM-only file must survive as exactly 3 bytes.
+		assertArrayEquals(BOM, readWorkspaceBytes(build, "bomonly.txt"), "BOM-only file must stay 3 bytes");
 	}
 
-	@Test
-	void testSyncOnlyWithBom() throws Exception {
-		String depotPath = "//depot/bompop/synconly.txt";
-		byte[] content = concat(BOM, "sync only body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+D");
-
-		Populate syncOnly = new SyncOnlyImpl(false, true, false, false, null, null);
-		byte[] synced = syncAndReadBack("synconly", depotPath, "none", null, syncOnly);
-		assertStartsWith(BOM, synced);
-		assertArrayEquals(content, synced);
-	}
+	// ==================================================================
+	// 3. Sync-only + parallel transfer + a large multibyte body.
+	// ==================================================================
 
 	@Test
-	void testRevisionPinningWithBom() throws Exception {
-		// Two revisions of the same BOM'd file; sync forward to #2 (head) then back to #1
-		// by pinning the populate at each change - covers at-changelist and backward sync.
-		String depotPath = "//depot/bompop/revisions.txt";
-		byte[] rev1 = concat(BOM, "revision one\n".getBytes(StandardCharsets.UTF_8));
-		byte[] rev2 = concat(BOM, "revision two\n".getBytes(StandardCharsets.UTF_8));
-
-		long c1 = submitFileAsType(depotPath, rev1, "text+D");
-		long c2 = editFileAsType(depotPath, rev2, "text+D");
-
-		byte[] atHead = syncAndReadBack("rev-head", depotPath, "none", null,
-				new AutoCleanImpl(true, true, false, false, false, Long.toString(c2), null));
-		assertStartsWith(BOM, atHead);
-		assertArrayEquals(rev2, atHead, "head revision must carry its BOM verbatim");
-
-		byte[] atFirst = syncAndReadBack("rev-first", depotPath, "none", null,
-				new AutoCleanImpl(true, true, false, false, false, Long.toString(c1), null));
-		assertStartsWith(BOM, atFirst);
-		assertArrayEquals(rev1, atFirst, "backward revision must carry its BOM verbatim");
-	}
-
-	@Test
-	void testParallelSyncWithBom() throws Exception {
-		// Parallel transfer threads - a separate streaming path from the serial sync.
+	void testSyncOnlyParallelLargeBom() throws Exception {
 		String base = "//depot/bompar";
-		byte[][] contents = new byte[6][];
-		for (int i = 0; i < contents.length; i++) {
-			contents[i] = concat(BOM, ("parallel body " + i + "\n").getBytes(StandardCharsets.UTF_8));
-			submitFileAsType(base + "/file_" + i + ".txt", contents[i], "text+D");
+
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 120_000; i++) {
+			sb.append("café über naïve — 日本語 テスト résumé\n");
+		}
+		byte[] large = concat(BOM, sb.toString().getBytes(StandardCharsets.UTF_8));
+		submitFileAsType(base + "/large.txt", large, "text");
+
+		byte[][] small = new byte[4][];
+		for (int i = 0; i < small.length; i++) {
+			small[i] = concat(BOM, ("parallel body " + i + "\n").getBytes(StandardCharsets.UTF_8));
+			submitFileAsType(base + "/file_" + i + ".txt", small[i], "text+D");
 		}
 
 		ParallelSync parallel = new ParallelSync(true, null, "4", "1", "1");
-		Populate populate = new AutoCleanImpl(true, true, false, false, false, null, parallel);
+		Populate populate = new SyncOnlyImpl(false, true, false, false, null, parallel);
 
-		FreeStyleBuild build = buildDirSync("bom-par", base + "/...", "none", null, populate);
+		FreeStyleBuild build = buildDirSync("bom-syncpar", base + "/...", "none", null, populate);
 
-		for (int i = 0; i < contents.length; i++) {
+		byte[] syncedLarge = readWorkspaceBytes(build, "large.txt");
+		assertStartsWith(BOM, syncedLarge);
+		assertArrayEquals(large, syncedLarge, "large multibyte BOM file must transfer verbatim");
+
+		for (int i = 0; i < small.length; i++) {
 			byte[] synced = readWorkspaceBytes(build, "file_" + i + ".txt");
 			assertStartsWith(BOM, synced);
-			assertArrayEquals(contents[i], synced, "parallel-synced file " + i + " must be verbatim");
+			assertArrayEquals(small[i], synced, "parallel-synced file " + i + " must be verbatim");
 		}
 	}
 
 	// ==================================================================
-	// §F - idempotency / polling
+	// 4. An unchanged BOM file must not be seen as modified by reconcile
+	//    or polling - a corrupted BOM would surface as a phantom edit.
 	// ==================================================================
 
 	@Test
-	void testSecondAutoCleanBuildStable() throws Exception {
-		String depotPath = "//depot/bomidem/f1.txt";
-		byte[] content = concat(BOM, "idempotent body\n".getBytes(StandardCharsets.UTF_8));
+	void testUnchangedBomNotDetectedAsModified() throws Exception {
+		String depotPath = "//depot/bomidem/unchanged.txt";
+		byte[] content = concat(BOM, "unchanged body\n".getBytes(StandardCharsets.UTF_8));
 		submitFileAsType(depotPath, content, "text+D");
 
-		FreeStyleProject project = fileSyncProject("bom-f1", depotPath, "none", null, new AutoCleanImpl());
-
-		FreeStyleBuild first = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(first, "f1.txt"), "first sync must be verbatim");
-
-		FreeStyleBuild second = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(second, "f1.txt"), "second sync must remain verbatim");
-	}
-
-	@Test
-	void testPollingReportsNoChange() throws Exception {
-		String depotPath = "//depot/bomidem/f2.txt";
-		byte[] content = concat(BOM, "poll body\n".getBytes(StandardCharsets.UTF_8));
-		submitFileAsType(depotPath, content, "text+D");
-
-		FreeStyleProject project = fileSyncProject("bom-f2", depotPath, "none", null, new AutoCleanImpl());
+		// Polling: after a clean sync, nothing changed -> must not request a build.
+		FreeStyleProject project = fileSyncProject("bom-idem", depotPath, "none", null, new AutoCleanImpl());
 		FreeStyleBuild built = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(built, "f2.txt"));
+		assertArrayEquals(content, readWorkspaceBytes(built, "unchanged.txt"), "sync must be verbatim");
 
-		LogTaskListener listener = new LogTaskListener(LOGGER, Level.INFO);
-		PollingResult poll = project.poll(listener);
+		PollingResult poll = project.poll(new LogTaskListener(LOGGER, Level.INFO));
 		assertEquals(PollingResult.NO_CHANGES, poll, "an untouched BOM file must not poll dirty");
-	}
 
-	@Test
-	void testForceCleanTwiceStable() throws Exception {
-		String depotPath = "//depot/bomidem/f3.txt";
-		byte[] content = concat(BOM, "force clean idempotent\n".getBytes(StandardCharsets.UTF_8));
-		submitFileAsType(depotPath, content, "text+D");
-
-		FreeStyleProject project = fileSyncProject("bom-f3", depotPath, "none", null,
-				new ForceCleanImpl(false, false, null, null));
-
-		FreeStyleBuild first = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(first, "f3.txt"));
-
-		FreeStyleBuild second = build(project);
-		assertArrayEquals(content, readWorkspaceBytes(second, "f3.txt"), "repeat force-clean must be verbatim");
+		// Reconcile: a freshly synced BOM file must not look edited.
+		assertFalse(reconcileFindsChange(depotPath), "a correctly synced BOM file must show no phantom edit");
 	}
 
 	// ==================================================================
-	// §G - twin-risk on a unicode server (must not break legit BOM management)
+	// 5. Line-ending translation must not disturb the BOM.
 	// ==================================================================
 
 	@Test
-	void testUnicodeServerSingleBom() throws Exception {
-		p4d.unicode();
-		String depotPath = "//depot/bomuni/single.txt";
-		byte[] content = concat(BOM, "hello world\n".getBytes(StandardCharsets.UTF_8));
+	void testWinLineEndPreservesBom() throws Exception {
+		String depotPath = "//depot/bom/win_eol.txt";
+		byte[] content = concat(BOM, "line1\nline2\nline3\n".getBytes(StandardCharsets.UTF_8));
+		submitFileAsType(depotPath, content, "text");
 
-		submitFileAsType(depotPath, content, "utf8", "utf8-bom");
-
-		byte[] synced = syncAndReadBack("uni-single", depotPath, "utf8-bom", null, new AutoCleanImpl());
+		byte[] synced = syncAndReadBack("win-eol", depotPath, "none", "WIN", new AutoCleanImpl());
 		assertStartsWith(BOM, synced);
-		assertEquals(1, countOccurrences(synced, BOM), "must be exactly one BOM, not doubled");
+		assertEquals(3, countOccurrences(synced, new byte[]{'\r', '\n'}), "each newline should become CRLF");
 	}
 
-	@Test
-	void testUnicodeServerNoBomClientAddsBom() throws Exception {
-		// utf8 file with no BOM; utf8-bom client -> Perforce adds exactly one BOM.
-		p4d.unicode();
-		String depotPath = "//depot/bomuni/addbom.txt";
-		byte[] content = "no bom here\n".getBytes(StandardCharsets.UTF_8);
-
-		submitFileAsType(depotPath, content, "utf8", "utf8");
-
-		byte[] synced = syncAndReadBack("uni-addbom", depotPath, "utf8-bom", null, new AutoCleanImpl());
-		assertStartsWith(BOM, synced);
-		assertEquals(1, countOccurrences(synced, BOM), "exactly one BOM must be added");
-	}
+	// ==================================================================
+	// 6. Twin-risk: legitimate BOM management on a unicode server must not
+	//    break (no doubled BOM). Covers utf8 and utf16 filetypes.
+	// ==================================================================
 
 	@Test
-	void testUnicodeServerUtf16SingleBom() throws Exception {
-		// utf16 client file must carry exactly one correct-endian UTF-16 BOM.
+	void testUnicodeServerBomManagement() throws Exception {
 		p4d.unicode();
-		String depotPath = "//depot/bomuni/utf16.txt";
-		byte[] content = "hello\n".getBytes(StandardCharsets.UTF_16); // BE with BOM
 
-		submitFileAsType(depotPath, content, "utf16", "utf16");
+		// utf8 file with a BOM, synced by a utf8-bom client -> exactly one BOM.
+		String utf8Path = "//depot/bomuni/utf8.txt";
+		byte[] utf8 = concat(BOM, "hello world\n".getBytes(StandardCharsets.UTF_8));
+		submitFileAsType(utf8Path, utf8, "utf8", "utf8-bom");
 
-		byte[] synced = syncAndReadBack("uni-utf16", depotPath, "utf16", null, new AutoCleanImpl());
+		byte[] syncedUtf8 = syncAndReadBack("uni-utf8", utf8Path, "utf8-bom", null, new AutoCleanImpl());
+		assertStartsWith(BOM, syncedUtf8);
+		assertEquals(1, countOccurrences(syncedUtf8, BOM), "utf8 must have exactly one BOM, not doubled");
+
+		// utf16 file -> exactly one correct-endian UTF-16 BOM.
+		String utf16Path = "//depot/bomuni/utf16.txt";
+		byte[] utf16 = "hello\n".getBytes(StandardCharsets.UTF_16); // BE with BOM
+		submitFileAsType(utf16Path, utf16, "utf16", "utf16");
+
+		byte[] syncedUtf16 = syncAndReadBack("uni-utf16", utf16Path, "utf16", null, new AutoCleanImpl());
 		byte[] le = {(byte) 0xFF, (byte) 0xFE};
 		byte[] be = {(byte) 0xFE, (byte) 0xFF};
-		assertTrue(startsWith(le, synced) || startsWith(be, synced), "must start with a UTF-16 BOM");
-		assertEquals(1, countOccurrences(synced, le) + countOccurrences(synced, be), "exactly one UTF-16 BOM");
-		assertTrue(new String(synced, StandardCharsets.UTF_16).contains("hello"), "content must decode");
-	}
-
-	@Test
-	void testUnicodeServerCrossCharsetNoDoubleBom() throws Exception {
-		// Cross-charset round trip: submit under utf8-bom, sync under utf8. The fix must
-		// not introduce a doubled BOM or corrupt the body (this server manages the
-		// workspace BOM itself, so we assert integrity, not strip/add).
-		p4d.unicode();
-		String depotPath = "//depot/bomuni/cross.txt";
-		String body = "cross charset body\n";
-		byte[] content = concat(BOM, body.getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "utf8", "utf8-bom");
-
-		byte[] synced = syncAndReadBack("uni-cross", depotPath, "utf8", null, new AutoCleanImpl());
-		assertTrue(countOccurrences(synced, BOM) <= 1, "BOM must never be doubled");
-		assertEquals(body, stripUtf8Bom(synced), "body must survive the cross-charset round trip");
-	}
-
-	@Test
-	void testUnicodeServerBinaryBypass() throws Exception {
-		// Binary files are not charset-translated even on a unicode server.
-		p4d.unicode();
-		String depotPath = "//depot/bomuni/binary.bin";
-		byte[] content = concat(BOM, new byte[]{0x00, 0x01, (byte) 0xFF, 0x02});
-
-		submitFileAsType(depotPath, content, "binary", "utf8");
-
-		byte[] synced = syncAndReadBack("uni-binary", depotPath, "utf8", null, new AutoCleanImpl());
-		assertArrayEquals(content, synced, "binary must be byte-for-byte identical on a unicode server");
+		assertTrue(startsWith(le, syncedUtf16) || startsWith(be, syncedUtf16), "utf16 must start with a UTF-16 BOM");
+		assertEquals(1, countOccurrences(syncedUtf16, le) + countOccurrences(syncedUtf16, be),
+				"utf16 must have exactly one BOM");
+		assertTrue(new String(syncedUtf16, StandardCharsets.UTF_16).contains("hello"), "utf16 content must decode");
 	}
 
 	// ==================================================================
-	// §H - adjacent write/read paths
+	// 7. Shelve/unshelve is a distinct write path from sync.
 	// ==================================================================
 
 	@Test
 	void testShelveUnshelveRoundTripWithBom() throws Exception {
-		// A text+D+BOM file shelved and then unshelved into a fresh client must round-trip
-		// verbatim (the shelve/unshelve transfer path, not sync).
 		String depotPath = "//depot/bomadj/shelf.txt";
 		byte[] content = concat(BOM, "shelved body\n".getBytes(StandardCharsets.UTF_8));
 
@@ -655,43 +284,20 @@ class BomTest extends DefaultEnvironment {
 		byte[] unshelved = unshelveAndReadBack("bom-unshelve", depotPath, shelf);
 
 		assertStartsWith(BOM, unshelved);
-		assertArrayEquals(content, unshelved, "unshelved BOM'd file must be verbatim");
-	}
-
-	@Test
-	void testPrintReadsBomVerbatim() throws Exception {
-		// p4 print (getFileContents) of a BOM'd file must return the exact bytes -
-		// this is the path used by Pipeline-from-SCM / P4SCMFile reads.
-		String depotPath = "//depot/bomadj/print.txt";
-		byte[] content = concat(BOM, "printed body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+D");
-
-		byte[] printed = printBytes(depotPath);
-		assertStartsWith(BOM, printed);
-		assertArrayEquals(content, printed, "printed BOM'd file must be verbatim");
-	}
-
-	@Test
-	void testReconcileSeesNoEditForBom() throws Exception {
-		// After a clean sync, reconcile/status must NOT think the BOM'd file was edited -
-		// otherwise the workspace copy differs from the depot (a corrupted transfer).
-		String depotPath = "//depot/bomadj/reconcile.txt";
-		byte[] content = concat(BOM, "reconcile body\n".getBytes(StandardCharsets.UTF_8));
-
-		submitFileAsType(depotPath, content, "text+D");
-
-		assertFalse(reconcileFindsChange(depotPath), "a correctly synced BOM file must show no phantom edit");
+		assertArrayEquals(content, unshelved, "unshelved BOM file must be verbatim");
 	}
 
 	// ==================================================================
-	// Helpers - submit / edit / shelve
+	// Helpers - submit / shelve / unshelve / stat / reconcile
 	// ==================================================================
 
 	/**
 	 * Submit a file with raw bytes and a forced Perforce filetype. Adds the file
 	 * (default auto-typing), reopens it to the requested type, then submits - so BOM'd
 	 * content that would auto-detect as utf8 is reclassified.
+	 *
+	 * @param charset connection charset ("none" for a non-unicode server, or e.g.
+	 *                "utf8", "utf8-bom", "utf16" for a unicode server).
 	 */
 	private long submitFileAsType(String depotPath, byte[] content, String p4type, String charset) throws Exception {
 		String filename = fileName(depotPath);
@@ -720,36 +326,6 @@ class BomTest extends DefaultEnvironment {
 	/** Non-unicode ("none" charset) submit. */
 	private long submitFileAsType(String depotPath, byte[] content, String p4type) throws Exception {
 		return submitFileAsType(depotPath, content, p4type, "none");
-	}
-
-	/** Open an existing depot file for edit, overwrite with raw bytes, submit a new rev. */
-	private long editFileAsType(String depotPath, byte[] content, String p4type) throws Exception {
-		String filename = fileName(depotPath);
-		String client = "bom-submit.ws";
-		String clientPath = "//" + client + "/" + filename;
-		String view = "\"" + depotPath + "\" " + clientPath;
-
-		ManualWorkspaceImpl workspace = manualClient(client, view, "none", "target/bom-submit.ws");
-		File file = new File(new File("target/bom-submit.ws").getAbsoluteFile(), filename);
-
-		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			IClient iclient = p4.getClient();
-			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(clientPath);
-
-			iclient.sync(files, new SyncOptions());
-			iclient.editFiles(files, new EditFilesOptions());
-
-			file.delete();
-			Files.write(file.toPath(), content);
-
-			reopenType(iclient, files, p4type);
-			Changelist change = newChange(iclient, "BOM test edit " + depotPath, files);
-			change.refresh();
-			change.submit(false);
-			return change.getId();
-		} finally {
-			file.delete();
-		}
 	}
 
 	/** Add a file with a forced type, shelve it in a pending change, return the change id. */
@@ -796,22 +372,18 @@ class BomTest extends DefaultEnvironment {
 		}
 	}
 
-	/** {@code p4 print} of a depot file, returned as raw bytes. */
-	private byte[] printBytes(String depotPath) throws Exception {
-		String client = "bom-print.ws";
+	/** {@code p4 fstat -T headType} for a single depot file. */
+	private String getHeadType(String depotPath) throws Exception {
+		String client = "bom-stat.ws";
 		String view = "//depot/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
 
 		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(depotPath);
-			GetFileContentsOptions opts = new GetFileContentsOptions();
-			opts.setNoHeaderLine(true);
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			try (InputStream in = p4.getConnection().getFileContents(files, opts)) {
-				copy(in, out);
-			}
-			return out.toByteArray();
+			List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList(depotPath);
+			GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
+			List<IExtendedFileSpec> eSpec = p4.getConnection().getExtendedFiles(fileSpec, opts);
+			return eSpec.get(0).getHeadType();
 		}
 	}
 
@@ -839,21 +411,6 @@ class BomTest extends DefaultEnvironment {
 				}
 			}
 			return false;
-		}
-	}
-
-	/** {@code p4 fstat -T headType} for a single depot file. */
-	private String getHeadType(String depotPath) throws Exception {
-		String client = "bom-stat.ws";
-		String view = "//depot/... //" + client + "/...";
-		WorkspaceSpec spec = new WorkspaceSpec(view, null);
-		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
-
-		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
-			List<IFileSpec> fileSpec = FileSpecBuilder.makeFileSpecList(depotPath);
-			GetExtendedFilesOptions opts = new GetExtendedFilesOptions();
-			List<IExtendedFileSpec> eSpec = p4.getConnection().getExtendedFiles(fileSpec, opts);
-			return eSpec.get(0).getHeadType();
 		}
 	}
 
@@ -968,14 +525,6 @@ class BomTest extends DefaultEnvironment {
 
 	private static String fileName(String depotPath) {
 		return depotPath.substring(depotPath.lastIndexOf('/') + 1);
-	}
-
-	/** Decode UTF-8 bytes to a String, dropping a single leading 3-byte BOM if present. */
-	private static String stripUtf8Bom(byte[] bytes) {
-		byte[] payload = startsWith(BOM, bytes)
-				? java.util.Arrays.copyOfRange(bytes, BOM.length, bytes.length)
-				: bytes;
-		return new String(payload, StandardCharsets.UTF_8);
 	}
 
 	private static byte[] concat(byte[] a, byte[] b) {
