@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_CREATED;
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static jakarta.servlet.http.HttpServletResponse.SC_CREATED;
 
 @Symbol("swarm_projects")
 @Extension
