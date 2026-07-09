@@ -30,22 +30,18 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 	private void push(MarkupText text) {
 		text.hide(0, COMMAND.length());
 
-		String head = "<span class=\"titleDiv\">";
+		String head = "<span class=\"p4-titleDiv\">";
 		text.addMarkup(COMMAND.length(), head);
 
 		StringBuffer sb = new StringBuffer();
-		sb.append(" <a class=\"linkDiv\" id=\"");
-		sb.append("p4title" + id);
-		sb.append("\" href=\"javascript:toggle('");
+		sb.append(" <a class=\"p4-linkDiv\" href=\"#\" data-content-id=\"");
 		sb.append("p4content" + id);
-		sb.append("','");
-		sb.append("p4title" + id);
-		sb.append("');\">");
+		sb.append("\">");
 		sb.append("+");
 		sb.append("</a>");
 		sb.append("</span>");
 
-		sb.append("<div class=\"contentDiv\">");
+		sb.append("<div class=\"p4-contentDiv\">");
 		sb.append("<div id=\"");
 		sb.append("p4content" + id);
 		sb.append("\" style=\"display: none;\">");
