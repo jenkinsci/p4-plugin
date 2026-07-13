@@ -91,11 +91,12 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 				if (p4.isClient(client)) {
 					// revert any pending files, before deleting client
 					p4.revertAllFiles(false);
-					p4.log("P4 Task: remove client: " + client);
 					logger.info("P4: remove client: " + client);
 					if (forceDeleteClient) {
+						p4.log("P4 Task: force remove client: " + client);
 						p4.forceDeleteClient(client);
 					} else {
+						p4.log("P4 Task: remove client: " + client);
 						p4.deleteClient(client);
 					}
 				} else {
