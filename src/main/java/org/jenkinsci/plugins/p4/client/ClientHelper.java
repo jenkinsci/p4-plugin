@@ -448,9 +448,8 @@ public class ClientHelper extends ConnectionHelper {
 	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
 	 *
 	 * <p>Extracted from {@link #syncFiles} (its only caller) so the -p/-f/-q flag
-	 * matrix can be asserted in a fast, deterministic unit test without a live
-	 * server or replica — the P4JENKINS-184 regression lived entirely in this flag
-	 * translation.
+	 * matrix — in particular the mutual exclusivity of -f and -p (P4JENKINS-184) —
+	 * can be asserted in a fast, deterministic unit test without a live server.
 	 *
 	 * @param populate Populate options
 	 * @return SyncOptions with the equivalent -p/-f/-q flags
@@ -461,12 +460,12 @@ public class ClientHelper extends ConnectionHelper {
 		// setServerBypass (-p no have list)
 		syncOpts.setServerBypass(!populate.isHave());
 
-		// setForceUpdate (-f applied independently of the -p/have flag). Coupling
-		// -f to have meant a force populate that also used -p (have=false) silently
-		// dropped the force flag; against a read-only replica the server then treats
-		// files as 'already synced' and bypasses archive transfer, leaving the
-		// workspace empty while the console reports files 'added' (P4JENKINS-184).
-		syncOpts.setForceUpdate(populate.isForce());
+		// setForceUpdate (-f) only when -p is NOT used. 'p4 sync' rejects -f and -p
+		// together (usage: sync [ -K -n -N -p -q ]), so a populate that bypasses the
+		// have list (have=false) must not also force. When -p is used the server
+		// already re-fetches content for files missing from the client workspace, so
+		// -f is redundant there anyway (P4JENKINS-184).
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
 		return syncOpts;

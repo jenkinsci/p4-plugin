@@ -11,21 +11,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link ClientHelper#buildSyncOptions} covering the -p/-f flag
- * matrix (P4JENKINS-184). A force populate that also uses -p (have=false) must
- * still set the force flag, otherwise a read-only replica bypasses archive
- * transfer and leaves the workspace empty.
+ * matrix (P4JENKINS-184). 'p4 sync' rejects -f and -p together, so a force
+ * populate that also bypasses the have list (have=false) must emit -p only; the
+ * force flag is dropped to keep the command valid.
  */
 class SyncOptionsForceBypassTest {
 
 	@Test
-	void forceCleanWithBypassKeepsForceFlag() {
-		// ForceCleanImpl(have=false) -> force=true, have=false, i.e. sync -p -f
+	void forceCleanWithBypassEmitsBypassWithoutForce() {
+		// ForceCleanImpl(have=false) -> force=true, have=false. -f and -p cannot be
+		// combined, so the result must be -p only (no -f), otherwise the server
+		// rejects the sync command.
 		ForceCleanImpl populate = new ForceCleanImpl(false, false, null, null);
 
 		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
 
 		assertTrue(opts.isServerBypass(), "-p should be set when have=false");
-		assertTrue(opts.isForceUpdate(), "-f must be set even when -p (have=false) is used");
+		assertFalse(opts.isForceUpdate(), "-f must not be combined with -p (invalid p4 sync command)");
 	}
 
 	@Test

@@ -25,15 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * P4JENKINS-184: a force populate that also uses {@code -p} (serverBypass,
- * have=false) must still transfer archive content, so the workspace is populated
- * rather than left empty when the server believes files are 'already synced'.
+ * P4JENKINS-184: a force-clean populate that bypasses the have list ({@code -p},
+ * have=false) must write every synced file to disk rather than leaving an empty
+ * workspace while reporting files 'added'.
  *
- * <p>The regression coupled {@code -f} to the have flag, so a {@code ForceCleanImpl}
- * with have=false silently dropped {@code -f}; against a read-only replica this left
- * an empty workspace while reporting files 'added'. The harness runs a single p4d
- * (not a replica), so this asserts the on-disk outcome directly: every submitted
- * file must be present after a force+bypass sync (AC-1, AC-4).
+ * <p>({@code p4 sync} rejects {@code -f} and {@code -p} together, so this path
+ * uses {@code -p} alone — the flag translation is unit-tested in
+ * {@link SyncOptionsForceBypassTest}.) The harness runs a single p4d (not a
+ * replica), so this asserts the on-disk outcome directly: every submitted file
+ * must be present after the populate sync (AC-1, AC-4).
  */
 @WithJenkins
 @Issue("P4JENKINS-184")
@@ -61,9 +61,8 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 			submitFile(jenkins, base + "/file" + i + ".txt", "content " + i);
 		}
 
-		// ForceCleanImpl(have=false) -> sync -p -f: bypass the have-table but still
-		// force archive transfer. Before the fix -f was dropped and the workspace
-		// could come back empty.
+		// ForceCleanImpl(have=false) -> sync -p: bypass the have list. The workspace
+		// must still be fully populated on disk, not left empty.
 		FreeStyleBuild build = buildDirSync("force-bypass", base + "/...", new ForceCleanImpl(false, false, null, null));
 
 		FilePath workspace = build.getWorkspace();
