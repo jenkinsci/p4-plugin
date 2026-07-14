@@ -447,6 +447,11 @@ public class ClientHelper extends ConnectionHelper {
 	/**
 	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
 	 *
+	 * <p>Extracted from {@link #syncFiles} (its only caller) so the -p/-f/-q flag
+	 * matrix can be asserted in a fast, deterministic unit test without a live
+	 * server or replica — the P4JENKINS-184 regression lived entirely in this flag
+	 * translation.
+	 *
 	 * @param populate Populate options
 	 * @return SyncOptions with the equivalent -p/-f/-q flags
 	 */

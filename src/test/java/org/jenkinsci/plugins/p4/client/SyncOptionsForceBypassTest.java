@@ -42,7 +42,7 @@ class SyncOptionsForceBypassTest {
 	@Test
 	void autoCleanIsNeitherForcedNorBypassed() {
 		// AutoCleanImpl -> force=false, have=true, i.e. plain sync
-		AutoCleanImpl populate = new AutoCleanImpl(true, true, true, false, false, null, null);
+		AutoCleanImpl populate = autoClean(false);
 
 		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
 
@@ -63,10 +63,22 @@ class SyncOptionsForceBypassTest {
 
 	@Test
 	void quietFlagPropagates() {
-		AutoCleanImpl quiet = new AutoCleanImpl(true, true, true, false, true, null, null);
+		AutoCleanImpl quiet = autoClean(true);
 
 		SyncOptions opts = ClientHelper.buildSyncOptions(quiet);
 
 		assertTrue(opts.isQuiet(), "-q should reflect the populate quiet flag");
+	}
+
+	/**
+	 * Build an {@link AutoCleanImpl} varying only the {@code quiet} flag. AutoCleanImpl's
+	 * @DataBoundConstructor takes (replace, delete, tidy, modtime, quiet, pin, parallel);
+	 * only the have/force/quiet flags feed {@link ClientHelper#buildSyncOptions}, and
+	 * AutoClean always fixes have=true/force=false internally, so the first four booleans
+	 * are irrelevant here and pinned to sensible defaults to keep the tests focused on
+	 * the flag under test.
+	 */
+	private static AutoCleanImpl autoClean(boolean quiet) {
+		return new AutoCleanImpl(true, true, true, false, quiet, null, null);
 	}
 }
