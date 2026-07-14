@@ -25,19 +25,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * P4JENKINS-184: a force-clean populate that bypasses the have list ({@code -p},
- * have=false) must write every synced file to disk rather than leaving an empty
- * workspace while reporting files 'added'.
+ * P4JENKINS-184: a force-clean populate that also requests a have-list bypass
+ * ({@code ForceCleanImpl(have=false)}) must write every synced file to disk rather
+ * than leaving an empty workspace while reporting files 'added'.
  *
- * <p>({@code p4 sync} rejects {@code -f} and {@code -p} together, so this path
- * uses {@code -p} alone — the flag translation is unit-tested in
- * {@link SyncOptionsForceBypassTest}.) The harness runs a single p4d (not a
+ * <p>Because {@code p4 sync} rejects {@code -f} and {@code -p} together, the fix
+ * makes force win: it emits {@code -f} (not {@code -p}), so content is transferred
+ * regardless of what the have list claims — the flag translation is unit-tested in
+ * {@link SyncOptionsForceBypassTest}. The harness runs a single p4d (not a
  * replica), so this asserts the on-disk outcome directly across two sync cycles:
- * after the initial populate and again after wiping the workspace and re-running
- * the same populate, every submitted file must be present. The second cycle
- * proves {@code -p} actually re-transfers archive content — because it never
- * updates the have list — rather than passing by starting from a clean workspace
- * (AC-1, AC-4).
+ * after the initial populate, and again after wiping the workspace and re-running
+ * the same populate against the same client, every submitted file must be present.
+ * The second cycle is the discriminator — after cycle 1 the have list marks the
+ * files as synced, so only {@code -f} (force) will re-fetch them once deleted; a
+ * plain {@code -p} bypass would leave them missing (AC-1, AC-4).
  */
 @WithJenkins
 @Issue("P4JENKINS-184")
@@ -65,8 +66,8 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 			submitFile(jenkins, base + "/file" + i + ".txt", "content " + i);
 		}
 
-		// ForceCleanImpl(have=false) -> sync -p: bypass ("Populate have list"
-		// unchecked). The workspace must be fully populated on disk, not left empty.
+		// ForceCleanImpl(have=false): force + have-list bypass. Because -f and -p are
+		// mutually exclusive, force wins and the sync runs with -f, guaranteeing content.
 		FreeStyleProject project = createProject("force-bypass", base + "/...", new ForceCleanImpl(false, false, null, null));
 
 		// Cycle 1: initial populate into an empty client.
@@ -74,10 +75,10 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 		assertAllPresent(first.getWorkspace(), fileCount);
 
 		// Cycle 2: wipe the workspace on disk and re-run the SAME populate against the
-		// SAME client. -p never updates the have list, so the server still treats the
-		// client as holding nothing and re-transfers every file; this proves the sync
-		// actually moves archive content rather than passing because the first run
-		// happened to start from a clean workspace (P4JENKINS-184 AC-1/AC-4).
+		// SAME client. After cycle 1 the have list marks these files as synced, so a
+		// plain -p bypass would skip them and leave them missing; only -f (force)
+		// re-transfers the archive content so every file reappears (P4JENKINS-184
+		// AC-1/AC-4).
 		FilePath workspace = first.getWorkspace();
 		for (int i = 0; i < fileCount; i++) {
 			workspace.child("file" + i + ".txt").delete();

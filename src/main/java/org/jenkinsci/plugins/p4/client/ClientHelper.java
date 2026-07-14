@@ -448,7 +448,7 @@ public class ClientHelper extends ConnectionHelper {
 	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
 	 *
 	 * <p>Extracted from {@link #syncFiles} (its only caller) so the -p/-f/-q flag
-	 * matrix — in particular the mutual exclusivity of -f and -p (P4JENKINS-184) —
+	 * matrix — in particular the "force wins over bypass" rule for P4JENKINS-184 —
 	 * can be asserted in a fast, deterministic unit test without a live server.
 	 *
 	 * @param populate Populate options
@@ -457,21 +457,29 @@ public class ClientHelper extends ConnectionHelper {
 	static SyncOptions buildSyncOptions(Populate populate) {
 		SyncOptions syncOpts = new SyncOptions();
 
-		// setServerBypass (-p, "Populate have list" unchecked)
-		syncOpts.setServerBypass(!populate.isHave());
+		boolean force = populate.isForce();
+		// have=false means "Populate have list" is unchecked, i.e. sync -p.
+		boolean bypass = !populate.isHave();
 
-		// setForceUpdate (-f) only when -p is NOT used. -f and -p are mutually
-		// exclusive in 'p4 sync': combining them is rejected by the server with
+		// -f and -p are mutually exclusive in 'p4 sync': combining them is rejected by
+		// the server with
 		//   Usage: sync [ -K -n -N -p -q ] [-m max] [files...]
-		// (observed against the R24_1 test server; -f is absent from the -p usage
-		// line). So a populate that omits the have list (have=false) must not also
-		// force. This is not merely a workaround: because -p never records what it
-		// synced, it treats the have list as empty on every run and re-populates the
-		// full workspace each sync -- so archive content is (re-)transferred without
-		// -f. Coupling -f to isHave() keeps the command valid; P4JENKINS-184's
-		// symptom of a "synced but empty" workspace originates in the read-only
-		// replica's archive (lbr) replication, not in this flag translation.
-		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
+		// (observed against the R24_1 test server; -f is absent from the -p usage line).
+		// When a populate asks for both a force (force=true) and a have-list bypass
+		// (have=false), force wins: we drop -p and keep -f. This is the P4JENKINS-184
+		// fix -- with -p alone the server bypasses any file its have list already marks
+		// as synced (and on a forwarding read-only replica the have list is replicated
+		// from the master), so the archive content is never fetched and the workspace is
+		// left empty while the console still reports the files as synced. -f forces the
+		// content transfer regardless of the have list, guaranteeing the files land on
+		// disk. Before the fix this case was coerced to -p (force silently dropped),
+		// which is exactly the failing behaviour.
+		if (force && bypass) {
+			bypass = false;
+		}
+
+		syncOpts.setServerBypass(bypass);
+		syncOpts.setForceUpdate(force);
 		syncOpts.setQuiet(populate.isQuiet());
 
 		return syncOpts;
