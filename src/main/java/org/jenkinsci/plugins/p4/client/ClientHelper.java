@@ -457,14 +457,20 @@ public class ClientHelper extends ConnectionHelper {
 	static SyncOptions buildSyncOptions(Populate populate) {
 		SyncOptions syncOpts = new SyncOptions();
 
-		// setServerBypass (-p no have list)
+		// setServerBypass (-p, "Populate have list" unchecked)
 		syncOpts.setServerBypass(!populate.isHave());
 
-		// setForceUpdate (-f) only when -p is NOT used. 'p4 sync' rejects -f and -p
-		// together (usage: sync [ -K -n -N -p -q ]), so a populate that bypasses the
-		// have list (have=false) must not also force. When -p is used the server
-		// already re-fetches content for files missing from the client workspace, so
-		// -f is redundant there anyway (P4JENKINS-184).
+		// setForceUpdate (-f) only when -p is NOT used. -f and -p are mutually
+		// exclusive in 'p4 sync': combining them is rejected by the server with
+		//   Usage: sync [ -K -n -N -p -q ] [-m max] [files...]
+		// (observed against the R24_1 test server; -f is absent from the -p usage
+		// line). So a populate that omits the have list (have=false) must not also
+		// force. This is not merely a workaround: because -p never records what it
+		// synced, it treats the have list as empty on every run and re-populates the
+		// full workspace each sync -- so archive content is (re-)transferred without
+		// -f. Coupling -f to isHave() keeps the command valid; P4JENKINS-184's
+		// symptom of a "synced but empty" workspace originates in the read-only
+		// replica's archive (lbr) replication, not in this flag translation.
 		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 

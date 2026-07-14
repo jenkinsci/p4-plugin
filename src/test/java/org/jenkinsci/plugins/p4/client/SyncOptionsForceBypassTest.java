@@ -11,9 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link ClientHelper#buildSyncOptions} covering the -p/-f flag
- * matrix (P4JENKINS-184). 'p4 sync' rejects -f and -p together, so a force
- * populate that also bypasses the have list (have=false) must emit -p only; the
- * force flag is dropped to keep the command valid.
+ * matrix (P4JENKINS-184). -f and -p are mutually exclusive in 'p4 sync' -- the
+ * server rejects the combination with "Usage: sync [ -K -n -N -p -q ]" (-f absent
+ * from the -p usage line) -- so a populate that omits the have list (have=false)
+ * must emit -p without -f. That is the only valid mapping, not a suppressed fix:
+ * -p re-populates the full workspace on every run because it never updates the
+ * have list, so content is transferred without -f (see
+ * {@link ForcePopulateBypassTest} for the on-disk proof).
  */
 class SyncOptionsForceBypassTest {
 

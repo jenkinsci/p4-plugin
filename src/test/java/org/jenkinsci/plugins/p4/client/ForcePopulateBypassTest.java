@@ -32,8 +32,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>({@code p4 sync} rejects {@code -f} and {@code -p} together, so this path
  * uses {@code -p} alone — the flag translation is unit-tested in
  * {@link SyncOptionsForceBypassTest}.) The harness runs a single p4d (not a
- * replica), so this asserts the on-disk outcome directly: every submitted file
- * must be present after the populate sync (AC-1, AC-4).
+ * replica), so this asserts the on-disk outcome directly across two sync cycles:
+ * after the initial populate and again after wiping the workspace and re-running
+ * the same populate, every submitted file must be present. The second cycle
+ * proves {@code -p} actually re-transfers archive content — because it never
+ * updates the have list — rather than passing by starting from a clean workspace
+ * (AC-1, AC-4).
  */
 @WithJenkins
 @Issue("P4JENKINS-184")
@@ -61,11 +65,30 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 			submitFile(jenkins, base + "/file" + i + ".txt", "content " + i);
 		}
 
-		// ForceCleanImpl(have=false) -> sync -p: bypass the have list. The workspace
-		// must still be fully populated on disk, not left empty.
-		FreeStyleBuild build = buildDirSync("force-bypass", base + "/...", new ForceCleanImpl(false, false, null, null));
+		// ForceCleanImpl(have=false) -> sync -p: bypass ("Populate have list"
+		// unchecked). The workspace must be fully populated on disk, not left empty.
+		FreeStyleProject project = createProject("force-bypass", base + "/...", new ForceCleanImpl(false, false, null, null));
 
-		FilePath workspace = build.getWorkspace();
+		// Cycle 1: initial populate into an empty client.
+		FreeStyleBuild first = build(project);
+		assertAllPresent(first.getWorkspace(), fileCount);
+
+		// Cycle 2: wipe the workspace on disk and re-run the SAME populate against the
+		// SAME client. -p never updates the have list, so the server still treats the
+		// client as holding nothing and re-transfers every file; this proves the sync
+		// actually moves archive content rather than passing because the first run
+		// happened to start from a clean workspace (P4JENKINS-184 AC-1/AC-4).
+		FilePath workspace = first.getWorkspace();
+		for (int i = 0; i < fileCount; i++) {
+			workspace.child("file" + i + ".txt").delete();
+		}
+
+		FreeStyleBuild second = build(project);
+		assertAllPresent(second.getWorkspace(), fileCount);
+	}
+
+	/** Assert every file0..N-1 exists on disk and the count matches exactly. */
+	private void assertAllPresent(FilePath workspace, int fileCount) throws Exception {
 		int onDisk = 0;
 		for (int i = 0; i < fileCount; i++) {
 			FilePath file = workspace.child("file" + i + ".txt");
@@ -75,8 +98,8 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 		assertEquals(fileCount, onDisk, "on-disk file count must match the submitted file count");
 	}
 
-	/** Build a freestyle job syncing a whole depot view and return the completed build. */
-	private FreeStyleBuild buildDirSync(String jobName, String depotView, Populate populate) throws Exception {
+	/** Freestyle job syncing a whole depot view into a single fixed client. */
+	private FreeStyleProject createProject(String jobName, String depotView, Populate populate) throws Exception {
 		String client = jobName + ".ws";
 		String view = depotView + " //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -86,7 +109,10 @@ class ForcePopulateBypassTest extends DefaultEnvironment {
 		FreeStyleProject project = jenkins.createFreeStyleProject(jobName);
 		project.setScm(new PerforceScm(CREDENTIAL, workspace, populate));
 		project.save();
+		return project;
+	}
 
+	private FreeStyleBuild build(FreeStyleProject project) throws Exception {
 		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
 		assertEquals(Result.SUCCESS, build.getResult(), "force-bypass sync build should succeed");
 		return build;
