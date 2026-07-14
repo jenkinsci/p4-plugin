@@ -1,0 +1,72 @@
+package org.jenkinsci.plugins.p4.client;
+
+import com.perforce.p4java.option.client.SyncOptions;
+import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
+import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
+import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Unit tests for {@link ClientHelper#buildSyncOptions} covering the -p/-f flag
+ * matrix (P4JENKINS-184). A force populate that also uses -p (have=false) must
+ * still set the force flag, otherwise a read-only replica bypasses archive
+ * transfer and leaves the workspace empty.
+ */
+class SyncOptionsForceBypassTest {
+
+	@Test
+	void forceCleanWithBypassKeepsForceFlag() {
+		// ForceCleanImpl(have=false) -> force=true, have=false, i.e. sync -p -f
+		ForceCleanImpl populate = new ForceCleanImpl(false, false, null, null);
+
+		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
+
+		assertTrue(opts.isServerBypass(), "-p should be set when have=false");
+		assertTrue(opts.isForceUpdate(), "-f must be set even when -p (have=false) is used");
+	}
+
+	@Test
+	void forceCleanWithHaveKeepsForceFlag() {
+		// ForceCleanImpl(have=true) -> force=true, have=true, i.e. sync -f
+		ForceCleanImpl populate = new ForceCleanImpl(true, false, null, null);
+
+		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
+
+		assertFalse(opts.isServerBypass(), "-p should not be set when have=true");
+		assertTrue(opts.isForceUpdate(), "-f should be set when force=true");
+	}
+
+	@Test
+	void autoCleanIsNeitherForcedNorBypassed() {
+		// AutoCleanImpl -> force=false, have=true, i.e. plain sync
+		AutoCleanImpl populate = new AutoCleanImpl(true, true, true, false, false, null, null);
+
+		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
+
+		assertFalse(opts.isServerBypass(), "-p should not be set for a normal sync");
+		assertFalse(opts.isForceUpdate(), "-f should not be set for a normal sync");
+	}
+
+	@Test
+	void syncOnlyBypassWithoutForceStaysUnforced() {
+		// SyncOnlyImpl(force=false, have=false) -> sync -p only
+		SyncOnlyImpl populate = new SyncOnlyImpl(false, false, false, false, null, null);
+
+		SyncOptions opts = ClientHelper.buildSyncOptions(populate);
+
+		assertTrue(opts.isServerBypass(), "-p should be set when have=false");
+		assertFalse(opts.isForceUpdate(), "-f should not be set when force=false");
+	}
+
+	@Test
+	void quietFlagPropagates() {
+		AutoCleanImpl quiet = new AutoCleanImpl(true, true, true, false, true, null, null);
+
+		SyncOptions opts = ClientHelper.buildSyncOptions(quiet);
+
+		assertTrue(opts.isQuiet(), "-q should reflect the populate quiet flag");
+	}
+}

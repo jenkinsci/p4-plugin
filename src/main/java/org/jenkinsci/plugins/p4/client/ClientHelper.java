@@ -419,14 +419,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// sync options
-		SyncOptions syncOpts = new SyncOptions();
-
-		// setServerBypass (-p no have list)
-		syncOpts.setServerBypass(!populate.isHave());
-
-		// setForceUpdate (-f only if no -p is set)
-		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
-		syncOpts.setQuiet(populate.isQuiet());
+		SyncOptions syncOpts = buildSyncOptions(populate);
 
 		// Sync files with asynchronous callback and parallel if enabled to
 		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), getListener());
@@ -449,6 +442,29 @@ public class ClientHelper extends ConnectionHelper {
 				throw new P4JavaException(callback.getException());
 			}
 		}
+	}
+
+	/**
+	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
+	 *
+	 * @param populate Populate options
+	 * @return SyncOptions with the equivalent -p/-f/-q flags
+	 */
+	static SyncOptions buildSyncOptions(Populate populate) {
+		SyncOptions syncOpts = new SyncOptions();
+
+		// setServerBypass (-p no have list)
+		syncOpts.setServerBypass(!populate.isHave());
+
+		// setForceUpdate (-f applied independently of the -p/have flag). Coupling
+		// -f to have meant a force populate that also used -p (have=false) silently
+		// dropped the force flag; against a read-only replica the server then treats
+		// files as 'already synced' and bypasses archive transfer, leaving the
+		// workspace empty while the console reports files 'added' (P4JENKINS-184).
+		syncOpts.setForceUpdate(populate.isForce());
+		syncOpts.setQuiet(populate.isQuiet());
+
+		return syncOpts;
 	}
 
 	/**
