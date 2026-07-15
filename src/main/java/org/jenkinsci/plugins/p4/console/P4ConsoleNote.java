@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.console;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.MarkupText;
 import hudson.console.ConsoleAnnotationDescriptor;
@@ -8,8 +9,11 @@ import hudson.console.ConsoleNote;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
+
 public class P4ConsoleNote extends ConsoleNote<Object> {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@DataBoundConstructor
@@ -27,6 +31,7 @@ public class P4ConsoleNote extends ConsoleNote<Object> {
 	@Symbol("note")
 	public static final class DescriptorImpl extends
 			ConsoleAnnotationDescriptor {
+		@NonNull
 		public String getDisplayName() {
 			return "P4 Logging";
 		}

@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.email;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.User;
@@ -29,6 +30,7 @@ public class P4UserProperty extends UserProperty {
 			return new P4UserProperty(null);
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce User Property";
@@ -36,8 +38,7 @@ public class P4UserProperty extends UserProperty {
 
 		@Override
 		public UserProperty
-				newInstance(StaplerRequest2 req, JSONObject formData)
-						throws FormException {
+		newInstance(StaplerRequest2 req, @NonNull JSONObject formData) {
 			return new P4UserProperty(formData.optString("email"));
 		}
 	}

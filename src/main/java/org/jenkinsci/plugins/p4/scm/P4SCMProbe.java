@@ -10,6 +10,7 @@ import jenkins.scm.api.SCMProbeStat;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.logging.Logger;
 
 public class P4SCMProbe extends SCMProbe {
@@ -19,6 +20,7 @@ public class P4SCMProbe extends SCMProbe {
 		Items.XSTREAM2.addCompatibilityAlias("org.jenkinsci.plugins.p4.scm.P4Probe", P4SCMProbe.class);
 	}
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final static Logger logger = Logger.getLogger(P4SCMProbe.class.getName());
@@ -65,7 +67,7 @@ public class P4SCMProbe extends SCMProbe {
 			if ( clientStream != null ) {
 				filePath = filePath.replaceFirst(clientStream, "//" + p4.getClientUUID());
 			}
-			
+
 			if (p4.hasFile(filePath)) {
 				return SCMProbeStat.fromType(SCMFile.Type.REGULAR_FILE);
 			}
@@ -76,7 +78,7 @@ public class P4SCMProbe extends SCMProbe {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		// No need to close ConnectionHelper
 	}
 }

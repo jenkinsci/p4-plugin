@@ -23,10 +23,10 @@ import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
@@ -156,7 +157,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			// Scan through Path filters
 			if (f instanceof FilterPathImpl) {
 				// add unmatched files to remainder list
-				List<IFileSpec> remainder = new ArrayList<IFileSpec>();
+				List<IFileSpec> remainder = new ArrayList<>();
 				String path = ((FilterPathImpl) f).getPath();
 				for (IFileSpec s : files) {
 					String p = s.getDepotPathString();
@@ -177,7 +178,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			// Scan through View Mask filters
 			if (f instanceof FilterViewMaskImpl) {
 				// at least one file in the change must be contained in the view mask
-				List<IFileSpec> included = new ArrayList<IFileSpec>();
+				List<IFileSpec> included = new ArrayList<>();
 
 				String viewMask = ((FilterViewMaskImpl) f).getViewMask();
 				String[] maskPaths = viewMask.split("\\R");
@@ -215,7 +216,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 				for (IFileSpec s : files) {
 					String p = s.getDepotPathString();
-					
+
 					for (Pattern pattern : patterns) {
 						Matcher matcher = pattern.matcher(p);
 						if(matcher.matches()) {
@@ -223,12 +224,12 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 							break;
 						}
 					}
-					
+
 					if (foundMatchingChange) {
 						break;
 					}
 				}
-				
+
 				// If we've found a change matching one of our patterns, do not filter!
 				return !foundMatchingChange;
 			}
@@ -238,6 +239,6 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }

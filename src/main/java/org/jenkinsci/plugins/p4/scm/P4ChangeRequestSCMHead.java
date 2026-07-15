@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.mixin.ChangeRequestCheckoutStrategy;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
@@ -9,8 +10,11 @@ import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.review.P4Review;
 import org.jenkinsci.plugins.p4.tasks.CheckoutStatus;
 
+import java.io.Serial;
+
 public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSCMHead, ChangeRequestSCMHead2 {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final SCMHead target;
@@ -28,6 +32,7 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 		this.author = author;
 	}
 
+	@NonNull
 	@Override
 	public String getId() {
 		return getName();
@@ -46,6 +51,7 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 	 *
 	 * @return a “target” or “base” branch
 	 */
+	@NonNull
 	@Override
 	public SCMHead getTarget() {
 		return target;
@@ -59,11 +65,13 @@ public class P4ChangeRequestSCMHead extends P4SCMHead implements ChangeRequestSC
 		return scm;
 	}
 
+	@NonNull
 	@Override
 	public ChangeRequestCheckoutStrategy getCheckoutStrategy() {
 		return ChangeRequestCheckoutStrategy.MERGE;
 	}
 
+	@NonNull
 	@Override
 	public String getOriginName() {
 		return ((P4SCMHead) getTarget()).getPath().getPath();

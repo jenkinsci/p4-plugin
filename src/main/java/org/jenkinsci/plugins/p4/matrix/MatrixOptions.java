@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.matrix;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
 import hudson.matrix.MatrixExecutionStrategyDescriptor;
@@ -31,6 +32,7 @@ public class MatrixOptions extends DefaultMatrixExecutionStrategyImpl {
 	public static final class DescriptorImpl extends
 			MatrixExecutionStrategyDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: Matrix options";

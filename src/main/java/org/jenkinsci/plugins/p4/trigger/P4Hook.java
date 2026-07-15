@@ -140,8 +140,7 @@ public class P4Hook implements UnprotectedRootAction {
 			LOGGER.fine("P4: trying: " + job.getName());
 
 			P4Trigger trigger = null;
-			if (job instanceof ParameterizedJobMixIn.ParameterizedJob) {
-				ParameterizedJobMixIn.ParameterizedJob pJob = (ParameterizedJobMixIn.ParameterizedJob) job;
+			if (job instanceof ParameterizedJobMixIn.ParameterizedJob pJob) {
 				for (Object t : pJob.getTriggers().values()) {
 					if (t instanceof P4Trigger) {
 						trigger = (P4Trigger) t;
@@ -160,7 +159,7 @@ public class P4Hook implements UnprotectedRootAction {
 	}
 
 	private List<Job> getJobs() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		return j.getAllItems(Job.class);
 	}
 

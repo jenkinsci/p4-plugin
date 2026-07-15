@@ -53,6 +53,6 @@ public class NodeHelper {
 		if (computer != null) {
 			return computer.getNode();
 		}
-		return Jenkins.getInstance();
+		return Jenkins.get();
 	}
 }

@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.filters;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -15,6 +17,7 @@ import java.util.regex.PatternSyntaxException;
 public class FilterPatternListImpl extends Filter implements Serializable {
 	private static Logger logger = Logger.getLogger(FilterPatternListImpl.class.getName());
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String patternText;
@@ -29,23 +32,23 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 	public String getPatternText() {
 		return patternText;
 	}
-	
+
 	public boolean getCaseSensitive() {
 		return caseSensitive;
 	}
-	
+
 	public boolean isCaseSensitive() {
 		return getCaseSensitive();
 	}
 
 	public ArrayList<Pattern> getPatternList() {
-		ArrayList<Pattern> patternList = new ArrayList<Pattern>();
-		
+		ArrayList<Pattern> patternList = new ArrayList<>();
+
 		int caseFlag = 0;
 		if (!caseSensitive) {
 			caseFlag = Pattern.CASE_INSENSITIVE;
 		}
-		
+
 		for (String line : patternText.split("\\R")) {
 			// Try compiling each line into patterns. If we can't compile a line, skip it and log.
 			try {
@@ -55,7 +58,7 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 				logger.severe("Error processing supposed pattern \"" + line + "\", ignoring:\n" + e);
 			}
 		}
-		
+
 		return patternList;
 	}
 
@@ -63,16 +66,17 @@ public class FilterPatternListImpl extends Filter implements Serializable {
 	@Symbol("viewPattern")
 	public static final class DescriptorImpl extends FilterDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Exclude changes outside Java pattern";
 		}
-		
+
 		public FormValidation doCheckPatternText(@QueryParameter String value) {
-			if(value.trim().length() == 0) {
+			if (value.trim().isEmpty()) {
 				return FormValidation.warning("Empty pattern list found, will ignore all changes during polling.");
 			}
-			
+
 			int lineNumber = 1;
 			try {
 				for (String line: value.split("\\R")) {

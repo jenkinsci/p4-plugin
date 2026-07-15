@@ -1012,10 +1012,11 @@ class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 
 		// Add bad Jenkinsfile
-		submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
-				+ "pipeline {\n"
-				+ "  agentxxx\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + branch + "/" + jfile, """
+				\
+				pipeline {
+				  agentxxx
+				}""");
 
 		// Poll - Build #2 (fail)
 		timer.run();

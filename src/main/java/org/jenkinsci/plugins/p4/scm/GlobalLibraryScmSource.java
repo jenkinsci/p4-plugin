@@ -25,7 +25,6 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
@@ -44,7 +43,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 	@Override
 	protected SCMRevision retrieve(@NonNull final String thingName, @NonNull TaskListener listener)
-			throws IOException, InterruptedException {
+			throws IOException {
 
 		P4Path p4Path = new P4Path(path);
 		Workspace workspace = getWorkspace(p4Path);
@@ -66,22 +65,21 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getHeads(@NonNull TaskListener listener) {
 		// not used
 		return new ArrayList<>();
 	}
 
 	@Override
-	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) {
 		// not used
 		return new ArrayList<>();
 	}
 
+	@NonNull
 	@Override
 	public synchronized PerforceScm build(@NonNull SCMHead head, SCMRevision revision) {
-		if (head instanceof P4SCMHead && revision instanceof P4SCMRevision) {
-			P4SCMHead perforceHead = (P4SCMHead) head;
-			P4SCMRevision perforceRevision = (P4SCMRevision) revision;
+		if (head instanceof P4SCMHead perforceHead && revision instanceof P4SCMRevision perforceRevision) {
 
 			// Build workspace from 'head' paths
 			P4Path path = perforceHead.getPath();
@@ -113,7 +111,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 
 		String client = getFormat();
 		String view = ViewMapHelper.getClientView(depotView, client, true);
-		
+
 		// Make a workspace spec that is all default except for make it writeable.
 		// Without that, we can't do Replay in pipelines.
 		boolean allwrite = true;	// the change
@@ -141,6 +139,7 @@ public class GlobalLibraryScmSource extends AbstractP4ScmSource {
 	@Symbol("globalLib")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix Library";

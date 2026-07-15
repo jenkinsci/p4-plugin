@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.changes;
 
 import com.perforce.p4java.core.IFix;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
@@ -9,14 +10,13 @@ import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -32,6 +32,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 		this.history = Collections.unmodifiableList(logs);
 	}
 
+	@NonNull
 	public Iterator<P4ChangeEntry> iterator() {
 		return history.iterator();
 	}
@@ -54,10 +55,10 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 			synchronized (lock) {
 				FileOutputStream o = new FileOutputStream(file);
 				BufferedOutputStream b = new BufferedOutputStream(o);
-				Charset c = Charset.forName("UTF-8");
+				Charset c = StandardCharsets.UTF_8;
 				OutputStreamWriter w = new OutputStreamWriter(b, c);
 				WriterOutputStream s = new WriterOutputStream(w);
-				PrintStream stream = new PrintStream(s, true, "UTF-8");
+				PrintStream stream = new PrintStream(s, true, StandardCharsets.UTF_8);
 
 				stream.println("<?xml version='1.0' encoding='UTF-8'?>");
 				stream.println("<changelog>");
@@ -85,7 +86,7 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 
 							// URL encode depot path
 							String depotPath = f.getPath();
-							String safePath = URLEncoder.encode(depotPath, "UTF-8");
+							String safePath = URLEncoder.encode(depotPath, StandardCharsets.UTF_8);
 
 							stream.println("\t\t<file endRevision=\"" + revision + "\" action=\"" + action
 									+ "\" depot=\"" + safePath + "\" />");
@@ -114,10 +115,6 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 				stream.close();
 				o.close();
 			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -5,6 +5,7 @@ import com.perforce.p4java.core.file.FileSpecBuilder;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.option.server.GetFileContentsOptions;
 import com.perforce.p4java.server.IOptionsServer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AutoCompletionCandidates;
 import hudson.util.FormValidation;
@@ -16,7 +17,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.InputStream;
+import java.io.Serial;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -25,6 +28,7 @@ import static com.perforce.p4java.impl.mapbased.server.cmd.ResultMapParser.parse
 
 public class SpecWorkspaceImpl extends Workspace implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String name;
@@ -71,7 +75,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 		InputStream ins = connection.getFileContents(file, printOpts);
 
 		// parse spec
-		String spec = IOUtils.toString(ins, "UTF-8");
+		String spec = IOUtils.toString(ins, StandardCharsets.UTF_8);
 		spec = getExpand().format(spec, true);
 		if(!spec.contains(clientName)) {
 			throw new Exception("Spec file does not match client.");
@@ -96,6 +100,7 @@ public class SpecWorkspaceImpl extends Workspace implements Serializable {
 	@Symbol("specFileSpec")
 	public static final class DescriptorImpl extends WorkspaceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Spec File (load workspace spec from file in Perforce)";
