@@ -27,7 +27,7 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-public class ReviewAction<T extends Job<?, ?> & ParameterizedJob> implements Action {
+public class ReviewAction<T extends Job<?, ?> & ParameterizedJob<?, ?>> implements Action {
 
 	private final T project;
 
