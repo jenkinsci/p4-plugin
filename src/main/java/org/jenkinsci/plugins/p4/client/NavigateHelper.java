@@ -192,7 +192,7 @@ public class NavigateHelper implements Closeable {
 		private String depotPath;
 		private boolean isDir;
 
-		protected Node(String depotPath, boolean isDir) {
+		private Node(String depotPath, boolean isDir) {
 			this.isDir = isDir;
 			this.depotPath = depotPath;
 			this.name = depotPath.substring(depotPath.lastIndexOf("/") + 1);

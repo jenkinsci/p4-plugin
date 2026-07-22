@@ -2,10 +2,12 @@ package org.jenkinsci.plugins.p4.client;
 
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class ConnectionConfig implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String p4port;
@@ -60,8 +62,7 @@ public class ConnectionConfig implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof ConnectionConfig) {
-			ConnectionConfig comp = (ConnectionConfig) obj;
+		if (obj instanceof ConnectionConfig comp) {
 			return this.toString().equals(comp.toString());
 		} else {
 			return false;
@@ -71,7 +72,7 @@ public class ConnectionConfig implements Serializable {
 	@Override
 	public int hashCode() {
 		int hash = 7;
-		hash = (int) (1777 * hash + this.toString().hashCode());
+		hash = 1777 * hash + this.toString().hashCode();
 		return hash;
 	}
 }

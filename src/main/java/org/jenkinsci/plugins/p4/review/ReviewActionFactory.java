@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.review;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
@@ -18,6 +19,7 @@ public class ReviewActionFactory extends TransientActionFactory<Job> {
 		return Job.class;
 	}
 
+	@NonNull
 	@Override
 	public Collection<? extends Action> createFor(@Nonnull Job target) {
 		try {

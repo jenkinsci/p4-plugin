@@ -3,13 +3,16 @@ package org.jenkinsci.plugins.p4.changes;
 import com.perforce.p4java.core.file.IFileSpec;
 import com.perforce.p4java.exception.P4JavaException;
 import com.perforce.p4java.graph.ICommit;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 
+import java.io.Serial;
 import java.util.List;
 
 public class P4GraphRef implements P4Ref {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final String repo;
@@ -92,11 +95,8 @@ public class P4GraphRef implements P4Ref {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof P4GraphRef) {
-			P4GraphRef ref = (P4GraphRef) obj;
-			if (ref.toString().equals(toString())) {
-				return true;
-			}
+		if (obj instanceof P4GraphRef ref) {
+			return ref.toString().equals(toString());
 		}
 		return false;
 	}
@@ -109,12 +109,11 @@ public class P4GraphRef implements P4Ref {
 	}
 
 	@Override
-	public int compareTo(Object obj) {
+	public int compareTo(@NonNull Object obj) {
 		if (equals(obj)) {
 			return 0;
 		}
-		if (obj instanceof P4GraphRef) {
-			P4GraphRef ref = (P4GraphRef) obj;
+		if (obj instanceof P4GraphRef ref) {
 			long diff = getDate() - ref.getDate();
 			return (int) diff;
 		}

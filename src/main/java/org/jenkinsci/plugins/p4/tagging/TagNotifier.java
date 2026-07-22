@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.tagging;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -40,8 +41,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-			throws InterruptedException {
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
 
 		// return early if label not required
 		if (onlyOnSuccess && build.getResult() != Result.SUCCESS) {
@@ -84,7 +84,7 @@ public class TagNotifier extends Notifier {
 			}
 
 			AbstractProject<?, ?> project;
-			Jenkins j = Jenkins.getInstance();
+			Jenkins j = Jenkins.get();
 			project = j.getItemByFullName(jobName, AbstractProject.class);
 			if (project == null) {
 				logger.warning("No project; is it a valid Perforce job?");
@@ -92,7 +92,7 @@ public class TagNotifier extends Notifier {
 			}
 
 			int buildNum = Integer.parseInt(buildNumber);
-			build = (AbstractBuild<?, ?>) project.getBuildByNumber(buildNum);
+			build = project.getBuildByNumber(buildNum);
 			if (build == null) {
 				logger.warning("No build number; is it a valid Perforce job?");
 				return tagAction;
@@ -108,7 +108,7 @@ public class TagNotifier extends Notifier {
 	}
 
 	public static DescriptorImpl descriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		return j.getDescriptorByType(TagNotifier.DescriptorImpl.class);
 	}
 
@@ -121,6 +121,7 @@ public class TagNotifier extends Notifier {
 			return true;
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce: Label build";

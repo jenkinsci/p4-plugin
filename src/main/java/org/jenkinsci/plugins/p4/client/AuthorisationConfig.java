@@ -5,10 +5,12 @@ import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.credentials.P4TicketImpl;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class AuthorisationConfig implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String username;
@@ -20,16 +22,14 @@ public class AuthorisationConfig implements Serializable {
 	private String client;
 
 	public AuthorisationConfig(P4BaseCredentials credential) {
-		if (credential instanceof P4PasswordImpl) {
-			P4PasswordImpl p = (P4PasswordImpl) credential;
+		if (credential instanceof P4PasswordImpl p) {
 			this.type = AuthorisationType.PASSWORD;
 			this.username = p.getUsername();
 			this.password = p.getPassword();
 			this.allhosts = p.isAllhosts();
 		}
 
-		if (credential instanceof P4TicketImpl) {
-			P4TicketImpl t = (P4TicketImpl) credential;
+		if (credential instanceof P4TicketImpl t) {
 			this.type = AuthorisationType.TICKETPATH;
 			this.username = t.getUsername();
 			this.allhosts = false;
@@ -47,7 +47,7 @@ public class AuthorisationConfig implements Serializable {
 	}
 
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append(username);
 		sb.append((client != null) ? "@" + client : "@no-client");
 		return sb.toString();

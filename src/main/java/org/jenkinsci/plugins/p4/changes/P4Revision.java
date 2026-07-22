@@ -1,12 +1,15 @@
 package org.jenkinsci.plugins.p4.changes;
 
 import com.perforce.p4java.core.IChangelistSummary;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class P4Revision implements Serializable, Comparable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private int change;
@@ -54,11 +57,8 @@ public class P4Revision implements Serializable, Comparable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof P4Revision) {
-			P4Revision rev = (P4Revision) obj;
-			if (rev.toString().equals(toString())) {
-				return true;
-			}
+		if (obj instanceof P4Revision rev) {
+			return rev.toString().equals(toString());
 		}
 		return false;
 	}
@@ -71,13 +71,11 @@ public class P4Revision implements Serializable, Comparable {
 	}
 
 	@Override
-	public int compareTo(Object obj) {
+	public int compareTo(@NonNull Object obj) {
 		if(equals(obj)) {
 			return 0;
 		}
-		if (obj instanceof P4Revision) {
-			P4Revision rev = (P4Revision) obj;
-
+		if (obj instanceof P4Revision rev) {
 
 			if(rev.isLabel && rev.toString().equals("now"))
 				return -1;

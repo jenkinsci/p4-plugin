@@ -88,7 +88,7 @@ public class ConnectionFactory {
 				}
 			}
 		} catch (Exception e) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			sb.append("Unable to connect to: ");
 			sb.append(config.getServerUri());
 			sb.append("\n");

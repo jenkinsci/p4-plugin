@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.workflow;
 
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -17,6 +18,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
+import java.io.Serial;
 import java.util.Set;
 
 public class P4TaggingStep extends Step {
@@ -57,6 +59,7 @@ public class P4TaggingStep extends Step {
 			return "p4tag";
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4 Tag";
@@ -66,6 +69,7 @@ public class P4TaggingStep extends Step {
 
 	public static class P4TaggingStepExecution extends SynchronousStepExecution<Void> {
 
+		@Serial
 		private static final long serialVersionUID = 1L;
 
 		private transient P4TaggingStep step = null;

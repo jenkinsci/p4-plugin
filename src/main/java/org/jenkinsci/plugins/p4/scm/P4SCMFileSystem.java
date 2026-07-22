@@ -61,27 +61,24 @@ public class P4SCMFileSystem extends SCMFileSystem {
 			return;
 		}
 		if (StringUtils.isNotEmpty(definition.getScriptPath()) && definition.isLightweight()) {
-			try {
-				Run<?, ?> build = _job.getLastBuild();
-				TagAction tag = new TagAction(build, credential);
-				tag.setJenkinsPath(path);
-				build.addAction(tag);
-			} catch (IOException | InterruptedException e) {
-				logger.warning("P4: Failed to create temporary TagAction for JENKINSFILE_PATH.");
-			}
+			Run<?, ?> build = _job.getLastBuild();
+			TagAction tag = new TagAction(build, credential);
+			tag.setJenkinsPath(path);
+			build.addAction(tag);
 		}
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() {
 		p4.close();
 	}
 
 	@Override
-	public long lastModified() throws IOException, InterruptedException {
+	public long lastModified() {
 		return 0;
 	}
 
+	@NonNull
 	@Override
 	public SCMFile getRoot() {
 		return new P4SCMFile(this);
@@ -92,18 +89,12 @@ public class P4SCMFileSystem extends SCMFileSystem {
 
 		@Override
 		public boolean supports(SCM source) {
-			if (source instanceof PerforceScm) {
-				return true;
-			}
-			return false;
+			return source instanceof PerforceScm;
 		}
 
 		@Override
 		public boolean supports(SCMSource source) {
-			if (source instanceof AbstractP4ScmSource) {
-				return true;
-			}
-			return false;
+			return source instanceof AbstractP4ScmSource;
 		}
 
 		@Override
@@ -117,11 +108,10 @@ public class P4SCMFileSystem extends SCMFileSystem {
 		}
 
 		@Override
-		public SCMFileSystem build(@NonNull Item owner, SCM scm, @CheckForNull SCMRevision rev) throws IOException, InterruptedException {
-			if (scm == null || !(scm instanceof PerforceScm)) {
+		public SCMFileSystem build(@NonNull Item owner, @NonNull SCM scm, @CheckForNull SCMRevision rev) throws IOException {
+			if (scm == null || !(scm instanceof PerforceScm p4scm)) {
 				return null;
 			}
-			PerforceScm p4scm = (PerforceScm) scm;
 
 			if (rev != null && !(rev instanceof P4SCMRevision)) {
 				return null;
