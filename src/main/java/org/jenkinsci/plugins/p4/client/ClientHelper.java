@@ -427,10 +427,15 @@ public class ClientHelper extends ConnectionHelper {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 
 			ParallelSync parallel = populate.getParallel();
-			if (parallel != null && parallel.isEnable()) {
+			if (useParallelSync(populate)) {
 				ParallelSyncOptions parallelOpts = parallel.getParallelOptions();
 				iclient.syncParallel(files, syncOpts, callback, 0, parallelOpts);
 			} else {
+				if (parallel != null && parallel.isEnable() && syncOpts.isServerBypass()) {
+					// P4JENKINS-184: parallel + -p (bypass) drops content on read-only
+					// replicas; fall back to a serial sync so files are actually written.
+					log("P4: parallel sync disabled for -p (populate/bypass) sync; using serial transfer.");
+				}
 				iclient.sync(files, syncOpts, callback, 0);
 			}
 
@@ -448,8 +453,10 @@ public class ClientHelper extends ConnectionHelper {
 	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
 	 *
 	 * <p>Extracted from {@link #syncFiles} (its only caller) so the -p/-f/-q flag
-	 * matrix — in particular the "force wins over bypass" rule for P4JENKINS-184 —
-	 * can be asserted in a fast, deterministic unit test without a live server.
+	 * matrix can be asserted in a fast, deterministic unit test without a live
+	 * server. Note -f and -p are mutually exclusive in 'p4 sync' (the server rejects
+	 * the combination with "Usage: sync [ -K -n -N -p -q ]"), so -f is only sent
+	 * when the have list is being maintained.
 	 *
 	 * @param populate Populate options
 	 * @return SyncOptions with the equivalent -p/-f/-q flags
@@ -457,32 +464,37 @@ public class ClientHelper extends ConnectionHelper {
 	static SyncOptions buildSyncOptions(Populate populate) {
 		SyncOptions syncOpts = new SyncOptions();
 
-		boolean force = populate.isForce();
-		// have=false means "Populate have list" is unchecked, i.e. sync -p.
-		boolean bypass = !populate.isHave();
+		// setServerBypass (-p, "Populate have list" unchecked)
+		syncOpts.setServerBypass(!populate.isHave());
 
-		// -f and -p are mutually exclusive in 'p4 sync': combining them is rejected by
-		// the server with
-		//   Usage: sync [ -K -n -N -p -q ] [-m max] [files...]
-		// (observed against the R24_1 test server; -f is absent from the -p usage line).
-		// When a populate asks for both a force (force=true) and a have-list bypass
-		// (have=false), force wins: we drop -p and keep -f. This is the P4JENKINS-184
-		// fix -- with -p alone the server bypasses any file its have list already marks
-		// as synced (and on a forwarding read-only replica the have list is replicated
-		// from the master), so the archive content is never fetched and the workspace is
-		// left empty while the console still reports the files as synced. -f forces the
-		// content transfer regardless of the have list, guaranteeing the files land on
-		// disk. Before the fix this case was coerced to -p (force silently dropped),
-		// which is exactly the failing behaviour.
-		if (force && bypass) {
-			bypass = false;
-		}
-
-		syncOpts.setServerBypass(bypass);
-		syncOpts.setForceUpdate(force);
+		// setForceUpdate (-f) only when -p is NOT used; the two flags are mutually
+		// exclusive in 'p4 sync'.
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
 		syncOpts.setQuiet(populate.isQuiet());
 
 		return syncOpts;
+	}
+
+	/**
+	 * Whether the sync should use parallel transfer.
+	 *
+	 * <p>Parallel sync is skipped whenever the have list is bypassed (-p, have=false).
+	 * A parallel sync combined with -p (ServerBypass) does not honor the server's
+	 * {@code doPublish} directive on a read-only / forwarding replica: the delegated
+	 * transmit workers deliver 0 files while the console still reports every file as
+	 * synced, leaving the workspace empty (P4JENKINS-184). Falling back to a serial
+	 * sync transfers the archive content correctly and preserves -p's "do not update
+	 * have list" semantics -- unlike a flag change it does not alter the have-table
+	 * behaviour of any existing job. The trigger is the actual bug condition
+	 * (parallel enabled + bypass), independent of whether a force was requested.
+	 *
+	 * @param populate Populate options
+	 * @return true only when parallel is enabled and the have list is maintained
+	 */
+	static boolean useParallelSync(Populate populate) {
+		ParallelSync parallel = populate.getParallel();
+		boolean enabled = parallel != null && parallel.isEnable();
+		return enabled && populate.isHave();
 	}
 
 	/**
