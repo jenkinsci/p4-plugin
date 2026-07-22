@@ -318,4 +318,42 @@
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <!-- p4-synced test files under target/tmp are left read-only by p4d; if the
+           Jenkins test harness aborts its cleanup on a locked file, those files
+           survive and make mvn clean fail with "Access is denied" on Windows. -->
+      <id>windows-test-cleanup</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>clear-readonly-test-artifacts</id>
+                <phase>pre-clean</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <exec executable="cmd" failonerror="false">
+                      <arg line="/c attrib -R &quot;${project.build.directory}\tmp\*.*&quot; /S" />
+                    </exec>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 </project>
