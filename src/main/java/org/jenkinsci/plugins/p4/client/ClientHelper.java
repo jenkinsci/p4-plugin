@@ -415,14 +415,7 @@ public class ClientHelper extends ConnectionHelper {
 		}
 
 		// sync options
-		SyncOptions syncOpts = new SyncOptions();
-
-		// setServerBypass (-p no have list)
-		syncOpts.setServerBypass(!populate.isHave());
-
-		// setForceUpdate (-f only if no -p is set)
-		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
-		syncOpts.setQuiet(populate.isQuiet());
+		SyncOptions syncOpts = buildSyncOptions(populate);
 
 		// Sync files with asynchronous callback and parallel if enabled to
 		SyncStreamingCallback callback = new SyncStreamingCallback(iclient.getServer(), getListener());
@@ -430,10 +423,15 @@ public class ClientHelper extends ConnectionHelper {
 			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(revisions);
 
 			ParallelSync parallel = populate.getParallel();
-			if (parallel != null && parallel.isEnable()) {
+			if (useParallelSync(populate)) {
 				ParallelSyncOptions parallelOpts = parallel.getParallelOptions();
 				iclient.syncParallel(files, syncOpts, callback, 0, parallelOpts);
 			} else {
+				if (parallel != null && parallel.isEnable() && syncOpts.isServerBypass()) {
+					// P4JENKINS-184: parallel + -p (bypass) drops content on read-only
+					// replicas; fall back to a serial sync so files are actually written.
+					log("P4: parallel sync disabled for -p (populate/bypass) sync; using serial transfer.");
+				}
 				iclient.sync(files, syncOpts, callback, 0);
 			}
 
@@ -445,6 +443,54 @@ public class ClientHelper extends ConnectionHelper {
 				throw new P4JavaException(callback.getException());
 			}
 		}
+	}
+
+	/**
+	 * Translate a {@link Populate} strategy into p4java {@link SyncOptions}.
+	 *
+	 * <p>Extracted from {@link #syncFiles} (its only caller) so the -p/-f/-q flag
+	 * matrix can be asserted in a fast, deterministic unit test without a live
+	 * server. Note -f and -p are mutually exclusive in 'p4 sync' (the server rejects
+	 * the combination with "Usage: sync [ -K -n -N -p -q ]"), so -f is only sent
+	 * when the have list is being maintained.
+	 *
+	 * @param populate Populate options
+	 * @return SyncOptions with the equivalent -p/-f/-q flags
+	 */
+	static SyncOptions buildSyncOptions(Populate populate) {
+		SyncOptions syncOpts = new SyncOptions();
+
+		// setServerBypass (-p, "Populate have list" unchecked)
+		syncOpts.setServerBypass(!populate.isHave());
+
+		// setForceUpdate (-f) only when -p is NOT used; the two flags are mutually
+		// exclusive in 'p4 sync'.
+		syncOpts.setForceUpdate(populate.isForce() && populate.isHave());
+		syncOpts.setQuiet(populate.isQuiet());
+
+		return syncOpts;
+	}
+
+	/**
+	 * Whether the sync should use parallel transfer.
+	 *
+	 * <p>Parallel sync is skipped whenever the have list is bypassed (-p, have=false).
+	 * A parallel sync combined with -p (ServerBypass) does not honor the server's
+	 * {@code doPublish} directive on a read-only / forwarding replica: the delegated
+	 * transmit workers deliver 0 files while the console still reports every file as
+	 * synced, leaving the workspace empty (P4JENKINS-184). Falling back to a serial
+	 * sync transfers the archive content correctly and preserves -p's "do not update
+	 * have list" semantics -- unlike a flag change it does not alter the have-table
+	 * behaviour of any existing job. The trigger is the actual bug condition
+	 * (parallel enabled + bypass), independent of whether a force was requested.
+	 *
+	 * @param populate Populate options
+	 * @return true only when parallel is enabled and the have list is maintained
+	 */
+	static boolean useParallelSync(Populate populate) {
+		ParallelSync parallel = populate.getParallel();
+		boolean enabled = parallel != null && parallel.isEnable();
+		return enabled && populate.isHave();
 	}
 
 	/**
