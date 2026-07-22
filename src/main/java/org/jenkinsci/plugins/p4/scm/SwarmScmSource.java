@@ -355,7 +355,7 @@ public class SwarmScmSource extends AbstractP4ScmSource {
 		@NonNull
 		@Override
 		public String getDisplayName() {
-			return "Helix Swarm";
+			return "P4 Code Review";
 		}
 
 		@NonNull
