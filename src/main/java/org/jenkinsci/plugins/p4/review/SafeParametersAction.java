@@ -11,7 +11,6 @@ import hudson.model.TaskListener;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +28,7 @@ public class SafeParametersAction extends ParametersAction {
 
 	@Override
 	public List<ParameterValue> getParameters() {
-		List<ParameterValue> params = new ArrayList<ParameterValue>();
+		List<ParameterValue> params = new ArrayList<>();
 		List<ParameterValue> p = super.getParameters();
 		params.addAll(p);
 		params.addAll(internalParameters);
@@ -58,8 +57,7 @@ public class SafeParametersAction extends ParametersAction {
 	public static final class SafeParametersActionEnvironmentContributor extends EnvironmentContributor {
 
 		@Override
-		public void buildEnvironmentFor(Run r, EnvVars envs, TaskListener listener)
-				throws IOException, InterruptedException {
+		public void buildEnvironmentFor(@NonNull Run r, @NonNull EnvVars envs, @NonNull TaskListener listener) {
 			SafeParametersAction action = r.getAction(SafeParametersAction.class);
 			if (action != null) {
 				for (ParameterValue pv : action.getInternalParameters()) {
@@ -67,7 +65,6 @@ public class SafeParametersAction extends ParametersAction {
 				}
 			}
 		}
-		
 	}
 
 }

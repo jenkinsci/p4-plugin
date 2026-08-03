@@ -9,12 +9,14 @@ import hudson.model.Describable;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Workspace implements Cloneable, ExtensionPoint, Describable<Workspace>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private String charset;
@@ -62,13 +64,13 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	public abstract IClient setClient(IOptionsServer connection, String user) throws Exception;
 
 	public WorkspaceDescriptor getDescriptor() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		return (WorkspaceDescriptor) j.getDescriptor(getClass());
 	}
 
 	public static DescriptorExtensionList<Workspace, WorkspaceDescriptor> all() {
-		Jenkins j = Jenkins.getInstance();
-		return j.<Workspace, WorkspaceDescriptor>getDescriptorList(Workspace.class);
+		Jenkins j = Jenkins.get();
+		return j.getDescriptorList(Workspace.class);
 	}
 
 	public String getRootPath() {
@@ -94,7 +96,7 @@ public abstract class Workspace implements Cloneable, ExtensionPoint, Describabl
 	public Expand getExpand() {
 		// provide an empty map if Environment is not set.
 		if (expand == null) {
-			setExpand(new HashMap<String, String>());
+			setExpand(new HashMap<>());
 		}
 		return expand;
 	}

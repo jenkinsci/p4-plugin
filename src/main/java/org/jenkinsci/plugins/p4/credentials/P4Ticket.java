@@ -5,20 +5,20 @@ public interface P4Ticket extends P4Credentials {
 	/**
 	 * @return The ticket value
 	 */
-	public String getTicketValue();
+	String getTicketValue();
 
 	/**
 	 * @return true if TicketValue is selected
 	 */
-	public boolean isTicketValueSet();
+	boolean isTicketValueSet();
 
 	/**
 	 * @return Location of the users .p4tickets files
 	 */
-	public String getTicketPath();
+	String getTicketPath();
 
 	/**
 	 * @return true if TicketPath is selected
 	 */
-	public boolean isTicketPathSet();
+	boolean isTicketPathSet();
 }

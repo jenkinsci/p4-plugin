@@ -1,5 +1,8 @@
 package org.jenkinsci.plugins.p4.client;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.perforce.p4java.option.server.CounterOptions;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
@@ -14,6 +17,7 @@ import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -37,6 +41,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WithJenkins
 class CheckoutTest extends DefaultEnvironment {
@@ -90,6 +95,92 @@ class CheckoutTest extends DefaultEnvironment {
 		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
 	}
 
+	@Issue("JENKINS-66648")
+	@Test
+	void testCheckoutBuildLabelNowResolvesToHead() throws Exception {
+		String client = "CheckoutLabelNow.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("CheckoutLabelNow");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		String latestChange = submitFile(jenkins, "//depot/CheckoutLabelNow/file.txt", "content");
+
+		List<ParameterValue> list = new ArrayList<>();
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_LABEL.toString(), "now"));
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
+
+		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: " + latestChange));
+	}
+
+	@Test
+	void testCheckoutBuildLabelResolvesViaCounterWhenNotALabel() throws Exception {
+		String client = "CheckoutCounterLabel.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("CheckoutCounterLabel");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		P4PasswordImpl admin = createCredentials("admin", "Password", p4d.getRshPort(), "checkoutCounterLabel-admin");
+		try (ConnectionHelper adminHelper = new ConnectionHelper(admin, null)) {
+			adminHelper.getConnection().setCounter("checkoutCounterLabel", "10", new CounterOptions());
+		}
+
+		List<ParameterValue> list = new ArrayList<>();
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_LABEL.toString(), "checkoutCounterLabel"));
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
+
+		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause(), actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.contains("P4 Task: syncing files at change: 10"));
+	}
+
+	@Issue("JENKINS-58161")
+	@Test
+	void testCredentialTickCreatesBackgroundKeepAlive() throws Exception {
+		String client = "CheckoutTick.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		P4PasswordImpl tickCredential = new P4PasswordImpl(CredentialsScope.GLOBAL, "checkoutTickCred",
+				"desc", p4d.getRshPort(), null, "jenkins", "0", "0", null, "jenkins");
+		tickCredential.setTick("50");
+		SystemCredentialsProvider.getInstance().getCredentials().add(tickCredential);
+		SystemCredentialsProvider.getInstance().save();
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("CheckoutTick");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm("checkoutTickCred", workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		List<String> log = build.getLog(LOG_LIMIT);
+		assertTrue(log.stream().anyMatch(line -> line.contains("...tick...")),
+				"a non-zero credential tick should start a background keep-alive ticker during the task");
+	}
+
 	@Issue("JENKINS-57534")
 	@Test
 	void testCheckoutRestrictedView() throws Exception {
@@ -132,29 +223,31 @@ class CheckoutTest extends DefaultEnvironment {
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
 
-		String success = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Success\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String success = """
+				
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        echo "Success"
+				      }
+				    }
+				  }
+				}""";
 
-		String fail = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        error('Failed to build')\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+		String fail = """
+				
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        error('Failed to build')
+				      }
+				    }
+				  }
+				}""";
 
 		submitFile(jenkins, jfile, success);
 
@@ -217,29 +310,31 @@ class CheckoutTest extends DefaultEnvironment {
 		String jfile = base + "/Jenkinsfile";
 		String tfile = base + "/test.txt";
 
-		String success = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        echo \"Success\"\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+	    String success = """
+			    
+			    pipeline {
+			      agent any
+			      stages {
+			        stage('Test') {
+			          steps {
+			            echo "Success"
+			          }
+			        }
+			      }
+			    }""";
 
-		String fail = "\n"
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        error('Failed to build')\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}";
+	    String fail = """
+			    
+			    pipeline {
+			      agent any
+			      stages {
+			        stage('Test') {
+			          steps {
+			            error('Failed to build')
+			          }
+			        }
+			      }
+			    }""";
 
 		submitFile(jenkins, jfile, success);
 

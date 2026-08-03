@@ -72,10 +72,9 @@ public class Validate {
 	public boolean check(List<IFileSpec> fileSpecs, boolean quiet, String... ignore) throws Exception {
 		boolean success = true;
 		boolean abort = false;
-		StringBuffer errorLog = new StringBuffer();
+		StringBuilder errorLog = new StringBuilder();
 
-		ArrayList<String> ignoreList = new ArrayList<String>();
-		ignoreList.addAll(Arrays.asList(ignore));
+		ArrayList<String> ignoreList = new ArrayList<>(Arrays.asList(ignore));
 
 		for (IFileSpec fileSpec : fileSpecs) {
 			FileSpecOpStatus status = fileSpec.getOpStatus();
@@ -110,7 +109,7 @@ public class Validate {
 		}
 
 		if (abort) {
-			String msg = "P4JAVA: Error(s):\n" + errorLog.toString();
+			String msg = "P4JAVA: Error(s):\n" + errorLog;
 			throw new AbortException(msg);
 		}
 		return success;

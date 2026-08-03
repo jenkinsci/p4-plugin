@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.credentials.P4InvalidCredentialException;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 
 public abstract class AbstractTask implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(AbstractTask.class.getName());

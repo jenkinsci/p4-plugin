@@ -21,11 +21,11 @@ import java.util.List;
 public class P4CredentialsImpl {
 
 	@Deprecated
-	static public ListBoxModel doFillCredentialItems() {
+	public static ListBoxModel doFillCredentialItems() {
 		ListBoxModel list = new ListBoxModel();
 
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
+		Jenkins scope = Jenkins.get();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
@@ -37,7 +37,7 @@ public class P4CredentialsImpl {
 			list.add("Select credential...", "");
 		}
 		for (P4BaseCredentials c : credentials) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			sb.append(c.getDescription());
 			sb.append(" (");
 			sb.append(c.getUsername());
@@ -49,9 +49,9 @@ public class P4CredentialsImpl {
 		return list;
 	}
 
-	static public ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
+	public static ListBoxModel doFillCredentialItems(Item project, String credentialsId) {
 
-		if(project == null && !Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER) ||
+		if (project == null && !Jenkins.get().hasPermission(Jenkins.ADMINISTER) ||
 				project != null && !project.hasPermission(Item.EXTENDED_READ)) {
 			return new StandardListBoxModel().includeCurrentValue(credentialsId);
 		}
@@ -60,16 +60,16 @@ public class P4CredentialsImpl {
 				.includeEmptyValue()
 				.includeMatchingAs(
 						project instanceof Queue.Task
-								? Tasks.getAuthenticationOf((Queue.Task) project)
-								: ACL.SYSTEM,
+								? Tasks.getAuthenticationOf2((Queue.Task) project)
+								: ACL.SYSTEM2,
 						project,
 						P4BaseCredentials.class,
-						Collections.<DomainRequirement>emptyList(),
+						Collections.emptyList(),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class));
 	}
 
 	@Deprecated
-	static public FormValidation doCheckCredential(@QueryParameter String value) {
+	public static FormValidation doCheckCredential(@QueryParameter String value) {
 		if (value == null) {
 			return FormValidation.ok();
 		}
@@ -89,7 +89,7 @@ public class P4CredentialsImpl {
 		}
 	}
 
-	static public FormValidation doCheckCredential(Item project, String value) {
+	public static FormValidation doCheckCredential(Item project, String value) {
 		if (value == null) {
 			return FormValidation.ok();
 		}

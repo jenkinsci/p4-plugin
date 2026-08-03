@@ -2,6 +2,7 @@ package org.jenkinsci.plugins.p4.workspace;
 
 import com.perforce.p4java.client.IClientSummary;
 import com.perforce.p4java.client.IClientSummary.ClientLineEnd;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AutoCompletionCandidates;
@@ -13,11 +14,13 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implements Cloneable, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = Logger.getLogger(WorkspaceSpec.class.getName());
 
@@ -176,6 +179,7 @@ public class WorkspaceSpec extends AbstractDescribableImpl<WorkspaceSpec> implem
 	@Symbol("clientSpec")
 	public static class DescriptorImpl extends Descriptor<WorkspaceSpec> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce Client Spec";

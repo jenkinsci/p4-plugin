@@ -7,19 +7,22 @@ import hudson.model.Descriptor;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class TrustImpl extends AbstractDescribableImpl<TrustImpl> implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@NonNull private final String trust;
 
 	@DataBoundConstructor
-	public TrustImpl(String trust) {
+	public TrustImpl(@NonNull String trust) {
 		this.trust = trust;
 	}
 
+	@NonNull
 	public String getTrust() {
 		return trust;
 	}
@@ -27,6 +30,7 @@ public class TrustImpl extends AbstractDescribableImpl<TrustImpl> implements Ser
 	@Extension
 	@Symbol("trust")
 	public static class DescriptorImpl extends Descriptor<TrustImpl> {
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "SSL Trust";

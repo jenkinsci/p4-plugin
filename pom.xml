@@ -1,15 +1,17 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>6.2189.v695a_c41f5249</version>
+    <version>6.2211.v27f680c93c53</version>
   </parent>
 
   <artifactId>p4</artifactId>
-  <version>1.17.4-SNAPSHOT</version>
+  <version>1.18.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>P4 Plugin</name>
   <description>P4 Client plugin for the Jenkins SCM provider.</description>
@@ -19,7 +21,7 @@
     <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <hpi.bundledArtifacts>jzlib,p4java,unirest-java</hpi.bundledArtifacts>
+    <hpi.bundledArtifacts>jzlib,p4java,unirest-java-core</hpi.bundledArtifacts>
     <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
@@ -28,7 +30,7 @@
     <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>p4-1.17.3</tag>
+    <tag>p4-1.18.0</tag>
   </scm>
 
   <developers>
@@ -71,6 +73,11 @@
   </dependencyManagement>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.perforce</groupId>
@@ -116,24 +123,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.mashape.unirest</groupId>
-      <artifactId>unirest-java</artifactId>
-      <version>1.4.9</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>apache-httpcomponents-client-4-api</artifactId>
+      <groupId>com.konghq</groupId>
+      <artifactId>unirest-java-core</artifactId>
+      <version>4.4.5</version>
     </dependency>
 
     <dependency>
@@ -187,7 +179,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>multiple-scms</artifactId>
-      <version>0.6</version>
+      <version>0.8</version>
       <optional>true</optional>
     </dependency>
 
@@ -213,7 +205,7 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-exec</artifactId>
-      <version>1.3</version>
+      <version>1.4.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -257,6 +249,65 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- p4-synced test files under target/tmp are left read-only by p4d; if the
+           Jenkins test harness aborts its cleanup on a locked file, those files
+           survive and make mvn clean fail with "Access is denied" on Windows. -->
+      <id>windows-test-cleanup</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>clear-readonly-test-artifacts</id>
+                <phase>pre-clean</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <exec executable="cmd" failonerror="false">
+                      <arg line="/c attrib -R &quot;${project.build.directory}\tmp\*.*&quot; /S" />
+                    </exec>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

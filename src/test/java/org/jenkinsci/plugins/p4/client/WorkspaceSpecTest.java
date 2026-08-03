@@ -109,21 +109,27 @@ class WorkspaceSpecTest extends DefaultEnvironment {
 	@Test
 	void adjustViewLineTest() {
 		String clientName = "CLIENT";
-		String view = "\n//depot/Jam/... //placeholder/...\n" +
-				"//depot/java/yo/...\n\n" +
-				"-//depot/java/stuff //otherStuff/java/stuff\n\n" +
-				"//products/no/where/rhs\n" ;
-		String expectedView = "//depot/Jam/... //CLIENT/...\n" +
-				"//depot/java/yo/... //CLIENT/java/yo/...\n" +
-				"-//depot/java/stuff //CLIENT/java/stuff\n" +
-				"//products/no/where/rhs //CLIENT/no/where/rhs" ;
+		String view = """
+				
+				//depot/Jam/... //placeholder/...
+				//depot/java/yo/...
+				
+				-//depot/java/stuff //otherStuff/java/stuff
+				
+				//products/no/where/rhs
+				""";
+		String expectedView = """
+				//depot/Jam/... //CLIENT/...
+				//depot/java/yo/... //CLIENT/java/yo/...
+				-//depot/java/stuff //CLIENT/java/stuff
+				//products/no/where/rhs //CLIENT/no/where/rhs""";
 
 		WorkspaceSpec spec = new WorkspaceSpec(false, true, false, false, false, false, null, "LOCAL", view, null, null, null, false);
 		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, clientName, spec,false);
 
 		StringBuilder postView = new StringBuilder(300);
 		for (String line : view.split("\n\\s*")) {
-			if ( postView.length() > 0) {
+			if (!postView.isEmpty()) {
 				postView.append("\n");
 			}
 			postView.append( workspace.adjustViewLine(line, clientName, true));

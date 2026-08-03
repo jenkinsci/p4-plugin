@@ -38,6 +38,7 @@ public class P4SCMFile extends SCMFile {
 		this.isDir = isDir;
 	}
 
+	@NonNull
 	@Override
 	protected SCMFile newChild(@NonNull String name, boolean assumeIsDirectory) {
 		return new P4SCMFile(fs, this, name, assumeIsDirectory);
@@ -48,11 +49,10 @@ public class P4SCMFile extends SCMFile {
 	 *
 	 * @return Always non-null. If this method is not a directory, this method returns
 	 * an empty iterable.
-	 * @throws IOException          if an error occurs while performing the operation.
-	 * @throws InterruptedException if interrupted while performing the operation.
 	 */
+	@NonNull
 	@Override
-	public Iterable<SCMFile> children() throws IOException, InterruptedException {
+	public Iterable<SCMFile> children() {
 		String path = getPath();
 
 		ConnectionHelper p4 = fs.getConnection();
@@ -73,10 +73,9 @@ public class P4SCMFile extends SCMFile {
 	 * @return A <code>long</code> value representing the time the file was last modified, measured in milliseconds
 	 * since the epoch (00:00:00 GMT, January 1, 1970) or {@code 0L} if the operation is unsupported.
 	 * @throws IOException          if an error occurs while performing the operation.
-	 * @throws InterruptedException if interrupted while performing the operation.
 	 */
 	@Override
-	public long lastModified() throws IOException, InterruptedException {
+	public long lastModified() throws IOException {
 
 		ConnectionHelper p4 = fs.getConnection();
 		List<IFileSpec> file = getFileSpec();
@@ -100,11 +99,11 @@ public class P4SCMFile extends SCMFile {
 	 * @return the {@link Type} of this object, specifically {@link Type#NONEXISTENT} if this {@link SCMFile} instance
 	 * does not exist in the remote system (e.g. if you created a nonexistent instance via {@link #child(String)})
 	 * @throws IOException          if an error occurs while performing the operation.
-	 * @throws InterruptedException if interrupted while performing the operation.
 	 * @since 2.0
 	 */
+	@NonNull
 	@Override
-	protected Type type() throws IOException, InterruptedException {
+	protected Type type() throws IOException {
 		if (isDir) {
 			return Type.DIRECTORY;
 		}
@@ -135,10 +134,10 @@ public class P4SCMFile extends SCMFile {
 	 * @return an open stream to read the file content. The caller must close the stream.
 	 * @throws IOException          if this object represents a directory or if an error occurs while performing the
 	 *                              operation.
-	 * @throws InterruptedException if interrupted while performing the operation.
 	 */
+	@NonNull
 	@Override
-	public InputStream content() throws IOException, InterruptedException {
+	public InputStream content() throws IOException {
 		ConnectionHelper p4 = fs.getConnection();
 		List<IFileSpec> file = getFileSpec();
 		GetFileContentsOptions printOpts = new GetFileContentsOptions();
