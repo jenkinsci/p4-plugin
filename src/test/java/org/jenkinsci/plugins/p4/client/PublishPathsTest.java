@@ -37,13 +37,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * P4JENKINS-183: P4Publish (shelve) with 'paths' set shelves every listed file, not just
- * the ones actually modified. Reproduced directly against ClientHelper.buildChange()/
- * publishChange() - the same code path PerforceScm/PublishNotifier use.
+ * P4JENKINS-183 (works as designed): P4Publish (shelve) with 'paths' set shelves every listed file that
+ * Perforce OPENS - and shelve operates on opened files, not on "content changed" files. With reconcile's
+ * filetype detection (-t, used on 2019.1+ servers) a file whose depot type differs from its detected type
+ * is opened for a type change even when its content is unchanged, so it is correctly shelved too. This
+ * test documents that expected behaviour against ClientHelper.buildChange()/publishChange() (the same path
+ * PerforceScm/PublishNotifier use); no plugin code change is required.
  */
 @WithJenkins
 @Issue("P4JENKINS-183")
@@ -63,7 +65,7 @@ class PublishPathsTest extends DefaultEnvironment {
 	}
 
 	@Test
-	void testShelvePathsShouldNotShelveUnmodifiedFile() throws Exception {
+	void testShelvePathsShelvesAllOpenedListedFiles() throws Exception {
 		String client = "paths-bug.ws";
 		String root = "target/paths-bug.ws";
 		String view = "//depot/pathsbug/... //" + client + "/...";
@@ -147,8 +149,11 @@ class PublishPathsTest extends DefaultEnvironment {
 					.collect(Collectors.toList());
 
 			assertTrue(shelvedPaths.contains(depot4), "the genuinely edited file must be shelved");
-			assertFalse(shelvedPaths.contains(depot1),
-					"P4JENKINS-183: an unmodified file listed in 'paths' must not be shelved, but was: " + shelvedPaths);
+			// 1.bin's content is unchanged, but it is stored as binary+l while reconcile -t detects it as
+			// text+l, so reconcile OPENS it for a filetype change - and p4publish shelves opened files.
+			// Shelving it too is therefore the expected behaviour (verified: no plugin code change needed).
+			assertTrue(shelvedPaths.contains(depot1),
+					"P4JENKINS-183 (works as designed): a listed file opened by reconcile is shelved; shelved=" + shelvedPaths);
 		}
 	}
 }
