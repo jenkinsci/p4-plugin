@@ -124,6 +124,10 @@ public class PerforceScm extends SCM {
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
 	public static final long DEFAULT_HEAD_LIMIT = 1000;
 
+	// Max builds calculateChanges() walks back to find a change-reporting baseline;
+	// if exceeded, falls back to the current change only.
+	public static final int MAX_BASELINE_WALKBACK = 1000;
+
 	public String getCredential() {
 		return credential;
 	}
@@ -848,7 +852,8 @@ public class PerforceScm extends SCM {
 
 		Run<?, ?> lastBuild;
 		PerforceScm.DescriptorImpl scm = getDescriptor();
-		if (scm != null && scm.isLastSuccess()) {
+		boolean sinceLastSuccess = (scm != null && scm.isLastSuccess());
+		if (sinceLastSuccess) {
 			// JENKINS-64030 Include changes since last successful build
 			lastBuild = run.getPreviousSuccessfulBuild();
 		} else {
@@ -859,6 +864,18 @@ public class PerforceScm extends SCM {
 
 		String syncID = task.getSyncID();
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
+
+		// If the previous build recorded no baseline for this syncID (e.g. it failed before
+		// p4sync during an auth outage), walk back to the most recent build that did - as lookForChanges()
+		// does for polling - so outage-window changes aren't dropped.
+		int walked = 0;
+		Run<?, ?> baseline = lastBuild;
+		while ((lastRefs == null || lastRefs.isEmpty()) && baseline != null && walked++ < MAX_BASELINE_WALKBACK) {
+			baseline = sinceLastSuccess ? baseline.getPreviousSuccessfulBuild() : baseline.getPreviousCompletedBuild();
+			if (baseline != null) {
+				lastRefs = TagAction.getLastChange(baseline, task.getListener(), syncID);
+			}
+		}
 
 		if (lastRefs != null && !lastRefs.isEmpty()) {
 			list.addAll(task.getChangesFull(lastRefs));
