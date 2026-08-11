@@ -7,7 +7,7 @@ import jenkins.scm.api.SCMFileSystem;
 import jenkins.scm.api.SCMSourceOwner;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.client.NavigateHelper;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
@@ -18,78 +18,83 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import static junit.framework.TestCase.assertEquals;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class P4SCMFileSystemTest extends DefaultEnvironment {
+@WithJenkins
+class P4SCMFileSystemTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-ScmFileSystemTest-p4root";
 
 	private static ManualWorkspaceImpl workspace;
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 
 		String client = "testNavigation.ws";
 		String view = "//depot/... //${P4_CLIENT}/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
 		workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
-		workspace.setExpand(new HashMap<String, String>());
+		workspace.setExpand(new HashMap<>());
 	}
 
 	@Test
-	public void testAutoComplete() throws IOException {
-
-		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "autoComplete");
+	void testAutoComplete() throws Exception {
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "autoComplete");
 
 		// Clear login cache then initialise default connection
-		ConnectionHelper p4 = new ConnectionHelper(owner, CREDENTIAL, null);
-		p4.invalidateSession();
+		try (ConnectionHelper p4 = new ConnectionHelper(owner, CREDENTIAL, null)) {
+			p4.invalidateSession();
 
-		NavigateHelper nav = new NavigateHelper(5);
+			NavigateHelper nav = new NavigateHelper(5);
 
-		AutoCompletionCandidates results = nav.getCandidates("//");
-		assertNotNull(results);
-		assertEquals(2, results.getValues().size());
+			AutoCompletionCandidates results = nav.getCandidates("//");
+			assertNotNull(results);
+			assertEquals(2, results.getValues().size());
 
-		results = nav.getCandidates("//de");
-		assertNotNull(results);
-		assertEquals("//depot/", results.getValues().get(0));
+			results = nav.getCandidates("//de");
+			assertNotNull(results);
+			assertEquals("//depot/", results.getValues().get(0));
 
-		results = nav.getCandidates("//depot/");
-		assertNotNull(results);
-		assertEquals("//depot/Data/", results.getValues().get(0));
+			results = nav.getCandidates("//depot/");
+			assertNotNull(results);
+			assertEquals("//depot/Data/", results.getValues().get(0));
 
-		results = nav.getCandidates("//depot/Data/");
-		assertNotNull(results);
-		assertEquals("//depot/Data/file-0.dat", results.getValues().get(0));
+			results = nav.getCandidates("//depot/Data/");
+			assertNotNull(results);
+			assertEquals("//depot/Data/file-0.dat", results.getValues().get(0));
+		}
 	}
 
 	@Test
-	public void testNodes() throws Exception {
-
+	void testNodes() throws Exception {
 		TempClientHelper p4 = new TempClientHelper(null, CREDENTIAL, null, workspace);
 		NavigateHelper nav = new NavigateHelper(p4.getConnection());
 
@@ -106,15 +111,14 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void ofSource_Smokes() throws Exception {
-
+	void ofSource_Smokes() throws Exception {
 		String format = workspace.getName();
 
 		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
 		source.setPattern(BranchesScmSource.DescriptorImpl.defaultPattern);
 		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
 
-		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.getInstance(), "multi1");
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "multi1");
 		source.setOwner(owner);
 
 		P4Path path = new P4Path("//depot");
@@ -146,8 +150,38 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testLightWeightWorkflow() throws Exception {
+	void testFileLastModifiedAndType() throws Exception {
+		String format = workspace.getName();
 
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
+		source.setPattern(BranchesScmSource.DescriptorImpl.defaultPattern);
+		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
+
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "multiFileMeta");
+		source.setOwner(owner);
+
+		P4Path path = new P4Path("//depot");
+		P4SCMHead head = new P4SCMHead("main", path);
+
+		SCMFileSystem fs = SCMFileSystem.of(source, head);
+		assertThat(fs, notNullValue());
+
+		// A child discovered via children() carries a real (not assumed) isDir flag,
+		// so type() takes its fast isDir==true path rather than querying the server.
+		Iterator<SCMFile> iterator = fs.getRoot().children().iterator();
+		P4SCMFile dir = (P4SCMFile) iterator.next();
+		assertThat(dir.getName(), is("Data"));
+		assertEquals(SCMFile.Type.DIRECTORY, dir.type());
+
+		// A child looked up by name (rather than discovered) assumes isDir==false,
+		// so type() falls through to the real fstat-based query for a regular file.
+		P4SCMFile file = (P4SCMFile) fs.getRoot().child("Main").child("file-12.txt");
+		assertTrue(file.lastModified() > 0, "expected a real last-modified time, got " + file.lastModified());
+		assertEquals(SCMFile.Type.REGULAR_FILE, file.type());
+	}
+
+	@Test
+	void testLightWeightWorkflow() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"
@@ -180,8 +214,7 @@ public class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testLightWeightP4_CLIENT() throws Exception {
-
+	void testLightWeightP4_CLIENT() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"

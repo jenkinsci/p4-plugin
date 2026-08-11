@@ -16,14 +16,14 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
+import java.io.Serial;
 
 public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 
 	/**
 	 * Ensure consistent serialisation.
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@NonNull
@@ -45,6 +45,7 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		this.allhosts = allhosts;
 	}
 
+	@NonNull
 	public Secret getPassword() {
 		return password;
 	}
@@ -57,6 +58,7 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 	@Symbol("password")
 	public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce Password Credential";
@@ -76,10 +78,9 @@ public class P4PasswordImpl extends P4BaseCredentials implements P4Password {
 		                                       @QueryParameter("p4host") String p4host,
 		                                       @QueryParameter("username") String username,
 		                                       @QueryParameter("password") String password,
-		                                       @QueryParameter("allhosts") boolean allhosts)
-				throws IOException, ServletException {
+		                                       @QueryParameter("allhosts") boolean allhosts) {
 
-			if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
 				return FormValidation.warning("Insufficient permissions");
 			}
 

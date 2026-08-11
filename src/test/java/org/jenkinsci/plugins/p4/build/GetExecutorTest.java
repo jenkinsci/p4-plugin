@@ -1,16 +1,16 @@
 package org.jenkinsci.plugins.p4.build;
 
 import hudson.FilePath;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GetExecutorTest {
+class GetExecutorTest {
 
 	@Test
-	public void testGetExecutor() {
+	void testGetExecutor() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\workspace\\path");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);
@@ -25,7 +25,7 @@ public class GetExecutorTest {
 	}
 
 	@Test
-	public void testGetExecutorWhenUsingSubDirectory() {
+	void testGetExecutorWhenUsingSubDirectory() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\workspace\\path\\subDir");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);
@@ -40,7 +40,7 @@ public class GetExecutorTest {
 	}
 
 	@Test
-	public void testGetExecutorWhenWorkspaceHasAtSignIn() {
+	void testGetExecutorWhenWorkspaceHasAtSignIn() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\worksp@ce\\path");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);
@@ -55,7 +55,7 @@ public class GetExecutorTest {
 	}
 
 	@Test
-	public void testGetExecutorUsingNonStandardExecutor() {
+	void testGetExecutorUsingNonStandardExecutor() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\workspace\\path@2");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);
@@ -70,7 +70,7 @@ public class GetExecutorTest {
 	}
 
 	@Test
-	public void testGetExecutorWhenUsingSubDirectoryAndNonStandardExecutor() {
+	void testGetExecutorWhenUsingSubDirectoryAndNonStandardExecutor() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\workspace\\path@2\\subDir");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);
@@ -85,7 +85,7 @@ public class GetExecutorTest {
 	}
 
 	@Test
-	public void testGetExecutorWhenWorkspaceHasAtSignInUsingNonStandardExecutor() {
+	void testGetExecutorWhenWorkspaceHasAtSignInUsingNonStandardExecutor() {
 		//Windows path test
 		File windowsWorkspaceDir =  new File("C:\\Windows\\worksp@1ce\\path@2");
 		FilePath windowsWorkspace = new FilePath(windowsWorkspaceDir);

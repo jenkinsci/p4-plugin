@@ -1,38 +1,30 @@
-.git/
 *.class
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.war
-*.ear
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
+# Eclipse
 .classpath
-
 .project
-
-go.sh
-go.bat
-
-docs/UserGuide.pdf
-target/
-work/
-vagrant/
-
+.factorypath
 *.prefs
 
-.pydevproject
+# IntelliJ
 .idea
 *.iml
 
-.p4config
+# VS Code
+.vscode
 
+# Maven build / Jenkins test harness output
+target/
+work/
+
+# Perforce
+.p4config
 .p4ignore
 
+# Presentations (stored in Perforce, not git)
 docs/ppt/
 
 tmp*

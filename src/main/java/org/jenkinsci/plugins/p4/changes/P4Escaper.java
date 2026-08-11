@@ -1,6 +1,6 @@
 package org.jenkinsci.plugins.p4.changes;
 
-import org.apache.commons.lang3.text.translate.NumericEntityEscaper;
+import org.apache.commons.text.translate.NumericEntityEscaper;
 
 import java.io.IOException;
 import java.io.Writer;

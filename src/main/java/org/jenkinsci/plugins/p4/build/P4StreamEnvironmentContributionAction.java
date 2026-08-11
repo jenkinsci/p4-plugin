@@ -3,30 +3,16 @@ package org.jenkinsci.plugins.p4.build;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.model.EnvironmentContributingAction;
+import hudson.model.InvisibleAction;
 import hudson.model.Run;
 
-public class P4StreamEnvironmentContributionAction implements EnvironmentContributingAction {
+public class P4StreamEnvironmentContributionAction extends InvisibleAction implements EnvironmentContributingAction {
 	private final String streamAtChange;
 	private final String streamName;
 
 	public P4StreamEnvironmentContributionAction(String streamName, String streamAtChange) {
 		this.streamName = streamName;
 		this.streamAtChange = streamAtChange;
-	}
-
-	@Override
-	public String getIconFileName() {
-		return "";
-	}
-
-	@Override
-	public String getDisplayName() {
-		return "";
-	}
-
-	@Override
-	public String getUrlName() {
-		return "";
 	}
 
 	@Override

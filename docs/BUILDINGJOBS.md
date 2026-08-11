@@ -63,7 +63,7 @@ The Build Review Action supports the following parameters:
 -   pass (URL to call after a build succeeded)
 -   fail (URL to call after a build failed)
 
-**Note:** these parameters are stored in the Environment and can be used with variable expansion for example `${label}`. For this reason, please avoid these names for slaves and matrix axis. 
+**Note:** these parameters are stored in the Environment and can be used with variable expansion for example `${label}`. For this reason, please avoid these names for agents and matrix axis. 
 ### Review Authorization
 If Jenkins requires users to login, your Perforce trigger needs to use a Jenkins authorized account. You can find the `API Token` for the trigger user under:
 1. From the Jenkins dashboard, click  **People** in the sidebar menu.

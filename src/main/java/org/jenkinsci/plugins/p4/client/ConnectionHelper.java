@@ -35,7 +35,9 @@ import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.changes.P4GraphRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
+import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 
 import java.io.IOException;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,7 +97,7 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		if (getValidate().check(dirs, "")) {
 			return dirs;
 		}
-		return new ArrayList<IFileSpec>();
+		return new ArrayList<>();
 	}
 
 	private List<String> cleanDirPaths(List<String> paths) throws Exception {
@@ -292,6 +295,18 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		getConnection().deleteClient(name, opts);
 	}
 
+	/**
+	 * Delete a client workspace using -f option (force delete)
+	 *
+	 * @param name Client name
+	 * @throws Exception push up stack
+	 */
+	public void forceDeleteClient(String name) throws Exception {
+		DeleteClientOptions opts = new DeleteClientOptions();
+		opts.setForce(true);
+		getConnection().deleteClient(name, opts);
+	}
+
 	public String getEmail(String userName) throws Exception {
 		IUser user = getConnection().getUser(userName);
 		if (user != null) {
@@ -369,10 +384,10 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 		List<Map<String, Object>> resultMaps;
 		resultMaps = getConnection().execMapCmdList(cmd, args, null);
 
-		List<IFileSpec> list = new ArrayList<IFileSpec>();
+		List<IFileSpec> list = new ArrayList<>();
 
 		if (resultMaps != null) {
-			if ((resultMaps.size() > 0) && (resultMaps.get(0) != null)) {
+			if ((!resultMaps.isEmpty()) && (resultMaps.get(0) != null)) {
 				Map<String, Object> map = resultMaps.get(0);
 				if (map.containsKey("shelved")) {
 					for (int i = 0; map.get("rev" + i) != null; i++) {
@@ -438,11 +453,11 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	protected String buildRevisionLimit(String path, P4Ref from, P4Ref to) {
 		String revisionPath = path;
 		if (from != null && to != null) {
-			revisionPath = revisionPath + "@" + from.toString() + "," + to.toString();
+			revisionPath = revisionPath + "@" + from + "," + to;
 		} else if (from == null && to != null) {
-			revisionPath = revisionPath + "@" + to.toString();
+			revisionPath = revisionPath + "@" + to;
 		} else if (from != null && to == null) {
-			revisionPath = revisionPath + "@" + from.toString() + ",now";
+			revisionPath = revisionPath + "@" + from + ",now";
 		}
 		return revisionPath;
 	}
@@ -520,18 +535,16 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	 * @throws Exception push up stack
 	 */
 	public List<P4Ref> listCommits(List<P4Ref> fromRefs, P4Ref to) throws Exception {
-		List<P4Ref> list = new ArrayList<P4Ref>();
+		List<P4Ref> list = new ArrayList<>();
 
-		if (!(to instanceof P4GraphRef)) {
+		if (!(to instanceof P4GraphRef toGraph)) {
 			return list;
 		}
-		P4GraphRef toGraph = (P4GraphRef) to;
 
 		for (P4Ref from : fromRefs) {
-			if (!(from instanceof P4GraphRef)) {
+			if (!(from instanceof P4GraphRef fromGraph)) {
 				continue;
 			}
-			P4GraphRef fromGraph = (P4GraphRef) from;
 
 			// skip mismatched repos
 			if (!fromGraph.getRepo().equals(toGraph.getRepo())) {
@@ -604,7 +617,39 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		disconnect();
+	}
+
+	/**
+	 * Retrieves the latest Perforce changelist for a given polling path since a specified changelist number.
+	 * If no changes exist or the input is invalid, the method returns {@code null}.
+	 *
+	 * @param from the reference containing the polling path and starting changelist number;
+	 * @return a {@link P4PollRef} representing the latest change found for the given path,
+	 *         or {@code null} if no changes are found or if the input reference is invalid.
+	 * @throws Exception if an error occurs while retrieving the list of changes from Perforce.
+	 */
+
+	public P4PollRef getLatestChangeForPollPath(P4PollRef from) throws Exception {
+		if (from == null || from.getChange() < 0 || from.getPollPath() == null) {
+			return null;
+		}
+
+		String pollPath = from.getPollPath();
+		String path = pollPath.endsWith("/...")
+				? pollPath + "@" + from.getChange() + ",now"
+				: pollPath + "/...@" + from.getChange() + ",now";
+
+		List<IFileSpec> spec = FileSpecBuilder.makeFileSpecList(path);
+		GetChangelistsOptions opts = new GetChangelistsOptions();
+		opts.setMaxMostRecent(1);
+		List<IChangelistSummary> changes = getConnection().getChangelists(spec, opts);
+		if (changes.isEmpty() || changes.get(0) == null || changes.get(0).getId() <= 0) {
+			return null;
+		}
+
+		P4PollRef finalChange = new P4PollRef(changes.get(0).getId(), pollPath);
+		return from.equals(finalChange) ? null : finalChange;
 	}
 }

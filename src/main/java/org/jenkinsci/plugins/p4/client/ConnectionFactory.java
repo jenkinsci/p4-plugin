@@ -88,7 +88,7 @@ public class ConnectionFactory {
 				}
 			}
 		} catch (Exception e) {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			sb.append("Unable to connect to: ");
 			sb.append(config.getServerUri());
 			sb.append("\n");
@@ -118,6 +118,8 @@ public class ConnectionFactory {
 		// enable graph depot and AndMaps
 		props.put(PropertyDefs.ENABLE_GRAPH_SHORT_FORM, "true");
 		props.put(PropertyDefs.ENABLE_ANDMAPS_SHORT_FORM, "true");
+
+		props.put(RpcPropertyDefs.RPC_SECURE_SOCKET_ENABLED_PROTOCOLS_NICK, "TLSv1.3,TLSv1.2");
 
 		// Set P4HOST if defined
 		UsageOptions opts = new UsageOptions(props);

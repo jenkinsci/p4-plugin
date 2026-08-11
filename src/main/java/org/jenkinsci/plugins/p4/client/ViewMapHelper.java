@@ -75,7 +75,7 @@ public class ViewMapHelper {
 			return null;
 		}
 
-		StringBuffer lhs = new StringBuffer("");
+		StringBuffer lhs = new StringBuffer();
 		lhs.append(base);
 		lhs.append(PATH_DELIM);
 		lhs.append(scriptPath);
@@ -91,7 +91,7 @@ public class ViewMapHelper {
 			rhs = wrapSpaces(rhs);
 		}
 
-		StringBuffer view = new StringBuffer();
+		StringBuilder view = new StringBuilder();
 		view.append(lhs);
 		view.append(MAP_SEP);
 		view.append(rhs);

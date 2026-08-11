@@ -1,11 +1,15 @@
 package org.jenkinsci.plugins.p4.populate;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
+
 public class SyncOnlyImpl extends Populate {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final boolean revert;
@@ -16,7 +20,7 @@ public class SyncOnlyImpl extends Populate {
 	 * @param revert   revert before sync option
 	 * @param have     populate have list
 	 * @param force    force sync
-	 * @param quiet    Perforce quiet option
+	 * @param quiet    P4 quiet option
 	 * @param pin      Change or label to pin the sync
 	 * @param parallel Parallel sync option
 	 */
@@ -40,6 +44,7 @@ public class SyncOnlyImpl extends Populate {
 	@Symbol("syncOnly")
 	public static final class DescriptorImpl extends PopulateDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Sync only";

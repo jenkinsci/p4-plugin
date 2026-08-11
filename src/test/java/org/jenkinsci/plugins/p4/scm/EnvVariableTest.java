@@ -3,9 +3,8 @@ package org.jenkinsci.plugins.p4.scm;
 import hudson.model.Result;
 import jenkins.branch.BranchSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -21,40 +20,51 @@ import org.jenkinsci.plugins.workflow.libs.LibraryConfiguration;
 import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class EnvVariableTest extends DefaultEnvironment {
-	private static Logger logger = Logger.getLogger(PerforceSCMSourceTest.class.getName());
+@WithJenkins
+class EnvVariableTest extends DefaultEnvironment {
+
+  private static final Logger LOGGER = Logger.getLogger(EnvVariableTest.class.getName());
 
 	private static final String P4ROOT = "tmp-ScmSourceTest-p4root";
 
-	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(30 * 60);
+	private static JenkinsRule jenkins;
 
-	@ClassRule
-	public static SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+        jenkins.timeout = 30 * 60;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testJenkinsFilePathShouldBeAvailableWhenLightweightAndSkipDefaultCheckoutSet() throws Exception {
+	void testJenkinsFilePathShouldBeAvailableWhenLightweightAndSkipDefaultCheckoutSet() throws Exception {
 		String pipeline = ""
 				+ "pipeline {\n"
 				+ "  agent any\n"
@@ -96,8 +106,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-54382")
-	public void testMultiBranchDeepJenkinsfile() throws Exception {
-
+	void testMultiBranchDeepJenkinsfile() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/deep";
 		String scriptPath = "space build/jfile";
@@ -129,8 +138,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchMultiLineDeepJenkinsfile() throws Exception {
-
+	void testMultiBranchMultiLineDeepJenkinsfile() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/mdeep";
 		String scriptPath = "space build/jfile";
@@ -163,23 +171,24 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
+	void testJenkinsfilePathAvailableAsEnvVar() throws Exception {
 		String base = "//depot/default/default1";
 		String scriptPath = "build/MyJenkinsfile";
 		String branch = "Main";
-		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + branch + "/" + scriptPath, """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				             echo "The jenkinsfile path is: ${JENKINSFILE_PATH}"\
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}";
 		String includes = base + "/...";
@@ -205,8 +214,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
-
+	void testMultiBranchRemoteJenkinsfileScanPerChange() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/Remote";
 		String scriptPath = "a space/jfile";
@@ -288,8 +296,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchRemoteJenkinsfileLatestChange() throws Exception {
-
+	void testMultiBranchRemoteJenkinsfileLatestChange() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/LatestRemote";
 		String scriptPath = "a space/jfile";
@@ -363,8 +370,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMultiBranchRemoteJenkinsfilePlus() throws Exception {
-
+	void testMultiBranchRemoteJenkinsfilePlus() throws Exception {
 		// Setup sample Multi Branch Project
 		String base = "//depot/Plus";
 		String scriptPath = "a space/jfile";
@@ -454,7 +460,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock_lightweight() throws Exception {
+	void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock_lightweight() throws Exception {
 		//https://issues.jenkins.io/browse/JENKINS-39107
 		GlobalLibraries globalLib = setGlobalLibraryForPipeline();
 		String base = "//depot/default";
@@ -480,7 +486,7 @@ public class EnvVariableTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock() throws Exception {
+	void testJenkinsFilePathIsAvailableOutsideOfPipelineBlock() throws Exception {
 		GlobalLibraries globalLib = setGlobalLibraryForPipeline();
 		String base = "//depot/default";
 		String scriptPath = "Jenkinsfiles/Jenkinsfile-Repro-JENKINS-39107";
@@ -505,36 +511,38 @@ public class EnvVariableTest extends DefaultEnvironment {
 
 	private void submitJenkinsFile(String base, String scriptPath) throws Exception {
 		submitFile(jenkins, base + "/" + scriptPath,
-				"@Library('stream-lib')\n" +
-						"import org.foo.lib.* \n" +
-						"echo \"Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\"\n" +
-						"pipeline {\n" +
-						" agent any\n" +
-						" stages {\n" +
-						"  stage(\"Repro\") {\n" +
-						"   steps {\n" +
-						"    script {\n" +
-						"       echo \"Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}\" \n" +
-						"   }\n" +
-						"  }\n" +
-						" }\n" +
-						"}\n" +
-						"}");
+				"""
+						@Library('stream-lib')
+						import org.foo.lib.*\s
+						echo "Outside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}"
+						pipeline {
+						 agent any
+						 stages {
+						  stage("Repro") {
+						   steps {
+						    script {
+						       echo "Inside pipeline in Jenkinsfile. Variable is: env.JENKINSFILE_PATH=${env.JENKINSFILE_PATH}"\s
+						   }
+						  }
+						 }
+						}
+						}""");
 	}
 
 	private GlobalLibraries setGlobalLibraryForPipeline() throws Exception {
-		String libContent = "package org.foo;\n" +
-				"\n" +
-				"def dispEnv ()\n" +
-				"{\n" +
-				"  echo \"All Environment Variables\"\n" +
-				"  if (isUnix()) {\n" +
-				"    sh 'env'\n" +
-				"  }\n" +
-				"  else {\n" +
-				"    bat 'set'\n" +
-				"  }\n" +
-				"return this;";
+		String libContent = """
+				package org.foo;
+				
+				def dispEnv ()
+				{
+				  echo "All Environment Variables"
+				  if (isUnix()) {
+				    sh 'env'
+				  }
+				  else {
+				    bat 'set'
+				  }
+				return this;""";
 		submitFile(jenkins, "//depot/library/src/org/foo/lib.groovy", libContent);
 
 		String path = "//depot/library/...";

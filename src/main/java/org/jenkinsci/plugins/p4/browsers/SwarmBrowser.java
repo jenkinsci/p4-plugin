@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.browsers;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.Descriptor;
@@ -12,14 +13,16 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
+import java.io.Serial;
 import java.net.URL;
 
 public class SwarmBrowser extends P4Browser {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@DataBoundConstructor
@@ -60,6 +63,7 @@ public class SwarmBrowser extends P4Browser {
 	@Symbol("swarm")
 	public static class DescriptorImpl extends Descriptor<RepositoryBrowser<?>> {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Swarm browser";
@@ -78,7 +82,7 @@ public class SwarmBrowser extends P4Browser {
 		}
 
 		@Override
-		public SwarmBrowser newInstance(StaplerRequest req, JSONObject jsonObject) throws FormException {
+		public SwarmBrowser newInstance(StaplerRequest2 req, @NonNull JSONObject jsonObject) {
 			return (req == null) ? null : req.bindJSON(SwarmBrowser.class, jsonObject);
 		}
 	}

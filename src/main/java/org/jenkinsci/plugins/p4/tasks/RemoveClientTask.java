@@ -15,20 +15,22 @@ import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.populate.ForceCleanImpl;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 public class RemoveClientTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(RemoveClientTask.class.getName());
 
 	private boolean deleteClient;
+	private boolean forceDeleteClient;
 	private boolean deleteFiles;
 
 	public RemoveClientTask(String credential, Run<?, ?> run, TaskListener listener) {
@@ -45,12 +47,16 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 		this.deleteClient = deleteClient;
 	}
 
+	public void setForceDeleteClient(boolean forceDeleteClient) {
+		this.forceDeleteClient = forceDeleteClient;
+	}
+
 	public void setDeleteFiles(boolean deleteFiles) {
 		this.deleteFiles = deleteFiles;
 	}
 
 	private void useGlobalSettings() {
-		Jenkins j = Jenkins.getInstance();
+		Jenkins j = Jenkins.get();
 		@SuppressWarnings("unchecked")
 		Descriptor<SCM> scm = j.getDescriptor(PerforceScm.class);
 		DescriptorImpl p4scm = (DescriptorImpl) scm;
@@ -62,7 +68,7 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	}
 
 	@Override
-	public Object task(ClientHelper p4) throws Exception {
+	public Object task(ClientHelper p4) {
 		logger.info("Task: remove client.");
 
 		String client = getClientName();
@@ -82,13 +88,18 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 			}
 
 			// remove client if required
-			if (deleteClient) {
+			if (deleteClient || forceDeleteClient) {
 				if (p4.isClient(client)) {
 					// revert any pending files, before deleting client
 					p4.revertAllFiles(false);
-					p4.log("P4 Task: remove client: " + client);
 					logger.info("P4: remove client: " + client);
-					p4.deleteClient(client);
+					if (forceDeleteClient) {
+						p4.log("P4 Task: force remove client: " + client);
+						p4.forceDeleteClient(client);
+					} else {
+						p4.log("P4 Task: remove client: " + client);
+						p4.deleteClient(client);
+					}
 				} else {
 					logger.warning("P4: Cannot find: " + client);
 					return deleteFiles;
@@ -102,12 +113,12 @@ public class RemoveClientTask extends AbstractTask implements FileCallable<Boole
 	}
 
 	@Override
-	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException, InterruptedException {
+	public Boolean invoke(File workspace, VirtualChannel channel) throws IOException {
 		return (Boolean) tryTask();
 	}
 
 	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }

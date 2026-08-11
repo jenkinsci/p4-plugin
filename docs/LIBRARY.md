@@ -33,7 +33,7 @@ An example Pipeline Script:
  
     pipeline {
     
-      agent { label 'master' }
+      agent { label 'controller' }
       
       stages {
         stage("Run script") {

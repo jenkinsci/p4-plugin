@@ -9,10 +9,12 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> implements Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@NonNull
@@ -28,13 +30,14 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 	private final String ticketPath;
 
 	@DataBoundConstructor
-	public TicketModeImpl(String value, String ticketValue, String ticketPath) {
+	public TicketModeImpl(@NonNull String value, String ticketValue, String ticketPath) {
 		this.value = value;
 		this.ticketValue = "";
 		this.ticketSecret = Secret.fromString(ticketValue);
 		this.ticketPath = (ticketPath != null) ? ticketPath : "";
 	}
 
+	@NonNull
 	public String getValue() {
 		return value;
 	}
@@ -50,6 +53,7 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 		return ticketSecret.getPlainText();
 	}
 
+	@NonNull
 	public String getTicketPath() {
 		return ticketPath;
 	}
@@ -65,6 +69,7 @@ public class TicketModeImpl extends AbstractDescribableImpl<TicketModeImpl> impl
 	@Extension
 	@Symbol("ticketMode")
 	public static class DescriptorImpl extends Descriptor<TicketModeImpl> {
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "TicketMode";

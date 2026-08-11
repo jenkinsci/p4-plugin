@@ -8,9 +8,8 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import hudson.model.StringParameterValue;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
-import org.jenkinsci.plugins.p4.ExtendedJenkinsRule;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.trigger.P4Trigger;
@@ -20,12 +19,13 @@ import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 import java.util.HashMap;
@@ -33,28 +33,33 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JenkinsfileTest extends DefaultEnvironment {
+@WithJenkins
+class JenkinsfileTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(JenkinsfileTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(JenkinsfileTest.class.getName());
 	private static final String P4ROOT = "tmp-JenkinsfileTest-p4root";
 
-	@ClassRule
-	public static ExtendedJenkinsRule jenkins = new ExtendedJenkinsRule(7 * 60);
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+        jenkins.timeout = 7 * 60;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testBasicJenkinsfile() throws Exception {
-
+	void testBasicJenkinsfile() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   p4sync credential: '" + CREDENTIAL + "', template: 'test.ws'\n"
@@ -82,8 +87,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(new CpsScmFlowDefinition(scm, "Jenkinsfile"));
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -113,8 +120,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testDiffClients() throws Exception {
-
+	void testDiffClients() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   checkout([$class: 'PerforceScm', credential: '" + CREDENTIAL + "',"
@@ -151,40 +157,40 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			int head = Integer.parseInt(p4.getCounter("change"));
 
-		// Build 1
-		WorkflowRun run = job.scheduleBuild2(0).get();
-		jenkins.assertBuildStatusSuccess(run);
-		assertEquals(head, Integer.parseInt(p4.getCounter("change")));
+			// Build 1
+			WorkflowRun run = job.scheduleBuild2(0).get();
+			jenkins.assertBuildStatusSuccess(run);
+			assertEquals(head, Integer.parseInt(p4.getCounter("change")));
 
-		// Make changes for trigger
-		submitFile(jenkins, "//depot/Data/j002", "Content");
+			// Make changes for trigger
+			submitFile(jenkins, "//depot/Data/j002", "Content");
 
-		// Add a trigger
-		P4Trigger trigger = new P4Trigger();
-		trigger.start(job, false);
-		job.addTrigger(trigger);
-		job.save();
+			// Add a trigger
+			P4Trigger trigger = new P4Trigger();
+			trigger.start(job, false);
+			job.addTrigger(trigger);
+			job.save();
 
-		assertEquals(1, job.getLastBuild().getNumber());
+			assertEquals(1, job.getLastBuild().getNumber());
 
-		// Test trigger
-		trigger.poke(job, p4d.getRshPort());
+			// Test trigger
+			trigger.poke(job, p4d.getRshPort());
 
-		TimeUnit.SECONDS.sleep(job.getQuietPeriod());
-		jenkins.waitUntilNoActivity();
+			TimeUnit.SECONDS.sleep(job.getQuietPeriod());
+			jenkins.waitUntilNoActivity();
 
-		assertEquals(2, job.getLastBuild().getNumber());
-		assertEquals(head + 1, Integer.parseInt(p4.getCounter("change")));
+			assertEquals(2, job.getLastBuild().getNumber());
+			assertEquals(head + 1, Integer.parseInt(p4.getCounter("change")));
 
-		assertEquals(1, job.getLastBuild().getChangeSets().size());
+			assertEquals(1, job.getLastBuild().getChangeSets().size());
+		}
 	}
 
 	@Test
-	public void testMulitSync() throws Exception {
-
+	void testMultiSync() throws Exception {
 		String content1 = ""
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
@@ -247,8 +253,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testMulitSyncPolling() throws Exception {
-
+	void testMultiSyncPolling() throws Exception {
 		String content1 = ""
 				+ "node {\n"
 				+ "   p4sync charset: 'none', credential: '" + CREDENTIAL + "',\n"
@@ -307,8 +312,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get latest change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 2
 		WorkflowRun run2 = job.scheduleBuild2(0).get();
@@ -347,7 +354,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 
 	@Test
 	@Issue("JENKINS-43770")
-	public void testMultiSyncParallelPolling() throws Exception {
+	void testMultiSyncParallelPolling() throws Exception {
 		// Change 1 not available in //depot/data. First change is 17
 		// Change 1 is first change in //depot/main
 		String content1 = ""
@@ -419,8 +426,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		workspace.setExpand(envVars);
 
 		// Get latest change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		int head = Integer.parseInt(p4.getCounter("change"));
+		int head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = Integer.parseInt(p4.getCounter("change"));
+		}
 
 		// Build 2
 		WorkflowRun run2 = job.scheduleBuild2(0).get();
@@ -458,8 +467,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsfileLocation() throws Exception {
-
+	void testJenkinsfileLocation() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   echo 'Alt Jenkinsfile'\n"
@@ -473,7 +481,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -495,8 +503,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testJenkinsfileLocationLightweight() throws Exception {
-
+	void testJenkinsfileLocationLightweight() throws Exception {
 		String content = ""
 				+ "node {\n"
 				+ "   echo 'Alt Jenkinsfile'\n"
@@ -510,7 +517,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("//depot/Data/... //" + client + "/..." + "\n");
 		sb.append("//depot/Other/Jenkinsfile //" + client + "/build/Jenkinsfile");
 		WorkspaceSpec spec = new WorkspaceSpec(false, false, false, false, false, false, stream, line, sb.toString(), null, null, null, true);
@@ -527,8 +534,10 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		job.setDefinition(cpsScmFlowDefinition);
 
 		// Get current change
-		ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace);
-		String head = p4.getCounter("change");
+		String head;
+		try (ClientHelper p4 = new ClientHelper(job, CREDENTIAL, null, workspace)) {
+			head = p4.getCounter("change");
+		}
 
 		// Build 1
 		WorkflowRun run = job.scheduleBuild2(0).get();
@@ -538,22 +547,23 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPipelineJenkinsfilePathEnvVar() throws Exception {
+	void testPipelineJenkinsfilePathEnvVar() throws Exception {
 		String base = "//depot/envJfile";
 		String scriptPath = "Jenkinsfile";
-		submitFile(jenkins, base + "/" + scriptPath, ""
-				+ "pipeline {\n"
-				+ "  agent any\n"
-				+ "  stages {\n"
-				+ "    stage('Test') {\n"
-				+ "      steps {\n"
-				+ "        script {\n"
-				+ "             echo \"The jenkinsfile path is: ${JENKINSFILE_PATH}\""
-				+ "        }\n"
-				+ "      }\n"
-				+ "    }\n"
-				+ "  }\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + scriptPath, """
+				\
+				pipeline {
+				  agent any
+				  stages {
+				    stage('Test') {
+				      steps {
+				        script {
+				             echo "The jenkinsfile path is: ${JENKINSFILE_PATH}"\
+				        }
+				      }
+				    }
+				  }
+				}""");
 
 		// Manual workspace spec definition
 		String client = "envJfile.ws";
@@ -587,7 +597,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testNodeJenkinsfilePathEnvVar() throws Exception {
+	void testNodeJenkinsfilePathEnvVar() throws Exception {
 		String base = "//depot/envJfile";
 		String scriptPath = "Jenkinsfile";
 		submitFile(jenkins, base + "/" + scriptPath, ""
@@ -615,7 +625,7 @@ public class JenkinsfileTest extends DefaultEnvironment {
 		WorkflowRun run1 = job.scheduleBuild2(0).get();
 		jenkins.assertBuildStatusSuccess(run1);
 		jenkins.assertLogContains("The jenkinsfile path is: " + base + "/" + scriptPath, run1);
-		
+
 	/*
 	    // SCM Jenkinsfile job LightWeight Checkout
 		cpsScmFlowDefinition.setLightweight(true);
@@ -628,10 +638,8 @@ public class JenkinsfileTest extends DefaultEnvironment {
 	*/
 	}
 
-
 	@Test
-	public void testParametersStreamJenkinsfile() throws Exception {
-
+	void testParametersStreamJenkinsfile() throws Exception {
 		// Create workspace
 		submitStreamFile(jenkins, "//stream/main/Jenkinsfile", "node() {}", "desc");
 

@@ -6,6 +6,11 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.perforce.p4java.Metadata;
 import com.perforce.p4java.client.IClient;
+import com.perforce.p4java.core.ILabelMapping;
+import com.perforce.p4java.core.ViewMap;
+import com.perforce.p4java.impl.generic.core.Label;
+import com.perforce.p4java.option.server.CounterOptions;
+import com.perforce.p4java.server.IOptionsServer;
 import hudson.model.Cause;
 import hudson.model.Cause.UserIdCause;
 import hudson.model.Fingerprint;
@@ -18,7 +23,8 @@ import hudson.util.ListBoxModel;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.PerforceScm.DescriptorImpl;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.credentials.P4BaseCredentials;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
@@ -27,11 +33,12 @@ import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.StaticWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -39,43 +46,49 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
+import static com.perforce.p4java.core.IMapEntry.EntryType.INCLUDE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class ConnectionTest extends DefaultEnvironment {
+@WithJenkins
+class ConnectionTest extends DefaultEnvironment {
 
-	private static Logger logger = Logger.getLogger(ConnectionTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ConnectionTest.class.getName());
 	private static final String P4ROOT = "tmp-ConnectionTest-p4root";
 	private static P4PasswordImpl auth;
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
+    
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
 
-	@Before
-	public void buildCredentials() throws Exception {
+	@BeforeEach
+	void beforeEach() throws Exception {
 		auth = createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testCheckP4d() throws Exception {
+	void testCheckP4d() throws Exception {
 		int ver = p4d.getVersion();
 		assertTrue(ver >= 20121);
 	}
 
 	@Test
-	public void testCredentialsList() throws Exception {
-
+	void testCredentialsList() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("CredentialsList");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
@@ -89,10 +102,10 @@ public class ConnectionTest extends DefaultEnvironment {
 		// Dropdown should show 2 credentials: none and "id"
 		PerforceScm.DescriptorImpl impl = (DescriptorImpl) desc;
 		ListBoxModel list = impl.doFillCredentialItems(project, null);
-		assertTrue(list.size() == 2);
+		assertEquals(2, list.size());
 
 		list = impl.doFillCredentialItems(project, CREDENTIAL);
-		assertTrue(list.size() == 2);
+		assertEquals(2, list.size());
 
 		FormValidation form = impl.doCheckCredential(project, null);
 		assertEquals(FormValidation.Kind.OK, form.kind);
@@ -102,8 +115,21 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testTrackingOfCredential() throws Exception {
+	void testDoCheckCredentialWithUnknownIdReturnsError() throws Exception {
+		FreeStyleProject project = jenkins.createFreeStyleProject("CredentialsUnknown");
+		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
 
+		PerforceScm.DescriptorImpl impl = (DescriptorImpl) project.getScm().getDescriptor();
+		FormValidation form = impl.doCheckCredential(project, "thisCredentialDoesNotExist");
+		assertEquals(FormValidation.Kind.ERROR, form.kind);
+	}
+
+	@Test
+	void testTrackingOfCredential() throws Exception {
 		P4BaseCredentials credential = new P4PasswordImpl(
 				CredentialsScope.GLOBAL, "testTrackingOfCredential", "desc:passwd", p4d.getRshPort(),
 				null, "jenkins", "0", "0", null, "jenkins");
@@ -130,8 +156,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_buildHead() throws Exception {
-
+	void testFreeStyleProject_buildHead() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("BuildHead");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
@@ -156,8 +181,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testPinHost_ManualWs() throws Exception {
-
+	void testPinHost_ManualWs() throws Exception {
 		String client = "manual.ws";
 		String view = "//depot/Data/... //" + client + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);
@@ -175,9 +199,11 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in with client for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, workspace);
-		IClient iclient = p4.getClient();
-		String clienthost = iclient.getHostName();
+		String clienthost;
+		try (ClientHelper p4 = new ClientHelper(auth, null, workspace)) {
+			IClient iclient = p4.getClient();
+			clienthost = iclient.getHostName();
+		}
 		String hostname = InetAddress.getLocalHost().getHostName();
 
 		assertNotNull(clienthost);
@@ -185,8 +211,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testTPI83() throws Exception {
-
+	void testTPI83() throws Exception {
 		FreeStyleProject project = jenkins.createFreeStyleProject("TPI83");
 		Workspace workspace = new StaticWorkspaceImpl("none", false, defaultClient());
 		Populate populate = new AutoCleanImpl();
@@ -210,8 +235,7 @@ public class ConnectionTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testManual_Modtime() throws Exception {
-
+	void testManual_Modtime() throws Exception {
 		String client = "modtime.ws";
 		String stream = null;
 		String line = "LOCAL";
@@ -237,17 +261,18 @@ public class ConnectionTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, build.getResult());
 
 		// Log in for next set of tests...
-		ClientHelper p4 = new ClientHelper(auth, null, workspace);
-		boolean mod = p4.getClient().getOptions().isModtime();
-		assertEquals(true, mod);
+		try (ClientHelper p4 = new ClientHelper(auth, null, workspace)) {
+			boolean mod = p4.getClient().getOptions().isModtime();
+			assertTrue(mod);
+		}
 
 		// Check file exists with the correct date
 		String ws = build.getWorkspace().getRemote();
 		File file = new File(ws + "/file-0.dat");
-		assertEquals(true, file.exists());
+		assertTrue(file.exists());
 
 		String ver = Metadata.getP4JVersionString();
-		logger.info("P4Java Version: " + ver);
+		LOGGER.info("P4Java Version: " + ver);
 
 		long epoch = file.lastModified();
 		assertEquals(1397049803000L, epoch);
@@ -255,47 +280,134 @@ public class ConnectionTest extends DefaultEnvironment {
 
 
 	@Test
-	public void testIsCounter() throws Exception {
+	void testIsCounter() throws Exception {
+		try (ConnectionHelper cHelper = new ConnectionHelper(auth, null)) {
+			String cName = "change";  // always exists.
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertTrue(isCounter, "counter '" + cName + "'not found");
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
+			}
 
-		ConnectionHelper cHelper = new ConnectionHelper(auth, null);
+			cName = "thisDoesNotExist";
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertFalse(isCounter, "counter '" + cName + "' found");
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
+			}
 
-		String cName = "change";  // always exists.
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertTrue("counter '" + cName + "'not found", isCounter);
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		}
+			cName = "666111"; // JENKINS-70219
+			Scanner scanner = null;
+			try {
+				boolean isCounter = cHelper.isCounter(cName);
+				assertFalse(isCounter, "counter '" + cName + "' found");
 
-		cName = "thisDoesNotExist";
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertFalse("counter '" + cName + "' found", isCounter);
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		}
-
-		cName = "666111"; // JENKINS-70219
-		Scanner scanner = null;
-		try {
-			boolean isCounter = cHelper.isCounter(cName);
-			assertFalse("counter '" + cName + "' found", isCounter);
-
-			// check log for "user-counter NNN" command.
-			String lookFor = "user-counter " + cName;
-			scanner = new Scanner(new File(p4d.getLogPath()));
-			while (scanner.hasNextLine()) {
-				String line = scanner.nextLine();
-				if (line.indexOf(lookFor) >= 0) {
-					fail("Found numeric counter '" + cName + "' in log: " + line);
+				// check log for "user-counter NNN" command.
+				String lookFor = "user-counter " + cName;
+				scanner = new Scanner(new File(p4d.getLogPath()));
+				while (scanner.hasNextLine()) {
+					String line = scanner.nextLine();
+					if (line.contains(lookFor)) {
+						fail("Found numeric counter '" + cName + "' in log: " + line);
+					}
+				}
+			} catch (Exception e) {
+				fail("exception checking counter " + cName + ": " + e.getMessage());
+			} finally {
+				if (scanner != null) {
+					scanner.close();
 				}
 			}
-		} catch (Exception e) {
-			fail("exception checking counter " + cName + ": " + e.getMessage());
-		} finally {
-			if (scanner != null) {
-				scanner.close();
-			}
+		}
+	}
+
+	@Test
+	void testIsLabelAndLabelToChange() throws Exception {
+		try (ConnectionHelper cHelper = new ConnectionHelper(auth, null)) {
+			assertFalse(cHelper.isLabel("now"));
+			assertFalse(cHelper.isLabel("thisLabelDoesNotExist"));
+			assertNull(cHelper.labelToChange("thisLabelDoesNotExist"));
+
+			// Label pinned to a specific change: RevisionSpec present, leading "@" stripped.
+			Label pinned = new Label();
+			pinned.setName("PinnedLabel");
+			pinned.setDescription("pinned test label");
+			pinned.setRevisionSpec("@2");
+			pinned.setViewMapping(singleDepotViewMapping());
+			cHelper.setLabel(pinned);
+
+			assertTrue(cHelper.isLabel("PinnedLabel"));
+			assertEquals("2", cHelper.labelToChange("PinnedLabel"));
+
+			// Static label (no RevisionSpec): labelToChange falls back to the label's own name.
+			Label unpinned = new Label();
+			unpinned.setName("StaticLabel");
+			unpinned.setDescription("static test label");
+			unpinned.setViewMapping(singleDepotViewMapping());
+			cHelper.setLabel(unpinned);
+
+			assertTrue(cHelper.isLabel("StaticLabel"));
+			assertEquals("StaticLabel", cHelper.labelToChange("StaticLabel"));
+		}
+	}
+
+	private ViewMap<ILabelMapping> singleDepotViewMapping() {
+		ViewMap<ILabelMapping> viewMapping = new ViewMap<>();
+		Label.LabelMapping mapping = new Label.LabelMapping();
+		mapping.setLeft("//depot/...");
+		mapping.setType(INCLUDE);
+		viewMapping.addEntry(mapping);
+		return viewMapping;
+	}
+
+	@Test
+	void testCounterToChange() throws Exception {
+		// setting a counter needs admin rights; the "jenkins" user only reads it back.
+		P4PasswordImpl admin = createCredentials("admin", "Password", p4d.getRshPort(), "testCounterToChange-admin");
+		try (ConnectionHelper adminHelper = new ConnectionHelper(admin, null)) {
+			IOptionsServer server = adminHelper.getConnection();
+			CounterOptions opts = new CounterOptions();
+			server.setCounter("numericCounter", "7", opts);
+			server.setCounter("nonNumericCounter", "abc", opts);
+		}
+
+		try (ConnectionHelper cHelper = new ConnectionHelper(auth, null)) {
+			assertEquals("7", cHelper.counterToChange("numericCounter"));
+			assertNull(cHelper.counterToChange("nonNumericCounter"));
+			assertNull(cHelper.counterToChange("thisCounterDoesNotExist"));
+		}
+	}
+
+	@Test
+	void testGetLatestChangeForPollPath() throws Exception {
+		try (ConnectionHelper cHelper = new ConnectionHelper(auth, null)) {
+			assertNull(cHelper.getLatestChangeForPollPath(null));
+			assertNull(cHelper.getLatestChangeForPollPath(new P4PollRef(-1, "//depot/PollPath/...")));
+			assertNull(cHelper.getLatestChangeForPollPath(new P4PollRef(0, null)));
+
+			String base = "//depot/PollPath";
+			String firstChange = submitFile(jenkins, base + "/file1", "content");
+			String secondChange = submitFile(jenkins, base + "/file2", "content");
+			long first = Long.parseLong(firstChange);
+			long second = Long.parseLong(secondChange);
+
+			// pollPath already ends with "/..."
+			P4PollRef fromWithWildcard = new P4PollRef(first, base + "/...");
+			P4PollRef latest = cHelper.getLatestChangeForPollPath(fromWithWildcard);
+			assertNotNull(latest);
+			assertEquals(second, latest.getChange());
+
+			// pollPath without a trailing "/..." (method appends it)
+			P4PollRef fromBarePath = new P4PollRef(first, base);
+			latest = cHelper.getLatestChangeForPollPath(fromBarePath);
+			assertNotNull(latest);
+			assertEquals(second, latest.getChange());
+
+			// already at the latest change: no new changes to report
+			P4PollRef atHead = new P4PollRef(second, base + "/...");
+			assertNull(cHelper.getLatestChangeForPollPath(atHead));
 		}
 	}
 }

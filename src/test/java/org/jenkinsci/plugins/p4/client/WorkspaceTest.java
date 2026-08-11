@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Job;
 import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
@@ -14,7 +16,7 @@ import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
-import org.jenkinsci.plugins.p4.SampleServerRule;
+import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
@@ -25,40 +27,46 @@ import org.jenkinsci.plugins.p4.workspace.StreamWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.TemplateWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceDescriptor;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WorkspaceTest extends DefaultEnvironment {
+@WithJenkins
+class WorkspaceTest extends DefaultEnvironment {
 
 	private static final String P4ROOT = "tmp-WorkspaceTest-p4root";
 
-	@ClassRule
-	public static JenkinsRule jenkins = new JenkinsRule();
+	private static JenkinsRule jenkins;
 
-	@Rule
-	public SampleServerRule p4d = new SampleServerRule(P4ROOT, R24_1_r15);
+	@RegisterExtension
+	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
-	@Before
-	public void buildCredentials() throws Exception {
+    @BeforeAll
+    static void beforeAll(JenkinsRule rule) {
+        jenkins = rule;
+    }
+
+    @BeforeEach
+    void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
 	}
 
 	@Test
-	public void testFreeStyleProject_ManualWs() throws Exception {
-
+	void testFreeStyleProject_ManualWs() throws Exception {
 		String client = "manual.ws";
 		String stream = null;
 		String line = "LOCAL";
@@ -113,8 +121,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_TemplateWs() throws Exception {
-
+	void testFreeStyleProject_TemplateWs() throws Exception {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -135,23 +142,23 @@ public class WorkspaceTest extends DefaultEnvironment {
 		assertEquals("Template (view generated for each node)", desc.getDisplayName());
 
 		// Log in for next set of tests...
-		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
-		p4.login();
+		try (ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			p4.login();
 
-		TemplateWorkspaceImpl.DescriptorImpl impl = (TemplateWorkspaceImpl.DescriptorImpl) desc;
-		FormValidation form = impl.doCheckTemplateName("test.ws");
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			TemplateWorkspaceImpl.DescriptorImpl impl = (TemplateWorkspaceImpl.DescriptorImpl) desc;
+			FormValidation form = impl.doCheckTemplateName("test.ws");
+			assertEquals(FormValidation.Kind.OK, form.kind);
 
-		AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteTemplateName("t");
-		assertTrue(list.getValues().contains("test.ws"));
+			AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteTemplateName("t");
+			assertTrue(list.getValues().contains("test.ws"));
 
-		form = WorkspaceDescriptor.doCheckFormat(format);
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			form = WorkspaceDescriptor.doCheckFormat(format);
+			assertEquals(FormValidation.Kind.OK, form.kind);
+		}
 	}
 
 	@Test
-	public void testFreeStyleProject_StreamWs() throws Exception {
-
+	void testFreeStyleProject_StreamWs() throws Exception {
 		String stream = "//stream/main";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -172,25 +179,46 @@ public class WorkspaceTest extends DefaultEnvironment {
 		assertEquals("Streams (view generated by Perforce for each node)", desc.getDisplayName());
 
 		// Log in for next set of tests...
-		ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null);
-		p4.login();
+		try (ConnectionHelper p4 = new ConnectionHelper(project, CREDENTIAL, null)) {
+			p4.login();
 
-		FormValidation form = WorkspaceDescriptor.doCheckStreamName("//stream/main");
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			FormValidation form = WorkspaceDescriptor.doCheckStreamName("//stream/main");
+			assertEquals(FormValidation.Kind.OK, form.kind);
 
-		AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteStreamName("//");
-		assertTrue(list.getValues().contains("//stream/main"));
+			AutoCompletionCandidates list = WorkspaceDescriptor.doAutoCompleteStreamName("//");
+			assertTrue(list.getValues().contains("//stream/main"));
 
-		form = WorkspaceDescriptor.doCheckFormat(format);
-		assertEquals(FormValidation.Kind.OK, form.kind);
+			form = WorkspaceDescriptor.doCheckFormat(format);
+			assertEquals(FormValidation.Kind.OK, form.kind);
+		}
 
 		// delete worksapce
 		project.doDoWipeOutWorkspace();
 	}
 
 	@Test
-	public void testTPI95() throws Exception {
+	void testProcessWorkspaceBeforeDeletion_NoPreviousBuild() throws Exception {
+		String client = "WipeOutNeverBuilt.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
 
+		FreeStyleProject project = jenkins.createFreeStyleProject("WipeOutNeverBuilt");
+		project.setScm(scm);
+		project.save();
+
+		// Never built: no Run to read a workspace/environment from, so this must
+		// bail out safely (false) rather than NPE on job.getLastBuild().
+		FilePath placeholder = new FilePath(new File("."));
+		boolean cleaned = scm.processWorkspaceBeforeDeletion((Job<?, ?>) project, placeholder, jenkins.jenkins);
+
+		assertFalse(cleaned, "a never-built job has nothing to clean up");
+	}
+
+	@Test
+	void testTPI95() throws Exception {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
 
@@ -201,10 +229,10 @@ public class WorkspaceTest extends DefaultEnvironment {
 		project.setScm(scm);
 		project.save();
 
-		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
-		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
@@ -220,20 +248,21 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWs() throws Exception {
-
+	void testFreeStyleProject_SpecWs() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test1";
 
-		String specFile = ""
-				+ "Client: jenkins-${JOB_NAME}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //jenkins-${JOB_NAME}/...\n";
+		String specFile = """
+				\
+				Client: jenkins-${JOB_NAME}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //jenkins-${JOB_NAME}/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -259,22 +288,23 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWsChangeView() throws Exception {
-
+	void testFreeStyleProject_SpecWsChangeView() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test2";
 
-		String specFile = ""
-				+ "Client: ${P4_CLIENT}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //${P4_CLIENT}/...\n"
-				+ "ChangeView:\n"
-				+"\t//depot/Data/...@17\n";
+		String specFile = """
+				\
+				Client: ${P4_CLIENT}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //${P4_CLIENT}/...
+				ChangeView:
+				\t//depot/Data/...@17
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -299,20 +329,21 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFreeStyleProject_SpecWsBadSpec() throws Exception {
-
+	void testFreeStyleProject_SpecWsBadSpec() throws Exception {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test3";
 
-		String specFile = ""
-				+ "Client: bad_client\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //bad_client/...\n";
+		String specFile = """
+				\
+				Client: bad_client
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //bad_client/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -333,7 +364,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testSyncID() throws Exception {
+	void testSyncID() {
 		Map<String, String> map = new HashMap<>();
 		map.put("NODE_NAME", "foo");
 		map.put("OTHER", "bar");
@@ -348,8 +379,7 @@ public class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
-	public void testFolderProject_StreamWs() throws Exception {
-
+	void testFolderProject_StreamWs() throws Exception {
 		String format = "jenkins-${NODE_NAME}-${JOB_NAME}.ws";
 		String view = "//depot/Data/... //" + format + "/...";
 		WorkspaceSpec spec = new WorkspaceSpec(view, null);

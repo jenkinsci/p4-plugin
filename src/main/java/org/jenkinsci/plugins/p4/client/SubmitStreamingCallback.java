@@ -29,7 +29,7 @@ public class SubmitStreamingCallback extends AbstractStreamingCallback {
 			}
 		}
 
-		List<IFileSpec> specList = new ArrayList<IFileSpec>();
+		List<IFileSpec> specList = new ArrayList<>();
 		specList.add(ResultListBuilder.handleFileReturn(map, getServer()));
 		try {
 			getValidate().check(specList, "");

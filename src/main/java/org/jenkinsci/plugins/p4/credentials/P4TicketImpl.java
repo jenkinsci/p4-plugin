@@ -14,14 +14,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
+import java.io.Serial;
 
 public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 
 	/**
 	 * Ensure consistent serialisation.
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	@CheckForNull
@@ -42,7 +42,7 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 	}
 
 	public boolean isTicketValueSet() {
-		return (ticket == null) ? false : ticket.isTicketValueSet();
+		return ticket != null && ticket.isTicketValueSet();
 	}
 
 	@CheckForNull
@@ -51,13 +51,14 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 	}
 
 	public boolean isTicketPathSet() {
-		return (ticket == null) ? false : ticket.isTicketPathSet();
+		return ticket != null && ticket.isTicketPathSet();
 	}
 
 	@Extension
 	@Symbol("ticket")
 	public static class DescriptorImpl extends BaseStandardCredentialsDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Perforce Ticket Credential";
@@ -78,10 +79,9 @@ public class P4TicketImpl extends P4BaseCredentials implements P4Ticket {
 		                                       @QueryParameter("p4host") String p4host,
 		                                       @QueryParameter("ticket") String value,
 		                                       @QueryParameter("ticketValue") String ticketValue,
-		                                       @QueryParameter("ticketPath") String ticketPath)
-				throws IOException, ServletException {
+		                                       @QueryParameter("ticketPath") String ticketPath) {
 
-			if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
 				return FormValidation.warning("Insufficient permissions");
 			}
 

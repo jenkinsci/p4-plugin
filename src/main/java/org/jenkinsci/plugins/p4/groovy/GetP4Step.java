@@ -1,6 +1,7 @@
 package org.jenkinsci.plugins.p4.groovy;
 
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -20,6 +21,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.Serial;
 import java.util.Set;
 
 public class GetP4Step extends Step {
@@ -50,6 +52,7 @@ public class GetP4Step extends Step {
 			return "p4";
 		}
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "P4 Groovy";
@@ -66,12 +69,13 @@ public class GetP4Step extends Step {
 	}
 
 	@Override
-	public StepExecution start(StepContext context) throws Exception {
+	public StepExecution start(StepContext context) {
 		return new Execution(this, context);
 	}
 
 	public static class Execution extends SynchronousNonBlockingStepExecution<P4Groovy> {
 
+		@Serial
 		private static final long serialVersionUID = 1L;
 
 		private transient GetP4Step step = null;

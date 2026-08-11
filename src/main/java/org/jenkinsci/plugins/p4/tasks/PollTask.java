@@ -12,6 +12,7 @@ import hudson.remoting.VirtualChannel;
 import jenkins.security.Roles;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.changes.P4LabelRef;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.changes.P4Ref;
 import org.jenkinsci.plugins.p4.client.ClientHelper;
 import org.jenkinsci.plugins.p4.filters.Filter;
@@ -20,11 +21,12 @@ import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.filters.FilterViewMaskImpl;
+import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +35,12 @@ import java.util.regex.Pattern;
 
 public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private final List<Filter> filter;
 	private final List<P4Ref> lastRefs;
+	private List<P4PollRef> lastPollRefs = new ArrayList<>();
 
 	private String pin;
 
@@ -53,20 +57,48 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 	@Override
 	public Object task(ClientHelper p4) throws Exception {
-		List<P4Ref> changes = new ArrayList<P4Ref>();
+		List<P4Ref> changes = new ArrayList<>();
+		boolean isCustomPollingPathPresent = (this.getWorkspace() instanceof ManualWorkspaceImpl)
+				&& ((ManualWorkspaceImpl) this.getWorkspace()).getSpec().hasCustomPollingPaths();
 
-		//Fix for https://issues.jenkins.io/browse/JENKINS-63879
-		boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
-
-		// find changes...
-		if (pin != null && !pin.isEmpty() && !pollLatestWithPin) {
-			changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
+		if (isCustomPollingPathPresent) {
+			// if custom polling path is present, then we need to poll only custom paths and not client workspace
+			// Poll polling path changes
+			if (!lastPollRefs.isEmpty()) {
+				for (P4PollRef ref : lastPollRefs) {
+					P4PollRef changeRef = p4.getLatestChangeForPollPath(ref);
+					if (changeRef != null) {
+						changes.add(changeRef);
+					}
+				}
+			}
 		} else {
-			changes = p4.listHaveChanges(lastRefs);
+			//Fix for https://issues.jenkins.io/browse/JENKINS-63879
+			boolean pollLatestWithPin = FilterLatestWithPinImpl.isActive(filter);
+
+			// find changes...
+			if (pin != null && !pin.isEmpty() && !pollLatestWithPin) {
+				changes = p4.listHaveChanges(lastRefs, new P4LabelRef(pin));
+			} else {
+				changes = p4.listHaveChanges(lastRefs);
+			}
+
+			// Poll Graph commit changes
+			if (p4.checkVersion(20171)) {
+				List<IRepo> repos = p4.listRepos();
+				for (IRepo repo : repos) {
+					P4Ref graphHead = p4.getGraphHead(repo.getName());
+					List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
+					changes.addAll(commits);
+					for (P4Ref commit : commits) {
+						p4.log("... found commit: " + commit.toString());
+					}
+				}
+			}
 		}
 
 		// filter changes...
-		List<P4Ref> remainder = new ArrayList<P4Ref>();
+		List<P4Ref> remainder = new ArrayList<>();
 		for (P4Ref c : changes) {
 			long change = c.getChange();
 			if (change > 0) {
@@ -80,25 +112,19 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 		}
 		changes = remainder;
 
-		// Poll Graph commit changes
-		if (p4.checkVersion(20171)) {
-			List<IRepo> repos = p4.listRepos();
-			for (IRepo repo : repos) {
-				P4Ref graphHead = p4.getGraphHead(repo.getName());
-				List<P4Ref> commits = p4.listCommits(lastRefs, graphHead);
-				changes.addAll(commits);
-				for(P4Ref commit : commits) {
-					p4.log("... found commit: " + commit.toString());
-				}
-
-			}
-		}
-
 		return changes;
 	}
 
 	public void setLimit(String expandedPin) {
 		pin = expandedPin;
+	}
+
+	public void setPollRefChanges(List<P4PollRef> pollRefs) {
+		this.lastPollRefs = pollRefs;
+	}
+
+	public List<P4PollRef> getPollRefChanges() {
+		return lastPollRefs;
 	}
 
 	/**
@@ -131,7 +157,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			// Scan through Path filters
 			if (f instanceof FilterPathImpl) {
 				// add unmatched files to remainder list
-				List<IFileSpec> remainder = new ArrayList<IFileSpec>();
+				List<IFileSpec> remainder = new ArrayList<>();
 				String path = ((FilterPathImpl) f).getPath();
 				for (IFileSpec s : files) {
 					String p = s.getDepotPathString();
@@ -152,7 +178,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 			// Scan through View Mask filters
 			if (f instanceof FilterViewMaskImpl) {
 				// at least one file in the change must be contained in the view mask
-				List<IFileSpec> included = new ArrayList<IFileSpec>();
+				List<IFileSpec> included = new ArrayList<>();
 
 				String viewMask = ((FilterViewMaskImpl) f).getViewMask();
 				String[] maskPaths = viewMask.split("\\R");
@@ -160,6 +186,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 					boolean isFileInViewMask = false;
 					String p = s.getDepotPathString();
 					for (String maskPath : maskPaths) {
+						maskPath = maskPath.trim(); // remove leading/trailing spaces
 						if (p.startsWith(maskPath)) {
 							isFileInViewMask = true;
 						}
@@ -189,7 +216,7 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 				for (IFileSpec s : files) {
 					String p = s.getDepotPathString();
-					
+
 					for (Pattern pattern : patterns) {
 						Matcher matcher = pattern.matcher(p);
 						if(matcher.matches()) {
@@ -197,12 +224,12 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 							break;
 						}
 					}
-					
+
 					if (foundMatchingChange) {
 						break;
 					}
 				}
-				
+
 				// If we've found a change matching one of our patterns, do not filter!
 				return !foundMatchingChange;
 			}
@@ -212,6 +239,6 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 }
