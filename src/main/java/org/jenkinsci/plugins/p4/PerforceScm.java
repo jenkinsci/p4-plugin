@@ -870,14 +870,14 @@ public class PerforceScm extends SCM {
 		// does for polling - so outage-window changes aren't dropped.
 		int walked = 0;
 		Run<?, ?> baseline = lastBuild;
-		while ((lastRefs == null || lastRefs.isEmpty()) && baseline != null && walked++ < MAX_BASELINE_WALKBACK) {
+		while (lastRefs.isEmpty() && baseline != null && walked++ < MAX_BASELINE_WALKBACK) {
 			baseline = sinceLastSuccess ? baseline.getPreviousSuccessfulBuild() : baseline.getPreviousCompletedBuild();
 			if (baseline != null) {
 				lastRefs = TagAction.getLastChange(baseline, task.getListener(), syncID);
 			}
 		}
 
-		if (lastRefs != null && !lastRefs.isEmpty()) {
+		if (!lastRefs.isEmpty()) {
 			list.addAll(task.getChangesFull(lastRefs));
 		}
 
