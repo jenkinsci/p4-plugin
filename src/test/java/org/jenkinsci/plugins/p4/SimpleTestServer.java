@@ -27,6 +27,13 @@ public class SimpleTestServer {
 
 	private static final String RESOURCES = "src/test/resources/";
 
+	// On Windows the rsh p4d process can keep its db.* files locked for a while after it starts exiting,
+	// so wiping the p4root needs a much longer retry window there. Linux can delete open files and passes
+	// on the first try, so the small window is fine.
+	private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+	private static final int CLEANUP_RETRIES = IS_WINDOWS ? 120 : 30;       // ~60s on Windows, ~15s elsewhere
+	private static final long CLEANUP_RETRY_SLEEP_MS = 500L;
+
 	private final String p4d;
 	private final File p4root;
 	private final String p4ver;
@@ -81,10 +88,10 @@ public class SimpleTestServer {
 		tarIn = new TarArchiveInputStream(
 				new GzipCompressorInputStream(new BufferedInputStream(new FileInputStream(archive))));
 
-		TarArchiveEntry tarEntry = tarIn.getNextTarEntry();
+		TarArchiveEntry tarEntry = tarIn.getNextEntry();
 		while (tarEntry != null) {
 			File node = new File(p4root, tarEntry.getName());
-            LOGGER.debug("extracting: {}", node.getCanonicalPath());
+      		LOGGER.debug("extracting: {}", node.getCanonicalPath());
 			if (tarEntry.isDirectory()) {
 				node.mkdirs();
 			} else {
@@ -98,7 +105,7 @@ public class SimpleTestServer {
 				}
 				bout.close();
 			}
-			tarEntry = tarIn.getNextTarEntry();
+			tarEntry = tarIn.getNextEntry();
 		}
 		tarIn.close();
 	}
@@ -108,7 +115,7 @@ public class SimpleTestServer {
 			// On Windows the rsh p4d process spawned by the previous test may still be
 			// exiting and holding its db.* files when the next test starts; retry until
 			// the OS releases the handles (Linux can delete open files, so it passes first try).
-			int count = 30;
+			int count = CLEANUP_RETRIES;
 			while (true) {
 				try {
 					FileUtils.cleanDirectory(p4root);
@@ -117,8 +124,9 @@ public class SimpleTestServer {
 					if (--count <= 0) {
 						throw e;
 					}
+					System.gc(); // nudge the JVM to release any lingering handles before retrying
 					try {
-						Thread.sleep(500);
+						Thread.sleep(CLEANUP_RETRY_SLEEP_MS);
 					} catch (InterruptedException ie) {
 						Thread.currentThread().interrupt();
 						throw new IOException(ie);
@@ -132,9 +140,10 @@ public class SimpleTestServer {
 
 	public void destroy() throws Exception {
 		if (p4root.exists()) {
-			int count = 30;
+			int count = CLEANUP_RETRIES;
 			while(!tryDestroy() && count > 0) {
-				Thread.sleep(500);
+				System.gc(); // nudge the JVM to release any lingering handles before retrying
+				Thread.sleep(CLEANUP_RETRY_SLEEP_MS);
 				count --;
 			}
 		}
@@ -170,7 +179,7 @@ public class SimpleTestServer {
 				}
 			}
 		}
-        LOGGER.info("P4D Version: {}", version);
+    	LOGGER.info("P4D Version: {}", version);
 		return version;
 	}
 
@@ -183,7 +192,7 @@ public class SimpleTestServer {
 			cmdLine.addArgument(arg);
 		}
 
-        LOGGER.debug("EXEC: {}", cmdLine);
+    	LOGGER.debug("EXEC: {}", cmdLine);
 
 		DefaultExecutor executor = new DefaultExecutor();
 		return executor.execute(cmdLine);

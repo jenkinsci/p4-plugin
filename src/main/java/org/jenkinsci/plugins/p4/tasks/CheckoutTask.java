@@ -26,10 +26,10 @@ import org.jenkinsci.plugins.p4.workspace.Expand;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.Workspace;
 import org.jenkinsci.remoting.RoleChecker;
-import org.jenkinsci.remoting.RoleSensitive;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>, Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger.getLogger(CheckoutTask.class.getName());
@@ -149,7 +150,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 			}
 
 			// Generate build report
-			StringBuffer buildReport = new StringBuffer("P4: builds: ");
+			StringBuilder buildReport = new StringBuilder("P4: builds: ");
 			for (P4Ref build : builds) {
 				buildReport.append(build.toString() + " ");
 			}
@@ -190,8 +191,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 		if (status == CheckoutStatus.SHELVED) {
 			p4.unshelveFiles(review);
 
-			if (populate instanceof AutoCleanImpl) {
-				AutoCleanImpl auto = (AutoCleanImpl) populate;
+			if (populate instanceof AutoCleanImpl auto) {
 				if (auto.isTidy()) {
 					p4.revertAllFiles(true);
 				}
@@ -390,7 +390,7 @@ public class CheckoutTask extends AbstractTask implements FileCallable<Boolean>,
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
-		checker.check((RoleSensitive) this, Roles.SLAVE);
+		checker.check(this, Roles.SLAVE);
 	}
 
 

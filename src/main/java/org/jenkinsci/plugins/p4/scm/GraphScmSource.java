@@ -148,7 +148,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) throws Exception {
+	public P4SCMRevision getRevision(TempClientHelper p4, P4SCMHead head) {
 		P4Ref ref = p4.getGraphHead(head.getPath().getPath());
 		P4SCMRevision revision = new P4SCMRevision(head, ref);
 		return revision;
@@ -160,7 +160,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 			throw new IllegalArgumentException("missing path");
 		}
 
-		StringBuffer depotView = new StringBuffer();
+		StringBuilder depotView = new StringBuilder();
 		depotView.append(path.getPath());
 		depotView.append("/...");
 
@@ -174,6 +174,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 	@Symbol("multiGraph")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix4Git";
@@ -189,13 +190,12 @@ public class GraphScmSource extends AbstractP4ScmSource {
 		}
 
 		public List getGraphPopulateDescriptors() {
-			Jenkins j = Jenkins.getInstance();
+			Jenkins j = Jenkins.get();
 			DescriptorExtensionList<Populate, Descriptor<Populate>> list = j.getDescriptorList(Populate.class);
 			for (Descriptor<Populate> d : list) {
-				if (!(d instanceof PopulateDescriptor)) {
+				if (!(d instanceof PopulateDescriptor p)) {
 					list.remove(d);
 				} else {
-					PopulateDescriptor p = (PopulateDescriptor) d;
 					if (!p.isGraphCompatible()) {
 						list.remove(p);
 					}

@@ -81,7 +81,7 @@ public class CredentialsHelper {
 	@Deprecated
 	public static P4BaseCredentials findCredential(String id) {
 		Class<P4BaseCredentials> type = P4BaseCredentials.class;
-		Jenkins scope = Jenkins.getInstance();
+		Jenkins scope = Jenkins.get();
 		Authentication acl = ACL.SYSTEM;
 		DomainRequirement domain = new DomainRequirement();
 
@@ -108,8 +108,8 @@ public class CredentialsHelper {
 			return null;
 		}
 		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, context,
-						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsProvider.lookupCredentialsInItemGroup(P4BaseCredentials.class, context,
+						ACL.SYSTEM2, Collections.emptyList()),
 				CredentialsMatchers.allOf(
 						CredentialsMatchers.withId(credentialsId),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
@@ -132,8 +132,8 @@ public class CredentialsHelper {
 			return findCredential(credentialsId);
 		}
 		P4BaseCredentials credentials = CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(P4BaseCredentials.class, item,
-						ACL.SYSTEM, Collections.<DomainRequirement>emptyList()),
+				CredentialsProvider.lookupCredentialsInItem(P4BaseCredentials.class, item,
+						ACL.SYSTEM2, Collections.emptyList()),
 				CredentialsMatchers.allOf(
 						CredentialsMatchers.withId(credentialsId),
 						CredentialsMatchers.instanceOf(P4BaseCredentials.class)));
@@ -152,7 +152,7 @@ public class CredentialsHelper {
 			return null;
 		}
 		P4BaseCredentials credentials = CredentialsProvider.findCredentialById(credentialsId,
-				P4BaseCredentials.class, run, Collections.<DomainRequirement>emptyList());
+				P4BaseCredentials.class, run, Collections.emptyList());
 		return credentials;
 	}
 }

@@ -20,6 +20,7 @@ import jenkins.branch.BranchSource;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerExtension;
+import org.jenkinsci.plugins.p4.changes.P4PollRef;
 import org.jenkinsci.plugins.p4.filters.Filter;
 import org.jenkinsci.plugins.p4.filters.FilterPatternListImpl;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -53,6 +54,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -83,6 +85,88 @@ class PollingTest extends DefaultEnvironment {
     @BeforeEach
     void beforeEach() throws Exception {
 		createCredentials("jenkins", "jenkins", p4d.getRshPort(), CREDENTIAL);
+	}
+
+	@Test
+	void testPollingWalksBackPastBuildThatFailedBeforeSync() throws Exception {
+		// P4JENKINS-158: a build that fails before its checkout/p4sync step runs has no
+		// TagAction for this workspace's syncID. Polling must walk back to the last build
+		// that actually synced, rather than stalling forever thinking there are no changes.
+		String base = "//depot/WalkBack";
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "walkBackBeforeSync");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "    if (env.FAIL_BEFORE_SYNC == 'true') {\n"
+				+ "        error('failing before sync')\n"
+				+ "    }\n"
+				+ "    checkout perforce(\n"
+				+ "        credential: '" + CREDENTIAL + "', \n"
+				+ "        populate: autoClean(quiet: true),\n"
+				+ "        workspace: manualSpec(name: '" + client + "', \n"
+				+ "           spec: clientSpec(view: '" + base + "/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		submitFile(jenkins, base + "/file1", "content");
+
+		// Build 1: succeeds, syncs, creates a valid TagAction baseline for this workspace.
+		List<ParameterValue> okParams = new ArrayList<>();
+		okParams.add(new StringParameterValue("FAIL_BEFORE_SYNC", "false"));
+		WorkflowRun run1 = job.scheduleBuild2(0, new SafeParametersAction(new ArrayList<>(), okParams)).get();
+		jenkins.assertBuildStatusSuccess(run1);
+
+		// Build 2: fails before ever reaching checkout, so it has no TagAction for this syncID.
+		List<ParameterValue> failParams = new ArrayList<>();
+		failParams.add(new StringParameterValue("FAIL_BEFORE_SYNC", "true"));
+		WorkflowRun run2 = job.scheduleBuild2(0, new SafeParametersAction(new ArrayList<>(), failParams)).get();
+		assertEquals(Result.FAILURE, run2.getResult());
+
+		// A new change lands after the failed build.
+		submitFile(jenkins, base + "/file2", "content");
+
+		Logger polling = Logger.getLogger("WalkBackPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+
+		PollingResult result = job.poll(listener);
+
+		assertThat(pollHandler.getLogBuffer(), containsString("walking back to previous build"));
+		assertEquals(PollingResult.BUILD_NOW, result);
+	}
+
+	@Test
+	void testCustomPollingPathsResolveToLatestChangePerPath() throws Exception {
+		String base = "//depot/CustomPoll";
+		String changeA = submitFile(jenkins, base + "/A/file1", "content");
+		String changeB = submitFile(jenkins, base + "/B/file1", "content");
+
+		String client = "CustomPollPaths.ws";
+		String view = base + "/Main/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		spec.setCustomPolling(true);
+		spec.setPollPath(" " + base + "/A/... , " + base + "/B/... , ");
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("CustomPollPaths");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		TagAction tag = build.getAction(TagAction.class);
+		assertNotNull(tag);
+		List<P4PollRef> pollChanges = tag.getCustomPollPathChanges();
+		assertNotNull(pollChanges);
+		assertEquals(2, pollChanges.size());
+
+		List<Long> changes = pollChanges.stream().map(P4PollRef::getChange).collect(Collectors.toList());
+		assertTrue(changes.contains(Long.parseLong(changeA)));
+		assertTrue(changes.contains(Long.parseLong(changeB)));
 	}
 
 	@Test
@@ -1012,10 +1096,11 @@ class PollingTest extends DefaultEnvironment {
 		assertEquals(Result.SUCCESS, job.getLastBuild().getResult());
 
 		// Add bad Jenkinsfile
-		submitFile(jenkins, base + "/" + branch + "/" + jfile, ""
-				+ "pipeline {\n"
-				+ "  agentxxx\n"
-				+ "}");
+		submitFile(jenkins, base + "/" + branch + "/" + jfile, """
+				\
+				pipeline {
+				  agentxxx
+				}""");
 
 		// Poll - Build #2 (fail)
 		timer.run();

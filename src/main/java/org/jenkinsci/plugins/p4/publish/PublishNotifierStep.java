@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.p4.publish;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Result;
@@ -28,8 +29,8 @@ public class PublishNotifierStep extends PublishNotifier implements SimpleBuildS
 	}
 
 	@Override
-	public void perform(Run<?, ?> run, FilePath buildWorkspace,
-						Launcher launcher, TaskListener listener)
+	public void perform(@NonNull Run<?, ?> run, @NonNull FilePath buildWorkspace,
+	                    @NonNull Launcher launcher, @NonNull TaskListener listener)
 			throws InterruptedException, IOException {
 
 		// return early if publish not required

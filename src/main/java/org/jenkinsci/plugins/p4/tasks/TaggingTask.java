@@ -15,12 +15,14 @@ import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
 public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 		Serializable {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	private static Logger logger = Logger
@@ -59,7 +61,7 @@ public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 			label.setRevisionSpec("@" + buildChange);
 
 			// set label view to match workspace
-			ViewMap<ILabelMapping> viewMapping = new ViewMap<ILabelMapping>();
+			ViewMap<ILabelMapping> viewMapping = new ViewMap<>();
 			ClientView view = p4.getClientView();
 			for (IClientViewMapping entry : view) {
 				String left = entry.getLeft();
@@ -88,6 +90,6 @@ public class TaggingTask extends AbstractTask implements FileCallable<Boolean>,
 	@Override
 	public void checkRoles(RoleChecker checker) throws SecurityException {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

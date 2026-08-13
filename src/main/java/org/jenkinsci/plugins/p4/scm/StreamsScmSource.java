@@ -41,7 +41,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	}
 
 	@Override
-	public List<P4SCMHead> getTags(@NonNull TaskListener listener) throws Exception {
+	public List<P4SCMHead> getTags(@NonNull TaskListener listener) {
 		return new ArrayList<>();
 	}
 
@@ -85,6 +85,7 @@ public class StreamsScmSource extends AbstractP4ScmSource {
 	@Symbol("multiStreams")
 	public static final class DescriptorImpl extends P4SCMSourceDescriptor {
 
+		@NonNull
 		@Override
 		public String getDisplayName() {
 			return "Helix Streams";

@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Job;
 import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -194,6 +197,27 @@ class WorkspaceTest extends DefaultEnvironment {
 	}
 
 	@Test
+	void testProcessWorkspaceBeforeDeletion_NoPreviousBuild() throws Exception {
+		String client = "WipeOutNeverBuilt.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("WipeOutNeverBuilt");
+		project.setScm(scm);
+		project.save();
+
+		// Never built: no Run to read a workspace/environment from, so this must
+		// bail out safely (false) rather than NPE on job.getLastBuild().
+		FilePath placeholder = new FilePath(new File("."));
+		boolean cleaned = scm.processWorkspaceBeforeDeletion((Job<?, ?>) project, placeholder, jenkins.jenkins);
+
+		assertFalse(cleaned, "a never-built job has nothing to clean up");
+	}
+
+	@Test
 	void testTPI95() throws Exception {
 		String client = "test.ws";
 		String format = "jenkins-${node}-${project}.ws";
@@ -228,15 +252,17 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test1";
 
-		String specFile = ""
-				+ "Client: jenkins-${JOB_NAME}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //jenkins-${JOB_NAME}/...\n";
+		String specFile = """
+				\
+				Client: jenkins-${JOB_NAME}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //jenkins-${JOB_NAME}/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -266,17 +292,19 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test2";
 
-		String specFile = ""
-				+ "Client: ${P4_CLIENT}\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //${P4_CLIENT}/...\n"
-				+ "ChangeView:\n"
-				+"\t//depot/Data/...@17\n";
+		String specFile = """
+				\
+				Client: ${P4_CLIENT}
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //${P4_CLIENT}/...
+				ChangeView:
+				\t//depot/Data/...@17
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 
@@ -305,15 +333,17 @@ class WorkspaceTest extends DefaultEnvironment {
 		String client = "jenkins-${JOB_NAME}";
 		String specPath = "//depot/spec/test3";
 
-		String specFile = ""
-				+ "Client: bad_client\n"
-				+ "Owner: pallen\n"
-				+ "Root: /tmp\n"
-				+ "Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir\n"
-				+ "SubmitOptions: submitunchanged\n"
-				+ "LineEnd:	local\n"
-				+ "View:\n"
-				+ "\t//depot/Data/... //bad_client/...\n";
+		String specFile = """
+				\
+				Client: bad_client
+				Owner: pallen
+				Root: /tmp
+				Options:	noallwrite noclobber nocompress unlocked nomodtime rmdir
+				SubmitOptions: submitunchanged
+				LineEnd:	local
+				View:
+				\t//depot/Data/... //bad_client/...
+				""";
 
 		submitFile(jenkins, specPath, specFile);
 

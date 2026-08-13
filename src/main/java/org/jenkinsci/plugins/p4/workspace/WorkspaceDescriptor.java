@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.p4.client.ConnectionFactory;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
@@ -51,7 +52,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
 		try {
 			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null && value.length() > 0) {
+			if (iserver != null && !value.isEmpty()) {
 				String user = iserver.getUserName();
 				List<IClientSummary> list;
 				list = iserver.getClients(user, value + "*", 10);
@@ -87,7 +88,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 		try {
 			IOptionsServer iserver = ConnectionFactory.getConnection();
 			if (iserver != null && value.length() > 1) {
-				List<String> streamPaths = new ArrayList<String>();
+				List<String> streamPaths = new ArrayList<>();
 				streamPaths.add(value + "...");
 				GetStreamsOptions opts = new GetStreamsOptions();
 				opts.setMaxResults(10);
@@ -116,7 +117,7 @@ public abstract class WorkspaceDescriptor extends Descriptor<Workspace> {
 		AutoCompletionCandidates c = new AutoCompletionCandidates();
 		try {
 			IOptionsServer iserver = ConnectionFactory.getConnection();
-			if (iserver != null && value.length() > 0) {
+			if (iserver != null && !value.isEmpty()) {
 				List<IClientSummary> list;
 				GetClientsOptions opts = new GetClientsOptions();
 				opts.setMaxResults(10);
