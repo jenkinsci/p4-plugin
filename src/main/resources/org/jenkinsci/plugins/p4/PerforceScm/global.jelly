@@ -63,4 +63,10 @@
 		</f:entry>
     </f:section>
 
+    <f:section title="P4: AI healing">
+		<f:entry field="aiHealEnabled">
+			<f:checkbox title="${%Allow jobs to attempt an AI fix when a build fails}" default="false"/>
+		</f:entry>
+    </f:section>
+
 </j:jelly>

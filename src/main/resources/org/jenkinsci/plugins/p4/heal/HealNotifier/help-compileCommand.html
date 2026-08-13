@@ -1,0 +1,18 @@
+<div>
+	<p>
+		A fast command that only has to compile, run before anything is tested so an
+		obviously broken fix is thrown out cheaply.
+	</p>
+	<p>
+		Leave it blank to use this job's own build step. The job's
+		<b>Invoke top-level Maven targets</b> step is read, and its goals are replaced
+		with <code>compile</code> &mdash; the same Maven installation, POM file and
+		properties, so the compile matches the build.
+	</p>
+	<p>
+		Only a Maven build step can be read. If this job builds with a shell script or
+		a batch file, fill this in yourself: the command is launched directly rather
+		than through a shell, so shell operators such as <code>&amp;&amp;</code> do not
+		work here.
+	</p>
+</div>

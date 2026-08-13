@@ -1075,6 +1075,8 @@ public class PerforceScm extends SCM {
 
 		private boolean recursionInPolling;
 
+		private boolean aiHealEnabled;
+
 		public boolean isAutoSave() {
 			return autoSave;
 		}
@@ -1137,6 +1139,24 @@ public class PerforceScm extends SCM {
 
 		public void setRecursionInPolling(boolean recursionInPolling) {
 			this.recursionInPolling = recursionInPolling;
+		}
+
+		/**
+		 * Master switch for AI-assisted healing of failed builds.
+		 *
+		 * <p>Off by default, and deliberately an administrator-only setting: the
+		 * feature sends build output to a third-party API and spends money doing it,
+		 * so no job can turn it on by itself. While this is false the build step is
+		 * not offered at all.
+		 *
+		 * @return true if healing may run on this controller
+		 */
+		public boolean isAiHealEnabled() {
+			return aiHealEnabled;
+		}
+
+		public void setAiHealEnabled(boolean aiHealEnabled) {
+			this.aiHealEnabled = aiHealEnabled;
 		}
 
 		/**
@@ -1235,6 +1255,13 @@ public class PerforceScm extends SCM {
 			} catch (JSONException e) {
 				logger.info("Unable to read Polling options in configuration");
 				recursionInPolling = false;
+			}
+
+			try {
+				aiHealEnabled = json.getBoolean("aiHealEnabled");
+			} catch (JSONException e) {
+				logger.info("Unable to read AI healing options in configuration");
+				aiHealEnabled = false;
 			}
 
 			save();

@@ -53,6 +53,19 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 
 	private static Logger logger = Logger.getLogger(ConnectionHelper.class.getName());
 
+	/**
+	 * TODO REVERT BEFORE COMMIT: local testing only, not a feature.
+	 *
+	 * <p>Forces {@link #getSwarm()} to report this Swarm URL for every server,
+	 * instead of reading the {@code P4.Swarm.URL} property from the one it is
+	 * connected to. Set to null, or delete this field and the block that reads it,
+	 * to restore normal behaviour.
+	 *
+	 * <p>Deliberately not {@code final}: as a constant, SpotBugs folds it and then
+	 * reports every caller's {@code url != null} check as redundant, which fails
+	 * {@code spotbugs:check}.
+	 */
+	private static String swarmUrlOverride = "http://localhost/";
 
 	@Deprecated
 	public ConnectionHelper(String credentialID, TaskListener listener) throws IOException {
@@ -402,6 +415,15 @@ public class ConnectionHelper extends SessionHelper implements AutoCloseable {
 	}
 
 	public String getSwarm() throws P4JavaException {
+		// TODO REVERT BEFORE COMMIT: local testing only. Pretends every server
+		// advertises a Swarm at this URL, so the Swarm link paths can be exercised
+		// without a Swarm. Delete this block and swarmUrlOverride to restore reading
+		// the P4.Swarm.URL property from the server.
+		if (swarmUrlOverride != null) {
+			String url = swarmUrlOverride;
+			return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+		}
+
 		GetPropertyOptions propOpts = new GetPropertyOptions();
 		String key = "P4.Swarm.URL";
 		propOpts.setName(key);

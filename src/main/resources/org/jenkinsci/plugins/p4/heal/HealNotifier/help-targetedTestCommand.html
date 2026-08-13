@@ -1,0 +1,21 @@
+<div>
+	<p>
+		A command that runs only the tests that were failing, so a fix that does not
+		actually fix them is rejected without waiting for a full build.
+		<code>{tests}</code> is replaced with their comma-separated ids.
+	</p>
+	<p>
+		Leave it blank to use this job's own build step. The job's
+		<b>Invoke top-level Maven targets</b> step is read, and its goals are replaced
+		with <code>test -Dtest={tests}</code>.
+	</p>
+	<p>
+		Only a Maven build step can be read. If this job builds with a shell script or
+		a batch file, either fill this in yourself or leave it blank to skip the
+		targeted run &mdash; the full build still decides whether a fix is real.
+	</p>
+	<p>
+		The full build itself is never configured here. It is always the command this
+		job's build step runs, so a fix is proved against the build that failed.
+	</p>
+</div>

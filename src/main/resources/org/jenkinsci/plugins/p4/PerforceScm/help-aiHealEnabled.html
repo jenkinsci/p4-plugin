@@ -1,0 +1,28 @@
+<div>
+	<p>
+		Allows jobs to add the <b>P4: Attempt an AI fix when the build fails</b>
+		build step. While this is unticked the step is not offered at all, and any
+		job already configured with it does nothing.
+	</p>
+	<p>
+		This is an administrator-level switch because the feature has two effects
+		that individual job owners should not be able to turn on unilaterally:
+	</p>
+	<ul>
+		<li>
+			It sends build output &mdash; a log excerpt, failing test names and
+			assertion messages, and the source files involved &mdash; to whichever
+			AI provider the job is configured to use. Recognised secrets are masked
+			first, but treat this as sending build content off-site.
+		</li>
+		<li>
+			It costs money per failed build, and a job that fails repeatedly will
+			spend repeatedly. Each job can set its own token ceiling.
+		</li>
+	</ul>
+	<p>
+		Enabling this switch does not make anything happen on its own. A job must
+		also add the build step, and that step defaults to a dry run: it verifies a
+		fix and prints it, without changing anything in the depot.
+	</p>
+</div>

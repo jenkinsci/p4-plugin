@@ -1,0 +1,22 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
+	<f:entry title="${%API key credential}" field="credentialId">
+		<f:select/>
+	</f:entry>
+
+	<f:advanced>
+		<f:entry title="${%API endpoint}" field="endpoint">
+			<f:textbox default="https://api.anthropic.com/v1/messages"/>
+		</f:entry>
+
+		<f:entry title="${%Maximum tool round-trips per conversation}" field="maxToolIterations">
+			<f:number default="25" min="1" max="100"/>
+		</f:entry>
+
+		<f:entry title="${%Request timeout in seconds}" field="requestTimeoutSeconds">
+			<f:number default="600" min="30"/>
+		</f:entry>
+	</f:advanced>
+
+</j:jelly>

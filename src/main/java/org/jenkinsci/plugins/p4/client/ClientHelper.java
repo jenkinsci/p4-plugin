@@ -1160,6 +1160,28 @@ public class ClientHelper extends ConnectionHelper {
 	}
 
 	/**
+	 * Discard a shelved change: the shelved files and then the pending change
+	 * itself, so nothing is left behind for a human to trip over.
+	 *
+	 * @param shelf Shelved changelist number
+	 * @throws Exception push up stack
+	 */
+	public void deleteShelve(long shelf) throws Exception {
+		TimeTask timer = new TimeTask();
+		log("P4 Task: delete shelve: " + shelf);
+
+		String path = "//" + iclient.getName() + "/...";
+		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(path);
+
+		List<IFileSpec> discarded = iclient.shelveChangelist((int) shelf, files, false, false, true);
+		getValidate().check(discarded, "No such file(s)", "no file(s) to delete");
+
+		getConnection().deletePendingChangelist((int) shelf);
+
+		log("... duration: " + timer);
+	}
+
+	/**
 	 * Resolve files in workspace with the specified option.
 	 *
 	 * @param mode Resolve mode

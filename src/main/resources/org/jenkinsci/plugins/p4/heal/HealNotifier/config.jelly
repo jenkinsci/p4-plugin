@@ -1,0 +1,72 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+
+	<f:dropdownDescriptorSelector field="aiProvider" title="${%AI provider}"/>
+
+	<f:entry title="${%Compile command - blank to use this job's build step}"
+	         field="compileCommand">
+		<f:textbox/>
+	</f:entry>
+
+	<f:entry title="${%Targeted test command - blank to use this job's build step}"
+	         field="targetedTestCommand">
+		<f:textbox/>
+	</f:entry>
+
+	<f:entry field="dryRun">
+		<f:checkbox title="${%Dry run - verify a fix and print it without changing anything}"
+		            default="true"/>
+	</f:entry>
+
+	<f:entry field="verifyShelf">
+		<f:checkbox title="${%Build the shelved fix in a clean workspace, and delete it if it fails}"
+		            default="true"/>
+	</f:entry>
+
+	<f:advanced>
+		<f:entry title="${%Paths the fix may change}" field="allowedPaths">
+			<f:textbox default="src/"/>
+		</f:entry>
+
+		<f:entry field="allowBuildConfigChanges">
+			<f:checkbox title="${%Allow changes to build configuration}" default="false"/>
+		</f:entry>
+
+		<f:entry title="${%Attempts}" field="maxAttempts">
+			<f:number default="3" min="1" max="10"/>
+		</f:entry>
+
+		<f:entry title="${%Critic rejections needed to drop a candidate}" field="criticQuorum">
+			<f:number default="2" min="1" max="4"/>
+		</f:entry>
+
+		<f:entry title="${%Verify re-runs for the flake check}" field="flakeReruns">
+			<f:number default="2" min="0" max="5"/>
+		</f:entry>
+
+		<f:entry title="${%Token ceiling per build - 0 means no limit}" field="maxTokens">
+			<f:number default="0" min="0"/>
+		</f:entry>
+
+		<f:entry title="${%Model for diagnosis and fixes}" field="smartModel">
+			<f:textbox default="claude-opus-5"/>
+		</f:entry>
+
+		<f:entry title="${%Model for critics}" field="cheapModel">
+			<f:textbox default="claude-haiku-4-5"/>
+		</f:entry>
+
+		<f:entry title="${%Effort for diagnosis and fixes}" field="smartEffort">
+			<f:textbox default="xhigh"/>
+		</f:entry>
+
+		<f:entry title="${%Effort for critics}" field="cheapEffort">
+			<f:textbox/>
+		</f:entry>
+
+		<f:entry title="${%Maximum response tokens}" field="maxResponseTokens">
+			<f:number default="16000" min="1024"/>
+		</f:entry>
+	</f:advanced>
+
+</j:jelly>
