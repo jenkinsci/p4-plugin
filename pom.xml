@@ -21,7 +21,7 @@
     <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <hpi.bundledArtifacts>jzlib,p4java,unirest-java-core</hpi.bundledArtifacts>
+    <hpi.bundledArtifacts>jzlib,p4java,unirest-java-core,unirest-object-mappers-gson</hpi.bundledArtifacts>
     <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
