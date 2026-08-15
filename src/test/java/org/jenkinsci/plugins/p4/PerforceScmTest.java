@@ -1,10 +1,14 @@
 package org.jenkinsci.plugins.p4;
 
+import com.perforce.p4java.exception.P4JavaException;
 import hudson.matrix.DefaultMatrixExecutionStrategyImpl;
 import hudson.matrix.MatrixProject;
 import hudson.model.FreeStyleProject;
 import hudson.scm.SCM;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
+import org.jenkinsci.plugins.p4.client.ConnectionHelper;
 import org.jenkinsci.plugins.p4.matrix.MatrixOptions;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
@@ -15,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.mockito.MockedConstruction;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,7 +27,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.when;
 
 @WithJenkins
 class PerforceScmTest extends DefaultEnvironment {
@@ -148,6 +157,58 @@ class PerforceScmTest extends DefaultEnvironment {
 
 		assertFalse(descriptor.isAutoSave(),
 				"autoSave should be reset to false when a later field in the same group fails to parse");
+	}
+
+	@Test
+	void testFindBrowserReturnsNullForUnknownCredential() {
+		assertNull(PerforceScm.findBrowser("does-not-exist"));
+	}
+
+	@Test
+	void testFindBrowserReturnsSwarmBrowserWhenSwarmUrlConfigured() throws Exception {
+		createCredentials("jenkins", "jenkins", "localhost:1666", "findBrowserCred");
+
+		try (MockedConstruction<ConnectionHelper> mocked = mockConstruction(ConnectionHelper.class, (mock, context) ->
+				when(mock.getSwarm()).thenReturn("http://swarm.example.com"))) {
+
+			P4Browser browser = PerforceScm.findBrowser("findBrowserCred");
+
+			assertInstanceOf(SwarmBrowser.class, browser);
+			assertEquals("http://swarm.example.com", browser.getUrl());
+		}
+	}
+
+	@Test
+	void testFindBrowserReturnsNullWhenNoSwarmUrlConfigured() throws Exception {
+		createCredentials("jenkins", "jenkins", "localhost:1666", "findBrowserCredNoSwarm");
+
+		try (MockedConstruction<ConnectionHelper> mocked = mockConstruction(ConnectionHelper.class, (mock, context) ->
+				when(mock.getSwarm()).thenReturn(null))) {
+
+			assertNull(PerforceScm.findBrowser("findBrowserCredNoSwarm"));
+		}
+	}
+
+	@Test
+	void testFindBrowserReturnsNullWhenConnectionThrows() throws Exception {
+		createCredentials("jenkins", "jenkins", "localhost:1666", "findBrowserCredThrows");
+
+		try (MockedConstruction<ConnectionHelper> mocked = mockConstruction(ConnectionHelper.class, (mock, context) ->
+				when(mock.getSwarm()).thenThrow(new RuntimeException("boom")))) {
+
+			assertNull(PerforceScm.findBrowser("findBrowserCredThrows"));
+		}
+	}
+
+	@Test
+	void testFindBrowserReturnsNullWhenSwarmLookupThrowsP4JavaException() throws Exception {
+		createCredentials("jenkins", "jenkins", "localhost:1666", "findBrowserCredP4JavaEx");
+
+		try (MockedConstruction<ConnectionHelper> mocked = mockConstruction(ConnectionHelper.class, (mock, context) ->
+				when(mock.getSwarm()).thenThrow(new P4JavaException("boom")))) {
+
+			assertNull(PerforceScm.findBrowser("findBrowserCredP4JavaEx"));
+		}
 	}
 
 }

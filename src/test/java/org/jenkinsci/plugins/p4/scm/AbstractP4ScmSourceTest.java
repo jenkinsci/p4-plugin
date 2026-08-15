@@ -1,6 +1,12 @@
 package org.jenkinsci.plugins.p4.scm;
 
+import jenkins.scm.api.SCMHeadCategory;
+import jenkins.scm.api.trait.SCMSourceTrait;
+import jenkins.scm.impl.ChangeRequestSCMHeadCategory;
+import jenkins.scm.impl.TagSCMHeadCategory;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.p4.browsers.P4Browser;
+import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.changes.P4ChangeRef;
 import org.jenkinsci.plugins.p4.client.TempClientHelper;
 import org.jenkinsci.plugins.p4.filters.FilterPerChangeImpl;
@@ -225,5 +231,58 @@ class AbstractP4ScmSourceTest {
 		P4SCMRevision revision = source.getRevision(p4, head);
 
 		assertEquals(5L, revision.getRef().getChange());
+	}
+
+	@Test
+	void testSetTraitsAndGetTraits() {
+		BranchesScmSource source = newSource();
+		assertTrue(source.getTraits().isEmpty());
+
+		SCMSourceTrait trait = mock(SCMSourceTrait.class);
+		source.setTraits(List.of(trait));
+
+		assertEquals(1, source.getTraits().size());
+	}
+
+	@Test
+	void testSetTraitsWithNullClearsToEmptyList() {
+		BranchesScmSource source = newSource();
+		source.setTraits(List.of(mock(SCMSourceTrait.class)));
+
+		source.setTraits(null);
+
+		assertTrue(source.getTraits().isEmpty());
+	}
+
+	@Test
+	void testIsCategoryEnabledAlwaysReturnsTrue() {
+		BranchesScmSource source = newSource();
+
+		assertTrue(source.isCategoryEnabled(ChangeRequestSCMHeadCategory.DEFAULT));
+		assertTrue(source.isCategoryEnabled(TagSCMHeadCategory.DEFAULT));
+		assertTrue(source.isCategoryEnabled(mock(SCMHeadCategory.class)));
+	}
+
+	@Test
+	void testSetBrowserAndUseNewDirectoryStructure() {
+		BranchesScmSource source = newSource();
+		assertFalse(source.isUseNewDirectoryStructure());
+
+		P4Browser browser = new SwarmBrowser("http://swarm.example.com");
+		source.setBrowser(browser);
+		source.setUseNewDirectoryStructure(true);
+
+		assertSame(browser, source.getBrowser());
+		assertTrue(source.isUseNewDirectoryStructure());
+	}
+
+	@Test
+	void testGetMappingsDefaultsWhenNotSet() {
+		BranchesScmSource source = newSource();
+
+		assertEquals(BranchesScmSource.DescriptorImpl.defaultPath, source.getMappings());
+
+		source.setMappings("//depot/main/...");
+		assertEquals("//depot/main/...", source.getMappings());
 	}
 }

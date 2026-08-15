@@ -129,11 +129,17 @@
     </dependency>
 
     <dependency>
+      <groupId>com.konghq</groupId>
+      <artifactId>unirest-object-mappers-gson</artifactId>
+      <version>4.2.9</version>
+    </dependency>
+
+    <!-- Jenkins dependencies -->
+    <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>json-api</artifactId>
     </dependency>
 
-    <!-- Jenkins dependencies -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>

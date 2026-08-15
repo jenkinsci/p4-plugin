@@ -13,17 +13,24 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
+import hudson.util.LogTaskListener;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
+import org.jenkinsci.plugins.p4.JsonHttpStubServer;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerExtension;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.jenkinsci.plugins.p4.credentials.P4PasswordImpl;
+import org.jenkinsci.plugins.p4.filters.Filter;
+import org.jenkinsci.plugins.p4.filters.FilterPathImpl;
+import org.jenkinsci.plugins.p4.filters.FilterUserImpl;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
+import org.jenkinsci.plugins.p4.review.ReviewNotifier;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -38,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,6 +101,39 @@ class CheckoutTest extends DefaultEnvironment {
 
 		// Assert that the workspace sync'd the expected change
 		assertEquals(expectedChangelist, env.get("P4_CHANGELIST"));
+	}
+
+	@Test
+	void testCheckoutAppliesPathFilterToChangelog() throws Exception {
+		String client = "PathFilter.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("PathFilter");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		// Includes a non-path filter too, to exercise applyPathFilters' skip-non-FilterPathImpl branch.
+		List<Filter> filter = List.of(new FilterUserImpl("someoneelse"), new FilterPathImpl("//depot/PathFilter/exclude/"));
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Baseline build so the next changes show up as "new" in the following build's changelog.
+		submitFile(jenkins, "//depot/PathFilter/keep/baseline.txt", "content");
+		FreeStyleBuild build1 = project.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, build1.getResult());
+
+		// A change entirely under the excluded path, and one outside it, in the same changelog.
+		submitFile(jenkins, "//depot/PathFilter/exclude/fileA.txt", "content", "Change to exclude path");
+		submitFile(jenkins, "//depot/PathFilter/keep/fileB.txt", "content", "Change to keep path");
+
+		FreeStyleBuild build2 = project.scheduleBuild2(0).get();
+		assertEquals(Result.SUCCESS, build2.getResult());
+
+		P4ChangeSet cs = (P4ChangeSet) build2.getChangeSets().get(0);
+		assertEquals(1, cs.getHistory().size(),
+				"the change entirely under the excluded path should be filtered out");
+		assertTrue(cs.getHistory().get(0).getMsg().contains("Change to keep path"));
 	}
 
 	@Issue("JENKINS-66648")
@@ -419,5 +460,88 @@ class CheckoutTest extends DefaultEnvironment {
 		jenkins.waitUntilNoActivity();
 
 		assertEquals(Result.SUCCESS, project.getLastBuild().getResult());
+	}
+
+	@Test
+	void testMatrixConfigurationPollingChecksEachChildConfiguration() throws Exception {
+		// Multi-configuration project
+		MatrixProject project = jenkins.createProject(MatrixProject.class, "matrixPolling");
+		AxisList axes = new AxisList();
+		axes.add(new Axis("VARIANT", "v1", "v2"));
+		project.setAxes(axes);
+
+		// Manual workspace spec definition
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-matrixPolling";
+		String view = "//depot/${VARIANT}/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+
+		// Auto clean
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+		project.save();
+
+		submitFile(jenkins, "//depot/v1/src/file1", "content");
+		submitFile(jenkins, "//depot/v2/src/file2", "content");
+
+		project.scheduleBuild2(0);
+		jenkins.waitUntilNoActivity();
+		assertEquals(Result.SUCCESS, project.getLastBuild().getResult());
+
+		// A new change lands in one variant's path only.
+		submitFile(jenkins, "//depot/v2/src/file3", "content");
+
+		Logger polling = Logger.getLogger("MatrixPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+
+		project.poll(listener);
+
+		assertTrue(pollHandler.getLogBuffer().contains("VARIANT-v1"), "buffer=" + pollHandler.getLogBuffer());
+		assertTrue(pollHandler.getLogBuffer().contains("VARIANT-v2"), "buffer=" + pollHandler.getLogBuffer());
+	}
+
+	@Test
+	void testSwarmUpdateNotifiesRunningDuringBuildAndPassOnCompletion() throws Exception {
+		String base = "//depot/SwarmUpdate";
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
+
+		submitFile(jenkins, base + "/file1", "content");
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "swarmUpdateNotify");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				// Attach the progress message and stay 'building' past onStarted's first
+				// 2-second timer tick, so ReviewNotifier's TimerTask also notifies "running"
+				// (not just onCompleted's final "pass"/"fail").
+				+ "    p4SwarmUpdate(updateMessage: 'in progress')\n"
+				+ "    sleep(time: 3, unit: 'SECONDS')\n"
+				+ "    checkout perforce(\n"
+				+ "        credential: '" + CREDENTIAL + "', \n"
+				+ "        populate: autoClean(quiet: true),\n"
+				+ "        workspace: manualSpec(name: '" + client + "', \n"
+				+ "           spec: clientSpec(view: '" + base + "/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		try (JsonHttpStubServer stub = new JsonHttpStubServer()) {
+			stub.stub("/update", 200, "{}");
+
+			List<ParameterValue> list = new ArrayList<>();
+			list.add(new StringParameterValue(ReviewProp.SWARM_UPDATE.getProp(), stub.getUrl() + "/update"));
+			SafeParametersAction actions = new SafeParametersAction(new ArrayList<>(), list);
+
+			Logger reviewLogger = Logger.getLogger(ReviewNotifier.class.getName());
+			TestHandler reviewHandler = new TestHandler();
+			reviewLogger.addHandler(reviewHandler);
+
+			WorkflowRun run = job.scheduleBuild2(0, actions).get();
+
+			assertEquals(Result.SUCCESS, run.getResult());
+			assertTrue(reviewHandler.getLogBuffer().contains("Response code: 200"), "buffer=" + reviewHandler.getLogBuffer());
+			assertTrue(stub.getLastRequestBody("/update").contains("in progress"),
+					"body=" + stub.getLastRequestBody("/update"));
+		}
 	}
 }

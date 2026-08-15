@@ -150,6 +150,37 @@ class P4SCMFileSystemTest extends DefaultEnvironment {
 	}
 
 	@Test
+	void testFileLastModifiedAndType() throws Exception {
+		String format = workspace.getName();
+
+		BranchesScmSource source = new BranchesScmSource(CREDENTIAL, "//depot/...", null, format);
+		source.setPattern(BranchesScmSource.DescriptorImpl.defaultPattern);
+		source.setMappings(BranchesScmSource.DescriptorImpl.defaultPath);
+
+		SCMSourceOwner owner = new WorkflowMultiBranchProject(Jenkins.get(), "multiFileMeta");
+		source.setOwner(owner);
+
+		P4Path path = new P4Path("//depot");
+		P4SCMHead head = new P4SCMHead("main", path);
+
+		SCMFileSystem fs = SCMFileSystem.of(source, head);
+		assertThat(fs, notNullValue());
+
+		// A child discovered via children() carries a real (not assumed) isDir flag,
+		// so type() takes its fast isDir==true path rather than querying the server.
+		Iterator<SCMFile> iterator = fs.getRoot().children().iterator();
+		P4SCMFile dir = (P4SCMFile) iterator.next();
+		assertThat(dir.getName(), is("Data"));
+		assertEquals(SCMFile.Type.DIRECTORY, dir.type());
+
+		// A child looked up by name (rather than discovered) assumes isDir==false,
+		// so type() falls through to the real fstat-based query for a regular file.
+		P4SCMFile file = (P4SCMFile) fs.getRoot().child("Main").child("file-12.txt");
+		assertTrue(file.lastModified() > 0, "expected a real last-modified time, got " + file.lastModified());
+		assertEquals(SCMFile.Type.REGULAR_FILE, file.type());
+	}
+
+	@Test
 	void testLightWeightWorkflow() throws Exception {
 		String content = ""
 				+ "node {\n"

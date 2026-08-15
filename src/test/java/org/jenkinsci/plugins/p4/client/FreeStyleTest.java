@@ -25,6 +25,7 @@ import org.jenkinsci.plugins.p4.browsers.SwarmBrowser;
 import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.populate.SyncOnlyImpl;
+import org.jenkinsci.plugins.p4.review.ReviewNotifier;
 import org.jenkinsci.plugins.p4.review.ReviewProp;
 import org.jenkinsci.plugins.p4.review.SafeParametersAction;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
@@ -61,8 +62,9 @@ class FreeStyleTest extends DefaultEnvironment {
 	private final SampleServerExtension p4d = new SampleServerExtension(P4ROOT, R24_1_r15);
 
     @BeforeAll
-    static void beforeAll(JenkinsRule rule) {
+    static void beforeAll(JenkinsRule rule) throws Exception {
         jenkins = rule;
+        startHttpServer(HTTP_PORT);
     }
 
     @BeforeEach
@@ -138,13 +140,21 @@ class FreeStyleTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "committed"));
 		list.add(new StringParameterValue(ReviewProp.P4_LABEL.toString(), "auto15"));
-		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.getProp(), HTTP_URL + "/pass"));
 		Action actions = new SafeParametersAction(new ArrayList<>(), list);
+
+		// ReviewNotifier.onCompleted posts SWARM_PASS to this callback; capture its own
+		// logger to confirm the dummy HTTP server actually received and answered the POST.
+		Logger reviewLogger = Logger.getLogger(ReviewNotifier.class.getName());
+		TestHandler reviewHandler = new TestHandler();
+		reviewLogger.addHandler(reviewHandler);
 
 		FreeStyleBuild build;
 		Cause.UserIdCause cause = new Cause.UserIdCause();
 		build = project.scheduleBuild2(0, cause, actions).get();
 		assertEquals(Result.SUCCESS, build.getResult());
+
+		assertTrue(reviewHandler.getLogBuffer().contains("Response code: 200"));
 
 		List<String> log = build.getLog(LOG_LIMIT);
 		assertTrue(log.contains("P4 Task: syncing files at change: 15"));
@@ -219,7 +229,7 @@ class FreeStyleTest extends DefaultEnvironment {
 		List<ParameterValue> list = new ArrayList<>();
 		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "shelved"));
 		list.add(new StringParameterValue(ReviewProp.SWARM_REVIEW.toString(), "19"));
-		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.toString(), HTTP_URL + "/pass"));
+		list.add(new StringParameterValue(ReviewProp.SWARM_PASS.getProp(), HTTP_URL + "/pass"));
 		Action actions = new SafeParametersAction(new ArrayList<>(), list);
 
 		FreeStyleBuild build;

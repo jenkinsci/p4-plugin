@@ -88,6 +88,55 @@ class PollingTest extends DefaultEnvironment {
 	}
 
 	@Test
+	void testPollingWalksBackPastBuildThatFailedBeforeSync() throws Exception {
+		// P4JENKINS-158: a build that fails before its checkout/p4sync step runs has no
+		// TagAction for this workspace's syncID. Polling must walk back to the last build
+		// that actually synced, rather than stalling forever thinking there are no changes.
+		String base = "//depot/WalkBack";
+		String client = "jenkins-${NODE_NAME}-${JOB_NAME}-${EXECUTOR_NUMBER}";
+
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "walkBackBeforeSync");
+		job.setDefinition(new CpsFlowDefinition(""
+				+ "node {\n"
+				+ "    if (env.FAIL_BEFORE_SYNC == 'true') {\n"
+				+ "        error('failing before sync')\n"
+				+ "    }\n"
+				+ "    checkout perforce(\n"
+				+ "        credential: '" + CREDENTIAL + "', \n"
+				+ "        populate: autoClean(quiet: true),\n"
+				+ "        workspace: manualSpec(name: '" + client + "', \n"
+				+ "           spec: clientSpec(view: '" + base + "/... //${P4_CLIENT}/...')))\n"
+				+ "}", false));
+
+		submitFile(jenkins, base + "/file1", "content");
+
+		// Build 1: succeeds, syncs, creates a valid TagAction baseline for this workspace.
+		List<ParameterValue> okParams = new ArrayList<>();
+		okParams.add(new StringParameterValue("FAIL_BEFORE_SYNC", "false"));
+		WorkflowRun run1 = job.scheduleBuild2(0, new SafeParametersAction(new ArrayList<>(), okParams)).get();
+		jenkins.assertBuildStatusSuccess(run1);
+
+		// Build 2: fails before ever reaching checkout, so it has no TagAction for this syncID.
+		List<ParameterValue> failParams = new ArrayList<>();
+		failParams.add(new StringParameterValue("FAIL_BEFORE_SYNC", "true"));
+		WorkflowRun run2 = job.scheduleBuild2(0, new SafeParametersAction(new ArrayList<>(), failParams)).get();
+		assertEquals(Result.FAILURE, run2.getResult());
+
+		// A new change lands after the failed build.
+		submitFile(jenkins, base + "/file2", "content");
+
+		Logger polling = Logger.getLogger("WalkBackPolling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+
+		PollingResult result = job.poll(listener);
+
+		assertThat(pollHandler.getLogBuffer(), containsString("walking back to previous build"));
+		assertEquals(PollingResult.BUILD_NOW, result);
+	}
+
+	@Test
 	void testCustomPollingPathsResolveToLatestChangePerPath() throws Exception {
 		String base = "//depot/CustomPoll";
 		String changeA = submitFile(jenkins, base + "/A/file1", "content");

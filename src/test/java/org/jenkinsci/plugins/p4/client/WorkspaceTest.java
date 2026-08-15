@@ -1,11 +1,13 @@
 package org.jenkinsci.plugins.p4.client;
 
+import hudson.FilePath;
 import hudson.model.Action;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Cause;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Job;
 import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.StringParameterValue;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -191,6 +194,27 @@ class WorkspaceTest extends DefaultEnvironment {
 
 		// delete worksapce
 		project.doDoWipeOutWorkspace();
+	}
+
+	@Test
+	void testProcessWorkspaceBeforeDeletion_NoPreviousBuild() throws Exception {
+		String client = "WipeOutNeverBuilt.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("WipeOutNeverBuilt");
+		project.setScm(scm);
+		project.save();
+
+		// Never built: no Run to read a workspace/environment from, so this must
+		// bail out safely (false) rather than NPE on job.getLastBuild().
+		FilePath placeholder = new FilePath(new File("."));
+		boolean cleaned = scm.processWorkspaceBeforeDeletion((Job<?, ?>) project, placeholder, jenkins.jenkins);
+
+		assertFalse(cleaned, "a never-built job has nothing to clean up");
 	}
 
 	@Test
