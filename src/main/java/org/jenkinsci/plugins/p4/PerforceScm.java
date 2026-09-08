@@ -892,16 +892,14 @@ public class PerforceScm extends SCM {
 			}
 		}
 
-		// still empty! No previous build, so add current.
-		// P4JENKINS-159: also fall back to the current change when the walk-back exhausted
-		// MAX_BASELINE_WALKBACK without finding a baseline - otherwise an auth outage would still
-		// yield a silently empty changelog (the very bug this fix targets, just at a larger scale).
+		// still empty! No previous build, or walk-back found no baseline: report the current change so the
+		// changelog is never silently empty.
 		boolean walkbackExhausted = baselineMissing && lastRefs.isEmpty();
 		if (list.isEmpty() && (lastBuild == null || walkbackExhausted)) {
 			if (walkbackExhausted) {
-				task.getListener().getLogger().println("P4: no change baseline found within "
-						+ maxWalkback + " previous builds for syncID: " + syncID
-						+ "; reporting current change only.");
+				task.getListener().getLogger().println("P4: no change baseline found in the last " + maxWalkback
+						+ " builds for syncID '" + syncID + "'; reporting the current change only - the changelog "
+						+ "for changes submitted during the outage may be incomplete.");
 			}
 			list.add(task.getCurrentChange());
 		}

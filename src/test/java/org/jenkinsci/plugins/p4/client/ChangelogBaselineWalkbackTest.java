@@ -5,6 +5,7 @@ import hudson.model.Result;
 import hudson.scm.ChangeLogSet;
 import hudson.util.LogTaskListener;
 import jenkins.scm.RunWithSCM;
+import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.p4.DefaultEnvironment;
 import org.jenkinsci.plugins.p4.PerforceScm;
 import org.jenkinsci.plugins.p4.SampleServerExtension;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * previous (failed) build and, without the walk-back in PerforceScm.calculateChanges, collapses to "No
  * previous build found" and silently drops every change submitted during the outage.
  *
- * Both tests walk the customer steps from comment 4150071 as a pipeline job and assert the FIX (the
+ * The core tests walk the customer steps from comment 4150071 as a pipeline job and assert the FIX (the
  * recovery build's changelog recovers the outage change) - one drives recovery via a manual build, the
- * other via polling. Steps 1-4 are shared in {@link #prepareOutageScenario}.
+ * other via polling; steps 1-4 are shared in {@link #prepareOutageScenario}. The remaining tests cover the
+ * sinceLastSuccess branch, the walk-back cap boundary (found exactly at the cap vs. exhausted past it), and
+ * that the recovered changelog stays bounded by maxChanges.
  */
 @WithJenkins
 class ChangelogBaselineWalkbackTest extends DefaultEnvironment {
@@ -175,7 +179,7 @@ class ChangelogBaselineWalkbackTest extends DefaultEnvironment {
 					"cap=1 should stop before the baseline, dropping earliest outage change " + outageEarly + ", reported=" + recovery);
 			assertTrue(recovery.contains(outageHead),
 					"exhaustion fallback should still report the head change " + outageHead + ", reported=" + recovery);
-			assertTrue(jenkins.getLog(recoveryRun).contains("no change baseline found within 1 previous builds"),
+			assertTrue(jenkins.getLog(recoveryRun).contains("no change baseline found in the last 1 builds"),
 					"recovery build should log walk-back exhaustion at the configured cap");
 		} finally {
 			System.clearProperty(prop);
@@ -183,9 +187,79 @@ class ChangelogBaselineWalkbackTest extends DefaultEnvironment {
 	}
 
 	/**
-	 * Steps 1-4 shared by both tests: run a baseline build, submit the at-risk "outage" change, break the
-	 * credential so a build fails (recording no baseline), then fix it with a fresh credential ID. Returns
-	 * the outage change the recovery build must not drop; leaves the job ready for its recovery (step 5).
+	 * Cap boundary, found side: with cap=1 the baseline sits one failed build back - i.e. on the LAST
+	 * allowed walk-back step (exactly at the cap). It must still be found (outage change recovered) with no
+	 * exhaustion fallback. Together with walkbackStopsAtConfiguredCapAndFallsBackToCurrentChange (same cap=1
+	 * but the baseline one step further, just past the cap) this pins the inclusive edge: N means N.
+	 */
+	@Test
+	void walkbackFindsBaselineExactlyAtCap() throws Exception {
+		String prop = PerforceScm.class.getName() + ".maxBaselineWalkback";
+		System.setProperty(prop, "1");
+		try {
+			String base = "//depot/atcaprepro";
+			WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "atcaprepro");
+			String outageChange = prepareOutageScenario(job, base);   // baseline build + ONE failed build
+
+			WorkflowRun recoveryRun = job.scheduleBuild2(0).get();
+			List<String> recovery = reportedChangeIds(recoveryRun);
+			assertTrue(recovery.contains(outageChange),
+					"baseline exactly at cap=1 must still be found (outage change recovered), reported=" + recovery);
+			assertFalse(jenkins.getLog(recoveryRun).contains("no change baseline found"),
+					"baseline found within the cap must NOT log walk-back exhaustion");
+		} finally {
+			System.clearProperty(prop);
+		}
+	}
+
+	/**
+	 * When the walk-back finds a distant baseline, the recovery changelog must stay bounded by the global
+	 * maxChanges - getChangesFull() reuses the same p4-changes-with-max path as a normal build, so the span
+	 * is never dumped whole. Here maxChanges is pinned to 2 with 4 changes in the span; only the 2 most
+	 * recent must be reported.
+	 */
+	@Test
+	void walkbackChangelogIsCappedByMaxChanges() throws Exception {
+		int cap = 2;
+		PerforceScm.DescriptorImpl descriptor = jenkins.jenkins.getDescriptorByType(PerforceScm.DescriptorImpl.class);
+		JSONObject cfg = new JSONObject();
+		cfg.put("maxFiles", PerforceScm.DEFAULT_FILE_LIMIT);
+		cfg.put("maxChanges", cap);
+		descriptor.configure((StaplerRequest2) null, cfg);
+		assertEquals(cap, descriptor.getMaxChanges(), "precondition: maxChanges pinned to " + cap);
+
+		String base = "//depot/capspan";
+		String view = base + "/... //${P4_CLIENT}/...";
+		WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "capspan");
+		job.setDefinition(new CpsFlowDefinition(pipelineScript(CREDENTIAL, view), false));
+
+		// Baseline build (records the baseline the walk-back will find one step back).
+		assertNotNull(submitFile(jenkins, base + "/fileA", "content A"));
+		reportedChangeIds(job.scheduleBuild2(0).get());
+
+		// FOUR changes in the outage window - more than the cap of 2.
+		assertNotNull(submitFile(jenkins, base + "/fileB", "content B"));
+		assertNotNull(submitFile(jenkins, base + "/fileC", "content C"));
+		assertNotNull(submitFile(jenkins, base + "/fileD", "content D"));
+		assertNotNull(submitFile(jenkins, base + "/fileE", "content E"));
+
+		// Break creds, one failed build (no baseline), then fix and recover -> walk-back kicks in.
+		swapCredential(CREDENTIAL, "localhost:1");
+		assertEquals(Result.FAILURE, job.scheduleBuild2(0).get().getResult(), "outage build must fail");
+		swapCredential(CREDENTIAL, p4d.getRshPort());
+		createCredentials("jenkins", "jenkins", p4d.getRshPort(), POST_FAILOVER_CREDENTIAL);
+		job.setDefinition(new CpsFlowDefinition(pipelineScript(POST_FAILOVER_CREDENTIAL, view), false));
+
+		List<String> recovery = reportedChangeIds(job.scheduleBuild2(0).get());
+		assertTrue(recovery.size() <= cap,
+				"walk-back changelog should be capped at maxChanges=" + cap + " but was " + recovery.size() + ": " + recovery);
+	}
+
+	/**
+	 * Steps 1-4 shared by the outage-recovery tests: run a baseline build, submit the at-risk "outage"
+	 * change, break the credential so a build fails (recording no baseline), then fix it with a fresh
+	 * credential ID. Returns the outage change the recovery build must not drop; leaves the job ready for
+	 * its recovery (step 5). The single failed build puts the baseline one walk-back step away.
 	 */
 	private String prepareOutageScenario(WorkflowJob job, String base) throws Exception {
 		String view = base + "/... //${P4_CLIENT}/...";

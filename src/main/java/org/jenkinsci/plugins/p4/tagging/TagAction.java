@@ -261,6 +261,7 @@ public class TagAction extends AbstractScmTagAction {
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
+	 * @param quiet    When true, suppress the "No previous build found..." line (used by the walk-back)
 	 * @return List of TagActions from the last build
 	 */
 	private static List<TagAction> getLastTagActions(Run<?, ?> run, TaskListener listener, boolean quiet) {
