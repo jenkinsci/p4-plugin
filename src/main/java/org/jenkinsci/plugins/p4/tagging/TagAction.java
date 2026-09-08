@@ -261,12 +261,15 @@ public class TagAction extends AbstractScmTagAction {
 	 *
 	 * @param run      The current build
 	 * @param listener Listener for logging
+	 * @param quiet    When true, suppress the "No previous build found..." line (used by the walk-back)
 	 * @return List of TagActions from the last build
 	 */
-	private static List<TagAction> getLastTagActions(Run<?, ?> run, TaskListener listener) {
+	private static List<TagAction> getLastTagActions(Run<?, ?> run, TaskListener listener, boolean quiet) {
 		List<TagAction> actions = lastActions(run);
 		if (actions == null) {
-			listener.getLogger().println("No previous build found...");
+			if (!quiet) {
+				listener.getLogger().println("No previous build found...");
+			}
 			return Collections.emptyList();
 		}
 
@@ -294,6 +297,10 @@ public class TagAction extends AbstractScmTagAction {
 	 * @return List of matching TagActions
 	 */
 	private static List<TagAction> findTagActionsForSyncID(Run<?, ?> run, TaskListener listener, String syncID) {
+		return findTagActionsForSyncID(run, listener, syncID, false);
+	}
+
+	private static List<TagAction> findTagActionsForSyncID(Run<?, ?> run, TaskListener listener, String syncID, boolean quiet) {
 		if (syncID == null || syncID.isEmpty()) {
 			listener.getLogger().println("No build found for syncID: ..." + syncID);
 			return Collections.emptyList();
@@ -301,7 +308,7 @@ public class TagAction extends AbstractScmTagAction {
 		logger.fine("   using syncID: " + syncID);
 
 		List<TagAction> matched = new ArrayList<>();
-		for (TagAction action : getLastTagActions(run, listener)) {
+		for (TagAction action : getLastTagActions(run, listener, quiet)) {
 			if (syncID.equals(action.getSyncID())) {
 				matched.add(action);
 			}
@@ -314,8 +321,14 @@ public class TagAction extends AbstractScmTagAction {
 	 * (clone ID now filtered from the syncID to address JENKINS-43877)
 	 */
 	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID) {
+		return getLastChange(run, listener, syncID, false);
+	}
+
+	// P4JENKINS-159: quiet=true suppresses the "No previous build found..." line so the changelog
+	// walk-back can probe many baseline-less builds without spamming that (misleading) message.
+	public static List<P4Ref> getLastChange(Run<?, ?> run, TaskListener listener, String syncID, boolean quiet) {
 		List<P4Ref> changes = new ArrayList<>();
-		for (TagAction action : findTagActionsForSyncID(run, listener, syncID)) {
+		for (TagAction action : findTagActionsForSyncID(run, listener, syncID, quiet)) {
 			changes = action.getRefChanges();
 			for (P4Ref change : changes) {
 				listener.getLogger().println("Found last change " + change.toString() + " on syncID " + syncID);
