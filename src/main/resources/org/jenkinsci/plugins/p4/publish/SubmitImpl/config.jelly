@@ -26,6 +26,10 @@
 		<f:checkbox title="${%Reopened files}" default="false"/>
 	</f:entry>
 
+	<f:entry field="fileType">
+		<f:checkbox title="${%Detect filetype changes}" default="true"/>
+	</f:entry>
+
     <f:advanced>
         <f:entry title="Publish paths" field="paths">
             <f:textarea default="${descriptor.defaultPath}"/>
