@@ -20,8 +20,10 @@ import org.jenkinsci.plugins.p4.populate.AutoCleanImpl;
 import org.jenkinsci.plugins.p4.populate.Populate;
 import org.jenkinsci.plugins.p4.publish.PublishNotifier;
 import org.jenkinsci.plugins.p4.publish.ShelveImpl;
+import org.jenkinsci.plugins.p4.publish.SubmitImpl;
 import org.jenkinsci.plugins.p4.workspace.ManualWorkspaceImpl;
 import org.jenkinsci.plugins.p4.workspace.WorkspaceSpec;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,18 +36,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * P4JENKINS-183 (works as designed): P4Publish (shelve) with 'paths' set shelves every listed file that
- * Perforce OPENS - and shelve operates on opened files, not on "content changed" files. With reconcile's
- * filetype detection (-t, used on 2019.1+ servers) a file whose depot type differs from its detected type
- * is opened for a type change even when its content is unchanged, so it is correctly shelved too. This
- * test documents that expected behaviour against ClientHelper.buildChange()/publishChange() (the same path
- * PerforceScm/PublishNotifier use); no plugin code change is required.
+ * P4Publish (shelve) with 'paths' set shelves every listed file that Perforce OPENS - shelve operates on
+ * opened files, not on "content changed" files. Reconcile's filetype detection ('-t', used on 2019.1+
+ * servers) opens a file whose depot type differs from its detected type even when the content is unchanged
+ * (e.g. a binary+l file holding text), so it also gets shelved. The "Detect filetype changes" option
+ * controls whether '-t' is passed: ticked (default) shelves the unchanged listed file too; unticked runs
+ * reconcile without '-t' so only genuinely edited files are shelved.
  */
 @WithJenkins
 @Issue("P4JENKINS-183")
@@ -155,5 +159,333 @@ class PublishPathsTest extends DefaultEnvironment {
 			assertTrue(shelvedPaths.contains(depot1),
 					"P4JENKINS-183 (works as designed): a listed file opened by reconcile is shelved; shelved=" + shelvedPaths);
 		}
+	}
+
+	@Test
+	void testShelvePathsWithoutFileTypeShelvesOnlyEditedFile() throws Exception {
+		String client = "filetypeoff.ws";
+		String root = "target/filetypeoff.ws";
+		String view = "//depot/filetypeoff/... //" + client + "/...";
+
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false,
+				null, "LOCAL", view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+		workspace.setExpand(new HashMap<>());
+		File wsRoot = new File(root).getAbsoluteFile();
+		wsRoot.mkdirs();
+		workspace.setRootPath(wsRoot.toString());
+
+		String depot1 = "//depot/filetypeoff/1.bin";
+		String depot4 = "//depot/filetypeoff/4.bin";
+		String clientPath1 = "//" + client + "/1.bin";
+		String clientPath4 = "//" + client + "/4.bin";
+
+		// Submit two binary+l files holding plain text (a file stored binary but containing text).
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+
+			Files.write(new File(wsRoot, "1.bin").toPath(), "File1\n".getBytes(StandardCharsets.UTF_8));
+			Files.write(new File(wsRoot, "4.bin").toPath(), "File4\n".getBytes(StandardCharsets.UTF_8));
+
+			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(clientPath1, clientPath4);
+			iclient.addFiles(files, new AddFilesOptions());
+
+			ReopenFilesOptions retype = new ReopenFilesOptions();
+			retype.setFileType("binary+l");
+			iclient.reopenFiles(files, retype);
+
+			Changelist change = new Changelist();
+			change.setDescription("binary+l files");
+			change = (Changelist) iclient.createChangelist(change);
+			ReopenFilesOptions toChange = new ReopenFilesOptions();
+			toChange.setChangelistId(change.getId());
+			iclient.reopenFiles(files, toChange);
+			change.refresh();
+			change.submit(false);
+		}
+
+		// Real Jenkins job: sync both files, edit ONLY 4.bin, then p4publish shelve listing BOTH files in
+		// 'paths' with "Detect filetype changes" UNticked.
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-FileType-Off");
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+
+		// Only 4.bin is genuinely modified.
+		project.getBuildersList().add(new CreateArtifact("4.bin", "File4\nedited by build\n"));
+
+		ShelveImpl publish = new ShelveImpl("Shelved by Jenkins. Build: ${BUILD_TAG}", false, false, false, false);
+		publish.setPaths(depot1 + "\n" + depot4);
+		// Untick "Detect filetype changes" - reconcile runs without -t.
+		publish.setFileType(false);
+		PublishNotifier notifier = new PublishNotifier(CREDENTIAL, workspace, publish);
+		project.getPublishersList().add(notifier);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Only the edited 4.bin should be shelved; the unchanged 1.bin must be excluded now that -t is off.
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+			List<IFileSpec> allFiles = FileSpecBuilder.makeFileSpecList("//" + iclient.getName() + "/...");
+			GetChangelistsOptions clOpts = new GetChangelistsOptions();
+			clOpts.setType(IChangelist.Type.PENDING);
+			List<IChangelistSummary> pending = p4.getConnection().getChangelists(allFiles, clOpts);
+
+			List<IFileSpec> shelved = null;
+			for (IChangelistSummary cl : pending) {
+				if (cl.getDescription() != null && cl.getDescription().startsWith("Shelved by Jenkins")) {
+					shelved = p4.getConnection().getShelvedFiles(cl.getId());
+					break;
+				}
+			}
+			assertTrue(shelved != null, "should find the changelist the build shelved into");
+
+			List<String> shelvedPaths = shelved.stream()
+					.map(IFileSpec::getDepotPathString)
+					.collect(Collectors.toList());
+
+			assertTrue(shelvedPaths.contains(depot4),
+					"the genuinely edited file must be shelved; shelved=" + shelvedPaths);
+			assertFalse(shelvedPaths.contains(depot1),
+					"with 'Detect filetype changes' off, unchanged 1.bin must NOT be shelved; shelved=" + shelvedPaths);
+		}
+	}
+
+	@Test
+	void testSubmitPathsWithoutFileTypeSubmitsOnlyEditedFile() throws Exception {
+		String client = "filetypeoffsubmit.ws";
+		String root = "target/filetypeoffsubmit.ws";
+		String view = "//depot/filetypeoffsubmit/... //" + client + "/...";
+
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false,
+				null, "LOCAL", view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+		workspace.setExpand(new HashMap<>());
+		File wsRoot = new File(root).getAbsoluteFile();
+		wsRoot.mkdirs();
+		workspace.setRootPath(wsRoot.toString());
+
+		String depot1 = "//depot/filetypeoffsubmit/1.bin";
+		String depot4 = "//depot/filetypeoffsubmit/4.bin";
+		String clientPath1 = "//" + client + "/1.bin";
+		String clientPath4 = "//" + client + "/4.bin";
+
+		// Submit two binary+l files holding plain text (a file stored binary but containing text).
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+
+			Files.write(new File(wsRoot, "1.bin").toPath(), "File1\n".getBytes(StandardCharsets.UTF_8));
+			Files.write(new File(wsRoot, "4.bin").toPath(), "File4\n".getBytes(StandardCharsets.UTF_8));
+
+			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(clientPath1, clientPath4);
+			iclient.addFiles(files, new AddFilesOptions());
+
+			ReopenFilesOptions retype = new ReopenFilesOptions();
+			retype.setFileType("binary+l");
+			iclient.reopenFiles(files, retype);
+
+			Changelist change = new Changelist();
+			change.setDescription("binary+l files");
+			change = (Changelist) iclient.createChangelist(change);
+			ReopenFilesOptions toChange = new ReopenFilesOptions();
+			toChange.setChangelistId(change.getId());
+			iclient.reopenFiles(files, toChange);
+			change.refresh();
+			change.submit(false);
+		}
+
+		// Real Jenkins job: sync both files, edit ONLY 4.bin, then p4publish SUBMIT listing BOTH files in
+		// 'paths' with "Detect filetype changes" UNticked.
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-Submit-FileType-Off");
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+
+		// Only 4.bin is genuinely modified.
+		project.getBuildersList().add(new CreateArtifact("4.bin", "File4\nedited by build\n"));
+
+		SubmitImpl publish = new SubmitImpl("Submitted by Jenkins. Build: ${BUILD_TAG}", false, false, false, false, null);
+		publish.setPaths(depot1 + "\n" + depot4);
+		// Untick "Detect filetype changes" - reconcile runs without -t.
+		publish.setFileType(false);
+		PublishNotifier notifier = new PublishNotifier(CREDENTIAL, workspace, publish);
+		project.getPublishersList().add(notifier);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Only the edited 4.bin should be submitted; the unchanged 1.bin must be excluded now that -t is off.
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+			List<IFileSpec> allFiles = FileSpecBuilder.makeFileSpecList("//" + iclient.getName() + "/...");
+			GetChangelistsOptions clOpts = new GetChangelistsOptions();
+			clOpts.setType(IChangelist.Type.SUBMITTED);
+			List<IChangelistSummary> submitted = p4.getConnection().getChangelists(allFiles, clOpts);
+
+			IChangelist target = null;
+			for (IChangelistSummary cl : submitted) {
+				if (cl.getDescription() != null && cl.getDescription().startsWith("Submitted by Jenkins")) {
+					target = p4.getConnection().getChangelist(cl.getId());
+					break;
+				}
+			}
+			assertTrue(target != null, "should find the changelist the build submitted into");
+
+			List<String> submittedPaths = target.getFiles(true).stream()
+					.map(IFileSpec::getDepotPathString)
+					.collect(Collectors.toList());
+
+			assertTrue(submittedPaths.contains(depot4),
+					"the genuinely edited file must be submitted; submitted=" + submittedPaths);
+			assertFalse(submittedPaths.contains(depot1),
+					"with 'Detect filetype changes' off, unchanged 1.bin must NOT be submitted; submitted=" + submittedPaths);
+		}
+	}
+
+	@Test
+	void testSubmitPathsSubmitsAllOpenedListedFiles() throws Exception {
+		String client = "submitpaths-bug.ws";
+		String root = "target/submitpaths-bug.ws";
+		String view = "//depot/submitpathsbug/... //" + client + "/...";
+
+		WorkspaceSpec spec = new WorkspaceSpec(true, true, false, false, false, false,
+				null, "LOCAL", view, null, null, null, true);
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", true, client, spec, false);
+		workspace.setExpand(new HashMap<>());
+		File wsRoot = new File(root).getAbsoluteFile();
+		wsRoot.mkdirs();
+		workspace.setRootPath(wsRoot.toString());
+
+		String depot1 = "//depot/submitpathsbug/1.bin";
+		String depot4 = "//depot/submitpathsbug/4.bin";
+		String clientPath1 = "//" + client + "/1.bin";
+		String clientPath4 = "//" + client + "/4.bin";
+
+		// Submit two binary+l files holding plain text (a file stored binary but containing text).
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+
+			Files.write(new File(wsRoot, "1.bin").toPath(), "File1\n".getBytes(StandardCharsets.UTF_8));
+			Files.write(new File(wsRoot, "4.bin").toPath(), "File4\n".getBytes(StandardCharsets.UTF_8));
+
+			List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(clientPath1, clientPath4);
+			iclient.addFiles(files, new AddFilesOptions());
+
+			ReopenFilesOptions retype = new ReopenFilesOptions();
+			retype.setFileType("binary+l");
+			iclient.reopenFiles(files, retype);
+
+			Changelist change = new Changelist();
+			change.setDescription("binary+l files");
+			change = (Changelist) iclient.createChangelist(change);
+			ReopenFilesOptions toChange = new ReopenFilesOptions();
+			toChange.setChangelistId(change.getId());
+			iclient.reopenFiles(files, toChange);
+			change.refresh();
+			change.submit(false);
+		}
+
+		// Real Jenkins job: sync both files, edit ONLY 4.bin, then p4publish submit listing BOTH files in
+		// 'paths' with "Detect filetype changes" left at its default (ticked -> reconcile -t).
+		FreeStyleProject project = jenkins.createFreeStyleProject("Publish-Submit-Paths-Bug");
+
+		Populate populate = new AutoCleanImpl();
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, populate);
+		project.setScm(scm);
+
+		// Only 4.bin is genuinely modified.
+		project.getBuildersList().add(new CreateArtifact("4.bin", "File4\nedited by build\n"));
+
+		SubmitImpl publish = new SubmitImpl("Submitted by Jenkins. Build: ${BUILD_TAG}", false, false, false, false, null);
+		publish.setPaths(depot1 + "\n" + depot4);
+		PublishNotifier notifier = new PublishNotifier(CREDENTIAL, workspace, publish);
+		project.getPublishersList().add(notifier);
+		project.save();
+
+		FreeStyleBuild build = project.scheduleBuild2(0, new Cause.UserIdCause()).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// With -t on (default), the type-mismatched 1.bin is opened for a filetype change even though its
+		// content is unchanged, so BOTH files are submitted - the submit counterpart of
+		// testShelvePathsShelvesAllOpenedListedFiles.
+		try (ClientHelper p4 = new ClientHelper(jenkins.getInstance(), CREDENTIAL, null, workspace)) {
+			IClient iclient = p4.getClient();
+			List<IFileSpec> allFiles = FileSpecBuilder.makeFileSpecList("//" + iclient.getName() + "/...");
+			GetChangelistsOptions clOpts = new GetChangelistsOptions();
+			clOpts.setType(IChangelist.Type.SUBMITTED);
+			List<IChangelistSummary> submitted = p4.getConnection().getChangelists(allFiles, clOpts);
+
+			IChangelist target = null;
+			for (IChangelistSummary cl : submitted) {
+				if (cl.getDescription() != null && cl.getDescription().startsWith("Submitted by Jenkins")) {
+					target = p4.getConnection().getChangelist(cl.getId());
+					break;
+				}
+			}
+			assertTrue(target != null, "should find the changelist the build submitted into");
+
+			List<String> submittedPaths = target.getFiles(true).stream()
+					.map(IFileSpec::getDepotPathString)
+					.collect(Collectors.toList());
+
+			assertTrue(submittedPaths.contains(depot4),
+					"the genuinely edited file must be submitted; submitted=" + submittedPaths);
+			assertTrue(submittedPaths.contains(depot1),
+					"with 'Detect filetype changes' on (default), the type-mismatched 1.bin is opened by reconcile -t and submitted too; submitted=" + submittedPaths);
+		}
+	}
+
+	/**
+	 * Pipeline DSL binding: fileType is a {@code @DataBoundSetter}, so {@link DescribableModel} binding here
+	 * reflects how {@code p4publish { publish: submit(fileType: false) }} binds the named argument. Omitting
+	 * fileType must default to true (backward compatible, reconcile -t); fileType: false must bind to false.
+	 */
+	@Test
+	void submitBindsFileTypeFromDsl() throws Exception {
+		DescribableModel<SubmitImpl> model = new DescribableModel<>(SubmitImpl.class);
+
+		SubmitImpl omitted = model.instantiate(submitArgs());
+		assertTrue(omitted.isFileType(), "submit without fileType must default to true (reconcile -t)");
+
+		Map<String, Object> args = submitArgs();
+		args.put("fileType", false);
+		SubmitImpl off = model.instantiate(args);
+		assertFalse(off.isFileType(), "submit(fileType: false) must bind to false (reconcile without -t)");
+	}
+
+	@Test
+	void shelveBindsFileTypeFromDsl() throws Exception {
+		DescribableModel<ShelveImpl> model = new DescribableModel<>(ShelveImpl.class);
+
+		Map<String, Object> base = new HashMap<>();
+		base.put("description", "d");
+		base.put("onlyOnSuccess", false);
+		base.put("delete", false);
+		base.put("modtime", false);
+		base.put("revert", false);
+
+		ShelveImpl omitted = model.instantiate(new HashMap<>(base));
+		assertTrue(omitted.isFileType(), "shelve without fileType must default to true (reconcile -t)");
+
+		base.put("fileType", false);
+		ShelveImpl off = model.instantiate(base);
+		assertFalse(off.isFileType(), "shelve(fileType: false) must bind to false (reconcile without -t)");
+	}
+
+	/** Mandatory submit constructor args (description, onlyOnSuccess, delete, modtime, reopen, purge). */
+	private static Map<String, Object> submitArgs() {
+		Map<String, Object> args = new HashMap<>();
+		args.put("description", "d");
+		args.put("onlyOnSuccess", false);
+		args.put("delete", false);
+		args.put("modtime", false);
+		args.put("reopen", false);
+		args.put("purge", "");
+		return args;
 	}
 }

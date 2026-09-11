@@ -21,6 +21,9 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 	private String expandedDesc;
 	private String paths;
 
+	// Whether reconcile passes '-t'. Boxed so pre-existing configs (null) default to true via isFileType().
+	private Boolean fileType;
+
 	public String getDescription() {
 		return description;
 	}
@@ -68,5 +71,13 @@ public abstract class Publish implements ExtensionPoint, Describable<Publish>, S
 
 	public String getPaths() {
 		return paths;
+	}
+
+	public boolean isFileType() {
+		return fileType == null || fileType;
+	}
+
+	protected void setFileType(boolean fileType) {
+		this.fileType = fileType;
 	}
 }

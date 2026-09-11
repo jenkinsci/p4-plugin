@@ -759,7 +759,7 @@ public class ClientHelper extends ConnectionHelper {
 	public void versionFile(String file, Publish publish, int ChangelistID, boolean submit) throws Exception {
 		// build file revision spec
 		List<IFileSpec> files = FileSpecBuilder.makeFileSpecList(file);
-		findChangeFiles(files, publish.isDelete(), publish.isModtime());
+		findChangeFiles(files, publish.isDelete(), publish.isModtime(), publish.isFileType());
 
 		// Exit early if no change
 		if (!isOpened(files)) {
@@ -791,7 +791,7 @@ public class ClientHelper extends ConnectionHelper {
 			List<String> paths = buildPaths(publish, clientBase);
 
 			files = FileSpecBuilder.makeFileSpecList(paths);
-			findChangeFiles(files, publish.isDelete(), publish.isModtime());
+			findChangeFiles(files, publish.isDelete(), publish.isModtime(), publish.isFileType());
 		}
 
 		// Check if file is open
@@ -821,7 +821,7 @@ public class ClientHelper extends ConnectionHelper {
 		return list;
 	}
 
-	private void findChangeFiles(List<IFileSpec> files, boolean delete, boolean modtime) throws Exception {
+	private void findChangeFiles(List<IFileSpec> files, boolean delete, boolean modtime, boolean fileType) throws Exception {
 		// cleanup pending changes (revert -k)
 		RevertFilesOptions revertOpts = new RevertFilesOptions();
 		revertOpts.setNoClientRefresh(true);
@@ -842,7 +842,7 @@ public class ClientHelper extends ConnectionHelper {
 		statusOpts.setOutsideEdit(true);
 		statusOpts.setRemoved(delete);
 		if (checkVersion(20191)) {
-			statusOpts.setFileType(true);
+			statusOpts.setFileType(fileType);
 		}
 
 		List<IFileSpec> status = iclient.reconcileFiles(files, statusOpts);
