@@ -10,7 +10,6 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
-	private int id = 0;
 	private int depth = 0;
 
 	public static final String COMMAND = "(p4):cmd:";
@@ -33,30 +32,9 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 
 	private void push(MarkupText text) {
 		text.hide(0, COMMAND.length());
-
-		String head = "<span class=\"titleDiv\">";
-		text.addMarkup(COMMAND.length(), head);
-
-		StringBuilder sb = new StringBuilder();
-		sb.append(" <a class=\"linkDiv\" id=\"");
-		sb.append("p4title" + id);
-		sb.append("\" href=\"javascript:toggle('");
-		sb.append("p4content" + id);
-		sb.append("','");
-		sb.append("p4title" + id);
-		sb.append("');\">");
-		sb.append("+");
-		sb.append("</a>");
-		sb.append("</span>");
-
-		sb.append("<div class=\"contentDiv\">");
-		sb.append("<div id=\"");
-		sb.append("p4content" + id);
-		sb.append("\" style=\"display: none;\">");
-		text.addMarkup(text.length() - 1, sb.toString());
-
+		text.addMarkup(COMMAND.length(), "<details><summary class=\"titleDiv\">");
+		text.addMarkup(text.length() - 1, "</summary><div class=\"contentDiv\">");
 		text.hide(text.length() - 1, text.length());
-		id++;
 		depth++;
 	}
 
@@ -64,9 +42,7 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 		text.hide(0, text.length());
 
 		if (depth > 0) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("</div></div>");
-			text.addMarkup(text.length(), sb.toString());
+			text.addMarkup(text.length(), "</div></details>");
 			depth--;
 		}
 	}
