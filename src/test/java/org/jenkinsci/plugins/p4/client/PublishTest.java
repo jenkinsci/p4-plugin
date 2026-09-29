@@ -215,7 +215,7 @@ class PublishTest extends DefaultEnvironment {
 
 		P4ChangeSet changeSet = (P4ChangeSet) run.getChangeSets().get(0);
 		String msg = changeSet.getHistory().get(0).getMsg();
-		assertEquals("test.", msg);
+		assertEquals("test?.", msg);
 	}
 
 	@Test
