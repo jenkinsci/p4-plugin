@@ -177,7 +177,7 @@ public class GraphScmSource extends AbstractP4ScmSource {
 		@NonNull
 		@Override
 		public String getDisplayName() {
-			return "Helix4Git";
+			return "P4Git";
 		}
 
 		@NonNull
