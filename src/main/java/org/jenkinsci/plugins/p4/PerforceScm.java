@@ -124,6 +124,15 @@ public class PerforceScm extends SCM {
 	public static final int DEFAULT_CHANGE_LIMIT = 20;
 	public static final long DEFAULT_HEAD_LIMIT = 1000;
 
+	// Default max builds calculateChanges() walks back to find a change-reporting baseline; if exceeded,
+	// falls back to the current change only. Operators can lower it (e.g. on jobs with a per-build-volatile
+	// syncID where the walk-back would otherwise scan far) via -D<this class name>.maxBaselineWalkback=<n>.
+	public static final int MAX_BASELINE_WALKBACK = 1000;
+
+	static int maxBaselineWalkback() {
+		return Integer.getInteger(PerforceScm.class.getName() + ".maxBaselineWalkback", MAX_BASELINE_WALKBACK);
+	}
+
 	public String getCredential() {
 		return credential;
 	}
@@ -836,7 +845,8 @@ public class PerforceScm extends SCM {
 
 		Run<?, ?> lastBuild;
 		PerforceScm.DescriptorImpl scm = getDescriptor();
-		if (scm != null && scm.isLastSuccess()) {
+		boolean sinceLastSuccess = (scm != null && scm.isLastSuccess());
+		if (sinceLastSuccess) {
 			// JENKINS-64030 Include changes since last successful build
 			lastBuild = run.getPreviousSuccessfulBuild();
 		} else {
@@ -848,7 +858,27 @@ public class PerforceScm extends SCM {
 		String syncID = task.getSyncID();
 		List<P4Ref> lastRefs = TagAction.getLastChange(lastBuild, task.getListener(), syncID);
 
-		if (lastRefs != null && !lastRefs.isEmpty()) {
+		// P4JENKINS-159: If the previous build recorded no baseline for this syncID (e.g. it failed before
+		// p4sync during an auth outage), walk back to the most recent build that did - analogous to the
+		// walk-back lookForChanges() performs for polling - so outage-window changes aren't dropped.
+		// Parity guard (as in lookForChanges): if the previous build DID sync this workspace, an empty
+		// result means "nothing new" rather than "no baseline", so don't walk back.
+		TagAction previousTag = TagAction.getLastAction(lastBuild);
+		boolean previousSyncedThisSyncID = previousTag != null && syncID.equals(previousTag.getSyncID());
+		boolean baselineMissing = lastRefs.isEmpty() && lastBuild != null && !previousSyncedThisSyncID;
+
+		int maxWalkback = maxBaselineWalkback();
+		int walked = 0;
+		Run<?, ?> baseline = baselineMissing ? lastBuild : null;
+		while (lastRefs.isEmpty() && baseline != null && walked++ < maxWalkback) {
+			baseline = sinceLastSuccess ? baseline.getPreviousSuccessfulBuild() : baseline.getPreviousCompletedBuild();
+			if (baseline != null) {
+				// quiet=true: don't spam "No previous build found..." for each baseline-less build probed
+				lastRefs = TagAction.getLastChange(baseline, task.getListener(), syncID, true);
+			}
+		}
+
+		if (!lastRefs.isEmpty()) {
 			list.addAll(task.getChangesFull(lastRefs));
 		}
 
@@ -862,8 +892,15 @@ public class PerforceScm extends SCM {
 			}
 		}
 
-		// still empty! No previous build, so add current
-		if ((lastBuild == null) && list.isEmpty()) {
+		// still empty! No previous build, or walk-back found no baseline: report the current change so the
+		// changelog is never silently empty.
+		boolean walkbackExhausted = baselineMissing && lastRefs.isEmpty();
+		if (list.isEmpty() && (lastBuild == null || walkbackExhausted)) {
+			if (walkbackExhausted) {
+				task.getListener().getLogger().println("P4: no change baseline found in the last " + maxWalkback
+						+ " builds for syncID '" + syncID + "'; reporting the current change only - the changelog "
+						+ "for changes submitted during the outage may be incomplete.");
+			}
 			list.add(task.getCurrentChange());
 		}
 
