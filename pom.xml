@@ -24,6 +24,7 @@
     <hpi.bundledArtifacts>jzlib,p4java,unirest-java-core,unirest-object-mappers-gson</hpi.bundledArtifacts>
     <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
+    <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
   </properties>
 
   <scm>
