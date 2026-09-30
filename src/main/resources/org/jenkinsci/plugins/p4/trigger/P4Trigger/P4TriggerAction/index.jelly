@@ -11,7 +11,6 @@
                 </j:when>
                 <j:otherwise>
                 	<link rel="stylesheet" href="${rootURL}/plugin/p4/style.css"></link>
-                	<script type="text/javascript" src="${rootURL}/plugin/p4/script.js"></script>
                     <pre>
                         <st:getOutput var="output" />
                         <j:whitespace>${it.writeLogTo(output)}</j:whitespace>
