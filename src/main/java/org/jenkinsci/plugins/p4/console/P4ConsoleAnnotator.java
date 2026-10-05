@@ -38,7 +38,9 @@ public class P4ConsoleAnnotator extends ConsoleAnnotator<Object> {
 		text.addMarkup(COMMAND.length(), head);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append(" <a class=\"p4-linkDiv\" href=\"#\" data-content-id=\"");
+		sb.append(" <a class=\"p4-linkDiv\" id=\"");
+		sb.append("p4title" + id);
+		sb.append("\" href=\"#\" data-content-id=\"");
 		sb.append("p4content" + id);
 		sb.append("\">");
 		sb.append("+");
