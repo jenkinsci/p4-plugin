@@ -70,6 +70,42 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+
+      <!-- Transitive via credentials -> bouncycastle-api; pin to 1.85, BOM resolves vulnerable 1.84 -->
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpkix-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcpg-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcutil-jdk18on</artifactId>
+        <version>1.85</version>
+      </dependency>
+
+      <!-- Direct dep; pin above BOM's 1402.v94c9ce464861, which has a known sandbox-bypass flaw -->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1422.v06869826dd9b_</version>
+      </dependency>
+
+      <!-- Transitive via matrix-project -> junit; pin to pull jackson-databind/core past the vulnerable 2.21.2 line -->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>jackson2-api</artifactId>
+        <version>2.22.2-445.vdc613f1d8012</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
