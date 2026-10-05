@@ -71,26 +71,26 @@
         <type>pom</type>
       </dependency>
 
-      <!-- Transitive via credentials -> bouncycastle-api; pin to 1.85, BOM resolves vulnerable 1.84 -->
+      <!-- Transitive via credentials -> bouncycastle-api; bouncycastle-api plugin still bundles an older line -->
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
-        <version>1.85</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-jdk18on</artifactId>
-        <version>1.85</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpg-jdk18on</artifactId>
-        <version>1.85</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcutil-jdk18on</artifactId>
-        <version>1.85</version>
+        <version>1.86</version>
       </dependency>
 
       <!-- Direct dep; pin above BOM's 1402.v94c9ce464861, which has a known sandbox-bypass flaw -->
@@ -100,11 +100,21 @@
         <version>1422.v06869826dd9b_</version>
       </dependency>
 
-      <!-- Transitive via matrix-project -> junit; pin to pull jackson-databind/core past the vulnerable 2.21.2 line -->
+      <!-- Transitive via matrix-project -> junit; jackson2-api plugin still bundles an older line -->
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>jackson2-api</artifactId>
         <version>2.22.2-445.vdc613f1d8012</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.22.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.22.3</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
