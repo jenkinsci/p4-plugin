@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class P4ConsoleAnnotatorTest {
 
 	@Test
-	void testAnnotateCommandLineAddsToggleMarkup() {
+	void testAnnotateCommandLineAddsCollapsibleMarkup() {
 		P4ConsoleAnnotator annotator = new P4ConsoleAnnotator();
 		MarkupText text = new MarkupText(P4ConsoleAnnotator.COMMAND + "p4 sync");
 
@@ -20,32 +20,44 @@ class P4ConsoleAnnotatorTest {
 
 		assertSame(annotator, result);
 		String html = text.toString(true);
-		assertTrue(html.contains("titleDiv"));
+		assertTrue(html.contains("<details"));
+		assertTrue(html.contains("<summary class=\"titleDiv\">"));
 		assertTrue(html.contains("contentDiv"));
-		assertTrue(html.contains("p4title0"));
-		assertTrue(html.contains("p4content0"));
 	}
 
 	@Test
-	void testAnnotateStopLineWithOpenDepthClosesDiv() {
+	void testAnnotateCommandLineMarkupNeedsNoScript() {
+		P4ConsoleAnnotator annotator = new P4ConsoleAnnotator();
+		MarkupText text = new MarkupText(P4ConsoleAnnotator.COMMAND + "p4 sync");
+
+		annotator.annotate(new Object(), text);
+
+		String html = text.toString(true);
+		assertFalse(html.contains("javascript:"));
+		assertFalse(html.contains("toggle("));
+		assertFalse(html.contains("onclick"));
+	}
+
+	@Test
+	void testAnnotateStopLineWithOpenDepthClosesDetails() {
 		P4ConsoleAnnotator annotator = new P4ConsoleAnnotator();
 		annotator.annotate(new Object(), new MarkupText(P4ConsoleAnnotator.COMMAND + "p4 sync"));
 
 		MarkupText stop = new MarkupText(P4ConsoleAnnotator.STOP + "1");
 		annotator.annotate(new Object(), stop);
 
-		assertTrue(stop.toString(true).contains("</div></div>"));
+		assertTrue(stop.toString(true).contains("</div></details>"));
 	}
 
 	@Test
-	void testAnnotateStopLineWithoutOpenDepthDoesNotCloseDiv() {
+	void testAnnotateStopLineWithoutOpenDepthDoesNotCloseDetails() {
 		P4ConsoleAnnotator annotator = new P4ConsoleAnnotator();
 
 		MarkupText stop = new MarkupText(P4ConsoleAnnotator.STOP + "1");
 		Object result = annotator.annotate(new Object(), stop);
 
 		assertSame(annotator, result);
-		assertFalse(stop.toString(true).contains("</div></div>"));
+		assertFalse(stop.toString(true).contains("</details>"));
 	}
 
 	@Test
