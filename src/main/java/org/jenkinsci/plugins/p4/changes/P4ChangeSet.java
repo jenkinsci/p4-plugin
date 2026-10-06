@@ -5,7 +5,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.kohsuke.stapler.framework.io.WriterOutputStream;
 
 import java.io.BufferedOutputStream;
@@ -67,11 +67,11 @@ public class P4ChangeSet extends ChangeLogSet<P4ChangeEntry> {
 					stream.println("\t\t<changenumber><changeInfo>" + cl.getId() + "</changeInfo>");
 					stream.println("\t\t<clientId>" + cl.getClientId() + "</clientId>");
 
-					stream.println("\t\t<msg>" + P4Escaper.filter().translate(StringEscapeUtils.escapeXml(cl.getMsg())) + "</msg>");
-					stream.println("\t\t<changeUser>" + StringEscapeUtils.escapeXml(cl.getAuthor().getId())
+					stream.println("\t\t<msg>" + StringEscapeUtils.escapeXml10(P4Escaper.filter().translate(cl.getMsg())) + "</msg>");
+					stream.println("\t\t<changeUser>" + StringEscapeUtils.escapeXml10(cl.getAuthor().getId())
 							+ "</changeUser>");
 
-					stream.println("\t\t<changeTime>" + StringEscapeUtils.escapeXml(cl.getChangeTime()) + "</changeTime>");
+					stream.println("\t\t<changeTime>" + StringEscapeUtils.escapeXml10(cl.getChangeTime()) + "</changeTime>");
 
 					stream.println("\t\t<shelved>" + cl.isShelved() + "</shelved>");
 

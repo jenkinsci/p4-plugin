@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.17</version>
+    <version>6.2211.v27f680c93c53</version>
   </parent>
 
   <artifactId>p4</artifactId>
@@ -20,6 +20,11 @@
   <properties>
     <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+    <hpi.bundledArtifacts>jzlib,p4java,unirest-java-core,unirest-object-mappers-gson</hpi.bundledArtifacts>
+    <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
+    <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
   </properties>
 
   <scm>
@@ -65,60 +70,95 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
+
+      <!-- Transitive via credentials -> bouncycastle-api; bouncycastle-api plugin still bundles an older line -->
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
-        <version>1.84</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-jdk18on</artifactId>
-        <version>1.84</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpg-jdk18on</artifactId>
-        <version>1.84</version>
+        <version>1.86</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcutil-jdk18on</artifactId>
-        <version>1.84</version>
+        <version>1.86</version>
       </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-cps</artifactId>
-        <version>4331.4333.v50a_b_076c5199</version>
-      </dependency>
+
+      <!-- Direct dep; pin above BOM's 1402.v94c9ce464861, which has a known sandbox-bypass flaw -->
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>script-security</artifactId>
-        <version>1402.1405.vc96e74964250</version>
+        <version>1422.v06869826dd9b_</version>
       </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>credentials-binding</artifactId>
-        <version>725.ve52b_2328a_fde</version>
-      </dependency>
+
+      <!-- Transitive via matrix-project -> junit; jackson2-api plugin still bundles an older line -->
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>jackson2-api</artifactId>
-        <version>2.22.0-439.vb_b_43658d6176</version>
+        <version>2.22.2-445.vdc613f1d8012</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.20.0</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.22.3</version>
       </dependency>
       <dependency>
-        <groupId>org.mozilla</groupId>
-        <artifactId>rhino</artifactId>
-        <version>1.9.1</version>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.22.3</version>
+      </dependency>
+
+      <!-- Transitive via workflow-multibranch; pin past the version with a known snippet-generator flaw -->
+      <dependency>
+        <groupId>org.jenkins-ci.plugins.workflow</groupId>
+        <artifactId>workflow-cps</artifactId>
+        <version>4383.v04fa_a_3d67b_d9</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>com.perforce</groupId>
+      <artifactId>p4java</artifactId>
+      <version>2026.1.2989454</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>eddsa-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>jakarta-mail-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.mig82</groupId>
+      <artifactId>folder-properties</artifactId>
+      <version>62.v1636b_4a_84608</version>
+    </dependency>
 
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -126,36 +166,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.perforce</groupId>
-      <artifactId>p4java</artifactId>
-      <version>2026.1.2989454</version>
-    </dependency>
-    <dependency>
       <groupId>io.jenkins.plugins</groupId>
-      <artifactId>eddsa-api</artifactId>
-      <version>0.3.0.1-29.v67e9a_1c969b_b_</version>
-    </dependency>
-    <dependency>
-      <groupId>io.jenkins.plugins</groupId>
-      <artifactId>jakarta-mail-api</artifactId>
-      <version>2.1.3-3</version>
-    </dependency>
-    <dependency>
-      <groupId>com.mig82</groupId>
-      <artifactId>folder-properties</artifactId>
-      <version>57.vde5161ec7a_b_a_</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.17.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-exec</artifactId>
-      <version>1.4.0</version>
+      <artifactId>commons-text-api</artifactId>
     </dependency>
 
     <dependency>
@@ -177,6 +189,11 @@
 
     <!-- Jenkins dependencies -->
     <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>json-api</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
     </dependency>
@@ -189,16 +206,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>command-launcher</artifactId>
     </dependency>
 
     <!-- Workflow dependencies (aggregator) -->
@@ -254,6 +261,12 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>1.4.0</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -284,12 +297,6 @@
       <artifactId>commons-compress</artifactId>
       <version>1.27.1</version>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20251224</version>
     </dependency>
 
   </dependencies>
