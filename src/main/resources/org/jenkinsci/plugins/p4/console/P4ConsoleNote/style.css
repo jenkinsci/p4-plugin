@@ -1,18 +1,18 @@
-span.titleDiv {
+span.p4-titleDiv {
 	color: #008000;
 }
 
-div.titleDiv {
+div.p4-titleDiv {
 	color: #008000;
 }
 
-a.linkDiv {
+a.p4-linkDiv {
 	text-decoration: none;
 	font-weight: bold;
 	color: #0000FF;
 }
 
-div.contentDiv {
+div.p4-contentDiv {
 	color: #505050;
 	background-color: #f0f0f0;
 }

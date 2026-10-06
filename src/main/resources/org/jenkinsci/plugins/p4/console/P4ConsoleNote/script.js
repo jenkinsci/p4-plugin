@@ -11,4 +11,13 @@ function toggle(showHideDiv, switchTextDiv) {
 	}
 }
 
+Behaviour.specify("a.p4-linkDiv", 'a.p4-linkDiv', 0, function(el) {
+	el.onclick = function(evt) {
+		evt.preventDefault();
 
+		let contentId = el.dataset.contentId;
+		let linkId = el.id;
+
+		toggle(contentId, linkId);
+	}
+});
