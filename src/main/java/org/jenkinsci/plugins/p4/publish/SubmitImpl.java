@@ -64,6 +64,11 @@ public class SubmitImpl extends Publish implements Serializable {
 		super.setPaths(paths);
 	}
 
+	@DataBoundSetter
+	public void setFileType(boolean fileType) {
+		super.setFileType(fileType);
+	}
+
 	@Extension
 	@Symbol("submit")
 	public static final class DescriptorImpl extends PublishDescriptor {
