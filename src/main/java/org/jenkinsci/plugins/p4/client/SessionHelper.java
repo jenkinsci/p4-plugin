@@ -213,7 +213,7 @@ public class SessionHelper extends CredentialsHelper {
 	}
 
 	public PerforceScm.DescriptorImpl getP4SCM() {
-		Jenkins j = Jenkins.get();
+		Jenkins j = Jenkins.getInstanceOrNull();
 		if (j != null) {
 			Descriptor dsc = j.getDescriptor(PerforceScm.class);
 			if (dsc instanceof PerforceScm.DescriptorImpl p4scm) {
