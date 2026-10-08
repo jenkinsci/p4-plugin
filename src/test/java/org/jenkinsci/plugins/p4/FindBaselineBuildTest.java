@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * P4JENKINS-159: PerforceScm.findBaselineBuild() walks back from the previous build to the most recent
+ * PerforceScm.findBaselineBuild() walks back from the previous build to the most recent
  * build that recorded a TagAction for the workspace's syncID (i.e. synced it), bounded by a maximum number
  * of steps.
  */

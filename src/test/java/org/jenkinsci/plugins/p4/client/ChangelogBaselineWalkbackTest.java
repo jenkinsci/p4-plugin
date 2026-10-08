@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * P4JENKINS-159: after a credential/ticket outage (server failover or password expiry) a build can fail
+ * After a credential/ticket outage (server failover or password expiry) a build can fail
  * before p4sync and record no last-built change. The next successful build then finds no baseline on its
  * previous (failed) build and, without the walk-back in PerforceScm.calculateChanges, collapses to "No
  * previous build found" and silently drops every change submitted during the outage.

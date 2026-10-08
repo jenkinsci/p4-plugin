@@ -850,7 +850,7 @@ public class PerforceScm extends SCM {
 			lastBuild = run.getPreviousCompletedBuild();
 		}
 
-		// P4JENKINS-159: if the previous build recorded no baseline (e.g. it failed before p4sync during an
+		// If the previous build recorded no baseline (e.g. it failed before p4sync during an
 		// auth outage), walk back to the most recent build that did so outage-window changes aren't dropped.
 		String syncID = task.getSyncID();
 		Run<?, ?> baseline = findBaselineBuild(lastBuild, syncID, sinceLastSuccess, MAX_BASELINE_WALKBACK);
