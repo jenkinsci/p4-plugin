@@ -325,6 +325,22 @@ public class TagAction extends AbstractScmTagAction {
 	}
 
 	/**
+	 * Whether the build recorded a TagAction for the given syncID (i.e. synced that workspace).
+	 */
+	public static boolean hasSyncID(Run<?, ?> run, String syncID) {
+		List<TagAction> actions = lastActions(run);
+		if (actions == null || syncID == null) {
+			return false;
+		}
+		for (TagAction action : actions) {
+			if (syncID.equals(action.getSyncID())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Returns custom poll path changes from the last build for the given syncID.
 	 */
 	public static List<P4PollRef> getLastPollChange(Run<?, ?> run, TaskListener listener, String syncID) {
