@@ -1,5 +1,27 @@
 ## Release notes
 
+### Release 1.18.1 (major features/fixes)
+
+[@33937](https://swarm.workshop.perforce.com/changes/33937) - Merge pull request #281 from jenkinsci/ChangelogBaselineWalkback
+Walk back to last baseline so auth-outage changes aren't dropped from changelog
+
+[@33921](https://swarm.workshop.perforce.com/changes/33921) - Merge pull request #283 from jenkinsci/JENKINS-183-shelve-filetype
+Add 'Detect filetype changes' shelve option to P4Publish Shelve operation
+
+[@33911](https://swarm.workshop.perforce.com/changes/33911) - Merge pull request #285 from HeikoNardmann/JENKINS-76553-console-expand-links
+[JENKINS-76553] Make console expand links work without toggle()
+
+[@33910](https://swarm.workshop.perforce.com/changes/33910) - Merge pull request #250 from daniel-beck/JENKINS-76334
+[JENKINS-76334] Make P4 console annotations work with Jenkins 2.539+ CSP
+
+[@33903](https://swarm.workshop.perforce.com/changes/33903) - Merge pull request #280 from jenkinsci/p4publishShelveCommand
+P4Publish shelving unchanged files listed in the 'paths' variable
+
+[@33898](https://swarm.workshop.perforce.com/changes/33898) - Merge pull request #278 from hjain-perforce: Fix sync -p reporting files synced but leaving workspace empty on read-only replicas
+
+[@33895](https://swarm.workshop.perforce.com/changes/33895) - Merge pull request #231 from strangelookingnerd/migrate
+Require Jenkins 2.528.3 and Jakarta EE 9
+
 ### Release 1.18.0 (major features/fixes)
 
 [@32953](https://swarm.workshop.perforce.com/changes/32953) - Fix— BOM stripping that failed the MD5 check when syncing UTF8 files stored astext+D
