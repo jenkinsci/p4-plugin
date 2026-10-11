@@ -881,7 +881,7 @@ public class PerforceScm extends SCM {
 		}
 
 		// Apply path-based filters to the change list
-		list = applyPathFilters(list);
+		list = applyPathFilters(list, filter);
 		return list;
 	}
 
@@ -906,36 +906,58 @@ public class PerforceScm extends SCM {
 
 	/**
 	 * Apply path-based filters (FilterPathImpl) to a list of change entries.
-	 * If no path filters are present the original list is returned.
+	 * A change is excluded only when it has affected files and every one of them lies under one of the
+	 * filter paths. Each change is kept at most once and the original order is preserved. If no path
+	 * filters are present the original list is returned.
 	 *
 	 * @param entries list of change entries to filter
-	 * @return filtered list of change entries (or original list if no filters)
+	 * @param filters the configured filters, of which only FilterPathImpl is considered
+	 * @return filtered list of change entries (or original list if no path filters)
 	 */
-	private List<P4ChangeEntry> applyPathFilters(List<P4ChangeEntry> entries) {
-		if (entries == null || entries.isEmpty() || filter == null || filter.isEmpty()) {
+	static List<P4ChangeEntry> applyPathFilters(List<P4ChangeEntry> entries, List<Filter> filters) {
+		if (entries == null || entries.isEmpty() || filters == null || filters.isEmpty()) {
+			return entries;
+		}
+
+		List<String> filterPaths = new ArrayList<>();
+		for (Filter f : filters) {
+			if (f instanceof FilterPathImpl) {
+				filterPaths.add(((FilterPathImpl) f).getPath());
+			}
+		}
+		if (filterPaths.isEmpty()) {
 			return entries;
 		}
 
 		List<P4ChangeEntry> remainder = new ArrayList<>();
-
-		for (Filter f : filter) {
-			if (!(f instanceof FilterPathImpl)) {
-				continue;
-			}
-			String filterPath = ((FilterPathImpl) f).getPath();
-
-			for (P4ChangeEntry c : entries) {
-				Collection<P4AffectedFile> affectedFiles = c.getAffectedFiles();
-				for (P4AffectedFile affectedFile : affectedFiles) {
-					String p = affectedFile.getPath();
-					if (!p.startsWith(filterPath)) {
-						remainder.add(c);
-					}
-				}
+		for (P4ChangeEntry c : entries) {
+			if (hasFileOutsidePaths(c, filterPaths)) {
+				remainder.add(c);
 			}
 		}
+		return remainder;
+	}
 
-		return remainder.isEmpty() ? entries : remainder;
+	private static boolean hasFileOutsidePaths(P4ChangeEntry change, List<String> paths) {
+		Collection<P4AffectedFile> affectedFiles = change.getAffectedFiles();
+		// Without a (complete) file list we cannot tell that the change is fully excluded.
+		if (affectedFiles == null || affectedFiles.isEmpty() || change.isFileLimit()) {
+			return true;
+		}
+		for (P4AffectedFile affectedFile : affectedFiles) {
+			String p = affectedFile.getPath();
+			boolean excluded = false;
+			for (String path : paths) {
+				if (p.startsWith(path)) {
+					excluded = true;
+					break;
+				}
+			}
+			if (!excluded) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// Post Jenkins 2.60 JENKINS-37584 JENKINS-40885 JENKINS-52806 JENKINS-60074
