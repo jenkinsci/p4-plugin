@@ -9,6 +9,8 @@
 		<br/>
 		<code style="margin-left: 60.0px;">-//depot/main/tests/001</code>
 		<br/>
+		<code style="margin-left: 60.0px;">-//.../*.txt</code>
+		<br />
 	</p>
 	<p style="margin-left: 60.0px;">
 		<strong>Case A</strong> (change will not be filtered, as index.xml is 
@@ -50,6 +52,17 @@
 		<li style="margin-left: 90.0px;"><code>//depot/main/src/build.xml</code>
 		</li>
 		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/test.xml</code>
+		</li>
+	</ul>
+	<p style="margin-left: 60.0px;">
+		<strong>Case E</strong> (change will be filtered, as *.txt files
+		are excluded with view mask):
+	</p>
+	<p style="margin-left: 90.0px;">Files:</p>
+	<ul>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/readme.txt</code>
+		</li>
+		<li style="margin-left: 90.0px;"><code>//depot/main/tests/001/readme.txt</code>
 		</li>
 	</ul>
 </div>

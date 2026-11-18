@@ -374,6 +374,52 @@ class PollingTest extends DefaultEnvironment {
 	}
 
 	@Test
+	void testPollingMaskExclWildcard() throws Exception {
+
+		String client = "PollingMaskExcl.ws";
+		String view = "//depot/... //" + client + "/...";
+		WorkspaceSpec spec = new WorkspaceSpec(view, null);
+
+		FreeStyleProject project = jenkins.createFreeStyleProject("PollingMaskExclWildcard");
+		ManualWorkspaceImpl workspace = new ManualWorkspaceImpl("none", false, client, spec, false);
+
+		Populate populate = new AutoCleanImpl();
+		List<Filter> filter = new ArrayList<Filter>();
+
+		// Filter changes outside of //depot/Data and and all *-1.dat files
+		StringBuilder sb = new StringBuilder();
+		sb.append("//depot/Data");
+		sb.append("\n");
+		sb.append("-//.../*-1.dat");
+
+		FilterViewMaskImpl mask = new FilterViewMaskImpl(sb.toString());
+		filter.add(mask);
+		PerforceScm scm = new PerforceScm(CREDENTIAL, workspace, filter, populate, null);
+		project.setScm(scm);
+		project.save();
+
+		// Build at change 1
+		List<ParameterValue> list = new ArrayList<ParameterValue>();
+		list.add(new StringParameterValue(ReviewProp.SWARM_STATUS.toString(), "submitted"));
+		list.add(new StringParameterValue(ReviewProp.P4_CHANGE.toString(), "1"));
+		Action actions = new SafeParametersAction(new ArrayList<ParameterValue>(), list);
+
+		FreeStyleBuild build;
+		Cause.UserIdCause cause = new Cause.UserIdCause();
+		build = project.scheduleBuild2(0, cause, actions).get();
+		assertEquals(Result.SUCCESS, build.getResult());
+
+		// Poll for changes incrementally
+		Logger polling = Logger.getLogger("Polling");
+		TestHandler pollHandler = new TestHandler();
+		polling.addHandler(pollHandler);
+		LogTaskListener listener = new LogTaskListener(polling, Level.INFO);
+		project.poll(listener);
+		assertThat(pollHandler.getLogBuffer(), containsString("found change: 17"));
+		assertThat(pollHandler.getLogBuffer(), not(containsString("found change: 18")));
+	}
+
+	@Test
 	void testPatternList() throws Exception {
 		String client = "PatternList.ws";
 		String view = "//depot/... //" + client + "/...";

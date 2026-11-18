@@ -187,13 +187,13 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 					String p = s.getDepotPathString();
 					for (String maskPath : maskPaths) {
 						maskPath = maskPath.trim(); // remove leading/trailing spaces
-						if (p.startsWith(maskPath)) {
+						if (isMatch(p, maskPath)) {
 							isFileInViewMask = true;
 						}
 
 						if (maskPath.startsWith("-")) {
 							String excludedMaskPath = maskPath.substring(maskPath.indexOf("-") + 1);
-							if (p.startsWith(excludedMaskPath)) {
+							if (isMatch(p, excludedMaskPath)) {
 								isFileInViewMask = false;
 							}
 						}
@@ -236,6 +236,21 @@ public class PollTask extends AbstractTask implements FileCallable<List<P4Ref>>,
 
 		}
 		return false;
+	}
+
+	/**
+	 * Check if path and path mask match
+	 * @return boolean
+	 */
+	private boolean isMatch(String path, String mask) {
+		mask = mask
+				.replace("*", ".*")
+				.replace("/.../", "/.+/");
+
+		Pattern p = Pattern.compile('^' + mask + ".*");
+		Matcher m = p.matcher(path);
+
+		return m.matches();
 	}
 
 	public void checkRoles(RoleChecker checker) throws SecurityException {
